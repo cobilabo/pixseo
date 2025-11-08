@@ -123,10 +123,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 src="/logo.svg" 
                 alt="ふらっと。管理画面" 
                 className="h-8 w-auto"
+                style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(2000%) hue-rotate(0deg) brightness(1.1) contrast(1)' }}
                 onError={() => setLogoError(true)}
               />
             ) : (
-              <div className="h-8 w-8 bg-blue-600 rounded"></div>
+              <div className="h-8 w-8 bg-orange-500 rounded"></div>
             )}
           </Link>
         </div>
@@ -164,7 +165,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     }
                   `}
                 >
-                  <span className="mr-3">{item.icon}</span>
+                  <span 
+                    className="mr-3"
+                    style={isActive ? { filter: 'brightness(0) invert(1)' } : {}}
+                  >
+                    {item.icon}
+                  </span>
                   {item.name}
                 </Link>
               </div>
@@ -177,7 +183,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="text-sm text-gray-600 truncate">{user?.email}</div>
           <button
             onClick={handleSignOut}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-colors"
+            className="w-full px-4 py-2 text-sm font-bold text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-colors"
           >
             ログアウト
           </button>

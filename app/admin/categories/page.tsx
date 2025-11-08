@@ -134,7 +134,7 @@ export default function CategoriesPage() {
         {/* フローティングボタン：新規カテゴリー作成 */}
         <Link
           href="/admin/categories/new"
-          className="fixed bottom-8 right-8 bg-green-600 text-white w-14 h-14 rounded-full hover:bg-green-700 transition-all hover:scale-110 flex items-center justify-center z-50"
+          className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50"
           title="新規カテゴリーを作成"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

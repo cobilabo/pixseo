@@ -82,8 +82,7 @@ export default function ArticlesPage() {
               placeholder="記事を検索..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ backgroundColor: '#ddecf8' }}
+              className="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
 
@@ -186,7 +185,7 @@ export default function ArticlesPage() {
         {/* フローティングボタン：新規記事作成 */}
         <Link
           href="/admin/articles/new"
-          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50"
+          className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50"
           title="新規記事を作成"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
