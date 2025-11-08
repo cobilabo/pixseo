@@ -18,7 +18,13 @@ export default function WritersPage() {
   const fetchWriters = async () => {
     try {
       const data = await apiGet<Writer[]>('/api/admin/writers');
-      setWriters(data);
+      // クライアント側でソート（新しい順）
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      });
+      setWriters(sortedData);
     } catch (error) {
       console.error('Error fetching writers:', error);
     } finally {

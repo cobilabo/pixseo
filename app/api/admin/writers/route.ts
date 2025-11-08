@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const mediaId = request.headers.get('x-media-id');
     
-    let query = adminDb.collection('writers').orderBy('createdAt', 'desc');
+    let query = adminDb.collection('writers');
     
     // mediaIdでフィルタリング
     if (mediaId) {
