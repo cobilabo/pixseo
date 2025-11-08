@@ -3,18 +3,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": ["hnd1"],
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/admin-panel/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "admin.pixseo.cloud"
-        }
-      ]
-    }
-  ],
   "env": {
     "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyDi8DiIdhLCJO9bXAzBGdeKwBBi7gYPXHs",
     "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "ayumi-f6bd2.firebaseapp.com",

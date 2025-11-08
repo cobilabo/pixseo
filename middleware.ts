@@ -16,13 +16,15 @@ export async function middleware(request: NextRequest) {
 
   // 管理画面ドメインの場合
   if (hostname === 'admin.pixseo.cloud' || hostname === 'pixseo-lovat.vercel.app') {
-    // /admin-panel/* を /* にrewrite
-    if (pathname.startsWith('/admin-panel')) {
-      const url = request.nextUrl.clone();
-      url.pathname = pathname.replace(/^\/admin-panel/, '') || '/';
-      return NextResponse.rewrite(url);
+    // APIやadmin-panelで始まるパスはそのまま
+    if (pathname.startsWith('/api') || pathname.startsWith('/admin-panel')) {
+      return NextResponse.next();
     }
-    return NextResponse.next();
+    
+    // それ以外のパスは /admin-panel/* にrewrite
+    const url = request.nextUrl.clone();
+    url.pathname = `/admin-panel${pathname}`;
+    return NextResponse.rewrite(url);
   }
 
   // サービスドメイン（{slug}.pixseo.cloud）の場合
