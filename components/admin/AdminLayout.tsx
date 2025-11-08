@@ -184,10 +184,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Link href="/admin" className="flex items-center justify-center">
             {!logoError ? (
               <img 
-                src="/logo.svg" 
+                src="/logo.png" 
                 alt="PixSEO 管理画面" 
                 className="h-8 w-auto"
-                style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(2000%) hue-rotate(0deg) brightness(1.1) contrast(1)' }}
                 onError={() => setLogoError(true)}
               />
             ) : (
@@ -195,6 +194,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </Link>
         </div>
+
+        {/* サービス選択プルダウン（super_adminのみ） */}
+        {isSuperAdmin && tenants.length > 0 && (
+          <div className="px-3 py-4 border-b">
+            <div className="relative">
+              <select
+                value={currentTenant?.id || ''}
+                onChange={(e) => {
+                  const tenant = tenants.find(t => t.id === e.target.value);
+                  if (tenant) setCurrentTenant(tenant);
+                }}
+                className="w-full px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* ナビゲーションメニュー */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
@@ -245,7 +273,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       className={`
                         flex items-center px-3 py-2.5 text-sm transition-all rounded-xl font-bold
                         ${isActive 
-                          ? 'bg-purple-600 text-white' 
+                          ? 'bg-blue-600 text-white' 
                           : 'text-gray-600 hover:bg-gray-50'
                         }
                       `}
@@ -273,7 +301,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* ログアウトボタン */}
           <button
             onClick={handleSignOut}
-            className="w-full px-4 py-2 text-sm font-bold text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-colors"
+            className="w-full px-4 py-2 text-sm font-bold text-white bg-gray-600 rounded-full hover:bg-gray-700 transition-colors"
           >
             ログアウト
           </button>
@@ -290,31 +318,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* メインコンテンツ */}
       <main className="lg:ml-64 min-h-screen">
-        {/* super_adminの場合、サービス選択プルダウンを表示 */}
-        {isSuperAdmin && tenants.length > 0 && (
-          <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4">
-            <div className="max-w-7xl mx-auto">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                管理するサービスを選択
-              </label>
-              <select
-                value={currentTenant?.id || ''}
-                onChange={(e) => {
-                  const tenant = tenants.find(t => t.id === e.target.value);
-                  if (tenant) setCurrentTenant(tenant);
-                }}
-                className="w-full max-w-md px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              >
-                {tenants.map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-        
         <div className="p-4 sm:p-6 lg:p-8">
           {children}
         </div>

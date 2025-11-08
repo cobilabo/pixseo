@@ -181,7 +181,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
               type="submit"
               disabled={loading}
               onClick={handleSubmit}
-              className="bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               title="クライアント更新"
             >
               {loading ? (

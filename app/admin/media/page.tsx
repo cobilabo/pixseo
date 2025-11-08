@@ -234,7 +234,7 @@ export default function MediaPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 disabled:opacity-50 disabled:cursor-not-allowed"
             title="メディアをアップロード"
           >
             {uploading ? (

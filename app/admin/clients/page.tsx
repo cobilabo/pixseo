@@ -147,7 +147,7 @@ export default function ClientsPage() {
           {/* フローティング追加ボタン */}
           <Link
             href="/admin/clients/new"
-            className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-lg"
+            className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-lg"
             title="新規クライアント作成"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
