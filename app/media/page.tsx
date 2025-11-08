@@ -108,6 +108,25 @@ export default async function MediaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* デバッグ情報 */}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        right: 0, 
+        background: 'black', 
+        color: 'lime', 
+        padding: '10px', 
+        fontSize: '12px', 
+        zIndex: 9999,
+        maxWidth: '300px',
+        overflow: 'auto'
+      }}>
+        <div>MediaId: {mediaId || 'NULL'}</div>
+        <div>Recent: {recentArticles.length}</div>
+        <div>Popular: {popularArticles.length}</div>
+        <div>Host: {headersList.get('host')}</div>
+      </div>
+
       {/* JSON-LD構造化データ */}
       <script
         type="application/ld+json"
