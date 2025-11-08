@@ -25,21 +25,21 @@ export default function FloatingInput({
 
   if (multiline) {
     return (
-      <div className="relative bg-white rounded-lg p-6">
+      <div className="relative">
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           required={required}
           rows={rows}
-          className="w-full px-4 pt-8 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
+          className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
         />
         <label
-          className={`absolute left-10 transition-all pointer-events-none ${
+          className={`absolute left-4 transition-all pointer-events-none ${
             hasValue
-              ? 'text-xs top-2 bg-white px-2 text-gray-700'
-              : 'text-sm top-8 text-gray-500'
-          } peer-focus:text-xs peer-focus:top-2 peer-focus:bg-white peer-focus:px-2 peer-focus:text-gray-700`}
+              ? 'text-xs -top-2.5 bg-white px-2 text-gray-700'
+              : 'text-sm top-3 text-gray-500'
+          } peer-focus:text-xs peer-focus:-top-2.5 peer-focus:bg-white peer-focus:px-2 peer-focus:text-gray-700`}
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -49,21 +49,21 @@ export default function FloatingInput({
   }
 
   return (
-    <div className="relative bg-white rounded-lg p-6">
+    <div className="relative">
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full px-4 pt-8 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
+        className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
       />
       <label
-        className={`absolute left-10 transition-all pointer-events-none ${
+        className={`absolute left-4 transition-all pointer-events-none ${
           hasValue
-            ? 'text-xs top-2 bg-white px-2 text-gray-700'
-            : 'text-sm top-8 text-gray-500'
-          } peer-focus:text-xs peer-focus:top-2 peer-focus:bg-white peer-focus:px-2 peer-focus:text-gray-700`}
+            ? 'text-xs -top-2.5 bg-white px-2 text-gray-700'
+            : 'text-sm top-3 text-gray-500'
+        } peer-focus:text-xs peer-focus:-top-2.5 peer-focus:bg-white peer-focus:px-2 peer-focus:text-gray-700`}
       >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}

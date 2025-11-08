@@ -114,87 +114,88 @@ export default function NewArticlePage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl">
-          <form id="article-new-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* アイキャッチ画像（一番上） */}
-            <FeaturedImageUpload
-              value={formData.featuredImage}
-              onChange={(url) => setFormData({ ...formData, featuredImage: url })}
-            />
-
-            {/* タイトル */}
-            <FloatingInput
-              label="タイトル"
-              value={formData.title}
-              onChange={(value) => setFormData({ ...formData, title: value })}
-              required
-            />
-
-            {/* スラッグ */}
-            <div className="relative bg-white rounded-lg p-6">
-              <div className="flex gap-2 items-end">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="article-slug"
-                    required
-                    className="w-full px-4 pt-8 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
-                  />
-                  <label
-                    className={`absolute left-10 transition-all pointer-events-none ${
-                      formData.slug.length > 0
-                        ? 'text-xs top-2 bg-white px-2 text-gray-700'
-                        : 'text-sm top-8 text-gray-500'
-                    } peer-focus:text-xs peer-focus:top-2 peer-focus:bg-white peer-focus:px-2 peer-focus:text-gray-700`}
-                  >
-                    スラッグ（URL） <span className="text-red-500">*</span>
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  onClick={generateSlug}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 h-12"
-                >
-                  自動生成
-                </button>
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                URL: /media/articles/{formData.slug || 'article-slug'}
-              </p>
-            </div>
-
-            {/* 著者名 */}
-            <FloatingInput
-              label="著者名"
-              value={formData.authorName}
-              onChange={(value) => setFormData({ ...formData, authorName: value })}
-              required
-            />
-
-            {/* 抜粋 */}
-            <FloatingInput
-              label="抜粋"
-              value={formData.excerpt}
-              onChange={(value) => setFormData({ ...formData, excerpt: value })}
-              multiline
-              rows={3}
-            />
-
-            {/* 本文 */}
-            <div className="bg-white rounded-lg p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                本文 *
-              </label>
-              <RichTextEditor
-                value={formData.content}
-                onChange={(content) => setFormData({ ...formData, content })}
-              />
-            </div>
-
-            {/* カテゴリー・タグ */}
+        <div className="max-w-4xl pb-32">
+          <form id="article-new-form" onSubmit={handleSubmit}>
+            {/* すべてのフィールドを1つのパネル内に表示 */}
             <div className="bg-white rounded-lg p-6 space-y-6">
+              {/* タイトル */}
+              <FloatingInput
+                label="タイトル"
+                value={formData.title}
+                onChange={(value) => setFormData({ ...formData, title: value })}
+                required
+              />
+
+              {/* スラッグ - 自動生成ボタン付き */}
+              <div>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <FloatingInput
+                      label="スラッグ（URL）"
+                      value={formData.slug}
+                      onChange={(value) => setFormData({ ...formData, slug: value })}
+                      placeholder="article-slug"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={generateSlug}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 h-12 mb-0.5"
+                  >
+                    自動生成
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  URL: /media/articles/{formData.slug || 'article-slug'}
+                </p>
+              </div>
+
+              {/* 著者名 */}
+              <FloatingInput
+                label="著者名"
+                value={formData.authorName}
+                onChange={(value) => setFormData({ ...formData, authorName: value })}
+                required
+              />
+
+              {/* 抜粋 */}
+              <FloatingInput
+                label="抜粋"
+                value={formData.excerpt}
+                onChange={(value) => setFormData({ ...formData, excerpt: value })}
+                multiline
+                rows={3}
+              />
+
+              {/* 本文 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  本文 *
+                </label>
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(content) => setFormData({ ...formData, content })}
+                />
+              </div>
+
+              {/* Googleマップ URL */}
+              <FloatingInput
+                label="Googleマップ URL"
+                value={formData.googleMapsUrl}
+                onChange={(value) => setFormData({ ...formData, googleMapsUrl: value })}
+                type="url"
+              />
+
+              {/* 予約サイト URL */}
+              <FloatingInput
+                label="予約サイト URL"
+                value={formData.reservationUrl}
+                onChange={(value) => setFormData({ ...formData, reservationUrl: value })}
+                type="url"
+              />
+
+              {/* カテゴリー */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   カテゴリー
@@ -235,6 +236,7 @@ export default function NewArticlePage() {
                 )}
               </div>
 
+              {/* タグ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   タグ
@@ -274,96 +276,105 @@ export default function NewArticlePage() {
                   <p className="text-sm text-gray-500">タグがまだありません</p>
                 )}
               </div>
+
+              {/* メタタイトル */}
+              <FloatingInput
+                label="メタタイトル"
+                value={formData.metaTitle}
+                onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+              />
+
+              {/* メタディスクリプション */}
+              <FloatingInput
+                label="メタディスクリプション"
+                value={formData.metaDescription}
+                onChange={(value) => setFormData({ ...formData, metaDescription: value })}
+                multiline
+                rows={3}
+              />
             </div>
+          </form>
 
-            {/* メタタイトル */}
-            <FloatingInput
-              label="メタタイトル"
-              value={formData.metaTitle}
-              onChange={(value) => setFormData({ ...formData, metaTitle: value })}
-            />
+          {/* おすすめトグル（フローティング） */}
+          <div className="fixed bottom-48 right-8 bg-white rounded-full px-6 py-3 shadow-lg z-50">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-700">おすすめ</span>
+              <label className="cursor-pointer">
+                <div className="relative inline-block w-14 h-8">
+                  <input
+                    type="checkbox"
+                    checked={formData.isFeatured || false}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    className="sr-only"
+                  />
+                  <div 
+                    onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                    className={`absolute inset-0 rounded-full transition-colors cursor-pointer ${
+                      formData.isFeatured ? 'bg-orange-500' : 'bg-gray-400'
+                    }`}
+                  >
+                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      formData.isFeatured ? 'translate-x-6' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
 
-            {/* メタディスクリプション */}
-            <FloatingInput
-              label="メタディスクリプション"
-              value={formData.metaDescription}
-              onChange={(value) => setFormData({ ...formData, metaDescription: value })}
-              multiline
-              rows={3}
-            />
-
-            {/* Googleマップ URL */}
-            <FloatingInput
-              label="Googleマップ URL"
-              value={formData.googleMapsUrl}
-              onChange={(value) => setFormData({ ...formData, googleMapsUrl: value })}
-              type="url"
-            />
-
-            {/* 予約サイト URL */}
-            <FloatingInput
-              label="予約サイト URL"
-              value={formData.reservationUrl}
-              onChange={(value) => setFormData({ ...formData, reservationUrl: value })}
-              type="url"
-            />
-
-            {/* 公開設定（フローティングエリア） */}
-            <div className="fixed bottom-8 right-32 bg-white rounded-full px-6 py-3 shadow-lg z-50">
-              <label className="flex items-center cursor-pointer">
-                <span className="text-sm font-medium text-gray-700 mr-3">
-                  {formData.isPublished ? '公開中' : '非公開'}
-                </span>
-                <div className="relative">
+          {/* 公開トグル（フローティング） */}
+          <div className="fixed bottom-24 right-8 bg-white rounded-full px-6 py-3 shadow-lg z-50">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-700">公開</span>
+              <label className="cursor-pointer">
+                <div className="relative inline-block w-14 h-8">
                   <input
                     type="checkbox"
                     checked={formData.isPublished}
                     onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
                     className="sr-only"
                   />
-                  <div
+                  <div 
                     onClick={() => setFormData({ ...formData, isPublished: !formData.isPublished })}
-                    className={`block w-14 h-8 rounded-full transition-colors ${
+                    className={`absolute inset-0 rounded-full transition-colors cursor-pointer ${
                       formData.isPublished ? 'bg-orange-500' : 'bg-gray-400'
                     }`}
                   >
-                    <div
-                      className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
-                        formData.isPublished ? 'transform translate-x-6' : ''
-                      }`}
-                    />
+                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      formData.isPublished ? 'translate-x-6' : 'translate-x-0'
+                    }`}></div>
                   </div>
                 </div>
               </label>
             </div>
+          </div>
 
-            {/* フローティングボタン */}
-            <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
-              {/* キャンセルボタン */}
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="bg-gray-500 text-white w-14 h-14 rounded-full hover:bg-gray-600 transition-all hover:scale-110 flex items-center justify-center"
-                title="キャンセル"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          {/* フローティングボタン */}
+          <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
+            {/* キャンセルボタン */}
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="bg-gray-500 text-white w-14 h-14 rounded-full hover:bg-gray-600 transition-all hover:scale-110 flex items-center justify-center"
+              title="キャンセル"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-              {/* 作成ボタン */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                title="記事を作成"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
-            </div>
-          </form>
+            {/* 作成ボタン */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              title="記事を作成"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </AdminLayout>
     </AuthGuard>

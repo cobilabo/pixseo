@@ -100,22 +100,32 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
+    console.log('[handleSubmit] 記事更新処理を開始');
+    console.log('[handleSubmit] フォームデータ:', formData);
+    
     if (!formData.title || !formData.content || !formData.slug || !formData.authorName) {
+      console.error('[handleSubmit] 必須項目が不足しています');
       alert('タイトル、本文、スラッグ、著者名は必須です');
       return;
     }
 
     setLoading(true);
+    console.log('[handleSubmit] ローディング開始');
+    
     try {
-      await updateArticle(params.id, formData);
+      console.log('[handleSubmit] updateArticle関数を呼び出し中...', params.id);
+      const result = await updateArticle(params.id, formData);
+      console.log('[handleSubmit] 更新成功:', result);
       
       alert('記事を更新しました');
+      console.log('[handleSubmit] 記事一覧ページにリダイレクト');
       router.push('/admin/articles');
     } catch (error) {
-      console.error('Error updating article:', error);
+      console.error('[handleSubmit] 更新エラー:', error);
       alert('記事の更新に失敗しました');
     } finally {
       setLoading(false);
+      console.log('[handleSubmit] ローディング終了');
     }
   };
 
@@ -137,61 +147,72 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl">
-          <form id="article-edit-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* アイキャッチ画像（一番上） */}
-            <FeaturedImageUpload
-              value={formData.featuredImage}
-              onChange={(url) => setFormData({ ...formData, featuredImage: url })}
-            />
-
-            {/* タイトル */}
-            <FloatingInput
-              label="タイトル"
-              value={formData.title}
-              onChange={(value) => setFormData({ ...formData, title: value })}
-              required
-            />
-
-            {/* スラッグ */}
-            <FloatingInput
-              label="スラッグ（URL）"
-              value={formData.slug}
-              onChange={(value) => setFormData({ ...formData, slug: value })}
-              placeholder="article-slug"
-              required
-            />
-
-            {/* 著者名 */}
-            <FloatingInput
-              label="著者名"
-              value={formData.authorName}
-              onChange={(value) => setFormData({ ...formData, authorName: value })}
-              required
-            />
-
-            {/* 抜粋 */}
-            <FloatingInput
-              label="抜粋"
-              value={formData.excerpt}
-              onChange={(value) => setFormData({ ...formData, excerpt: value })}
-              multiline
-              rows={3}
-            />
-
-            {/* 本文 */}
-            <div className="bg-white rounded-lg p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                本文 *
-              </label>
-              <RichTextEditor
-                value={formData.content}
-                onChange={(content) => setFormData({ ...formData, content })}
-              />
-            </div>
-
-            {/* カテゴリー・タグ */}
+        <div className="max-w-4xl pb-32">
+          <form id="article-edit-form" onSubmit={handleSubmit}>
+            {/* すべてのフィールドを1つのパネル内に表示 */}
             <div className="bg-white rounded-lg p-6 space-y-6">
+              {/* タイトル */}
+              <FloatingInput
+                label="タイトル"
+                value={formData.title}
+                onChange={(value) => setFormData({ ...formData, title: value })}
+                required
+              />
+
+              {/* スラッグ */}
+              <FloatingInput
+                label="スラッグ（URL）"
+                value={formData.slug}
+                onChange={(value) => setFormData({ ...formData, slug: value })}
+                placeholder="article-slug"
+                required
+              />
+
+              {/* 著者名 */}
+              <FloatingInput
+                label="著者名"
+                value={formData.authorName}
+                onChange={(value) => setFormData({ ...formData, authorName: value })}
+                required
+              />
+
+              {/* 抜粋 */}
+              <FloatingInput
+                label="抜粋"
+                value={formData.excerpt}
+                onChange={(value) => setFormData({ ...formData, excerpt: value })}
+                multiline
+                rows={3}
+              />
+
+              {/* 本文 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  本文 *
+                </label>
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(content) => setFormData({ ...formData, content })}
+                />
+              </div>
+
+              {/* Googleマップ URL */}
+              <FloatingInput
+                label="Googleマップ URL"
+                value={formData.googleMapsUrl}
+                onChange={(value) => setFormData({ ...formData, googleMapsUrl: value })}
+                type="url"
+              />
+
+              {/* 予約サイト URL */}
+              <FloatingInput
+                label="予約サイト URL"
+                value={formData.reservationUrl}
+                onChange={(value) => setFormData({ ...formData, reservationUrl: value })}
+                type="url"
+              />
+
+              {/* カテゴリー */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   カテゴリー
@@ -232,6 +253,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 )}
               </div>
 
+              {/* タグ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   タグ
@@ -271,61 +293,77 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   <p className="text-sm text-gray-500">タグがまだありません</p>
                 )}
               </div>
+
+              {/* メタタイトル */}
+              <FloatingInput
+                label="メタタイトル"
+                value={formData.metaTitle}
+                onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+              />
+
+              {/* メタディスクリプション */}
+              <FloatingInput
+                label="メタディスクリプション"
+                value={formData.metaDescription}
+                onChange={(value) => setFormData({ ...formData, metaDescription: value })}
+                multiline
+                rows={3}
+              />
             </div>
-
-            {/* メタタイトル */}
-            <FloatingInput
-              label="メタタイトル"
-              value={formData.metaTitle}
-              onChange={(value) => setFormData({ ...formData, metaTitle: value })}
-            />
-
-            {/* メタディスクリプション */}
-            <FloatingInput
-              label="メタディスクリプション"
-              value={formData.metaDescription}
-              onChange={(value) => setFormData({ ...formData, metaDescription: value })}
-              multiline
-              rows={3}
-            />
-
-            {/* Googleマップ URL */}
-            <FloatingInput
-              label="Googleマップ URL"
-              value={formData.googleMapsUrl}
-              onChange={(value) => setFormData({ ...formData, googleMapsUrl: value })}
-              type="url"
-            />
-
-            {/* 予約サイト URL */}
-            <FloatingInput
-              label="予約サイト URL"
-              value={formData.reservationUrl}
-              onChange={(value) => setFormData({ ...formData, reservationUrl: value })}
-              type="url"
-            />
-
           </form>
 
+          {/* おすすめトグル（フローティング） */}
+          <div className="fixed bottom-48 right-8 bg-white rounded-full px-6 py-3 shadow-lg z-50">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-700">おすすめ</span>
+              <label className="cursor-pointer">
+                <div className="relative inline-block w-14 h-8">
+                  <input
+                    type="checkbox"
+                    checked={formData.isFeatured || false}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    className="sr-only"
+                  />
+                  <div 
+                    onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                    className={`absolute inset-0 rounded-full transition-colors cursor-pointer ${
+                      formData.isFeatured ? 'bg-orange-500' : 'bg-gray-400'
+                    }`}
+                  >
+                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      formData.isFeatured ? 'translate-x-6' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           {/* 公開トグル（フローティング） */}
-          <div className="fixed bottom-32 right-8 bg-white rounded-full p-4 z-50">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <span className="text-sm font-medium text-gray-700">公開</span>
-              <div className="relative inline-block w-14 h-8">
-                <input
-                  type="checkbox"
-                  checked={formData.isPublished}
-                  onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className={`absolute inset-0 rounded-full transition-colors ${
-                  formData.isPublished ? 'bg-orange-500' : 'bg-gray-400'
-                }`}></div>
-                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                  formData.isPublished ? 'translate-x-6' : 'translate-x-0'
-                }`}></div>
-              </div>
-            </label>
+          <div className="fixed bottom-24 right-8 bg-white rounded-full px-6 py-3 shadow-lg z-50">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-700">公開</span>
+              <label className="cursor-pointer">
+                <div className="relative inline-block w-14 h-8">
+                  <input
+                    type="checkbox"
+                    checked={formData.isPublished}
+                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                    className="sr-only"
+                  />
+                  <div 
+                    onClick={() => setFormData({ ...formData, isPublished: !formData.isPublished })}
+                    className={`absolute inset-0 rounded-full transition-colors cursor-pointer ${
+                      formData.isPublished ? 'bg-orange-500' : 'bg-gray-400'
+                    }`}
+                  >
+                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      formData.isPublished ? 'translate-x-6' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* フローティングボタン */}
@@ -346,9 +384,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             <button
               type="button"
               onClick={(e) => {
+                console.log('[更新ボタン] クリックされました');
                 e.preventDefault();
                 const form = document.getElementById('article-edit-form') as HTMLFormElement;
+                console.log('[更新ボタン] フォーム要素:', form);
+                
                 if (form && form.checkValidity()) {
+                  console.log('[更新ボタン] フォームバリデーション成功、handleSubmitを呼び出します');
                   // FormEventを作成してhandleSubmitを呼び出す
                   const syntheticEvent = {
                     preventDefault: () => {},
@@ -357,6 +399,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   } as unknown as FormEvent<HTMLFormElement>;
                   handleSubmit(syntheticEvent);
                 } else {
+                  console.error('[更新ボタン] フォームバリデーション失敗');
                   form?.reportValidity();
                 }
               }}
