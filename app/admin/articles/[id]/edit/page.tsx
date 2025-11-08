@@ -6,7 +6,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import ImageUpload from '@/components/admin/ImageUpload';
-import { getArticleById, updateArticle } from '@/lib/firebase/articles-admin';
+import { updateArticle } from '@/lib/firebase/articles-admin';
 import { getAllCategories } from '@/lib/firebase/categories';
 import { getAllTags } from '@/lib/firebase/tags';
 import { Category, Tag, Article } from '@/types/article';
@@ -38,17 +38,25 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [articleData, categoriesData, tagsData] = await Promise.all([
-          getArticleById(params.id),
+        console.log('[EditArticlePage] Fetching article data...');
+        
+        // Admin SDK経由でサーバーサイドから取得（API Route）
+        const [articleResponse, categoriesData, tagsData] = await Promise.all([
+          fetch(`/api/admin/articles/${params.id}`),
           getAllCategories(),
           getAllTags(),
         ]);
         
-        if (!articleData) {
-          alert('記事が見つかりません');
-          router.push('/admin/articles');
-          return;
+        if (!articleResponse.ok) {
+          throw new Error(`記事の取得に失敗しました: ${articleResponse.status}`);
         }
+        
+        const articleData: Article = await articleResponse.json();
+        console.log('[EditArticlePage] Received article:', articleData);
+        
+        // 日付をDateオブジェクトに変換
+        articleData.publishedAt = new Date(articleData.publishedAt);
+        articleData.updatedAt = new Date(articleData.updatedAt);
 
         setArticle(articleData);
         setFormData({
@@ -71,6 +79,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setTags(tagsData);
       } catch (error) {
         console.error('Error fetching data:', error);
+        alert('記事の読み込みに失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+        router.push('/admin/articles');
       } finally {
         setFetchLoading(false);
       }
