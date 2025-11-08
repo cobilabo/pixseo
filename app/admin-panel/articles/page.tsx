@@ -13,7 +13,6 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 export default function ArticlesPage() {
   const { currentTenant } = useMediaTenant();
   const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -22,7 +21,6 @@ export default function ArticlesPage() {
 
   const fetchArticles = async () => {
     try {
-      setLoading(true);
       console.log('[ArticlesPage] Fetching articles from API...');
       
       // API Client経由で取得（mediaIdが自動的にヘッダーに追加される）
@@ -43,8 +41,6 @@ export default function ArticlesPage() {
     } catch (error) {
       console.error('[ArticlesPage] Error fetching articles:', error);
       alert('記事の取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -87,12 +83,7 @@ export default function ArticlesPage() {
 
           {/* 記事一覧 */}
           <div className="bg-white rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">読み込み中...</p>
-              </div>
-            ) : filteredArticles.length === 0 ? (
+            {filteredArticles.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 {searchTerm ? '検索結果がありません' : '記事がまだありません'}
               </div>
