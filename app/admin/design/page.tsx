@@ -5,7 +5,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Theme, HeadingStyle, defaultTheme } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import AdminLayout from '@/components/admin/AdminLayout';
-import AuthGuard from '@/components/auth/AuthGuard';
+import AuthGuard from '@/components/admin/AuthGuard';
 import { apiClient } from '@/lib/api-client';
 
 export default function DesignPage() {
