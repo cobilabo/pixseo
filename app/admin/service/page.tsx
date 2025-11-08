@@ -31,24 +31,24 @@ export default function TenantsPage() {
   }, []);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`メディア「${name}」を削除しますか？\nこの操作は取り消せません。`)) {
+    if (!confirm(`サービス「${name}」を削除しますか？\nこの操作は取り消せません。`)) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/admin/tenants/${id}`, {
+      const response = await fetch(`/api/admin/service/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        alert('メディアを削除しました');
+        alert('サービスを削除しました');
         refreshTenants();
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
-      console.error('Error deleting tenant:', error);
-      alert('メディアの削除に失敗しました');
+      console.error('Error deleting service:', error);
+      alert('サービスの削除に失敗しました');
     }
   };
 
@@ -65,14 +65,14 @@ export default function TenantsPage() {
             <div className="bg-white rounded-xl overflow-hidden">
               {contextTenants.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  メディアがまだありません
+                  サービスがまだありません
                 </div>
               ) : (
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        メディア名
+                        サービス名
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         スラッグ
@@ -117,7 +117,7 @@ export default function TenantsPage() {
                           <div className="flex justify-end gap-2">
                             {/* 編集ボタン */}
                             <Link
-                              href={`/admin/tenants/${tenant.id}/edit`}
+                              href={`/admin/service/${tenant.id}/edit`}
                               className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors"
                               title="編集"
                             >
@@ -148,9 +148,9 @@ export default function TenantsPage() {
 
           {/* フローティング追加ボタン */}
           <Link
-            href="/admin/tenants/new"
-            className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50"
-            title="新規メディア作成"
+            href="/admin/service/new"
+            className="fixed bottom-8 right-8 bg-orange-500 text-white w-14 h-14 rounded-full hover:bg-orange-600 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-lg"
+            title="新規サービス作成"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

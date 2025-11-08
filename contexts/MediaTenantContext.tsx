@@ -69,7 +69,7 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/admin/tenants');
+      const response = await fetch('/api/admin/service');
       if (response.ok) {
         const data = await response.json();
         
