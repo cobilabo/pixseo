@@ -56,15 +56,11 @@ export default async function MediaPage() {
   const mediaIdFromHeader = headersList.get('x-media-id');
   const host = headersList.get('host') || '';
   
-  console.log('[Media Page] Host:', host);
-  console.log('[Media Page] mediaId from header:', mediaIdFromHeader);
-  
   // ホスト名からスラッグを抽出してmediaIdを取得
   let mediaId = mediaIdFromHeader;
   
   if (!mediaId && host.endsWith('.pixseo.cloud') && host !== 'admin.pixseo.cloud') {
     const slug = host.replace('.pixseo.cloud', '');
-    console.log('[Media Page] Extracted slug from host:', slug);
     
     // Firestoreからスラッグに対応するmediaIdを取得
     try {
@@ -76,21 +72,15 @@ export default async function MediaPage() {
       
       if (!tenantsSnapshot.empty) {
         mediaId = tenantsSnapshot.docs[0].id;
-        console.log('[Media Page] Found mediaId from Firestore:', mediaId);
       }
     } catch (error) {
       console.error('[Media Page] Error fetching mediaId:', error);
     }
   }
   
-  console.log('[Media Page] Final mediaId:', mediaId);
-  
   // 記事データを取得（サーバーサイド）
   const recentArticles = await getRecentArticlesServer(10, mediaId || undefined);
   const popularArticles = await getPopularArticlesServer(10, mediaId || undefined);
-  
-  console.log('[Media Page] Recent articles:', recentArticles.length);
-  console.log('[Media Page] Popular articles:', popularArticles.length);
 
   // JSON-LD 構造化データ（WebSite）
   const jsonLd = {
@@ -108,25 +98,6 @@ export default async function MediaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* デバッグ情報 */}
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        right: 0, 
-        background: 'black', 
-        color: 'lime', 
-        padding: '10px', 
-        fontSize: '12px', 
-        zIndex: 9999,
-        maxWidth: '300px',
-        overflow: 'auto'
-      }}>
-        <div>MediaId: {mediaId || 'NULL'}</div>
-        <div>Recent: {recentArticles.length}</div>
-        <div>Popular: {popularArticles.length}</div>
-        <div>Host: {headersList.get('host')}</div>
-      </div>
-
       {/* JSON-LD構造化データ */}
       <script
         type="application/ld+json"

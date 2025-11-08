@@ -66,7 +66,6 @@ export const getArticlesServer = async (
   } = {}
 ): Promise<Article[]> => {
   try {
-    console.log('[getArticlesServer] Fetching articles with options:', options);
     const articlesRef = adminDb.collection('articles');
     
     let q = articlesRef.where('isPublished', '==', true);
@@ -74,7 +73,6 @@ export const getArticlesServer = async (
     // mediaIdが指定されている場合はフィルタリング
     if (options.mediaId) {
       q = q.where('mediaId', '==', options.mediaId) as any;
-      console.log('[getArticlesServer] Filtering by mediaId:', options.mediaId);
     }
     
     if (options.categoryId) {
@@ -87,8 +85,6 @@ export const getArticlesServer = async (
     
     // orderByは使わず、取得後にソートする（Firestoreの複合インデックス不足を回避）
     const snapshot = await q.get();
-    
-    console.log('[getArticlesServer] Articles fetched:', snapshot.size);
     
     let articles = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -123,7 +119,6 @@ export const getArticlesServer = async (
     const limitCount = options.limit || 30;
     articles = articles.slice(0, limitCount);
     
-    console.log('[getArticlesServer] Returning', articles.length, 'articles');
     return articles;
   } catch (error) {
     console.error('[getArticlesServer] Error:', error);
