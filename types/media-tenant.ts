@@ -1,3 +1,5 @@
+import { Theme } from './theme';
+
 export interface MediaTenant {
   id: string;
   name: string;              // サービス名（例：「旅行メディアABC」）
@@ -14,6 +16,7 @@ export interface MediaTenant {
       portrait: string;      // 縦長ロゴ
     };
   };
+  theme?: Theme;             // デザインテーマ設定
   isActive: boolean;
   allowIndexing: boolean;    // SEOインデックス許可（デフォルト：false）
   createdAt: Date;
