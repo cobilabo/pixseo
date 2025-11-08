@@ -127,8 +127,8 @@ export const getAllArticles = async (): Promise<Article[]> => {
   try {
     console.log('[getAllArticles] Fetching all articles from Firestore...');
     const articlesRef = collection(db, 'articles');
-    const q = query(articlesRef, orderBy('updatedAt', 'desc'));
-    const querySnapshot = await getDocs(q);
+    // インデックス不要: 全件取得してクライアント側でソート
+    const querySnapshot = await getDocs(articlesRef);
 
     console.log(`[getAllArticles] Found ${querySnapshot.docs.length} articles`);
 

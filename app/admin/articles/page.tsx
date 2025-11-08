@@ -20,7 +20,9 @@ export default function ArticlesPage() {
     try {
       setLoading(true);
       const data = await getAllArticles();
-      setArticles(data);
+      // クライアント側で更新日時順にソート（新しい順）
+      const sortedData = data.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      setArticles(sortedData);
     } catch (error) {
       console.error('Error fetching articles:', error);
     } finally {
