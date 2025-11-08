@@ -28,20 +28,8 @@ export default function PopularKeywords({ limit = 10 }: PopularKeywordsProps) {
     fetchKeywords();
   }, [limit]);
 
-  if (loading) {
-    return (
-      <div className="animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (keywords.length === 0) {
+  // ローディング中またはキーワードがない場合は何も表示しない
+  if (loading || keywords.length === 0) {
     return null;
   }
 
