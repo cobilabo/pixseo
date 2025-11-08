@@ -7,6 +7,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
+import FloatingMultiSelect from '@/components/admin/FloatingMultiSelect';
 import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
@@ -333,9 +334,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
               {/* 本文 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  本文 *
-                </label>
                 <RichTextEditor
                   value={formData.content}
                   onChange={(content) => setFormData({ ...formData, content })}
@@ -359,86 +357,20 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               />
 
               {/* カテゴリー */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  カテゴリー
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => {
-                    const isSelected = formData.categoryIds.includes(category.id);
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setFormData({
-                              ...formData,
-                              categoryIds: formData.categoryIds.filter((id) => id !== category.id),
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              categoryIds: [...formData.categoryIds, category.id],
-                            });
-                          }
-                        }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {category.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {categories.length === 0 && (
-                  <p className="text-sm text-gray-500">カテゴリーがまだありません</p>
-                )}
-              </div>
+              <FloatingMultiSelect
+                label="カテゴリー"
+                values={formData.categoryIds}
+                onChange={(values) => setFormData({ ...formData, categoryIds: values })}
+                options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+              />
 
               {/* タグ */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  タグ
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => {
-                    const isSelected = formData.tagIds.includes(tag.id);
-                    return (
-                      <button
-                        key={tag.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setFormData({
-                              ...formData,
-                              tagIds: formData.tagIds.filter((id) => id !== tag.id),
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              tagIds: [...formData.tagIds, tag.id],
-                            });
-                          }
-                        }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          isSelected
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {tag.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {tags.length === 0 && (
-                  <p className="text-sm text-gray-500">タグがまだありません</p>
-                )}
-              </div>
+              <FloatingMultiSelect
+                label="タグ"
+                values={formData.tagIds}
+                onChange={(values) => setFormData({ ...formData, tagIds: values })}
+                options={tags.map(tag => ({ value: tag.id, label: tag.name }))}
+              />
 
               {/* メタタイトル */}
               <FloatingInput
