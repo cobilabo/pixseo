@@ -33,6 +33,12 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
               isPublished: true,
               viewCount: 0,
               likeCount: 0,
+              mediaId: article.mediaId || '',
+              isFeatured: false,
+              metaTitle: '',
+              metaDescription: '',
+              googleMapsUrl: '',
+              reservationUrl: '',
             }}
           />
         ))}

@@ -54,6 +54,7 @@ export interface RelatedArticle {
   featuredImage?: string;
   slug: string;
   publishedAt: Date;
+  mediaId: string;
 }
 
 
