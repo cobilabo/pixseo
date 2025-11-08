@@ -118,6 +118,7 @@ async function getMediaIdBySlug(slug: string): Promise<string | null> {
     console.log('[Middleware] Looking up media ID for slug:', slug);
 
     // Firestore REST APIを使用してサービス情報を取得
+    // セキュリティルールで公開読み取りが許可されているため、認証不要
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
     
     if (!projectId) {
@@ -128,27 +129,31 @@ async function getMediaIdBySlug(slug: string): Promise<string | null> {
     // Firestore REST API エンドポイント
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/mediaTenants`;
     
+    console.log('[Middleware] Fetching from Firestore REST API');
+    
     try {
       const response = await fetch(`${firestoreUrl}?pageSize=1000`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Edge Runtimeで動作するようキャッシュ設定
-        next: { revalidate: 60 }, // 60秒キャッシュ
+        cache: 'no-store', // Edge Runtimeではnextオプションが使えない
       });
 
       if (!response.ok) {
-        console.error('[Middleware] Firestore API error:', response.status);
+        console.error('[Middleware] Firestore API error:', response.status, await response.text());
         return null;
       }
 
       const data = await response.json();
       
+      console.log('[Middleware] Firestore response:', JSON.stringify(data).substring(0, 200));
+      
       // ドキュメントからスラッグに一致するものを検索
       if (data.documents) {
         for (const doc of data.documents) {
           const docSlug = doc.fields?.slug?.stringValue;
+          console.log('[Middleware] Checking slug:', docSlug);
           if (docSlug === slug) {
             // ドキュメントIDを抽出
             const docPath = doc.name;
@@ -157,6 +162,8 @@ async function getMediaIdBySlug(slug: string): Promise<string | null> {
             return mediaId || null;
           }
         }
+      } else {
+        console.log('[Middleware] No documents in response');
       }
 
       console.log('[Middleware] No media found for slug:', slug);
