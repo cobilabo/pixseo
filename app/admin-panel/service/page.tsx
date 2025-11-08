@@ -55,13 +55,9 @@ export default function TenantsPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-6xl">
-          {loading ? (
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">読み込み中...</p>
-            </div>
-          ) : (
+        {loading ? null : (
+          <div className="max-w-6xl animate-fadeIn">
+          {(
             <div className="bg-white rounded-xl overflow-hidden">
               {contextTenants.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
@@ -146,17 +142,19 @@ export default function TenantsPage() {
             </div>
           )}
 
-          {/* フローティング追加ボタン */}
-          <Link
-            href="/service/new"
-            className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-lg"
-            title="新規サービス作成"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </Link>
         </div>
+        )}
+
+        {/* フローティング追加ボタン */}
+        <Link
+          href="/service/new"
+          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-lg"
+          title="新規サービス作成"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </Link>
       </AdminLayout>
     </AuthGuard>
   );

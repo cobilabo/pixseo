@@ -41,24 +41,25 @@ export default function AdminPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="bg-white rounded-lg p-6">
+        {loading ? null : (
+          <div className="bg-white rounded-lg p-6 animate-fadeIn">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-blue-50 p-6 rounded-lg">
               <h3 className="text-sm font-medium text-blue-900 mb-2">記事数</h3>
               <p className="text-3xl font-bold text-blue-600">
-                {loading ? '...' : stats.articlesCount}
+                {stats.articlesCount}
               </p>
             </div>
             <div className="bg-green-50 p-6 rounded-lg">
               <h3 className="text-sm font-medium text-green-900 mb-2">カテゴリー数</h3>
               <p className="text-3xl font-bold text-green-600">
-                {loading ? '...' : stats.categoriesCount}
+                {stats.categoriesCount}
               </p>
             </div>
             <div className="bg-purple-50 p-6 rounded-lg">
               <h3 className="text-sm font-medium text-purple-900 mb-2">タグ数</h3>
               <p className="text-3xl font-bold text-purple-600">
-                {loading ? '...' : stats.tagsCount}
+                {stats.tagsCount}
               </p>
             </div>
           </div>
@@ -92,6 +93,7 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+        )}
       </AdminLayout>
     </AuthGuard>
   );

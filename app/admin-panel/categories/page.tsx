@@ -45,15 +45,11 @@ export default function CategoriesPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="space-y-6">
+        {loading ? null : (
+          <div className="space-y-6 animate-fadeIn">
           {/* カテゴリー一覧 */}
           <div className="bg-white rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">読み込み中...</p>
-              </div>
-            ) : categories.length === 0 ? (
+            {categories.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 カテゴリーがまだありません
               </div>
@@ -136,6 +132,7 @@ export default function CategoriesPage() {
             )}
           </div>
         </div>
+        )}
 
         {/* フローティングボタン：新規カテゴリー作成 */}
         <Link

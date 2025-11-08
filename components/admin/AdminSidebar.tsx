@@ -39,8 +39,8 @@ const AdminSidebar = memo(function AdminSidebar({
   onTenantChange,
   onSignOut,
 }: AdminSidebarProps) {
-  // サイトごとのメニュー（グループ化）
-  const siteNavigation: MenuItem[] = [
+  // セクション1: ダッシュボード、アカウント
+  const section1Navigation: MenuItem[] = [
     { 
       name: 'ダッシュボード', 
       href: '/',
@@ -56,55 +56,7 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: '記事管理', 
-      href: '/articles', 
-      icon: (
-        <Image 
-          src="/article.svg" 
-          alt="記事管理" 
-          width={20}
-          height={20}
-          priority
-        />
-      )
-    },
-    { 
-      name: 'カテゴリー管理', 
-      href: '/categories',
-      icon: (
-        <Image 
-          src="/category.svg" 
-          alt="カテゴリー管理" 
-          width={20}
-          height={20}
-          priority
-        />
-      )
-    },
-    { 
-      name: 'タグ管理', 
-      href: '/tags',
-      icon: (
-        <Image 
-          src="/tags.svg" 
-          alt="タグ管理" 
-          width={20}
-          height={20}
-          priority
-        />
-      )
-    },
-    { 
-      name: 'ライター管理', 
-      href: '/writers',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-      )
-    },
-    { 
-      name: 'アカウント管理', 
+      name: 'アカウント', 
       href: '/accounts',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,8 +64,64 @@ const AdminSidebar = memo(function AdminSidebar({
         </svg>
       )
     },
+  ];
+
+  // セクション2: アーティクル、カテゴリー、タグ、ライター
+  const section2Navigation: MenuItem[] = [
     { 
-      name: 'サイト管理', 
+      name: 'アーティクル', 
+      href: '/articles', 
+      icon: (
+        <Image 
+          src="/article.svg" 
+          alt="アーティクル" 
+          width={20}
+          height={20}
+          priority
+        />
+      )
+    },
+    { 
+      name: 'カテゴリー', 
+      href: '/categories',
+      icon: (
+        <Image 
+          src="/category.svg" 
+          alt="カテゴリー" 
+          width={20}
+          height={20}
+          priority
+        />
+      )
+    },
+    { 
+      name: 'タグ', 
+      href: '/tags',
+      icon: (
+        <Image 
+          src="/tags.svg" 
+          alt="タグ" 
+          width={20}
+          height={20}
+          priority
+        />
+      )
+    },
+    { 
+      name: 'ライター', 
+      href: '/writers',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      )
+    },
+  ];
+
+  // セクション3: サイト、デザイン、バナー、メディア
+  const section3Navigation: MenuItem[] = [
+    { 
+      name: 'サイト', 
       href: '/site',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +140,7 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: 'バナー管理', 
+      name: 'バナー', 
       href: '/banners',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +149,7 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: 'メディア管理', 
+      name: 'メディア', 
       href: '/media-library',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +162,7 @@ const AdminSidebar = memo(function AdminSidebar({
   // サービス管理メニュー（super_adminのみ）
   const serviceNavigation: MenuItem[] = isSuperAdmin ? [
     { 
-      name: 'サービス管理', 
+      name: 'サービス', 
       href: '/service',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +171,7 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: 'クライアント管理', 
+      name: 'クライアント', 
       href: '/clients',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,9 +245,75 @@ const AdminSidebar = memo(function AdminSidebar({
 
       {/* ナビゲーションメニュー */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
-        {/* サイトメニューグループ */}
+        {/* セクション1: ダッシュボード、アカウント */}
         <div className="mb-4 p-2 bg-[#f1f6f9] rounded-lg">
-          {siteNavigation.map((item) => {
+          {section1Navigation.map((item) => {
+            const isActive = item.exact 
+              ? pathname === item.href || pathname === item.href + '/'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
+            
+            return (
+              <div key={item.name} className="mb-1 last:mb-0">
+                <Link
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center px-3 py-2.5 text-sm transition-all rounded-xl font-bold
+                    ${isActive 
+                      ? 'bg-white text-gray-900 shadow-md' 
+                      : 'text-gray-600 hover:bg-white hover:bg-opacity-50'
+                    }
+                  `}
+                >
+                  <span 
+                    className="mr-3"
+                    style={isActive ? {} : { filter: 'brightness(0) saturate(100%) invert(47%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(94%) contrast(89%)' }}
+                  >
+                    {item.icon}
+                  </span>
+                  {item.name}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* セクション2: アーティクル、カテゴリー、タグ、ライター */}
+        <div className="mb-4 p-2 bg-[#f1f6f9] rounded-lg">
+          {section2Navigation.map((item) => {
+            const isActive = item.exact 
+              ? pathname === item.href || pathname === item.href + '/'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
+            
+            return (
+              <div key={item.name} className="mb-1 last:mb-0">
+                <Link
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center px-3 py-2.5 text-sm transition-all rounded-xl font-bold
+                    ${isActive 
+                      ? 'bg-white text-gray-900 shadow-md' 
+                      : 'text-gray-600 hover:bg-white hover:bg-opacity-50'
+                    }
+                  `}
+                >
+                  <span 
+                    className="mr-3"
+                    style={isActive ? {} : { filter: 'brightness(0) saturate(100%) invert(47%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(94%) contrast(89%)' }}
+                  >
+                    {item.icon}
+                  </span>
+                  {item.name}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* セクション3: サイト、デザイン、バナー、メディア */}
+        <div className="mb-4 p-2 bg-[#f1f6f9] rounded-lg">
+          {section3Navigation.map((item) => {
             const isActive = item.exact 
               ? pathname === item.href || pathname === item.href + '/'
               : pathname === item.href || pathname.startsWith(item.href + '/');
