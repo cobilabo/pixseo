@@ -27,7 +27,7 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchTenant = async () => {
       try {
-        const response = await fetch(`/api/admin/tenants/${params.id}`);
+        const response = await fetch(`/api/admin/service/${params.id}`);
         if (response.ok) {
           const data = await response.json();
           setFormData({
@@ -42,8 +42,8 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
           });
         }
       } catch (error) {
-        console.error('Error fetching tenant:', error);
-        alert('メディア情報の取得に失敗しました');
+        console.error('Error fetching service:', error);
+        alert('サービス情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -56,14 +56,14 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
     e.preventDefault();
 
     if (!formData.name || !formData.slug) {
-      alert('メディア名とスラッグは必須です');
+      alert('サービス名とスラッグは必須です');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/admin/tenants/${params.id}`, {
+      const response = await fetch(`/api/admin/service/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -83,16 +83,16 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        alert('メディアを更新しました');
+        alert('サービスを更新しました');
         await refreshTenants();
-        router.push('/admin/tenants');
+        router.push('/admin/service');
       } else {
         const error = await response.json();
-        throw new Error(error.error || 'メディア更新に失敗しました');
+        throw new Error(error.error || 'サービス更新に失敗しました');
       }
     } catch (error: any) {
-      console.error('Error updating tenant:', error);
-      alert(error.message || 'メディアの更新に失敗しました');
+      console.error('Error updating service:', error);
+      alert(error.message || 'サービスの更新に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
         <div className="max-w-4xl pb-32">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">メディア編集</h2>
+              <h2 className="text-xl font-bold text-gray-900">サービス編集</h2>
 
               {/* ロゴ */}
               <div>
@@ -132,9 +132,9 @@ export default function EditTenantPage({ params }: { params: { id: string } }) {
                 />
               </div>
 
-              {/* メディア名 */}
+              {/* サービス名 */}
               <FloatingInput
-                label="メディア名"
+                label="サービス名 *"
                 value={formData.name}
                 onChange={(value) => setFormData({ ...formData, name: value })}
                 required
