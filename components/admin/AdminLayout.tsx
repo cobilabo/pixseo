@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           width={20}
           height={20}
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           width={20}
           height={20}
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           width={20}
           height={20}
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           width={20}
           height={20}
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -215,7 +215,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               width={120}
               height={32}
               loading="eager"
-              fetchpriority="high"
+              fetchPriority="high"
               style={{ height: 'auto', display: 'block' }}
             />
           </Link>
@@ -342,7 +342,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 alt="User"
                 className="w-10 h-10 rounded-full object-cover"
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
                 style={{ display: 'block' }}
               />
             ) : (
