@@ -42,10 +42,14 @@ export default function AccountsPage() {
         
         // フィルタリング：
         // 1. super_adminは除外
-        // 2. 現在のサービスのmemberIdsに含まれるアカウントのみ
+        // 2. admin@pixseo.cloudは除外
+        // 3. 現在のサービスのmemberIdsに含まれるアカウントのみ
         const filteredAccounts = data.filter((account) => {
           // super_admin除外
           if (account.role === 'super_admin') return false;
+          
+          // admin@pixseo.cloud除外
+          if (account.email === 'admin@pixseo.cloud') return false;
           
           // 現在のサービスに紐づいているか
           return currentTenant.memberIds.includes(account.uid);

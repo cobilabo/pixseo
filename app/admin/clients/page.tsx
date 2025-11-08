@@ -94,12 +94,10 @@ export default function ClientsPage() {
                             <img 
                               src={client.logoUrl} 
                               alt={client.clientName}
-                              className="w-10 h-10 rounded object-cover"
+                              className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
-                              No Logo
-                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                           )}
                         </td>
                         <td className="px-6 py-4">
