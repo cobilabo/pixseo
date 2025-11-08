@@ -186,12 +186,18 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
               />
 
               {/* スラッグ */}
-              <FloatingInput
-                label="スラッグ（英数字とハイフンのみ）*"
-                value={formData.slug}
-                onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                required
-              />
+              <div>
+                <FloatingInput
+                  label="スラッグ（英数字とハイフンのみ）*"
+                  value={formData.slug}
+                  onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                  required
+                  disabled
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  ℹ️ スラッグは変更できません。変更が必要な場合は、新しいサービスを作成してください。
+                </p>
+              </div>
 
               {/* クライアント選択 */}
               <FloatingSelect

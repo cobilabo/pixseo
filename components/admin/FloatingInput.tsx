@@ -9,6 +9,7 @@ interface FloatingInputProps {
   required?: boolean;
   rows?: number;
   multiline?: boolean;
+  disabled?: boolean;
 }
 
 export default function FloatingInput({
@@ -20,6 +21,7 @@ export default function FloatingInput({
   required = false,
   rows = 3,
   multiline = false,
+  disabled = false,
 }: FloatingInputProps) {
   const hasValue = value.length > 0;
 
@@ -32,7 +34,10 @@ export default function FloatingInput({
           placeholder={placeholder}
           required={required}
           rows={rows}
-          className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
+          disabled={disabled}
+          className={`w-full px-4 pt-6 pb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer ${
+            disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+          }`}
         />
         <label
           className={`absolute left-2 transition-all pointer-events-none ${
@@ -56,7 +61,10 @@ export default function FloatingInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer"
+        disabled={disabled}
+        className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer ${
+          disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+        }`}
       />
       <label
         className={`absolute left-2 transition-all pointer-events-none ${
