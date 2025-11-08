@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect, memo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
@@ -63,14 +62,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/',
       exact: true,
       icon: (
-        <Image 
+        <img 
           src="/home.svg" 
           alt="ホーム" 
           width={20}
           height={20}
-          priority
-          loading="eager"
-          unoptimized
+          style={{ display: 'block' }}
         />
       )
     },
@@ -78,14 +75,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: '記事管理', 
       href: '/articles', 
       icon: (
-        <Image 
+        <img 
           src="/article.svg" 
           alt="記事管理" 
           width={20}
           height={20}
-          priority
-          loading="eager"
-          unoptimized
+          style={{ display: 'block' }}
         />
       )
     },
@@ -93,14 +88,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'カテゴリー管理', 
       href: '/categories',
       icon: (
-        <Image 
+        <img 
           src="/category.svg" 
           alt="カテゴリー管理" 
           width={20}
           height={20}
-          priority
-          loading="eager"
-          unoptimized
+          style={{ display: 'block' }}
         />
       )
     },
@@ -108,14 +101,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'タグ管理', 
       href: '/tags',
       icon: (
-        <Image 
+        <img 
           src="/tags.svg" 
           alt="タグ管理" 
           width={20}
           height={20}
-          priority
-          loading="eager"
-          unoptimized
+          style={{ display: 'block' }}
         />
       )
     },
@@ -167,7 +158,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
     { 
       name: 'メディア管理', 
-      href: '/media',
+      href: '/media-library',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
@@ -210,15 +201,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* ロゴ */}
         <div className="p-4 border-b flex items-center justify-center">
           <Link href="/" className="flex items-center justify-center">
-            <Image 
+            <img 
               src="/logo.png" 
               alt="PixSEO 管理画面" 
               width={120}
               height={32}
-              priority
-              loading="eager"
-              quality={100}
-              style={{ height: 'auto' }}
+              style={{ height: 'auto', display: 'block' }}
             />
           </Link>
         </div>
@@ -339,17 +327,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* ログイン情報 */}
           <div className="flex items-center gap-3">
             {userLogoUrl ? (
-              <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                <Image 
-                  src={userLogoUrl} 
-                  alt="User"
-                  fill
-                  className="object-cover"
-                  sizes="40px"
-                  priority
-                  loading="eager"
-                />
-              </div>
+              <img 
+                src={userLogoUrl} 
+                alt="User"
+                className="w-10 h-10 rounded-full object-cover"
+                style={{ display: 'block' }}
+              />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300"></div>
             )}
