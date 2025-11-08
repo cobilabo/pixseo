@@ -19,12 +19,16 @@ export default function ArticlesPage() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
+      console.log('[ArticlesPage] Starting to fetch articles...');
       const data = await getAllArticles();
+      console.log('[ArticlesPage] Received articles:', data);
       // クライアント側で更新日時順にソート（新しい順）
       const sortedData = data.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      console.log('[ArticlesPage] Sorted articles:', sortedData);
       setArticles(sortedData);
     } catch (error) {
-      console.error('Error fetching articles:', error);
+      console.error('[ArticlesPage] Error fetching articles:', error);
+      alert('記事の取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
