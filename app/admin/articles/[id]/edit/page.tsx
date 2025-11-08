@@ -191,67 +191,85 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* カテゴリー・タグ */}
-            <div className="bg-white rounded-lg p-6 space-y-4">
+            <div className="bg-white rounded-lg p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   カテゴリー
                 </label>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <label key={category.id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.categoryIds.includes(category.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({
-                              ...formData,
-                              categoryIds: [...formData.categoryIds, category.id],
-                            });
-                          } else {
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => {
+                    const isSelected = formData.categoryIds.includes(category.id);
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
                             setFormData({
                               ...formData,
                               categoryIds: formData.categoryIds.filter((id) => id !== category.id),
                             });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              categoryIds: [...formData.categoryIds, category.id],
+                            });
                           }
                         }}
-                        className="mr-2"
-                      />
-                      {category.name}
-                    </label>
-                  ))}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {category.name}
+                      </button>
+                    );
+                  })}
                 </div>
+                {categories.length === 0 && (
+                  <p className="text-sm text-gray-500">カテゴリーがまだありません</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   タグ
                 </label>
-                <div className="space-y-2">
-                  {tags.map((tag) => (
-                    <label key={tag.id} className="inline-flex items-center mr-4">
-                      <input
-                        type="checkbox"
-                        checked={formData.tagIds.includes(tag.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({
-                              ...formData,
-                              tagIds: [...formData.tagIds, tag.id],
-                            });
-                          } else {
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => {
+                    const isSelected = formData.tagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
                             setFormData({
                               ...formData,
                               tagIds: formData.tagIds.filter((id) => id !== tag.id),
                             });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              tagIds: [...formData.tagIds, tag.id],
+                            });
                           }
                         }}
-                        className="mr-2"
-                      />
-                      {tag.name}
-                    </label>
-                  ))}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
                 </div>
+                {tags.length === 0 && (
+                  <p className="text-sm text-gray-500">タグがまだありません</p>
+                )}
               </div>
             </div>
 
@@ -331,9 +349,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 e.preventDefault();
                 const form = document.getElementById('article-edit-form') as HTMLFormElement;
                 if (form && form.checkValidity()) {
-                  const formEvent = new Event('submit', { bubbles: true, cancelable: true });
-                  form.dispatchEvent(formEvent);
-                  handleSubmit(formEvent as unknown as FormEvent<HTMLFormElement>);
+                  // FormEventを作成してhandleSubmitを呼び出す
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    currentTarget: form,
+                    target: form,
+                  } as unknown as FormEvent<HTMLFormElement>;
+                  handleSubmit(syntheticEvent);
                 } else {
                   form?.reportValidity();
                 }
