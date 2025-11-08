@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiGet } from '@/lib/api-client';
 import { Writer } from '@/types/writer';
 
@@ -92,11 +93,15 @@ export default function WritersPage() {
                       <tr key={writer.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           {writer.iconUrl ? (
-                            <img 
-                              src={writer.iconUrl} 
-                              alt={writer.handleName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                              <Image 
+                                src={writer.iconUrl} 
+                                alt={writer.handleName}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            </div>
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                           )}

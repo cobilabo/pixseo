@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { uploadImage, generateImagePath } from '@/lib/firebase/storage';
 
 interface ImageUploadProps {
@@ -56,16 +57,20 @@ export default function ImageUpload({ value, onChange, label }: ImageUploadProps
       )}
       
       {preview ? (
-        <div className="relative inline-block">
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-full max-w-md h-auto rounded-lg border border-gray-300"
-          />
+        <div className="relative inline-block max-w-md">
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-300">
+            <Image
+              src={preview}
+              alt="Preview"
+              fill
+              className="object-cover"
+              sizes="448px"
+            />
+          </div>
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+            className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 z-10"
           >
             削除
           </button>

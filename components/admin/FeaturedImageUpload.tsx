@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { apiPostFormData } from '@/lib/api-client';
 
 interface FeaturedImageUploadProps {
@@ -124,15 +125,17 @@ export default function FeaturedImageUpload({ value, onChange }: FeaturedImageUp
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
+        <Image
           src={preview}
           alt="Featured"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 512px"
         />
         
         {/* ホバー時のオーバーレイ */}
         {isHovered && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 transition-opacity">
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 transition-opacity z-10">
             {/* 変更ボタン */}
             <button
               type="button"

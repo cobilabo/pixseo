@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -141,11 +142,15 @@ export default function AccountsPage() {
                       <tr key={account.uid} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           {account.logoUrl ? (
-                            <img 
-                              src={account.logoUrl} 
-                              alt={account.displayName || account.email}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                              <Image 
+                                src={account.logoUrl} 
+                                alt={account.displayName || account.email}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            </div>
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                           )}

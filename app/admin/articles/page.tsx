@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteArticle } from '@/lib/firebase/articles-admin';
@@ -119,11 +120,15 @@ export default function ArticlesPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           {article.featuredImage && (
-                            <img
-                              src={article.featuredImage}
-                              alt=""
-                              className="w-24 h-16 object-cover rounded-xl mr-4"
-                            />
+                            <div className="relative w-24 h-16 rounded-xl overflow-hidden mr-4 flex-shrink-0">
+                              <Image
+                                src={article.featuredImage}
+                                alt={article.title}
+                                fill
+                                className="object-cover"
+                                sizes="96px"
+                              />
+                            </div>
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-gray-900 truncate">

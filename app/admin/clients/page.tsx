@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Client } from '@/types/client';
 
 export default function ClientsPage() {
@@ -91,11 +92,15 @@ export default function ClientsPage() {
                       <tr key={client.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           {client.logoUrl ? (
-                            <img 
-                              src={client.logoUrl} 
-                              alt={client.clientName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                              <Image 
+                                src={client.logoUrl} 
+                                alt={client.clientName}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            </div>
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                           )}
