@@ -1,6 +1,6 @@
-# Ayumi メディアサイト
+# PixSEO
 
-React + Firebase で構築するバリアフリー情報メディアサイト
+React + Firebase で構築するマルチテナント対応SEO特化型メディアプラットフォーム
 
 ## 技術スタック
 
