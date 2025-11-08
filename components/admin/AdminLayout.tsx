@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
@@ -17,29 +18,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, userRole } = useAuth();
   const { currentTenant, tenants, setCurrentTenant } = useMediaTenant();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [homeIconError, setHomeIconError] = useState(false);
-  const [logoError, setLogoError] = useState(false);
-  const [articleIconError, setArticleIconError] = useState(false);
-  const [categoryIconError, setCategoryIconError] = useState(false);
-  const [tagIconError, setTagIconError] = useState(false);
   const [userLogoUrl, setUserLogoUrl] = useState<string>('');
 
   const isSuperAdmin = userRole === 'super_admin';
 
-  // ユーザーのロゴURLを取得
+  // ユーザーのロゴURLを取得（キャッシュ付き）
   useEffect(() => {
-    if (user?.uid) {
-      fetch(`/api/admin/users/${user.uid}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.logoUrl) {
-            setUserLogoUrl(data.logoUrl);
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching user logo:', error);
-        });
+    if (!user?.uid) return;
+
+    // キャッシュから取得
+    const cachedLogo = sessionStorage.getItem(`userLogo_${user.uid}`);
+    if (cachedLogo) {
+      setUserLogoUrl(cachedLogo);
+      return;
     }
+
+    // APIから取得
+    fetch(`/api/admin/users/${user.uid}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.logoUrl) {
+          setUserLogoUrl(data.logoUrl);
+          sessionStorage.setItem(`userLogo_${user.uid}`, data.logoUrl);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user logo:', error);
+      });
   }, [user?.uid]);
 
   const handleSignOut = async () => {
@@ -58,72 +63,52 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin',
       exact: true,
       icon: (
-        !homeIconError ? (
-          <img 
-            src="/home.svg" 
-            alt="ホーム" 
-            className="w-5 h-5"
-            onError={() => setHomeIconError(true)}
-          />
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-        )
+        <Image 
+          src="/home.svg" 
+          alt="ホーム" 
+          width={20}
+          height={20}
+          priority
+        />
       )
     },
     { 
       name: '記事管理', 
       href: '/admin/articles', 
       icon: (
-        !articleIconError ? (
-          <img 
-            src="/article.svg" 
-            alt="記事管理" 
-            className="w-5 h-5"
-            onError={() => setArticleIconError(true)}
-          />
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        )
+        <Image 
+          src="/article.svg" 
+          alt="記事管理" 
+          width={20}
+          height={20}
+          priority
+        />
       )
     },
     { 
       name: 'カテゴリー管理', 
       href: '/admin/categories', 
       icon: (
-        !categoryIconError ? (
-          <img 
-            src="/category.svg" 
-            alt="カテゴリー管理" 
-            className="w-5 h-5"
-            onError={() => setCategoryIconError(true)}
-          />
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-        )
+        <Image 
+          src="/category.svg" 
+          alt="カテゴリー管理" 
+          width={20}
+          height={20}
+          priority
+        />
       )
     },
     { 
       name: 'タグ管理', 
       href: '/admin/tags', 
       icon: (
-        !tagIconError ? (
-          <img 
-            src="/tags.svg" 
-            alt="タグ管理" 
-            className="w-5 h-5"
-            onError={() => setTagIconError(true)}
-          />
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-          </svg>
-        )
+        <Image 
+          src="/tags.svg" 
+          alt="タグ管理" 
+          width={20}
+          height={20}
+          priority
+        />
       )
     },
     { 
@@ -217,16 +202,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* ロゴ */}
         <div className="p-4 border-b flex items-center justify-center">
           <Link href="/admin" className="flex items-center justify-center">
-            {!logoError ? (
-              <img 
-                src="/logo.png" 
-                alt="PixSEO 管理画面" 
-                className="h-8 w-auto"
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <div className="h-8 w-8 bg-orange-500 rounded"></div>
-            )}
+            <Image 
+              src="/logo.png" 
+              alt="PixSEO 管理画面" 
+              width={120}
+              height={32}
+              priority
+              style={{ height: 'auto' }}
+            />
           </Link>
         </div>
 
@@ -346,11 +329,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* ログイン情報 */}
           <div className="flex items-center gap-3">
             {userLogoUrl ? (
-              <img 
-                src={userLogoUrl} 
-                alt="User"
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                <Image 
+                  src={userLogoUrl} 
+                  alt="User"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300"></div>
             )}

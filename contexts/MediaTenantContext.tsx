@@ -62,7 +62,7 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // テナント一覧を取得
+  // テナント一覧を取得（キャッシュ付き）
   const fetchTenants = async () => {
     if (!user) {
       setTenants([]);
@@ -71,6 +71,37 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // セッションキャッシュから取得
+    const cachedTenants = sessionStorage.getItem(`tenants_${user.uid}`);
+    if (cachedTenants) {
+      try {
+        const parsedTenants = JSON.parse(cachedTenants);
+        setTenants(parsedTenants);
+
+        // 保存されたテナントIDがあれば復元
+        const storedTenantId = getStoredTenantId();
+        if (storedTenantId) {
+          const storedTenant = parsedTenants.find((t: MediaTenant) => t.id === storedTenantId);
+          if (storedTenant) {
+            setCurrentTenantState(storedTenant);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 最初のテナントを自動選択
+        if (parsedTenants.length > 0) {
+          setCurrentTenantState(parsedTenants[0]);
+          storeTenantId(parsedTenants[0].id);
+        }
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error('Error parsing cached tenants:', error);
+      }
+    }
+
+    // APIから取得
     try {
       const response = await fetch('/api/admin/service');
       if (response.ok) {
@@ -82,6 +113,9 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
         );
         
         setTenants(userTenants);
+        
+        // セッションキャッシュに保存
+        sessionStorage.setItem(`tenants_${user.uid}`, JSON.stringify(userTenants));
 
         // 保存されたテナントIDがあれば復元
         const storedTenantId = getStoredTenantId();
@@ -113,6 +147,10 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshTenants = async () => {
+    // キャッシュをクリア
+    if (user?.uid) {
+      sessionStorage.removeItem(`tenants_${user.uid}`);
+    }
     await fetchTenants();
   };
 
