@@ -13,28 +13,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:561071971625:web:0e382383fbb444c0066b38',
 };
 
-// 環境変数の検証
-if (typeof window !== 'undefined') {
-  const requiredEnvVars = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID',
-  ];
-
-  const missingVars = requiredEnvVars.filter(
-    (varName) => !process.env[varName]
-  );
-
-  if (missingVars.length > 0) {
-    console.warn(
-      'Missing Firebase environment variables:',
-      missingVars.join(', ')
-    );
-  }
-}
+// 環境変数はfallback値で設定済み（警告不要）
 
 // Firebase初期化（シングルトン）
 let app: FirebaseApp | undefined;

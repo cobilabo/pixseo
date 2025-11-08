@@ -16,9 +16,8 @@ export const metadata: Metadata = {
   },
 };
 
-// SSR: 常に最新データを取得（SEOに強い）
-// トップページは常に最新の記事を表示するため、動的レンダリング
-export const dynamic = 'force-dynamic';
+// ISR: 60秒ごとに再生成（SEOに強く、高速）
+export const revalidate = 60;
 
 export default async function MediaPage() {
   // 記事データを取得（サーバーサイド）
