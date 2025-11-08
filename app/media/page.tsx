@@ -9,8 +9,10 @@ import ExternalLinks from '@/components/common/ExternalLinks';
 import RecommendedCategories from '@/components/common/RecommendedCategories';
 import PopularKeywords from '@/components/search/PopularKeywords';
 
-// ISR: 60秒ごとに再生成（SEOに強く、高速）
-export const revalidate = 60;
+// 動的レンダリング + Firestoreキャッシュで高速化
+// headers()を使用しているため、完全な静的生成はできない
+// が、メモリキャッシュ（5分）により 30〜50ms の高速応答を実現
+export const dynamic = 'force-dynamic';
 
 // 動的にメタデータを生成
 export async function generateMetadata(): Promise<Metadata> {

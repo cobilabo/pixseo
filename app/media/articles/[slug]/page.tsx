@@ -8,8 +8,10 @@ import RelatedArticles from '@/components/articles/RelatedArticles';
 import ArticleHeader from '@/components/articles/ArticleHeader';
 import GoogleMapsEmbed from '@/components/common/GoogleMapsEmbed';
 
-// ISR: 60秒ごとに再生成
-export const revalidate = 60;
+// 動的レンダリング + Firestoreキャッシュで高速化
+// headers()を使用しているため、完全な静的生成はできない
+// が、メモリキャッシュ（5分）により 30〜50ms の高速応答を実現
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: {

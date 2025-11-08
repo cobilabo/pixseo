@@ -21,6 +21,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            quality={85}
+            loading="lazy"
           />
         </div>
       )}
