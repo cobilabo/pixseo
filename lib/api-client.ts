@@ -104,3 +104,27 @@ export async function apiPostFormData<T = any>(url: string, formData: FormData):
   return response.json();
 }
 
+// apiClientオブジェクトとしてもエクスポート
+export const apiClient = {
+  get: async (url: string, options?: RequestInit) => {
+    return fetchWithMediaId(url, { ...options, method: 'GET' });
+  },
+  post: async (url: string, data: any) => {
+    return fetchWithMediaId(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+  put: async (url: string, data: any) => {
+    return fetchWithMediaId(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (url: string) => {
+    return fetchWithMediaId(url, { method: 'DELETE' });
+  },
+};
+
