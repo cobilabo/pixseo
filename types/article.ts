@@ -12,6 +12,7 @@ export interface Article {
   tagIds: string[];
   featuredImage?: string;
   isPublished: boolean;
+  isFeatured?: boolean;
   viewCount: number;
   likeCount: number;
   // SEO

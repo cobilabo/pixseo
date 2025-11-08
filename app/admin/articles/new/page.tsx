@@ -28,6 +28,7 @@ export default function NewArticlePage() {
     tagIds: [] as string[],
     featuredImage: '',
     isPublished: false,
+    isFeatured: false,
     metaTitle: '',
     metaDescription: '',
     googleMapsUrl: '',
