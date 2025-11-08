@@ -131,34 +131,28 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
               <div className="grid grid-cols-3 gap-4">
                 {/* 横長ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    横長
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoLandscape}
                     onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
+                    label="ロゴ(横長)画像を選択"
                   />
                 </div>
 
                 {/* 正方形ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    正方形
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoSquare}
                     onChange={(url) => setFormData({ ...formData, logoSquare: url })}
+                    label="ロゴ(正方形)画像を選択"
                   />
                 </div>
 
                 {/* 縦長ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    縦長
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoPortrait}
                     onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
+                    label="ロゴ(縦長)画像を選択"
                   />
                 </div>
               </div>
@@ -172,7 +166,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
               />
 
               {/* スラッグ */}
-              <div>
+              <div className="relative">
                 <FloatingInput
                   label="スラッグ（英数字とハイフンのみ）*"
                   value={formData.slug}
@@ -180,9 +174,11 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                   required
                   disabled
                 />
-                <p className="mt-2 text-xs text-gray-500">
-                  ℹ️ スラッグは変更できません。変更が必要な場合は、新しいサービスを作成してください。
-                </p>
+                <style jsx>{`
+                  input:disabled {
+                    color: #9CA3AF !important;
+                  }
+                `}</style>
               </div>
 
               {/* クライアント選択 */}
@@ -215,22 +211,36 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                 rows={5}
               />
 
-              {/* アクティブ状態 */}
-              <div>
-                <label className="flex items-center">
+            </div>
+          </form>
+
+          {/* フローティング: 有効化トグル */}
+          <div className="fixed bottom-32 right-8 z-50">
+            <div className="bg-white rounded-full px-6 py-4 shadow-lg flex items-center gap-4 w-full">
+              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                有効化
+              </span>
+              <label className="cursor-pointer">
+                <div className="relative inline-block w-14 h-8">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="mr-2 w-4 h-4"
+                    className="sr-only"
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    サービスを有効化
-                  </span>
-                </label>
-              </div>
+                  <div 
+                    className={`absolute inset-0 rounded-full transition-colors ${
+                      formData.isActive ? 'bg-blue-600' : 'bg-gray-400'
+                    }`}
+                  >
+                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      formData.isActive ? 'translate-x-6' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </div>
+              </label>
             </div>
-          </form>
+          </div>
 
           {/* フローティングボタン */}
           <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">

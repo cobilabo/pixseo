@@ -52,6 +52,27 @@ export default function TenantsPage() {
     }
   };
 
+  const handleToggleActive = async (id: string, currentActive: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/service/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentActive }),
+      });
+
+      if (response.ok) {
+        refreshTenants();
+      } else {
+        throw new Error('更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error toggling service active:', error);
+      alert('状態の更新に失敗しました');
+    }
+  };
+
   return (
     <AuthGuard>
       <AdminLayout>
@@ -99,15 +120,25 @@ export default function TenantsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              tenant.isActive
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {tenant.isActive ? 'アクティブ' : '無効'}
-                          </span>
+                          <label className="cursor-pointer">
+                            <div className="relative inline-block w-14 h-8">
+                              <input
+                                type="checkbox"
+                                checked={tenant.isActive}
+                                onChange={() => handleToggleActive(tenant.id, tenant.isActive)}
+                                className="sr-only"
+                              />
+                              <div 
+                                className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
+                                  tenant.isActive ? 'bg-blue-600' : 'bg-gray-400'
+                                }`}
+                              >
+                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                                  tenant.isActive ? 'translate-x-6' : 'translate-x-0'
+                                }`}></div>
+                              </div>
+                            </div>
+                          </label>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">

@@ -108,34 +108,28 @@ export default function NewServicePage() {
               <div className="grid grid-cols-3 gap-4">
                 {/* 横長ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    横長
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoLandscape}
                     onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
+                    label="ロゴ(横長)画像を選択"
                   />
                 </div>
 
                 {/* 正方形ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    正方形
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoSquare}
                     onChange={(url) => setFormData({ ...formData, logoSquare: url })}
+                    label="ロゴ(正方形)画像を選択"
                   />
                 </div>
 
                 {/* 縦長ロゴ */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2 text-center">
-                    縦長
-                  </label>
                   <FeaturedImageUpload
                     value={formData.logoPortrait}
                     onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
+                    label="ロゴ(縦長)画像を選択"
                   />
                 </div>
               </div>

@@ -5,38 +5,53 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
+import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useRouter } from 'next/navigation';
 
 interface SiteSettings {
   siteName: string;
   siteDescription: string;
-  logoUrl: string;
+  logoLandscape: string;
+  logoSquare: string;
+  logoPortrait: string;
   allowIndexing: boolean;
 }
 
 export default function SitePage() {
+  const router = useRouter();
+  const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState<SiteSettings>({
     siteName: '',
     siteDescription: '',
-    logoUrl: '',
-    allowIndexing: false, // デフォルトはOFF
+    logoLandscape: '',
+    logoSquare: '',
+    logoPortrait: '',
+    allowIndexing: false,
   });
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [currentTenant]);
 
   const fetchSettings = async () => {
+    if (!currentTenant) {
+      setFetchLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/admin/site');
+      const response = await fetch(`/api/admin/service/${currentTenant.id}`);
       if (response.ok) {
         const data = await response.json();
         setFormData({
-          siteName: data.siteName || '',
+          siteName: data.name || '',
           siteDescription: data.siteDescription || '',
-          logoUrl: data.logoUrl || '',
-          allowIndexing: data.allowIndexing || false, // デフォルトはOFF
+          logoLandscape: data.logoLandscape || '',
+          logoSquare: data.logoSquare || '',
+          logoPortrait: data.logoPortrait || '',
+          allowIndexing: data.allowIndexing || false,
         });
       }
     } catch (error) {
@@ -49,19 +64,32 @@ export default function SitePage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    if (!currentTenant) {
+      alert('サービスが選択されていません');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/site', {
+      const response = await fetch(`/api/admin/service/${currentTenant.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.siteName,
+          siteDescription: formData.siteDescription,
+          logoLandscape: formData.logoLandscape,
+          logoSquare: formData.logoSquare,
+          logoPortrait: formData.logoPortrait,
+          allowIndexing: formData.allowIndexing,
+        }),
       });
 
       if (response.ok) {
         alert('サイト設定を更新しました');
+        fetchSettings();
       } else {
         throw new Error('更新に失敗しました');
       }
@@ -80,22 +108,39 @@ export default function SitePage() {
           <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">サイト管理</h2>
+              {/* ロゴ3種類（横並び） */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* 横長ロゴ */}
+                <div>
+                  <FeaturedImageUpload
+                    value={formData.logoLandscape}
+                    onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
+                    label="ロゴ(横長)画像を選択"
+                  />
+                </div>
 
-              {/* ロゴ */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  ロゴ画像
-                </label>
-                <FeaturedImageUpload
-                  value={formData.logoUrl}
-                  onChange={(url) => setFormData({ ...formData, logoUrl: url })}
-                />
+                {/* 正方形ロゴ */}
+                <div>
+                  <FeaturedImageUpload
+                    value={formData.logoSquare}
+                    onChange={(url) => setFormData({ ...formData, logoSquare: url })}
+                    label="ロゴ(正方形)画像を選択"
+                  />
+                </div>
+
+                {/* 縦長ロゴ */}
+                <div>
+                  <FeaturedImageUpload
+                    value={formData.logoPortrait}
+                    onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
+                    label="ロゴ(縦長)画像を選択"
+                  />
+                </div>
               </div>
 
               {/* サイト名 */}
               <FloatingInput
-                label="サイト名"
+                label="サービス名 *"
                 value={formData.siteName}
                 onChange={(value) => setFormData({ ...formData, siteName: value })}
                 required
@@ -103,16 +148,12 @@ export default function SitePage() {
 
               {/* サイトの説明 */}
               <FloatingInput
-                label="サイトの説明"
+                label="サイトの説明（SEO用メタディスクリプション）"
                 value={formData.siteDescription}
                 onChange={(value) => setFormData({ ...formData, siteDescription: value })}
                 multiline
                 rows={5}
               />
-
-              <div className="text-sm text-gray-500">
-                ※ サイト名と説明は、メタタグやSEOに使用されます
-              </div>
             </div>
           </form>
 

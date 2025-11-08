@@ -61,6 +61,27 @@ export default function ArticlesPage() {
     }
   };
 
+  const handleTogglePublished = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/articles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPublished: !currentStatus }),
+      });
+
+      if (response.ok) {
+        fetchArticles();
+      } else {
+        throw new Error('更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error toggling article published:', error);
+      alert('ステータスの更新に失敗しました');
+    }
+  };
+
   const filteredArticles = articles.filter((article) => {
     const lowercaseSearch = searchTerm.toLowerCase();
     return (
@@ -136,15 +157,25 @@ export default function ArticlesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            article.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {article.isPublished ? '公開中' : '下書き'}
-                        </span>
+                        <label className="cursor-pointer">
+                          <div className="relative inline-block w-14 h-8">
+                            <input
+                              type="checkbox"
+                              checked={article.isPublished}
+                              onChange={() => handleTogglePublished(article.id, article.isPublished)}
+                              className="sr-only"
+                            />
+                            <div 
+                              className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
+                                article.isPublished ? 'bg-blue-600' : 'bg-gray-400'
+                              }`}
+                            >
+                              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                                article.isPublished ? 'translate-x-6' : 'translate-x-0'
+                              }`}></div>
+                            </div>
+                          </div>
+                        </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(article.updatedAt).toLocaleDateString('ja-JP')}
