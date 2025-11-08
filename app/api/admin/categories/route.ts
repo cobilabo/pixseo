@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
       query = categoriesRef.where('mediaId', '==', mediaId);
     }
     
-    const snapshot = await query.orderBy('name').get();
+    // orderByを削除（クライアント側でソート）
+    const snapshot = await query.get();
 
     const categories: Category[] = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -32,9 +33,14 @@ export async function GET(request: NextRequest) {
     console.log(`[API /admin/categories] Found ${categories.length} categories`);
 
     return NextResponse.json(categories);
-  } catch (error) {
-    console.error('Error fetching admin categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[API /admin/categories] Error:', error);
+    console.error('[API /admin/categories] Error message:', error?.message);
+    console.error('[API /admin/categories] Error code:', error?.code);
+    return NextResponse.json({ 
+      error: 'Failed to fetch categories',
+      details: error?.message || 'Unknown error'
+    }, { status: 500 });
   }
 }
 

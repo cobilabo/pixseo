@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
       query = tagsRef.where('mediaId', '==', mediaId);
     }
     
-    const snapshot = await query.orderBy('name').get();
+    // orderByを削除（クライアント側でソート）
+    const snapshot = await query.get();
 
     const tags: Tag[] = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -31,9 +32,14 @@ export async function GET(request: NextRequest) {
     console.log(`[API /admin/tags] Found ${tags.length} tags`);
 
     return NextResponse.json(tags);
-  } catch (error) {
-    console.error('Error fetching admin tags:', error);
-    return NextResponse.json({ error: 'Failed to fetch tags' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[API /admin/tags] Error:', error);
+    console.error('[API /admin/tags] Error message:', error?.message);
+    console.error('[API /admin/tags] Error code:', error?.code);
+    return NextResponse.json({ 
+      error: 'Failed to fetch tags',
+      details: error?.message || 'Unknown error'
+    }, { status: 500 });
   }
 }
 

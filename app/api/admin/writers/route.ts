@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   try {
     const mediaId = request.headers.get('x-media-id');
     
+    console.log('[API /admin/writers] Fetching writers...', { mediaId });
+    
     let query = adminDb.collection('writers');
     
     // mediaIdでフィルタリング
@@ -31,11 +33,18 @@ export async function GET(request: NextRequest) {
       };
     });
     
+    console.log(`[API /admin/writers] Found ${writers.length} writers`);
+    
     return NextResponse.json(writers);
-  } catch (error) {
-    console.error('Error fetching writers:', error);
+  } catch (error: any) {
+    console.error('[API /admin/writers] Error:', error);
+    console.error('[API /admin/writers] Error message:', error?.message);
+    console.error('[API /admin/writers] Error code:', error?.code);
     return NextResponse.json(
-      { error: 'Failed to fetch writers' },
+      { 
+        error: 'Failed to fetch writers',
+        details: error?.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }
