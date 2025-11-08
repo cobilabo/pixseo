@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { createCategory } from '@/lib/firebase/categories-admin';
+import { useMediaTenant } from '@/contexts/MediaTenantContext';
 
 export default function NewCategoryPage() {
   const router = useRouter();
+  const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -26,9 +28,17 @@ export default function NewCategoryPage() {
       return;
     }
 
+    if (!currentTenant) {
+      alert('メディアテナントが選択されていません');
+      return;
+    }
+
     setLoading(true);
     try {
-      await createCategory(formData);
+      await createCategory({
+        ...formData,
+        mediaId: currentTenant.id,
+      });
       
       alert('カテゴリーを作成しました');
       router.push('/admin/categories');

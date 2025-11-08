@@ -57,9 +57,17 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
       return;
     }
 
+    if (!category) {
+      alert('カテゴリーデータの読み込みに失敗しました');
+      return;
+    }
+
     setLoading(true);
     try {
-      await updateCategory(params.id, formData);
+      await updateCategory(params.id, {
+        ...formData,
+        mediaId: category.mediaId,
+      });
       
       alert('カテゴリーを更新しました');
       router.push('/admin/categories');

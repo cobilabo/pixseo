@@ -51,9 +51,17 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
       return;
     }
 
+    if (!tag) {
+      alert('タグデータの読み込みに失敗しました');
+      return;
+    }
+
     setLoading(true);
     try {
-      await updateTag(params.id, formData);
+      await updateTag(params.id, {
+        ...formData,
+        mediaId: tag.mediaId,
+      });
       
       alert('タグを更新しました');
       router.push('/admin/tags');

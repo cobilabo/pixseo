@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { createTag } from '@/lib/firebase/tags-admin';
+import { useMediaTenant } from '@/contexts/MediaTenantContext';
 
 export default function NewTagPage() {
   const router = useRouter();
+  const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -23,9 +25,17 @@ export default function NewTagPage() {
       return;
     }
 
+    if (!currentTenant) {
+      alert('メディアテナントが選択されていません');
+      return;
+    }
+
     setLoading(true);
     try {
-      await createTag(formData);
+      await createTag({
+        ...formData,
+        mediaId: currentTenant.id,
+      });
       
       alert('タグを作成しました');
       router.push('/admin/tags');
