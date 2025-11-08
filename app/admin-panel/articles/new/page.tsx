@@ -113,23 +113,11 @@ export default function NewArticlePage() {
     setFormData({ ...formData, slug });
   };
 
-  if (fetchLoading) {
-    return (
-      <AuthGuard>
-        <AdminLayout>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-gray-600">データを読み込み中...</p>
-          </div>
-        </AdminLayout>
-      </AuthGuard>
-    );
-  }
-
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32">
+        {fetchLoading ? null : (
+          <div className="max-w-4xl pb-32 animate-fadeIn">
           <form id="article-new-form" onSubmit={handleSubmit}>
             {/* アイキャッチ画像（一番上・横長いっぱい） */}
             <div className="mb-6">
@@ -427,6 +415,7 @@ export default function NewArticlePage() {
             </button>
           </div>
         </div>
+        )}
       </AdminLayout>
     </AuthGuard>
   );

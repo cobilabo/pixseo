@@ -58,7 +58,7 @@ export default function NewTagPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-2xl">
+        <div className="max-w-2xl animate-fadeIn">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* タグ名 */}
             <div className="bg-white rounded-lg p-6">

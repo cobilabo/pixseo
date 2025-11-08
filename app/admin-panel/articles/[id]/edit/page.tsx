@@ -154,25 +154,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     window.open(previewUrl, '_blank');
   };
 
-  if (fetchLoading) {
-    return (
-      <AuthGuard>
-        <AdminLayout>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">読み込み中...</p>
-            </div>
-          </div>
-        </AdminLayout>
-      </AuthGuard>
-    );
-  }
-
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32">
+        {fetchLoading ? null : (
+          <div className="max-w-4xl pb-32 animate-fadeIn">
           <form id="article-edit-form" onSubmit={handleSubmit}>
             {/* アイキャッチ画像（一番上・横長いっぱい） */}
             <div className="mb-6">
@@ -473,6 +459,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </button>
           </div>
         </div>
+        )}
       </AdminLayout>
     </AuthGuard>
   );

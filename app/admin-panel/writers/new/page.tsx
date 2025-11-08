@@ -60,7 +60,7 @@ export default function NewWriterPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32">
+        <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-xl p-6 space-y-6">
               {/* アイコン */}
