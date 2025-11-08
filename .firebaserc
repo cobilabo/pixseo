@@ -1,15 +1,15 @@
 {
   "projects": {
-    "default": "ayumi-f6bd2"
+    "default": "pixseo-1eeef"
   },
   "targets": {
-    "ayumi-f6bd2": {
+    "pixseo-1eeef": {
       "hosting": {
         "production": [
-          "ayumi-f6bd2"
+          "pixseo-1eeef"
         ],
         "admin": [
-          "ayumi-f6bd2-admin"
+          "pixseo-1eeef-admin"
         ]
       }
     }

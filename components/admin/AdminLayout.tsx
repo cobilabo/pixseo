@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { currentTenant, tenants, setCurrentTenant } = useMediaTenant();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [homeIconError, setHomeIconError] = useState(false);
@@ -22,6 +22,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [articleIconError, setArticleIconError] = useState(false);
   const [categoryIconError, setCategoryIconError] = useState(false);
   const [tagIconError, setTagIconError] = useState(false);
+
+  const isSuperAdmin = userRole === 'super_admin';
 
   const handleSignOut = async () => {
     try {
@@ -32,11 +34,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  const navigation = [
+  // サイトごとのメニュー（グループ化）
+  const siteNavigation = [
     { 
       name: 'ダッシュボード', 
       href: '/admin',
-      exact: true, // 完全一致のみアクティブ
+      exact: true,
       icon: (
         !homeIconError ? (
           <img 
@@ -143,8 +146,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </svg>
       )
     },
+  ];
+
+  // サービス管理メニュー（super_adminのみ）
+  const serviceNavigation = isSuperAdmin ? [
     { 
-      name: 'メディアテナント管理', 
+      name: 'サービス管理', 
       href: '/admin/tenants', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +159,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </svg>
       )
     },
-  ];
+  ] : [];
 
   return (
     <div className="min-h-screen bg-blue-50">
@@ -169,7 +176,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {!logoError ? (
               <img 
                 src="/logo.svg" 
-                alt="ふらっと。管理画面" 
+                alt="PixSEO 管理画面" 
                 className="h-8 w-auto"
                 style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(2000%) hue-rotate(0deg) brightness(1.1) contrast(1)' }}
                 onError={() => setLogoError(true)}
@@ -180,85 +187,79 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </Link>
         </div>
 
-        {/* モバイル用ハンバーガーボタン */}
-        <div className="lg:hidden p-4 border-b">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-
         {/* ナビゲーションメニュー */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2">
-          {navigation.map((item) => {
-            // ダッシュボードは完全一致のみ、他はパスで判定
-            const isActive = item.exact 
-              ? pathname === item.href || pathname === item.href + '/'
-              : pathname === item.href || pathname.startsWith(item.href + '/');
-            
-            return (
-              <div key={item.name} className="mb-1">
-                <Link
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`
-                    flex items-center px-3 py-2.5 text-sm transition-all rounded-xl mx-2 font-bold
-                    ${isActive 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-700 hover:bg-gray-50'
-                    }
-                  `}
-                >
-                  <span 
-                    className="mr-3"
-                    style={isActive ? { filter: 'brightness(0) invert(1)' } : {}}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          {/* サイトメニューグループ */}
+          <div className="mb-4 p-2 bg-[#f1f6f9] rounded-lg">
+            {siteNavigation.map((item) => {
+              const isActive = item.exact 
+                ? pathname === item.href || pathname === item.href + '/'
+                : pathname === item.href || pathname.startsWith(item.href + '/');
+              
+              return (
+                <div key={item.name} className="mb-1 last:mb-0">
+                  <Link
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`
+                      flex items-center px-3 py-2.5 text-sm transition-all rounded-xl font-bold
+                      ${isActive 
+                        ? 'bg-white text-gray-900 shadow-md' 
+                        : 'text-gray-600 hover:bg-white hover:bg-opacity-50'
+                      }
+                    `}
                   >
-                    {item.icon}
-                  </span>
-                  {item.name}
-                </Link>
-              </div>
-            );
-          })}
-        </nav>
+                    <span 
+                      className="mr-3"
+                      style={isActive ? {} : { filter: 'brightness(0) saturate(100%) invert(47%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(94%) contrast(89%)' }}
+                    >
+                      {item.icon}
+                    </span>
+                    {item.name}
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
 
-        {/* フッター（メディア切り替え・ログイン情報・ログアウトボタン） */}
-        <div className="border-t p-4 space-y-3">
-          {/* メディア切り替え */}
-          {tenants.length > 0 && (
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                メディア
-              </label>
-              <select
-                value={currentTenant?.id || ''}
-                onChange={(e) => {
-                  const tenant = tenants.find(t => t.id === e.target.value);
-                  if (tenant) setCurrentTenant(tenant);
-                }}
-                className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              >
-                {tenants.map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
-              <Link
-                href="/admin/tenants"
-                className="block text-xs text-blue-600 hover:text-blue-800 mt-1"
-              >
-                メディア管理 →
-              </Link>
+          {/* サービス管理メニュー（super_adminのみ） */}
+          {serviceNavigation.length > 0 && (
+            <div className="mb-4">
+              {serviceNavigation.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                
+                return (
+                  <div key={item.name} className="mb-1">
+                    <Link
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`
+                        flex items-center px-3 py-2.5 text-sm transition-all rounded-xl font-bold
+                        ${isActive 
+                          ? 'bg-purple-600 text-white' 
+                          : 'text-gray-600 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <span 
+                        className="mr-3"
+                        style={isActive ? { filter: 'brightness(0) invert(1)' } : { filter: 'brightness(0) saturate(100%) invert(47%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(94%) contrast(89%)' }}
+                      >
+                        {item.icon}
+                      </span>
+                      {item.name}
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           )}
-          
+        </nav>
+
+        {/* フッター（ログイン情報・ログアウトボタン） */}
+        <div className="border-t p-4 space-y-3">
           {/* ログイン情報 */}
-          <div className="text-sm text-gray-600 truncate pt-2 border-t">{user?.email}</div>
+          <div className="text-sm text-gray-600 truncate">{user?.email}</div>
           
           {/* ログアウトボタン */}
           <button
@@ -280,6 +281,31 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* メインコンテンツ */}
       <main className="lg:ml-64 min-h-screen">
+        {/* super_adminの場合、サービス選択プルダウンを表示 */}
+        {isSuperAdmin && tenants.length > 0 && (
+          <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4">
+            <div className="max-w-7xl mx-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                管理するサービスを選択
+              </label>
+              <select
+                value={currentTenant?.id || ''}
+                onChange={(e) => {
+                  const tenant = tenants.find(t => t.id === e.target.value);
+                  if (tenant) setCurrentTenant(tenant);
+                }}
+                className="w-full max-w-md px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              >
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+        
         <div className="p-4 sm:p-6 lg:p-8">
           {children}
         </div>
@@ -287,4 +313,3 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
-

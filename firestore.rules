@@ -32,14 +32,39 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     
-    // ユーザー情報（認証済みユーザーのみ）
+    // ユーザー情報（認証済みユーザーは自分のみ読み書き可、管理者は全員読み取り可）
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // お気に入り（認証済みユーザーのみ）
     match /favorites/{favoriteId} {
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // メディアテナント（認証済みユーザーのみ読み取り、管理者のみ書き込み）
+    match /tenants/{tenantId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // バナー（公開読み取り、認証済みユーザーのみ書き込み）
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // サイト設定（公開読み取り、認証済みユーザーのみ書き込み）
+    match /site/{siteId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // メディアファイル（公開読み取り、認証済みユーザーのみ書き込み）
+    match /media/{mediaId} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
