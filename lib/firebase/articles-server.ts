@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { adminDb } from './admin';
 import { Article } from '@/types/article';
+import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 
 // FirestoreのTimestampをDateに変換
 const convertTimestamp = (timestamp: any): Date => {
@@ -23,6 +24,16 @@ const convertTimestamp = (timestamp: any): Date => {
 // 記事を取得（サーバーサイド用）
 export const getArticleServer = async (slug: string, mediaId?: string): Promise<Article | null> => {
   try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey('article', slug, mediaId);
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Article>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
     let query = articlesRef
       .where('slug', '==', slug)
@@ -42,12 +53,17 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
     const doc = snapshot.docs[0];
     const data = doc.data();
     
-    return {
+    const article = {
       id: doc.id,
       ...data,
       publishedAt: convertTimestamp(data.publishedAt),
       updatedAt: convertTimestamp(data.updatedAt),
     } as Article;
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, article);
+    
+    return article;
   } catch (error) {
     console.error('Error getting article:', error);
     return null;
@@ -66,6 +82,24 @@ export const getArticlesServer = async (
   } = {}
 ): Promise<Article[]> => {
   try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey(
+      'articles',
+      options.mediaId,
+      options.categoryId,
+      options.tagId,
+      options.orderBy,
+      options.orderDirection,
+      options.limit
+    );
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Article[]>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
     
     let q = articlesRef.where('isPublished', '==', true);
@@ -119,6 +153,9 @@ export const getArticlesServer = async (
     const limitCount = options.limit || 30;
     articles = articles.slice(0, limitCount);
     
+    // キャッシュに保存
+    cacheManager.set(cacheKey, articles);
+    
     return articles;
   } catch (error) {
     console.error('[getArticlesServer] Error:', error);
@@ -155,20 +192,36 @@ export const getRelatedArticlesServer = async (
   mediaId?: string
 ): Promise<Article[]> => {
   try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey(
+      'related',
+      excludeArticleId,
+      categoryIds.join(','),
+      tagIds.join(','),
+      limitCount,
+      mediaId
+    );
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Article[]>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
-    let query = articlesRef.where('isPublished', '==', true);
+    let q = articlesRef.where('isPublished', '==', true);
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
-      query = query.where('mediaId', '==', mediaId) as any;
+      q = q.where('mediaId', '==', mediaId) as any;
     }
     
-    const snapshot = await query
-      .orderBy('publishedAt', 'desc')
-      .limit(limitCount * 2)
-      .get();
+    // orderByは使わず全件取得してメモリでソート（複合インデックス回避）
+    const snapshot = await q.get();
     
-    const articles = snapshot.docs
+    // まず全記事を変換してから publishedAt でソート
+    let allArticles = snapshot.docs
       .map((doc) => {
         const data = doc.data();
         return {
@@ -179,6 +232,11 @@ export const getRelatedArticlesServer = async (
         } as Article;
       })
       .filter((article) => article.id !== excludeArticleId)
+      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+      .slice(0, limitCount * 2); // ある程度絞り込む
+    
+    // 関連度でソート
+    const articles = allArticles
       .map((article) => {
         const categoryMatch = article.categoryIds.filter((id: string) =>
           categoryIds.includes(id)
@@ -194,6 +252,9 @@ export const getRelatedArticlesServer = async (
       .sort((a, b) => (b as any).relevanceScore - (a as any).relevanceScore)
       .slice(0, limitCount)
       .map(({ relevanceScore, ...article }) => article);
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, articles);
     
     return articles;
   } catch (error) {
