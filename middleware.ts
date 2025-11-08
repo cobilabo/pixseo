@@ -6,11 +6,6 @@ export async function middleware(request: NextRequest) {
 
   console.log('[Middleware] Request:', { hostname, pathname });
 
-  // 管理画面へのアクセスはスキップ
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    return NextResponse.next();
-  }
-
   // 静的ファイルやNext.js内部パスはスキップ
   if (
     pathname.startsWith('/_next') ||
@@ -21,62 +16,157 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // メインアプリ（/media配下）へのアクセス
-  if (pathname.startsWith('/media')) {
+  // 管理画面ドメインの場合、ルートを /admin にリダイレクト
+  if (hostname === 'admin.pixseo.cloud' || hostname === 'pixseo-lovat.vercel.app') {
+    // /admin 配下のパスはそのまま
+    if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+      return NextResponse.next();
+    }
+    
+    // ルートアクセスの場合は /admin にリダイレクト
+    if (pathname === '/' || pathname === '') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin';
+      return NextResponse.redirect(url);
+    }
+    
+    // その他のパスは /admin 配下にrewrite
+    if (!pathname.startsWith('/admin')) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/admin${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    
+    return NextResponse.next();
+  }
+
+  // サービスドメイン（{slug}.pixseo.cloud）の場合
+  if (hostname.endsWith('.pixseo.cloud') && hostname !== 'admin.pixseo.cloud') {
     try {
-      // ドメインからmediaIdを取得
-      const mediaId = await getMediaIdByDomain(hostname);
-      
-      if (!mediaId) {
-        console.log('[Middleware] No media found for domain:', hostname);
-        // デフォルトの動作（mediaIdなしで続行）
-        return NextResponse.next();
+      // スラッグを抽出
+      const slug = hostname.replace('.pixseo.cloud', '');
+      console.log('[Middleware] Service domain detected:', { slug, hostname });
+
+      // /media 配下のパスはそのまま
+      if (pathname.startsWith('/media')) {
+        // ドメインからmediaIdを取得
+        const mediaId = await getMediaIdBySlug(slug);
+        
+        if (!mediaId) {
+          console.log('[Middleware] No media found for slug:', slug);
+          return NextResponse.next();
+        }
+
+        console.log('[Middleware] Media ID found:', mediaId);
+
+        // レスポンスヘッダーにmediaIdを追加
+        const response = NextResponse.next();
+        response.headers.set('x-media-id', mediaId);
+        
+        return response;
       }
 
-      console.log('[Middleware] Media ID found:', mediaId);
+      // ルートアクセスの場合は /media にrewrite
+      if (pathname === '/' || pathname === '') {
+        const mediaId = await getMediaIdBySlug(slug);
+        
+        if (!mediaId) {
+          console.log('[Middleware] No media found for slug:', slug);
+          // 404ページを表示
+          return new NextResponse('Service not found', { status: 404 });
+        }
 
-      // レスポンスヘッダーにmediaIdを追加
-      const response = NextResponse.next();
-      response.headers.set('x-media-id', mediaId);
-      
-      return response;
+        const url = request.nextUrl.clone();
+        url.pathname = '/media';
+        
+        const response = NextResponse.rewrite(url);
+        response.headers.set('x-media-id', mediaId);
+        
+        return response;
+      }
+
+      // その他のパスは /media 配下にrewrite
+      if (!pathname.startsWith('/media')) {
+        const mediaId = await getMediaIdBySlug(slug);
+        
+        if (!mediaId) {
+          console.log('[Middleware] No media found for slug:', slug);
+          return new NextResponse('Service not found', { status: 404 });
+        }
+
+        const url = request.nextUrl.clone();
+        url.pathname = `/media${pathname}`;
+        
+        const response = NextResponse.rewrite(url);
+        response.headers.set('x-media-id', mediaId);
+        
+        return response;
+      }
     } catch (error) {
       console.error('[Middleware] Error:', error);
       return NextResponse.next();
     }
   }
 
+  // その他のドメイン（開発環境など）
   return NextResponse.next();
 }
 
-// ドメインからmediaIdを取得する関数
-async function getMediaIdByDomain(hostname: string): Promise<string | null> {
+// スラッグからmediaIdを取得する関数
+async function getMediaIdBySlug(slug: string): Promise<string | null> {
   try {
-    // 開発環境の場合はスキップ
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      console.log('[Middleware] Localhost detected, skipping domain lookup');
+    console.log('[Middleware] Looking up media ID for slug:', slug);
+
+    // Firestore REST APIを使用してサービス情報を取得
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    
+    if (!projectId) {
+      console.error('[Middleware] Firebase project ID not found');
       return null;
     }
 
-    // Vercelプレビューデプロイメントの場合
-    if (hostname.includes('.vercel.app')) {
-      console.log('[Middleware] Vercel deployment detected, skipping domain lookup');
+    // Firestore REST API エンドポイント
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/mediaTenants`;
+    
+    try {
+      const response = await fetch(`${firestoreUrl}?pageSize=1000`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Edge Runtimeで動作するようキャッシュ設定
+        next: { revalidate: 60 }, // 60秒キャッシュ
+      });
+
+      if (!response.ok) {
+        console.error('[Middleware] Firestore API error:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      // ドキュメントからスラッグに一致するものを検索
+      if (data.documents) {
+        for (const doc of data.documents) {
+          const docSlug = doc.fields?.slug?.stringValue;
+          if (docSlug === slug) {
+            // ドキュメントIDを抽出
+            const docPath = doc.name;
+            const mediaId = docPath.split('/').pop();
+            console.log('[Middleware] Found media ID:', mediaId);
+            return mediaId || null;
+          }
+        }
+      }
+
+      console.log('[Middleware] No media found for slug:', slug);
+      return null;
+    } catch (fetchError) {
+      console.error('[Middleware] Error fetching from Firestore:', fetchError);
       return null;
     }
-
-    // カスタムドメインからmediaIdを取得
-    // 注: Middlewareでは直接Firestoreにアクセスできないため、
-    // Edge-compatibleな方法でデータを取得する必要があります
-    // 以下は簡易実装で、本番環境では別途API Routeやエッジデータベースを使用してください
-    
-    console.log('[Middleware] Domain lookup for:', hostname);
-    
-    // TODO: エッジランタイム互換のデータベースから取得
-    // 例: Vercel KV, Upstash Redis, または専用API Route
-    
-    return null;
   } catch (error) {
-    console.error('[Middleware] Error fetching mediaId:', error);
+    console.error('[Middleware] Error in getMediaIdBySlug:', error);
     return null;
   }
 }
