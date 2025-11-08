@@ -18,9 +18,31 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  // mediaIdを取得
+  // mediaIdを取得（複数の方法を試す）
   const headersList = headers();
-  const mediaId = headersList.get('x-media-id');
+  const mediaIdFromHeader = headersList.get('x-media-id');
+  const host = headersList.get('host') || '';
+  
+  // ホスト名からスラッグを抽出してmediaIdを取得
+  let mediaId = mediaIdFromHeader;
+  
+  if (!mediaId && host.endsWith('.pixseo.cloud') && host !== 'admin.pixseo.cloud') {
+    const slug = host.replace('.pixseo.cloud', '');
+    
+    try {
+      const tenantsSnapshot = await adminDb
+        .collection('mediaTenants')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+      
+      if (!tenantsSnapshot.empty) {
+        mediaId = tenantsSnapshot.docs[0].id;
+      }
+    } catch (error) {
+      console.error('[generateMetadata] Error fetching mediaId:', error);
+    }
+  }
   
   const article = await getArticleServer(params.slug, mediaId || undefined);
   
@@ -74,9 +96,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ArticlePage({ params }: PageProps) {
-  // mediaIdを取得
+  // mediaIdを取得（複数の方法を試す）
   const headersList = headers();
-  const mediaId = headersList.get('x-media-id');
+  const mediaIdFromHeader = headersList.get('x-media-id');
+  const host = headersList.get('host') || '';
+  
+  // ホスト名からスラッグを抽出してmediaIdを取得
+  let mediaId = mediaIdFromHeader;
+  
+  if (!mediaId && host.endsWith('.pixseo.cloud') && host !== 'admin.pixseo.cloud') {
+    const slug = host.replace('.pixseo.cloud', '');
+    
+    try {
+      const tenantsSnapshot = await adminDb
+        .collection('mediaTenants')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+      
+      if (!tenantsSnapshot.empty) {
+        mediaId = tenantsSnapshot.docs[0].id;
+      }
+    } catch (error) {
+      console.error('[Article Page] Error fetching mediaId:', error);
+    }
+  }
   
   const article = await getArticleServer(params.slug, mediaId || undefined);
   if (!article) {

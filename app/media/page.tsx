@@ -51,11 +51,39 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MediaPage() {
-  // mediaIdを取得
+  // mediaIdを取得（複数の方法を試す）
   const headersList = headers();
-  const mediaId = headersList.get('x-media-id');
+  const mediaIdFromHeader = headersList.get('x-media-id');
+  const host = headersList.get('host') || '';
   
-  console.log('[Media Page] mediaId:', mediaId);
+  console.log('[Media Page] Host:', host);
+  console.log('[Media Page] mediaId from header:', mediaIdFromHeader);
+  
+  // ホスト名からスラッグを抽出してmediaIdを取得
+  let mediaId = mediaIdFromHeader;
+  
+  if (!mediaId && host.endsWith('.pixseo.cloud') && host !== 'admin.pixseo.cloud') {
+    const slug = host.replace('.pixseo.cloud', '');
+    console.log('[Media Page] Extracted slug from host:', slug);
+    
+    // Firestoreからスラッグに対応するmediaIdを取得
+    try {
+      const tenantsSnapshot = await adminDb
+        .collection('mediaTenants')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+      
+      if (!tenantsSnapshot.empty) {
+        mediaId = tenantsSnapshot.docs[0].id;
+        console.log('[Media Page] Found mediaId from Firestore:', mediaId);
+      }
+    } catch (error) {
+      console.error('[Media Page] Error fetching mediaId:', error);
+    }
+  }
+  
+  console.log('[Media Page] Final mediaId:', mediaId);
   
   // 記事データを取得（サーバーサイド）
   const recentArticles = await getRecentArticlesServer(10, mediaId || undefined);
