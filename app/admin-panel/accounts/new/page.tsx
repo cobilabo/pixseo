@@ -72,7 +72,7 @@ export default function NewAccountPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32">
+        <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
               {/* ロゴ */}

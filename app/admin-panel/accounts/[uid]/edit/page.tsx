@@ -86,25 +86,11 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
     }
   };
 
-  if (fetchLoading) {
-    return (
-      <AuthGuard>
-        <AdminLayout>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">読み込み中...</p>
-            </div>
-          </div>
-        </AdminLayout>
-      </AuthGuard>
-    );
-  }
-
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32">
+        {fetchLoading ? null : (
+          <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
               {/* ロゴ */}
@@ -172,6 +158,7 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
             </button>
           </div>
         </div>
+        )}
       </AdminLayout>
     </AuthGuard>
   );
