@@ -118,7 +118,7 @@ export default function WritersPage() {
                           <div className="flex justify-end gap-2">
                             {/* 編集ボタン */}
                             <Link
-                              href={`/admin/writers/${writer.id}/edit`}
+                              href={`/writers/${writer.id}/edit`}
                               className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors"
                               title="編集"
                             >

@@ -14,8 +14,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 管理画面ドメインの場合、そのまま通す（Route Groupsで処理）
+  // 管理画面ドメインの場合
   if (hostname === 'admin.pixseo.cloud' || hostname === 'pixseo-lovat.vercel.app') {
+    // /admin-panel/* を /* にrewrite
+    if (pathname.startsWith('/admin-panel')) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace(/^\/admin-panel/, '') || '/';
+      return NextResponse.rewrite(url);
+    }
     return NextResponse.next();
   }
 

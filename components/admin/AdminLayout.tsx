@@ -67,6 +67,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           alt="ホーム" 
           width={20}
           height={20}
+          loading="eager"
+          fetchpriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -80,6 +82,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           alt="記事管理" 
           width={20}
           height={20}
+          loading="eager"
+          fetchpriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -93,6 +97,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           alt="カテゴリー管理" 
           width={20}
           height={20}
+          loading="eager"
+          fetchpriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -106,6 +112,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           alt="タグ管理" 
           width={20}
           height={20}
+          loading="eager"
+          fetchpriority="high"
           style={{ display: 'block' }}
         />
       )
@@ -206,6 +214,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               alt="PixSEO 管理画面" 
               width={120}
               height={32}
+              loading="eager"
+              fetchpriority="high"
               style={{ height: 'auto', display: 'block' }}
             />
           </Link>
@@ -331,6 +341,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 src={userLogoUrl} 
                 alt="User"
                 className="w-10 h-10 rounded-full object-cover"
+                loading="eager"
+                fetchpriority="high"
                 style={{ display: 'block' }}
               />
             ) : (

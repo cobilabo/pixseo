@@ -118,7 +118,7 @@ export default function ClientsPage() {
                           <div className="flex justify-end gap-2">
                             {/* 編集ボタン */}
                             <Link
-                              href={`/admin/clients/${client.id}/edit`}
+                              href={`/clients/${client.id}/edit`}
                               className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors"
                               title="編集"
                             >
