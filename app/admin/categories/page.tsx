@@ -46,7 +46,7 @@ export default function CategoriesPage() {
       <AdminLayout>
         <div className="space-y-6">
           {/* カテゴリー一覧 */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="bg-white rounded-xl overflow-hidden">
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -126,6 +126,17 @@ export default function CategoriesPage() {
             )}
           </div>
         </div>
+
+        {/* フローティングボタン：新規カテゴリー作成 */}
+        <Link
+          href="/admin/categories/new"
+          className="fixed bottom-8 right-8 bg-green-600 text-white w-14 h-14 rounded-full hover:bg-green-700 transition-all hover:scale-110 flex items-center justify-center z-50"
+          title="新規カテゴリーを作成"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </Link>
       </AdminLayout>
     </AuthGuard>
   );

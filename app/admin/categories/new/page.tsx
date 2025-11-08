@@ -54,7 +54,7 @@ export default function NewCategoryPage() {
         <div className="max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* カテゴリー名 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 カテゴリー名 *
               </label>
@@ -68,7 +68,7 @@ export default function NewCategoryPage() {
             </div>
 
             {/* スラッグ */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 スラッグ（URL） *
               </label>
@@ -92,7 +92,7 @@ export default function NewCategoryPage() {
             </div>
 
             {/* 説明 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 説明
               </label>
@@ -105,7 +105,7 @@ export default function NewCategoryPage() {
             </div>
 
             {/* 並び順 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 並び順
               </label>
@@ -118,7 +118,7 @@ export default function NewCategoryPage() {
             </div>
 
             {/* おすすめ設定 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="flex items-center">
                 <input
                   type="checkbox"

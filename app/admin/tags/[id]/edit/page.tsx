@@ -86,7 +86,7 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
         <div className="max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* タグ名 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 タグ名 *
               </label>
@@ -100,7 +100,7 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* スラッグ */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 スラッグ（URL） *
               </label>

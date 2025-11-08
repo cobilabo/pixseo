@@ -43,14 +43,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-      ),
-      subItems: [
-        { name: '記事一覧', href: '/admin/articles' },
-        { name: '新規記事', href: '/admin/articles/new' },
-      ]
+      )
     },
     { 
-      name: 'カテゴリー管理', 
+      name: 'カテゴリー', 
       href: '/admin/categories', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +55,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )
     },
     { 
-      name: 'タグ管理', 
+      name: 'タグ', 
       href: '/admin/tags', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +69,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-blue-50">
       {/* サイドバー */}
       <aside className={`
-        fixed top-0 left-0 bottom-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out z-40
+        fixed top-0 left-0 bottom-0 w-64 bg-white transform transition-transform duration-200 ease-in-out z-40
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
         flex flex-col
@@ -102,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {navigation.map((item) => {
             // ダッシュボードは完全一致のみ、他はパスで判定
             const isActive = item.exact 
-              ? pathname === item.href
+              ? pathname === item.href || pathname === item.href + '/'
               : pathname === item.href || pathname.startsWith(item.href + '/');
             
             return (
@@ -113,7 +109,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   className={`
                     flex items-center px-3 py-2.5 text-sm font-medium transition-all rounded-xl mx-2
                     ${isActive 
-                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      ? 'bg-blue-100 text-blue-700' 
                       : 'text-gray-700 hover:bg-gray-50'
                     }
                   `}
@@ -121,26 +117,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <span className="mr-3">{item.icon}</span>
                   {item.name}
                 </Link>
-                {item.subItems && isActive && (
-                  <div className="mt-1 ml-2">
-                    {item.subItems.map((subItem) => (
-                      <Link
-                        key={subItem.href}
-                        href={subItem.href}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`
-                          flex items-center px-3 py-2 pl-12 text-sm transition-all rounded-xl mx-2
-                          ${pathname === subItem.href
-                            ? 'bg-blue-100 text-blue-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-50'
-                          }
-                        `}
-                      >
-                        {subItem.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}

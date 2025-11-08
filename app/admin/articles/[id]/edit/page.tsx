@@ -139,7 +139,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         <div className="max-w-4xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* タイトル */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 タイトル *
               </label>
@@ -153,7 +153,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* スラッグ */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 スラッグ（URL） *
               </label>
@@ -171,7 +171,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 著者 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 著者名 *
               </label>
@@ -185,7 +185,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 抜粋 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 抜粋
               </label>
@@ -198,7 +198,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* アイキャッチ画像 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <ImageUpload
                 label="アイキャッチ画像"
                 value={formData.featuredImage}
@@ -207,7 +207,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 本文 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 本文 *
               </label>
@@ -218,7 +218,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* カテゴリー・タグ */}
-            <div className="bg-white shadow rounded-lg p-6 space-y-4">
+            <div className="bg-white rounded-lg p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   カテゴリー
@@ -283,7 +283,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* SEO設定 */}
-            <div className="bg-white shadow rounded-lg p-6 space-y-4">
+            <div className="bg-white rounded-lg p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">SEO設定</h3>
               
               <div>
@@ -312,7 +312,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 追加設定 */}
-            <div className="bg-white shadow rounded-lg p-6 space-y-4">
+            <div className="bg-white rounded-lg p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">追加設定</h3>
               
               <div>
@@ -341,7 +341,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 公開設定 */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               <label className="flex items-center">
                 <input
                   type="checkbox"

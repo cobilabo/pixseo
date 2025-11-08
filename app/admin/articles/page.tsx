@@ -76,18 +76,19 @@ export default function ArticlesPage() {
       <AdminLayout>
         <div className="space-y-6">
           {/* 検索バー */}
-          <div className="bg-white shadow rounded-lg p-4">
+          <div className="rounded-xl p-4" style={{ backgroundColor: '#ddecf8' }}>
             <input
               type="text"
               placeholder="記事を検索..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ backgroundColor: '#ddecf8' }}
             />
           </div>
 
           {/* 記事一覧 */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="bg-white rounded-xl overflow-hidden">
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -185,7 +186,7 @@ export default function ArticlesPage() {
         {/* フローティングボタン：新規記事作成 */}
         <Link
           href="/admin/articles/new"
-          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50"
+          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50"
           title="新規記事を作成"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
