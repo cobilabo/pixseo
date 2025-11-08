@@ -42,8 +42,6 @@ export default function AdminPage() {
     <AuthGuard>
       <AdminLayout>
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">ダッシュボード</h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-blue-50 p-6 rounded-lg">
               <h3 className="text-sm font-medium text-blue-900 mb-2">記事数</h3>

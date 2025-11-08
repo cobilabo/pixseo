@@ -75,17 +75,6 @@ export default function ArticlesPage() {
     <AuthGuard>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">記事管理</h1>
-            <Link
-              href="/admin/articles/new"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <span className="mr-2">✏️</span>
-              新規記事を作成
-            </Link>
-          </div>
-
           {/* 検索バー */}
           <div className="bg-white shadow rounded-lg p-4">
             <input
@@ -192,6 +181,17 @@ export default function ArticlesPage() {
             )}
           </div>
         </div>
+
+        {/* フローティングボタン：新規記事作成 */}
+        <Link
+          href="/admin/articles/new"
+          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50"
+          title="新規記事を作成"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </Link>
       </AdminLayout>
     </AuthGuard>
   );

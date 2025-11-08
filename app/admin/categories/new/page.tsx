@@ -52,10 +52,6 @@ export default function NewCategoryPage() {
     <AuthGuard>
       <AdminLayout>
         <div className="max-w-2xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">新規カテゴリー作成</h1>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* カテゴリー名 */}
             <div className="bg-white shadow rounded-lg p-6">

@@ -45,17 +45,6 @@ export default function TagsPage() {
     <AuthGuard>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">タグ管理</h1>
-            <Link
-              href="/admin/tags/new"
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center"
-            >
-              <span className="mr-2">➕</span>
-              新規タグを作成
-            </Link>
-          </div>
-
           {/* タグ一覧 */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
             {loading ? (

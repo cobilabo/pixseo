@@ -28,7 +28,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigation = [
     { 
       name: 'ダッシュボード', 
-      href: '/admin', 
+      href: '/admin',
+      exact: true, // 完全一致のみアクティブ
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -69,54 +70,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* トップヘッダー */}
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-        <div className="flex justify-between items-center px-4 py-3">
-          <div className="flex items-center">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 lg:hidden"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link href="/admin" className="ml-2 lg:ml-0 text-xl font-bold text-blue-600">
-              ふらっと。管理画面
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="hidden sm:block text-sm text-gray-600">{user?.email}</span>
-            <button
-              onClick={handleSignOut}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-            >
-              ログアウト
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-blue-50">
       {/* サイドバー */}
       <aside className={`
-        fixed top-[57px] left-0 bottom-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out z-40
+        fixed top-0 left-0 bottom-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out z-40
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
+        flex flex-col
       `}>
-        <nav className="h-full overflow-y-auto py-4">
+        {/* ロゴ */}
+        <div className="p-4 border-b">
+          <Link href="/admin" className="text-xl font-bold text-blue-600">
+            ふらっと。管理画面
+          </Link>
+        </div>
+
+        {/* モバイル用ハンバーガーボタン */}
+        <div className="lg:hidden p-4 border-b">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+
+        {/* ナビゲーションメニュー */}
+        <nav className="flex-1 overflow-y-auto py-4 px-2">
           {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            // ダッシュボードは完全一致のみ、他はパスで判定
+            const isActive = item.exact 
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(item.href + '/');
+            
             return (
-              <div key={item.name}>
+              <div key={item.name} className="mb-1">
                 <Link
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    flex items-center px-4 py-3 text-sm font-medium transition-colors
+                    flex items-center px-3 py-2.5 text-sm font-medium transition-all rounded-xl mx-2
                     ${isActive 
-                      ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700' 
-                      : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      : 'text-gray-700 hover:bg-gray-50'
                     }
                   `}
                 >
@@ -124,17 +122,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   {item.name}
                 </Link>
                 {item.subItems && isActive && (
-                  <div className="bg-gray-50">
+                  <div className="mt-1 ml-2">
                     {item.subItems.map((subItem) => (
                       <Link
                         key={subItem.href}
                         href={subItem.href}
                         onClick={() => setSidebarOpen(false)}
                         className={`
-                          flex items-center px-4 py-2 pl-14 text-sm transition-colors
+                          flex items-center px-3 py-2 pl-12 text-sm transition-all rounded-xl mx-2
                           ${pathname === subItem.href
-                            ? 'text-blue-700 font-medium'
-                            : 'text-gray-600 hover:text-gray-900'
+                            ? 'bg-blue-100 text-blue-700 font-medium'
+                            : 'text-gray-600 hover:bg-gray-50'
                           }
                         `}
                       >
@@ -147,6 +145,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             );
           })}
         </nav>
+
+        {/* フッター（ログイン情報とログアウトボタン） */}
+        <div className="border-t p-4 space-y-2">
+          <div className="text-sm text-gray-600 truncate">{user?.email}</div>
+          <button
+            onClick={handleSignOut}
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            ログアウト
+          </button>
+        </div>
       </aside>
 
       {/* オーバーレイ（モバイル） */}
@@ -158,7 +167,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* メインコンテンツ */}
-      <main className="pt-[57px] lg:ml-64 min-h-screen">
+      <main className="lg:ml-64 min-h-screen">
         <div className="p-4 sm:p-6 lg:p-8">
           {children}
         </div>

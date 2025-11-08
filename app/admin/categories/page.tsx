@@ -45,17 +45,6 @@ export default function CategoriesPage() {
     <AuthGuard>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">カテゴリー管理</h1>
-            <Link
-              href="/admin/categories/new"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center"
-            >
-              <span className="mr-2">➕</span>
-              新規カテゴリーを作成
-            </Link>
-          </div>
-
           {/* カテゴリー一覧 */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
             {loading ? (

@@ -114,10 +114,6 @@ export default function NewArticlePage() {
     <AuthGuard>
       <AdminLayout>
         <div className="max-w-4xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">新規記事作成</h1>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* タイトル */}
             <div className="bg-white shadow rounded-lg p-6">
