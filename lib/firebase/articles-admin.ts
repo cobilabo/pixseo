@@ -116,14 +116,21 @@ export const getArticleById = async (id: string): Promise<Article | null> => {
  * 全記事の取得（管理画面用）
  */
 export const getAllArticles = async (): Promise<Article[]> => {
+  // 確実に初期化
+  initializeFirebase();
+  
   if (!db) {
+    console.error('Firestore is still not initialized after calling initializeFirebase()');
     throw new Error('Firestore is not initialized');
   }
 
   try {
+    console.log('[getAllArticles] Fetching all articles from Firestore...');
     const articlesRef = collection(db, 'articles');
     const q = query(articlesRef, orderBy('updatedAt', 'desc'));
     const querySnapshot = await getDocs(q);
+
+    console.log(`[getAllArticles] Found ${querySnapshot.docs.length} articles`);
 
     return querySnapshot.docs.map((doc) => {
       const data = doc.data();
