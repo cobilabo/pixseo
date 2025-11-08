@@ -13,6 +13,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 export default function ArticlesPage() {
   const { currentTenant } = useMediaTenant();
   const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -38,9 +39,11 @@ export default function ArticlesPage() {
       const sortedData = articlesWithDates.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
       console.log('[ArticlesPage] Sorted articles:', sortedData);
       setArticles(sortedData);
+      setLoading(false);
     } catch (error) {
       console.error('[ArticlesPage] Error fetching articles:', error);
       alert('記事の取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+      setLoading(false);
     }
   };
 
@@ -69,7 +72,8 @@ export default function ArticlesPage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="space-y-6">
+        {loading ? null : (
+          <div className="space-y-6 animate-fadeIn">
           {/* 検索バー */}
           <div className="rounded-xl p-4" style={{ backgroundColor: '#ddecf8' }}>
             <input
@@ -190,6 +194,7 @@ export default function ArticlesPage() {
             )}
           </div>
         </div>
+        )}
 
         {/* フローティングボタン：新規記事作成 */}
         <Link

@@ -22,6 +22,15 @@ const config: Config = {
         '3xl': '1.75rem',
         'full': '9999px', // 正円はそのまま
       },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 0.3s ease-in-out',
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],
