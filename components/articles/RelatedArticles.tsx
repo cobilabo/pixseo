@@ -6,7 +6,8 @@ interface RelatedArticlesProps {
 }
 
 export default function RelatedArticles({ articles }: RelatedArticlesProps) {
-  if (articles.length === 0) {
+  // 配列チェック
+  if (!Array.isArray(articles) || articles.length === 0) {
     return null;
   }
 
@@ -14,34 +15,43 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
     <section className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">関連記事</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={{
-              id: article.id,
-              title: article.title,
-              excerpt: article.excerpt,
-              featuredImage: article.featuredImage,
-              slug: article.slug,
-              publishedAt: article.publishedAt,
-              updatedAt: article.publishedAt,
-              content: '',
-              authorId: '',
-              authorName: '',
-              categoryIds: [],
-              tagIds: [],
-              isPublished: true,
-              viewCount: 0,
-              likeCount: 0,
-              mediaId: article.mediaId || '',
-              isFeatured: false,
-              metaTitle: '',
-              metaDescription: '',
-              googleMapsUrl: '',
-              reservationUrl: '',
-            }}
-          />
-        ))}
+        {articles.map((article) => {
+          // 各記事の安全チェック
+          if (!article || !article.id) {
+            return null;
+          }
+          
+          return (
+            <ArticleCard
+              key={article.id}
+              article={{
+                id: article.id,
+                title: article.title || '',
+                excerpt: article.excerpt,
+                featuredImage: article.featuredImage,
+                slug: article.slug || '',
+                publishedAt: article.publishedAt,
+                updatedAt: article.publishedAt,
+                content: '',
+                authorId: '',
+                authorName: '',
+                categoryIds: [],
+                tagIds: [],
+                relatedArticleIds: [],
+                tableOfContents: [],
+                isPublished: true,
+                viewCount: 0,
+                likeCount: 0,
+                mediaId: article.mediaId || '',
+                isFeatured: false,
+                metaTitle: '',
+                metaDescription: '',
+                googleMapsUrl: '',
+                reservationUrl: '',
+              }}
+            />
+          );
+        })}
       </div>
     </section>
   );

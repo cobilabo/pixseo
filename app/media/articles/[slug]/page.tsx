@@ -132,7 +132,15 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  const relatedArticles = await getRelatedArticlesServer(article, 6, mediaId || undefined);
+  // 関連記事を安全に取得
+  let relatedArticles = [];
+  try {
+    relatedArticles = await getRelatedArticlesServer(article, 6, mediaId || undefined);
+  } catch (error) {
+    console.error('[Article Page] Error fetching related articles:', error);
+    // エラーが発生しても記事は表示する
+    relatedArticles = [];
+  }
 
   // JSON-LD 構造化データ（SEO強化）
   const jsonLd = {

@@ -10,6 +10,9 @@ interface SocialShareProps {
 export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
   const [url, setUrl] = useState(propUrl || '');
 
+  // タイトルの安全チェック
+  const safeTitle = typeof title === 'string' ? title : 'この記事をシェア';
+
   useEffect(() => {
     if (typeof window !== 'undefined' && !propUrl) {
       setUrl(window.location.href);
@@ -17,7 +20,7 @@ export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
   }, [propUrl]);
 
   const shareOnTwitter = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   };
 

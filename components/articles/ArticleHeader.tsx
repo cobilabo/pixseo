@@ -27,11 +27,11 @@ export default function ArticleHeader({ article }: ArticleHeaderProps) {
       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
         <span>{formatDate(article.publishedAt)}</span>
         <span>•</span>
-        <span>{article.authorName}</span>
+        <span>{article.authorName || '匿名'}</span>
         <span>•</span>
         <span>{article.viewCount || 0} views</span>
       </div>
-      {article.excerpt && (
+      {article.excerpt && typeof article.excerpt === 'string' && (
         <p className="text-lg text-gray-700 leading-relaxed">{article.excerpt}</p>
       )}
     </header>
