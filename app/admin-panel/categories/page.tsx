@@ -113,8 +113,8 @@ export default function CategoriesPage() {
                           <div className="relative inline-block w-14 h-8">
                             <input
                               type="checkbox"
-                              checked={category.isRecommended}
-                              onChange={() => handleToggleRecommended(category.id, category.isRecommended)}
+                              checked={category.isRecommended || false}
+                              onChange={() => handleToggleRecommended(category.id, category.isRecommended || false)}
                               className="sr-only"
                             />
                             <div 
