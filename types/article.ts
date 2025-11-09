@@ -1,3 +1,9 @@
+export interface TableOfContentsItem {
+  id: string;
+  level: number;  // 2, 3, 4 (H2, H3, H4)
+  text: string;
+}
+
 export interface Article {
   id: string;
   mediaId: string;           // 所属メディアID
@@ -28,6 +34,10 @@ export interface Article {
   googleMapsUrl?: string;
   latitude?: number;
   longitude?: number;
+  // コンテンツ拡張
+  tableOfContents?: TableOfContentsItem[];  // 目次
+  relatedArticleIds?: string[];              // 関連記事ID
+  readingTime?: number;                      // 読了時間（分）
 }
 
 export interface Category {

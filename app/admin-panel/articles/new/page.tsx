@@ -9,11 +9,12 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FloatingMultiSelect from '@/components/admin/FloatingMultiSelect';
 import { createArticle } from '@/lib/firebase/articles-admin';
-import { Category, Tag } from '@/types/article';
+import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiGet } from '@/lib/api-client';
+import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function NewArticlePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   
@@ -34,6 +36,7 @@ export default function NewArticlePage() {
     writerId: '',
     categoryIds: [] as string[],
     tagIds: [] as string[],
+    relatedArticleIds: [] as string[],
     isPublished: false,
     isFeatured: false,
     metaTitle: '',
@@ -45,20 +48,22 @@ export default function NewArticlePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('[NewArticlePage] Fetching categories, tags, and writers...');
+        console.log('[NewArticlePage] Fetching categories, tags, writers, and articles...');
         
-        const [categoriesData, tagsData, writersData] = await Promise.all([
+        const [categoriesData, tagsData, writersData, articlesData] = await Promise.all([
           apiGet<Category[]>('/api/admin/categories'),
           apiGet<Tag[]>('/api/admin/tags'),
           apiGet<Writer[]>('/api/admin/writers'),
+          apiGet<Article[]>('/api/admin/articles'),
         ]);
         
         setCategories(categoriesData);
         setTags(tagsData);
         setWriters(writersData);
+        setArticles(articlesData);
       } catch (error) {
         console.error('Error fetching data:', error);
-        alert('カテゴリー・タグ・ライターの読み込みに失敗しました');
+        alert('データの読み込みに失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -88,12 +93,21 @@ export default function NewArticlePage() {
 
     setLoading(true);
     try {
+      // 目次と読了時間を自動生成
+      const tableOfContents = generateTableOfContents(formData.content);
+      const readingTime = calculateReadingTime(formData.content);
+      
+      console.log('[handleSubmit] 目次:', tableOfContents);
+      console.log('[handleSubmit] 読了時間:', readingTime, '分');
+      
       await createArticle({
         ...formData,
         authorId: 'admin', // TODO: 実際のユーザーIDを使用
         authorName: selectedWriter.handleName,
         featuredImage: featuredImageUrl,
         mediaId: currentTenant.id,
+        tableOfContents,
+        readingTime,
       });
       
       alert('記事を作成しました');
@@ -320,6 +334,19 @@ export default function NewArticlePage() {
                 label="メタタイトル（SEO用）"
                 value={formData.metaTitle}
                 onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+              />
+
+              {/* 関連記事 */}
+              <FloatingMultiSelect
+                label="関連記事（最大5件）"
+                values={formData.relatedArticleIds}
+                onChange={(values) => {
+                  // 最大5件に制限
+                  if (values.length <= 5) {
+                    setFormData({ ...formData, relatedArticleIds: values });
+                  }
+                }}
+                options={articles.map(a => ({ value: a.id, label: a.title }))}
               />
             </div>
           </form>

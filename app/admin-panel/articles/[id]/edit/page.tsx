@@ -12,6 +12,7 @@ import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [article, setArticle] = useState<Article | null>(null);
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
@@ -33,6 +35,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     writerId: '',
     categoryIds: [] as string[],
     tagIds: [] as string[],
+    relatedArticleIds: [] as string[],
     isPublished: false,
     isFeatured: false,
     metaTitle: '',
@@ -46,11 +49,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       try {
         console.log('[EditArticlePage] Fetching article data...');
         
-        const [articleData, categoriesData, tagsData, writersData] = await Promise.all([
+        const [articleData, categoriesData, tagsData, writersData, articlesData] = await Promise.all([
           fetch(`/api/admin/articles/${params.id}`).then(r => r.json()),
           apiGet<Category[]>('/api/admin/categories'),
           apiGet<Tag[]>('/api/admin/tags'),
           apiGet<Writer[]>('/api/admin/writers'),
+          apiGet<Article[]>('/api/admin/articles'),
         ]);
         
         console.log('[EditArticlePage] Received article:', articleData);
@@ -69,6 +73,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           writerId: articleData.writerId || '',
           categoryIds: articleData.categoryIds,
           tagIds: articleData.tagIds,
+          relatedArticleIds: articleData.relatedArticleIds || [],
           isPublished: articleData.isPublished,
           isFeatured: articleData.isFeatured || false,
           metaTitle: articleData.metaTitle || '',
@@ -80,6 +85,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setCategories(categoriesData);
         setTags(tagsData);
         setWriters(writersData);
+        // 現在編集中の記事を除外
+        setArticles(articlesData.filter((a: Article) => a.id !== params.id));
       } catch (error) {
         console.error('Error fetching data:', error);
         alert('記事の読み込みに失敗しました');
@@ -116,6 +123,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     setLoading(true);
     
     try {
+      // 目次と読了時間を自動生成
+      const tableOfContents = generateTableOfContents(formData.content);
+      const readingTime = calculateReadingTime(formData.content);
+      
+      console.log('[handleSubmit] 目次:', tableOfContents);
+      console.log('[handleSubmit] 読了時間:', readingTime, '分');
+      
       const response = await fetch(`/api/admin/articles/${params.id}/update`, {
         method: 'PUT',
         headers: {
@@ -126,6 +140,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           authorName: selectedWriter.handleName,
           featuredImage: featuredImageUrl,
           mediaId: article.mediaId,
+          tableOfContents,
+          readingTime,
         }),
       });
       
@@ -364,6 +380,19 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 label="メタタイトル（SEO用）"
                 value={formData.metaTitle}
                 onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+              />
+
+              {/* 関連記事 */}
+              <FloatingMultiSelect
+                label="関連記事（最大5件）"
+                values={formData.relatedArticleIds}
+                onChange={(values) => {
+                  // 最大5件に制限
+                  if (values.length <= 5) {
+                    setFormData({ ...formData, relatedArticleIds: values });
+                  }
+                }}
+                options={articles.map(a => ({ value: a.id, label: a.title }))}
               />
             </div>
           </form>
