@@ -7,7 +7,8 @@ import {
   limit 
 } from 'firebase/firestore';
 import { adminDb } from './admin';
-import { Article, Category } from '@/types/article';
+import { Article, Category, Tag } from '@/types/article';
+import { Writer } from '@/types/writer';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 
 // FirestoreのTimestampをDateに変換
@@ -397,6 +398,181 @@ export const getCategoryServer = async (categoryId: string): Promise<Category | 
   } catch (error) {
     console.error('[getCategoryServer] Error:', error);
     return null;
+  }
+};
+
+// 複数のカテゴリーを取得（サーバーサイド用）
+export const getCategoriesServer = async (categoryIds: string[]): Promise<Category[]> => {
+  if (!categoryIds || categoryIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const categories = await Promise.all(
+      categoryIds.map((id) => getCategoryServer(id))
+    );
+    return categories.filter((cat): cat is Category => cat !== null);
+  } catch (error) {
+    console.error('[getCategoriesServer] Error:', error);
+    return [];
+  }
+};
+
+// タグを取得（サーバーサイド用）
+export const getTagServer = async (tagId: string): Promise<Tag | null> => {
+  try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey('tag', tagId);
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Tag>(cacheKey, CACHE_TTL.LONG);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
+    const tagDoc = await adminDb.collection('tags').doc(tagId).get();
+    
+    if (!tagDoc.exists) {
+      return null;
+    }
+    
+    const data = tagDoc.data();
+    const tag: Tag = {
+      id: tagDoc.id,
+      name: data?.name || '',
+      slug: data?.slug || '',
+      mediaId: data?.mediaId || '',
+    };
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, tag);
+    
+    return tag;
+  } catch (error) {
+    console.error('[getTagServer] Error:', error);
+    return null;
+  }
+};
+
+// 複数のタグを取得（サーバーサイド用）
+export const getTagsServer = async (tagIds: string[]): Promise<Tag[]> => {
+  if (!tagIds || tagIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const tags = await Promise.all(
+      tagIds.map((id) => getTagServer(id))
+    );
+    return tags.filter((tag): tag is Tag => tag !== null);
+  } catch (error) {
+    console.error('[getTagsServer] Error:', error);
+    return [];
+  }
+};
+
+// ライターを取得（サーバーサイド用）
+export const getWriterServer = async (writerId: string): Promise<Writer | null> => {
+  try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey('writer', writerId);
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Writer>(cacheKey, CACHE_TTL.LONG);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
+    const writerDoc = await adminDb.collection('writers').doc(writerId).get();
+    
+    if (!writerDoc.exists) {
+      return null;
+    }
+    
+    const data = writerDoc.data();
+    const writer: Writer = {
+      id: writerDoc.id,
+      handleName: data?.handleName || '',
+      icon: data?.icon,
+      bio: data?.bio,
+      mediaId: data?.mediaId || '',
+    };
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, writer);
+    
+    return writer;
+  } catch (error) {
+    console.error('[getWriterServer] Error:', error);
+    return null;
+  }
+};
+
+// 前後の記事を取得（サーバーサイド用）
+export const getAdjacentArticlesServer = async (
+  currentArticle: Article,
+  mediaId?: string
+): Promise<{ previousArticle: Article | null; nextArticle: Article | null }> => {
+  try {
+    const articlesRef = adminDb.collection('articles');
+    let baseQuery = articlesRef.where('isPublished', '==', true);
+    
+    // mediaIdフィルタリング
+    if (mediaId) {
+      baseQuery = baseQuery.where('mediaId', '==', mediaId) as any;
+    }
+    
+    // 前の記事（公開日が古い順で現在の記事より前）
+    const prevQuery = await baseQuery
+      .where('publishedAt', '<', currentArticle.publishedAt)
+      .orderBy('publishedAt', 'desc')
+      .limit(1)
+      .get();
+    
+    // 次の記事（公開日が新しい順で現在の記事より後）
+    const nextQuery = await baseQuery
+      .where('publishedAt', '>', currentArticle.publishedAt)
+      .orderBy('publishedAt', 'asc')
+      .limit(1)
+      .get();
+    
+    let previousArticle: Article | null = null;
+    let nextArticle: Article | null = null;
+    
+    if (!prevQuery.empty) {
+      const doc = prevQuery.docs[0];
+      const data = doc.data();
+      previousArticle = {
+        id: doc.id,
+        ...data,
+        publishedAt: convertTimestamp(data.publishedAt),
+        updatedAt: convertTimestamp(data.updatedAt),
+        tableOfContents: Array.isArray(data.tableOfContents) ? data.tableOfContents : [],
+        relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
+        readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
+      } as Article;
+    }
+    
+    if (!nextQuery.empty) {
+      const doc = nextQuery.docs[0];
+      const data = doc.data();
+      nextArticle = {
+        id: doc.id,
+        ...data,
+        publishedAt: convertTimestamp(data.publishedAt),
+        updatedAt: convertTimestamp(data.updatedAt),
+        tableOfContents: Array.isArray(data.tableOfContents) ? data.tableOfContents : [],
+        relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
+        readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
+      } as Article;
+    }
+    
+    return { previousArticle, nextArticle };
+  } catch (error) {
+    console.error('[getAdjacentArticlesServer] Error:', error);
+    return { previousArticle: null, nextArticle: null };
   }
 };
 

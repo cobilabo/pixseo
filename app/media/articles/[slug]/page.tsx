@@ -1,7 +1,14 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { getArticleServer, getRelatedArticlesServer, getCategoryServer } from '@/lib/firebase/articles-server';
+import { 
+  getArticleServer, 
+  getRelatedArticlesServer, 
+  getCategoriesServer,
+  getTagsServer,
+  getWriterServer,
+  getAdjacentArticlesServer 
+} from '@/lib/firebase/articles-server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import ArticleContent from '@/components/articles/ArticleContent';
@@ -12,6 +19,9 @@ import TableOfContents from '@/components/articles/TableOfContents';
 import ReadingTime from '@/components/articles/ReadingTime';
 import SocialShare from '@/components/articles/SocialShare';
 import Breadcrumbs from '@/components/articles/Breadcrumbs';
+import CategoryTagBadges from '@/components/articles/CategoryTagBadges';
+import ArticleNavigation from '@/components/articles/ArticleNavigation';
+import AuthorProfile from '@/components/articles/AuthorProfile';
 
 // 動的レンダリング + Firestoreキャッシュで高速化
 // headers()を使用しているため、完全な静的生成はできない
@@ -134,25 +144,37 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  // カテゴリー情報を取得（最初の1つのみ）
-  let category = null;
-  if (article.categoryIds && article.categoryIds.length > 0) {
-    try {
-      category = await getCategoryServer(article.categoryIds[0]);
-    } catch (error) {
-      console.error('[Article Page] Error fetching category:', error);
-    }
-  }
-
-  // 関連記事を安全に取得
-  let relatedArticles: Article[] = [];
-  try {
-    relatedArticles = await getRelatedArticlesServer(article, 6, mediaId || undefined);
-  } catch (error) {
-    console.error('[Article Page] Error fetching related articles:', error);
-    // エラーが発生しても記事は表示する
-    relatedArticles = [];
-  }
+  // カテゴリー、タグ、ライター、前後の記事、関連記事を並行取得
+  const [categories, tags, writer, adjacentArticles, relatedArticles] = await Promise.all([
+    // カテゴリー情報を取得
+    getCategoriesServer(article.categoryIds || []).catch((error) => {
+      console.error('[Article Page] Error fetching categories:', error);
+      return [];
+    }),
+    // タグ情報を取得
+    getTagsServer(article.tagIds || []).catch((error) => {
+      console.error('[Article Page] Error fetching tags:', error);
+      return [];
+    }),
+    // ライター情報を取得
+    getWriterServer(article.writerId).catch((error) => {
+      console.error('[Article Page] Error fetching writer:', error);
+      return null;
+    }),
+    // 前後の記事を取得
+    getAdjacentArticlesServer(article, mediaId || undefined).catch((error) => {
+      console.error('[Article Page] Error fetching adjacent articles:', error);
+      return { previousArticle: null, nextArticle: null };
+    }),
+    // 関連記事を取得
+    getRelatedArticlesServer(article, 6, mediaId || undefined).catch((error) => {
+      console.error('[Article Page] Error fetching related articles:', error);
+      return [];
+    }),
+  ]);
+  
+  // パンくずリスト用のカテゴリー（最初の1つ）
+  const category = categories.length > 0 ? categories[0] : null;
 
   // JSON-LD 構造化データ（SEO強化）
   const jsonLd = {
@@ -215,6 +237,9 @@ export default async function ArticlePage({ params }: PageProps) {
         {/* パンくずリスト */}
         <Breadcrumbs article={article} category={category} />
 
+        {/* カテゴリー・タグバッジ */}
+        <CategoryTagBadges categories={categories} tags={tags} />
+
         {/* 記事ヘッダー */}
         <ArticleHeader article={article} />
 
@@ -241,6 +266,9 @@ export default async function ArticlePage({ params }: PageProps) {
         {/* SNSシェアボタン */}
         <SocialShare title={typeof article.title === 'string' ? article.title : ''} />
 
+        {/* 著者プロフィール */}
+        {writer && <AuthorProfile writer={writer} />}
+
         {/* Googleマイマップ */}
         {article.googleMapsUrl && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -262,6 +290,12 @@ export default async function ArticlePage({ params }: PageProps) {
             </a>
           </div>
         )}
+
+        {/* 前後の記事ナビゲーション */}
+        <ArticleNavigation 
+          previousArticle={adjacentArticles.previousArticle} 
+          nextArticle={adjacentArticles.nextArticle} 
+        />
 
         {/* 関連記事 */}
         {relatedArticles.length > 0 && (
