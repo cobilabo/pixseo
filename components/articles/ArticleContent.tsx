@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import parse from 'html-react-parser';
+import parse, { DOMNode, Element } from 'html-react-parser';
+import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
 import ShortCodeRenderer from './ShortCodeRenderer';
 import { TableOfContentsItem } from '@/types/article';
@@ -34,6 +35,53 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
         if (youtubeId) {
           return <YouTubeEmbed videoId={youtubeId} />;
         }
+      }
+
+      // 画像を最適化（Next.js Image）
+      if (domNode.name === 'img' && domNode.attribs?.src) {
+        const { src, alt = '', ...rest } = domNode.attribs;
+        
+        // 外部URLの場合はそのまま表示（next.config.jsで許可が必要）
+        return (
+          <span className="block my-6">
+            <Image
+              src={src}
+              alt={alt}
+              width={800}
+              height={450}
+              className="rounded-lg w-full h-auto"
+              loading="lazy"
+              {...rest}
+            />
+          </span>
+        );
+      }
+
+      // 内部リンクを修正（the-ayumi.jp → 現在のホスト）
+      if (domNode.name === 'a' && domNode.attribs?.href) {
+        const { href, ...rest } = domNode.attribs;
+        
+        // the-ayumi.jpへのリンクを現在のホストに変換
+        let newHref = href;
+        if (href.includes('the-ayumi.jp')) {
+          // /2024/01/10/disability-certificate/ のような相対パスに変換
+          newHref = href.replace(/https?:\/\/the-ayumi\.jp/, '');
+        }
+        
+        // リンクの内容を抽出
+        const linkText = domNode.children
+          ?.map((child: any) => {
+            if (typeof child === 'string') return child;
+            if (child.type === 'text') return child.data;
+            return '';
+          })
+          .join('') || '';
+        
+        return (
+          <a href={newHref} {...rest}>
+            {linkText}
+          </a>
+        );
       }
 
       // 見出し（h2, h3, h4）にIDを付与

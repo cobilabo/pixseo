@@ -7,7 +7,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import { adminDb } from './admin';
-import { Article } from '@/types/article';
+import { Article, Category } from '@/types/article';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 
 // FirestoreのTimestampをDateに変換
@@ -358,6 +358,45 @@ export const getRelatedArticlesServer = async (
   } catch (error) {
     console.error('Error getting related articles:', error);
     return [];
+  }
+};
+
+// カテゴリーを取得（サーバーサイド用）
+export const getCategoryServer = async (categoryId: string): Promise<Category | null> => {
+  try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey('category', categoryId);
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Category>(cacheKey, CACHE_TTL.LONG);
+    if (cached) {
+      return cached;
+    }
+    
+    // Firestoreから取得
+    const categoryDoc = await adminDb.collection('categories').doc(categoryId).get();
+    
+    if (!categoryDoc.exists) {
+      return null;
+    }
+    
+    const data = categoryDoc.data();
+    const category: Category = {
+      id: categoryDoc.id,
+      name: data?.name || '',
+      slug: data?.slug || '',
+      description: data?.description,
+      mediaId: data?.mediaId || '',
+      isRecommended: data?.isRecommended || false,
+    };
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, category);
+    
+    return category;
+  } catch (error) {
+    console.error('[getCategoryServer] Error:', error);
+    return null;
   }
 };
 

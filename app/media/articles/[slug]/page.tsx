@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { getArticleServer, getRelatedArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticleServer, getRelatedArticlesServer, getCategoryServer } from '@/lib/firebase/articles-server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import ArticleContent from '@/components/articles/ArticleContent';
@@ -11,6 +11,7 @@ import GoogleMapsEmbed from '@/components/common/GoogleMapsEmbed';
 import TableOfContents from '@/components/articles/TableOfContents';
 import ReadingTime from '@/components/articles/ReadingTime';
 import SocialShare from '@/components/articles/SocialShare';
+import Breadcrumbs from '@/components/articles/Breadcrumbs';
 
 // 動的レンダリング + Firestoreキャッシュで高速化
 // headers()を使用しているため、完全な静的生成はできない
@@ -133,6 +134,16 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
+  // カテゴリー情報を取得（最初の1つのみ）
+  let category = null;
+  if (article.categoryIds && article.categoryIds.length > 0) {
+    try {
+      category = await getCategoryServer(article.categoryIds[0]);
+    } catch (error) {
+      console.error('[Article Page] Error fetching category:', error);
+    }
+  }
+
   // 関連記事を安全に取得
   let relatedArticles: Article[] = [];
   try {
@@ -201,6 +212,9 @@ export default async function ArticlePage({ params }: PageProps) {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* パンくずリスト */}
+        <Breadcrumbs article={article} category={category} />
+
         {/* 記事ヘッダー */}
         <ArticleHeader article={article} />
 
