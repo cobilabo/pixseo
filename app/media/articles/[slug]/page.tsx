@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { getArticleServer, getRelatedArticlesServer } from '@/lib/firebase/articles-server';
 import { adminDb } from '@/lib/firebase/admin';
+import { Article } from '@/types/article';
 import ArticleContent from '@/components/articles/ArticleContent';
 import RelatedArticles from '@/components/articles/RelatedArticles';
 import ArticleHeader from '@/components/articles/ArticleHeader';
@@ -133,7 +134,7 @@ export default async function ArticlePage({ params }: PageProps) {
   }
 
   // 関連記事を安全に取得
-  let relatedArticles = [];
+  let relatedArticles: Article[] = [];
   try {
     relatedArticles = await getRelatedArticlesServer(article, 6, mediaId || undefined);
   } catch (error) {
