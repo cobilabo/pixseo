@@ -62,8 +62,8 @@ export default function FloatingInput({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 peer ${
-          disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+        className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 peer ${
+          disabled ? 'bg-white text-gray-400 cursor-not-allowed' : 'text-gray-900'
         }`}
       />
       <label

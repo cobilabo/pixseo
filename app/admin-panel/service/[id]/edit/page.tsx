@@ -165,22 +165,13 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
               />
 
               {/* スラッグ */}
-              <div className="relative slug-field-wrapper">
-                <FloatingInput
-                  label="スラッグ（英数字とハイフンのみ）*"
-                  value={formData.slug}
-                  onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                  required
-                  disabled
-                />
-              </div>
-              <style jsx>{`
-                .slug-field-wrapper input:disabled {
-                  color: #9CA3AF !important;
-                  background-color: #ffffff !important;
-                  opacity: 1 !important;
-                }
-              `}</style>
+              <FloatingInput
+                label="スラッグ（英数字とハイフンのみ）*"
+                value={formData.slug}
+                onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                required
+                disabled
+              />
 
               {/* クライアント選択 */}
               <FloatingSelect

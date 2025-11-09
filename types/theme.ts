@@ -1,5 +1,3 @@
-export type HeadingStyle = 'default' | 'border-left' | 'border-bottom' | 'background' | 'rounded';
-
 export interface Theme {
   // レイアウトテーマ
   layoutTheme: 'theme1'; // 将来的に theme2, theme3 などを追加可能
@@ -11,20 +9,23 @@ export interface Theme {
   panelBackgroundColor: string;     // パネル（カード）背景色
   
   // 見出しデザイン
-  h2Style: HeadingStyle;
   h2Color: string;
   h2BackgroundColor?: string;
-  h2BorderColor?: string;
+  h2LeftBorderColor?: string;
+  h2BottomBorderColor?: string;
+  h2Icon?: string;
   
-  h3Style: HeadingStyle;
   h3Color: string;
   h3BackgroundColor?: string;
-  h3BorderColor?: string;
+  h3LeftBorderColor?: string;
+  h3BottomBorderColor?: string;
+  h3Icon?: string;
   
-  h4Style: HeadingStyle;
   h4Color: string;
   h4BackgroundColor?: string;
-  h4BorderColor?: string;
+  h4LeftBorderColor?: string;
+  h4BottomBorderColor?: string;
+  h4Icon?: string;
   
   // テキスト
   textColor: string;                // 本文テキストカラー
@@ -69,22 +70,25 @@ export const defaultTheme: Theme = {
   panelBackgroundColor: '#ffffff',  // white
   
   // H2
-  h2Style: 'border-left',
   h2Color: '#111827',               // gray-900
-  h2BackgroundColor: '#f3f4f6',    // gray-100
-  h2BorderColor: '#3b82f6',         // blue-500
+  h2BackgroundColor: '#f3f4f6',     // gray-100
+  h2LeftBorderColor: '#3b82f6',     // blue-500
+  h2BottomBorderColor: 'transparent',
+  h2Icon: '',
   
   // H3
-  h3Style: 'border-bottom',
   h3Color: '#1f2937',               // gray-800
   h3BackgroundColor: '#ffffff',
-  h3BorderColor: '#9ca3af',         // gray-400
+  h3LeftBorderColor: 'transparent',
+  h3BottomBorderColor: '#9ca3af',   // gray-400
+  h3Icon: '',
   
   // H4
-  h4Style: 'default',
   h4Color: '#374151',               // gray-700
   h4BackgroundColor: '#ffffff',
-  h4BorderColor: '#d1d5db',         // gray-300
+  h4LeftBorderColor: 'transparent',
+  h4BottomBorderColor: 'transparent',
+  h4Icon: '',
   
   // テキスト
   textColor: '#374151',             // gray-700
