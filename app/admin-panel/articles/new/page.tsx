@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiGet } from '@/lib/api-client';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
+import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -93,15 +94,20 @@ export default function NewArticlePage() {
 
     setLoading(true);
     try {
+      // WordPress HTMLをクリーニング
+      const cleanedContent = cleanWordPressHtml(formData.content);
+      console.log('[handleSubmit] HTMLクリーニング完了');
+      
       // 目次と読了時間を自動生成
-      const tableOfContents = generateTableOfContents(formData.content);
-      const readingTime = calculateReadingTime(formData.content);
+      const tableOfContents = generateTableOfContents(cleanedContent);
+      const readingTime = calculateReadingTime(cleanedContent);
       
       console.log('[handleSubmit] 目次:', tableOfContents);
       console.log('[handleSubmit] 読了時間:', readingTime, '分');
       
       await createArticle({
         ...formData,
+        content: cleanedContent, // クリーニング済みのコンテンツを使用
         authorId: 'admin', // TODO: 実際のユーザーIDを使用
         authorName: selectedWriter.handleName,
         featuredImage: featuredImageUrl,

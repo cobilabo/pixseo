@@ -13,6 +13,7 @@ import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
+import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -123,9 +124,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     setLoading(true);
     
     try {
+      // WordPress HTMLをクリーニング
+      const cleanedContent = cleanWordPressHtml(formData.content);
+      console.log('[handleSubmit] HTMLクリーニング完了');
+      
       // 目次と読了時間を自動生成
-      const tableOfContents = generateTableOfContents(formData.content);
-      const readingTime = calculateReadingTime(formData.content);
+      const tableOfContents = generateTableOfContents(cleanedContent);
+      const readingTime = calculateReadingTime(cleanedContent);
       
       console.log('[handleSubmit] 目次:', tableOfContents);
       console.log('[handleSubmit] 読了時間:', readingTime, '分');
@@ -137,6 +142,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         },
         body: JSON.stringify({
           ...formData,
+          content: cleanedContent, // クリーニング済みのコンテンツを使用
           authorName: selectedWriter.handleName,
           featuredImage: featuredImageUrl,
           mediaId: article.mediaId,
