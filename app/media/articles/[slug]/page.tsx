@@ -157,10 +157,10 @@ export default async function ArticlePage({ params }: PageProps) {
       return [];
     }),
     // ライター情報を取得
-    getWriterServer(article.writerId).catch((error) => {
+    article.writerId ? getWriterServer(article.writerId).catch((error) => {
       console.error('[Article Page] Error fetching writer:', error);
       return null;
-    }),
+    }) : Promise.resolve(null),
     // 前後の記事を取得
     getAdjacentArticlesServer(article, mediaId || undefined).catch((error) => {
       console.error('[Article Page] Error fetching adjacent articles:', error);
