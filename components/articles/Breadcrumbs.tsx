@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { Article, Category } from '@/types/article';
+import { useEffect, useState } from 'react';
 
 interface BreadcrumbsProps {
   article: Article;
@@ -7,6 +10,14 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
+  const [origin, setOrigin] = useState('https://furatto.pixseo.cloud');
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+  
   // JSON-LD構造化データ
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -16,19 +27,19 @@ export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
         '@type': 'ListItem',
         position: 1,
         name: 'トップ',
-        item: typeof window !== 'undefined' ? window.location.origin : 'https://furatto.pixseo.cloud',
+        item: origin,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: '記事一覧',
-        item: typeof window !== 'undefined' ? `${window.location.origin}/articles` : 'https://furatto.pixseo.cloud/articles',
+        item: `${origin}/articles`,
       },
       ...(category ? [{
         '@type': 'ListItem',
         position: 3,
         name: category.name,
-        item: typeof window !== 'undefined' ? `${window.location.origin}/categories/${category.slug}` : `https://furatto.pixseo.cloud/categories/${category.slug}`,
+        item: `${origin}/categories/${category.slug}`,
       }] : []),
       {
         '@type': 'ListItem',
