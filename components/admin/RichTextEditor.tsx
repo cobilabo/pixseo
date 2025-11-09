@@ -64,13 +64,28 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         // エディタ内での選択かチェック
         if (editorRef.current?.contains(range.commonAncestorContainer)) {
           const rect = range.getBoundingClientRect();
+          const editorRect = editorRef.current.getBoundingClientRect();
           
           // 選択中またはカーソルがエディタ内にある場合
           if (!selection.isCollapsed || document.activeElement === editorRef.current) {
-            setToolbarPosition({
-              top: rect.top + window.scrollY - 60,
-              left: rect.left + window.scrollX + rect.width / 2,
-            });
+            // ツールバーの高さを考慮（約50px）
+            const toolbarHeight = 50;
+            let top = rect.top - toolbarHeight - 10; // 10pxのマージン
+            const left = rect.left + rect.width / 2;
+            
+            // 画面上部に出ないように調整
+            if (top < 60) {
+              // ツールバーを選択範囲の下に表示
+              top = rect.bottom + 10;
+            }
+            
+            // 画面下部に出ないように調整
+            const windowHeight = window.innerHeight;
+            if (top + toolbarHeight > windowHeight - 20) {
+              top = windowHeight - toolbarHeight - 20;
+            }
+            
+            setToolbarPosition({ top, left });
             setShowToolbar(true);
             return;
           }
@@ -193,7 +208,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {showToolbar && (
         <div
           className="fixed z-50 bg-gray-900 text-white rounded-xl shadow-2xl p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
-          style={{ top: `${toolbarPosition.top}px`, left: `${toolbarPosition.left}px` }}
+          style={{ 
+            top: `${toolbarPosition.top}px`, 
+            left: `${toolbarPosition.left}px`,
+            maxWidth: '90vw'
+          }}
         >
           <ToolbarButton onClick={() => execCommand('bold')} title="太字 (Ctrl+B)">
             <strong className="text-sm">B</strong>

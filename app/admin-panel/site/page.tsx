@@ -33,28 +33,38 @@ export default function SitePage() {
 
   const fetchSettings = useCallback(async () => {
     if (!currentTenant) {
+      console.log('[Site Settings] No currentTenant, skipping fetch');
       setFetchLoading(false);
       return;
     }
 
     setFetchLoading(true);
+    console.log('[Site Settings] Fetching for tenant:', currentTenant.id);
 
     try {
-      console.log('[Site Settings] Fetching for tenant:', currentTenant.id);
       const response = await fetch(`/api/admin/service/${currentTenant.id}`);
+      console.log('[Site Settings] Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
         console.log('[Site Settings] Fetched data:', data);
-        setFormData({
+        console.log('[Site Settings] siteDescription:', data.siteDescription);
+        
+        const newFormData = {
           siteName: data.name || '',
           siteDescription: data.siteDescription || '',
           logoLandscape: data.logoLandscape || '',
           logoSquare: data.logoSquare || '',
           logoPortrait: data.logoPortrait || '',
           allowIndexing: data.allowIndexing || false,
-        });
+        };
+        
+        console.log('[Site Settings] Setting formData:', newFormData);
+        setFormData(newFormData);
       } else {
         console.error('[Site Settings] Failed to fetch:', response.status);
+        const errorText = await response.text();
+        console.error('[Site Settings] Error response:', errorText);
       }
     } catch (error) {
       console.error('[Site Settings] Error fetching site settings:', error);
