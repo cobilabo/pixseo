@@ -7,9 +7,10 @@ import { apiPostFormData } from '@/lib/api-client';
 interface FeaturedImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
+  label?: string;
 }
 
-export default function FeaturedImageUpload({ value, onChange }: FeaturedImageUploadProps) {
+export default function FeaturedImageUpload({ value, onChange, label = 'ロゴ画像を選択' }: FeaturedImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(value);
   const [isHovered, setIsHovered] = useState(false);
@@ -96,7 +97,7 @@ export default function FeaturedImageUpload({ value, onChange }: FeaturedImageUp
             </svg>
             <div className="flex justify-center text-sm">
               <span className="font-medium text-gray-900">
-                ロゴ画像を選択
+                {label}
               </span>
             </div>
           </div>
