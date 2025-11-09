@@ -38,7 +38,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log('[API Service Update] 更新開始:', params.id);
     
     const body = await request.json();
-    const { name, slug, customDomain, clientId, settings, isActive } = body;
+    const { 
+      name, 
+      slug, 
+      customDomain, 
+      clientId, 
+      settings, 
+      isActive,
+      siteDescription,
+      logoLandscape,
+      logoSquare,
+      logoPortrait,
+      allowIndexing,
+      theme
+    } = body;
 
     // 現在のサービスデータを取得
     const currentDoc = await adminDb.collection('mediaTenants').doc(params.id).get();
@@ -82,6 +95,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (settings !== undefined) updateData.settings = settings;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (clientId !== undefined) updateData.clientId = clientId || null;
+    if (siteDescription !== undefined) updateData.siteDescription = siteDescription;
+    if (logoLandscape !== undefined) updateData.logoLandscape = logoLandscape;
+    if (logoSquare !== undefined) updateData.logoSquare = logoSquare;
+    if (logoPortrait !== undefined) updateData.logoPortrait = logoPortrait;
+    if (allowIndexing !== undefined) updateData.allowIndexing = allowIndexing;
+    if (theme !== undefined) updateData.theme = theme;
 
     // クライアントが変更された場合の処理
     if (clientId !== undefined && clientId !== oldClientId) {

@@ -195,7 +195,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       type="button"
       onClick={onClick}
       onMouseDown={(e) => e.preventDefault()} // フォーカスを失わないように
-      className="px-3 py-1.5 hover:bg-gray-700 rounded-lg transition-colors text-white"
+      className="px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
       title={title}
     >
       {children}
@@ -207,7 +207,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* フローティングツールバー（選択時/カーソル移動時） */}
       {showToolbar && (
         <div
-          className="fixed z-50 bg-gray-900 text-white rounded-xl shadow-2xl p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
+          className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-2xl p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
           style={{ 
             top: `${toolbarPosition.top}px`, 
             left: `${toolbarPosition.left}px`,
@@ -224,7 +224,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             <u className="text-sm">U</u>
           </ToolbarButton>
           
-          <div className="w-px bg-gray-600 mx-1" />
+          <div className="w-px bg-gray-300 mx-1" />
           
           <ToolbarButton onClick={() => execCommand('formatBlock', '<h2>')} title="見出し2">
             <span className="text-xs">H2</span>
@@ -236,7 +236,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             <span className="text-xs">H4</span>
           </ToolbarButton>
           
-          <div className="w-px bg-gray-600 mx-1" />
+          <div className="w-px bg-gray-300 mx-1" />
           
           <ToolbarButton
             onClick={() => {
@@ -252,7 +252,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             🖼️
           </ToolbarButton>
 
-          <div className="w-px bg-gray-600 mx-1" />
+          <div className="w-px bg-gray-300 mx-1" />
 
           <ToolbarButton onClick={() => execCommand('insertUnorderedList')} title="箇条書き">
             ●
