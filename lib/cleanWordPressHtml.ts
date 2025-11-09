@@ -20,15 +20,26 @@ export function cleanWordPressHtml(html: string): string {
   // 2. 不要なHTMLコメントを削除（wp以外も）
   cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
 
-  // 3. 空の<p>タグを削除
+  // 3. WordPressクラス名を削除
+  cleaned = cleaned.replace(/class="[^"]*wp-[^"]*"/g, '');
+  
+  // 4. <figure> を <div> に変換
+  cleaned = cleaned.replace(/<figure([^>]*)>/g, '<div$1>');
+  cleaned = cleaned.replace(/<\/figure>/g, '</div>');
+  
+  // 5. <figcaption> を <p> に変換
+  cleaned = cleaned.replace(/<figcaption([^>]*)>/g, '<p$1>');
+  cleaned = cleaned.replace(/<\/figcaption>/g, '</p>');
+
+  // 6. 空の<p>タグを削除
   cleaned = cleaned.replace(/<p>\s*<\/p>/g, '');
   cleaned = cleaned.replace(/<p><br\s*\/?><\/p>/g, '');
   cleaned = cleaned.replace(/<p>&nbsp;<\/p>/g, '');
 
-  // 4. 連続する<br>タグを1つに
+  // 7. 連続する<br>タグを1つに
   cleaned = cleaned.replace(/(<br\s*\/?>\s*){3,}/g, '<br><br>');
 
-  // 5. DOMParserで不正なHTMLを修正
+  // 8. DOMParserで不正なHTMLを修正
   if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
     try {
       const parser = new DOMParser();
@@ -66,13 +77,13 @@ export function cleanWordPressHtml(html: string): string {
     }
   }
 
-  // 6. 不正な</p><p>パターンを修正
+  // 9. 不正な</p><p>パターンを修正
   cleaned = cleaned.replace(/<\/p>\s*<p>/g, '</p>\n<p>');
 
-  // 7. 先頭と末尾の空白・改行を削除
+  // 10. 先頭と末尾の空白・改行を削除
   cleaned = cleaned.trim();
 
-  // 8. 連続する空行を削除
+  // 11. 連続する空行を削除
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
 
   return cleaned;
