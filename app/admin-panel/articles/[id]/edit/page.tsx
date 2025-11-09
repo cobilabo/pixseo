@@ -325,9 +325,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 required
               />
 
-              {/* 抜粋 */}
+              {/* メタディスクリプション */}
               <FloatingInput
-                label="抜粋"
+                label="メタディスクリプション"
                 value={formData.excerpt}
                 onChange={(value) => setFormData({ ...formData, excerpt: value })}
                 multiline
@@ -360,21 +360,51 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
               {/* メタタイトル */}
               <FloatingInput
-                label="メタタイトル"
+                label="メタタイトル（SEO用）"
                 value={formData.metaTitle}
                 onChange={(value) => setFormData({ ...formData, metaTitle: value })}
               />
-
-              {/* メタディスクリプション */}
-              <FloatingInput
-                label="メタディスクリプション"
-                value={formData.metaDescription}
-                onChange={(value) => setFormData({ ...formData, metaDescription: value })}
-                multiline
-                rows={3}
-              />
             </div>
           </form>
+
+          {/* SERP プレビュー */}
+          <div className="bg-white rounded-xl p-6 mt-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Google 検索結果プレビュー
+            </h3>
+            <div className="border border-gray-200 rounded-xl p-4 bg-white">
+              {/* タイトル */}
+              <div className="text-xl text-blue-600 hover:underline cursor-pointer mb-1">
+                {formData.metaTitle || formData.title || 'タイトルを入力してください'}
+              </div>
+              {/* URL */}
+              <div className="text-sm mb-2">
+                <span className="text-green-700">
+                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo.cloud` : 'example.pixseo.cloud'} › articles › {formData.slug || 'article-slug'}
+                </span>
+              </div>
+              {/* メタディスクリプション */}
+              <div className="text-sm text-gray-600 line-clamp-2">
+                {formData.excerpt || 'メタディスクリプションを入力してください。検索結果に表示される説明文です。'}
+              </div>
+              {/* 文字数カウンター */}
+              <div className="mt-3 pt-3 border-t border-gray-100 flex gap-4 text-xs text-gray-500">
+                <div>
+                  タイトル: <span className={`font-medium ${(formData.metaTitle || formData.title || '').length > 60 ? 'text-red-500' : 'text-green-600'}`}>
+                    {(formData.metaTitle || formData.title || '').length}
+                  </span> / 60文字
+                </div>
+                <div>
+                  説明: <span className={`font-medium ${formData.excerpt.length > 160 ? 'text-red-500' : 'text-green-600'}`}>
+                    {formData.excerpt.length}
+                  </span> / 160文字
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* トグルエリア（固定位置・横幅をボタンに合わせる・距離を半分に） */}
           <div className="fixed bottom-36 right-8 w-32 space-y-4 z-50">
