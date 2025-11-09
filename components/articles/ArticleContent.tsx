@@ -4,12 +4,14 @@ import { useEffect } from 'react';
 import parse from 'html-react-parser';
 import YouTubeEmbed from './YouTubeEmbed';
 import ShortCodeRenderer from './ShortCodeRenderer';
+import { TableOfContentsItem } from '@/types/article';
 
 interface ArticleContentProps {
   content: string;
+  tableOfContents?: TableOfContentsItem[];
 }
 
-export default function ArticleContent({ content }: ArticleContentProps) {
+export default function ArticleContent({ content, tableOfContents }: ArticleContentProps) {
   useEffect(() => {
     // スクロール位置を保存・復元（ページ遷移時）
     return () => {
@@ -19,6 +21,9 @@ export default function ArticleContent({ content }: ArticleContentProps) {
 
   // ショートコードを処理
   const processedContent = ShortCodeRenderer.process(content);
+
+  // 見出しの出現順をカウント
+  let headingCount = 0;
 
   // HTMLをパースしてReactコンポーネントに変換
   const options = {
@@ -30,6 +35,26 @@ export default function ArticleContent({ content }: ArticleContentProps) {
           return <YouTubeEmbed videoId={youtubeId} />;
         }
       }
+
+      // 見出し（h2, h3, h4）にIDを付与
+      if (domNode.name && ['h2', 'h3', 'h4'].includes(domNode.name)) {
+        const tocItem = tableOfContents?.[headingCount];
+        const id = tocItem?.id || `heading-${headingCount}`;
+        headingCount++;
+
+        const Tag = domNode.name as 'h2' | 'h3' | 'h4';
+        return (
+          <Tag id={id} className="scroll-mt-20">
+            {domNode.children?.map((child: any, index: number) => {
+              if (typeof child === 'string' || child.data) {
+                return child.data || child;
+              }
+              return null;
+            })}
+          </Tag>
+        );
+      }
+
       // 参照元のスタイリング
       if (domNode.name === 'p' && domNode.children?.[0]?.data?.includes('参照：')) {
         return (

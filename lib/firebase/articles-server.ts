@@ -184,18 +184,21 @@ export const getPopularArticlesServer = async (limitCount: number = 10, mediaId?
 };
 
 // 関連記事を取得（サーバーサイド用）
+// 1. relatedArticleIds が指定されていればそれを優先
+// 2. なければカテゴリー・タグの一致度で自動選択
 export const getRelatedArticlesServer = async (
-  excludeArticleId: string,
-  categoryIds: string[],
-  tagIds: string[],
+  currentArticle: Article,
   limitCount: number = 6,
   mediaId?: string
 ): Promise<Article[]> => {
   try {
+    const { id: excludeArticleId, relatedArticleIds, categoryIds, tagIds } = currentArticle;
+    
     // キャッシュキー生成
     const cacheKey = generateCacheKey(
       'related',
       excludeArticleId,
+      relatedArticleIds?.join(',') || '',
       categoryIds.join(','),
       tagIds.join(','),
       limitCount,
@@ -208,50 +211,80 @@ export const getRelatedArticlesServer = async (
       return cached;
     }
     
-    // Firestoreから取得
-    const articlesRef = adminDb.collection('articles');
-    let q = articlesRef.where('isPublished', '==', true);
+    let articles: Article[] = [];
     
-    // mediaIdが指定されている場合はフィルタリング
-    if (mediaId) {
-      q = q.where('mediaId', '==', mediaId) as any;
+    // 1. relatedArticleIds が指定されていればそれを使用
+    if (relatedArticleIds && relatedArticleIds.length > 0) {
+      const articlesRef = adminDb.collection('articles');
+      
+      // 各IDごとに取得
+      const docs = await Promise.all(
+        relatedArticleIds.slice(0, limitCount).map(id => articlesRef.doc(id).get())
+      );
+      
+      articles = docs
+        .filter(doc => doc.exists && doc.data()?.isPublished)
+        .map(doc => {
+          const data = doc.data()!;
+          return {
+            id: doc.id,
+            ...data,
+            publishedAt: convertTimestamp(data.publishedAt),
+            updatedAt: convertTimestamp(data.updatedAt),
+          } as Article;
+        })
+        .filter(article => article.mediaId === (mediaId || article.mediaId));
     }
     
-    // orderByは使わず全件取得してメモリでソート（複合インデックス回避）
-    const snapshot = await q.get();
-    
-    // まず全記事を変換してから publishedAt でソート
-    let allArticles = snapshot.docs
-      .map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          publishedAt: convertTimestamp(data.publishedAt),
-          updatedAt: convertTimestamp(data.updatedAt),
-        } as Article;
-      })
-      .filter((article) => article.id !== excludeArticleId)
-      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-      .slice(0, limitCount * 2); // ある程度絞り込む
-    
-    // 関連度でソート
-    const articles = allArticles
-      .map((article) => {
-        const categoryMatch = article.categoryIds.filter((id: string) =>
-          categoryIds.includes(id)
-        ).length;
-        const tagMatch = article.tagIds.filter((id: string) =>
-          tagIds.includes(id)
-        ).length;
-        return {
-          ...article,
-          relevanceScore: categoryMatch * 2 + tagMatch,
-        };
-      })
-      .sort((a, b) => (b as any).relevanceScore - (a as any).relevanceScore)
-      .slice(0, limitCount)
-      .map(({ relevanceScore, ...article }) => article);
+    // 2. 足りない場合は自動で補完
+    if (articles.length < limitCount) {
+      const articlesRef = adminDb.collection('articles');
+      let q = articlesRef.where('isPublished', '==', true);
+      
+      // mediaIdが指定されている場合はフィルタリング
+      if (mediaId) {
+        q = q.where('mediaId', '==', mediaId) as any;
+      }
+      
+      const snapshot = await q.get();
+      
+      // すでに選択されているIDを除外
+      const excludeIds = [excludeArticleId, ...articles.map(a => a.id)];
+      
+      let autoArticles = snapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            publishedAt: convertTimestamp(data.publishedAt),
+            updatedAt: convertTimestamp(data.updatedAt),
+          } as Article;
+        })
+        .filter((article) => !excludeIds.includes(article.id))
+        .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+        .slice(0, (limitCount - articles.length) * 2);
+      
+      // 関連度でソート
+      autoArticles = autoArticles
+        .map((article) => {
+          const categoryMatch = article.categoryIds.filter((id: string) =>
+            categoryIds.includes(id)
+          ).length;
+          const tagMatch = article.tagIds.filter((id: string) =>
+            tagIds.includes(id)
+          ).length;
+          return {
+            ...article,
+            relevanceScore: categoryMatch * 2 + tagMatch,
+          };
+        })
+        .sort((a, b) => (b as any).relevanceScore - (a as any).relevanceScore)
+        .slice(0, limitCount - articles.length)
+        .map(({ relevanceScore, ...article }) => article);
+      
+      articles = [...articles, ...autoArticles];
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, articles);

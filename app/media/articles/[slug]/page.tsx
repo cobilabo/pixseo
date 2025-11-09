@@ -7,6 +7,9 @@ import ArticleContent from '@/components/articles/ArticleContent';
 import RelatedArticles from '@/components/articles/RelatedArticles';
 import ArticleHeader from '@/components/articles/ArticleHeader';
 import GoogleMapsEmbed from '@/components/common/GoogleMapsEmbed';
+import TableOfContents from '@/components/articles/TableOfContents';
+import ReadingTime from '@/components/articles/ReadingTime';
+import SocialShare from '@/components/articles/SocialShare';
 
 // 動的レンダリング + Firestoreキャッシュで高速化
 // headers()を使用しているため、完全な静的生成はできない
@@ -129,7 +132,7 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  const relatedArticles = await getRelatedArticlesServer(article.id, article.categoryIds, article.tagIds, 6, mediaId || undefined);
+  const relatedArticles = await getRelatedArticlesServer(article, 6, mediaId || undefined);
 
   // JSON-LD 構造化データ（SEO強化）
   const jsonLd = {
@@ -192,10 +195,25 @@ export default async function ArticlePage({ params }: PageProps) {
         {/* 記事ヘッダー */}
         <ArticleHeader article={article} />
 
+        {/* 読了時間 */}
+        {article.readingTime && (
+          <div className="mb-6">
+            <ReadingTime minutes={article.readingTime} />
+          </div>
+        )}
+
+        {/* 目次 */}
+        {article.tableOfContents && article.tableOfContents.length > 0 && (
+          <TableOfContents items={article.tableOfContents} />
+        )}
+
         {/* 記事本文 */}
         <article className="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
-          <ArticleContent content={article.content} />
+          <ArticleContent content={article.content} tableOfContents={article.tableOfContents} />
         </article>
+
+        {/* SNSシェアボタン */}
+        <SocialShare title={article.title} />
 
         {/* Googleマイマップ */}
         {article.googleMapsUrl && (
