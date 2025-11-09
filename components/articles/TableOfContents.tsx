@@ -10,6 +10,11 @@ interface TableOfContentsProps {
 export default function TableOfContents({ items }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
 
+  // 配列でない場合の安全チェック
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -23,8 +28,10 @@ export default function TableOfContents({ items }: TableOfContentsProps) {
     );
 
     items.forEach((item) => {
-      const element = document.getElementById(item.id);
-      if (element) observer.observe(element);
+      if (item && item.id) {
+        const element = document.getElementById(item.id);
+        if (element) observer.observe(element);
+      }
     });
 
     return () => observer.disconnect();
@@ -37,8 +44,6 @@ export default function TableOfContents({ items }: TableOfContentsProps) {
     }
   };
 
-  if (items.length === 0) return null;
-
   return (
     <div className="bg-blue-50 rounded-xl p-6 mb-8">
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -48,23 +53,30 @@ export default function TableOfContents({ items }: TableOfContentsProps) {
         目次
       </h2>
       <ul className="space-y-2">
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className={`${
-              item.level === 2 ? 'ml-0' : item.level === 3 ? 'ml-4' : 'ml-8'
-            }`}
-          >
-            <button
-              onClick={() => handleClick(item.id)}
-              className={`text-left hover:text-blue-600 transition-colors ${
-                activeId === item.id ? 'text-blue-600 font-semibold' : 'text-gray-700'
+        {items.map((item, index) => {
+          // 各アイテムの安全チェック
+          if (!item || !item.id || !item.text) {
+            return null;
+          }
+          
+          return (
+            <li
+              key={item.id || `toc-${index}`}
+              className={`${
+                item.level === 2 ? 'ml-0' : item.level === 3 ? 'ml-4' : 'ml-8'
               }`}
             >
-              {item.text}
-            </button>
-          </li>
-        ))}
+              <button
+                onClick={() => handleClick(item.id)}
+                className={`text-left hover:text-blue-600 transition-colors ${
+                  activeId === item.id ? 'text-blue-600 font-semibold' : 'text-gray-700'
+                }`}
+              >
+                {item.text}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

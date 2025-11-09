@@ -203,7 +203,7 @@ export default async function ArticlePage({ params }: PageProps) {
         )}
 
         {/* 目次 */}
-        {article.tableOfContents && article.tableOfContents.length > 0 && (
+        {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 && (
           <TableOfContents items={article.tableOfContents} />
         )}
 

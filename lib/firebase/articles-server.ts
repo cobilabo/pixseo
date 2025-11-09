@@ -53,11 +53,28 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
     const doc = snapshot.docs[0];
     const data = doc.data();
     
+    // tableOfContentsを安全に処理
+    let tableOfContents = data.tableOfContents || [];
+    if (!Array.isArray(tableOfContents)) {
+      console.warn('[getArticleServer] tableOfContents is not an array:', tableOfContents);
+      tableOfContents = [];
+    }
+    
+    // relatedArticleIdsを安全に処理
+    let relatedArticleIds = data.relatedArticleIds || [];
+    if (!Array.isArray(relatedArticleIds)) {
+      console.warn('[getArticleServer] relatedArticleIds is not an array:', relatedArticleIds);
+      relatedArticleIds = [];
+    }
+    
     const article = {
       id: doc.id,
       ...data,
       publishedAt: convertTimestamp(data.publishedAt),
       updatedAt: convertTimestamp(data.updatedAt),
+      tableOfContents,
+      relatedArticleIds,
+      readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
     
     // キャッシュに保存
@@ -122,11 +139,27 @@ export const getArticlesServer = async (
     
     let articles = snapshot.docs.map((doc) => {
       const data = doc.data();
+      
+      // tableOfContentsを安全に処理
+      let tableOfContents = data.tableOfContents || [];
+      if (!Array.isArray(tableOfContents)) {
+        tableOfContents = [];
+      }
+      
+      // relatedArticleIdsを安全に処理
+      let relatedArticleIds = data.relatedArticleIds || [];
+      if (!Array.isArray(relatedArticleIds)) {
+        relatedArticleIds = [];
+      }
+      
       return {
         id: doc.id,
         ...data,
         publishedAt: convertTimestamp(data.publishedAt),
         updatedAt: convertTimestamp(data.updatedAt),
+        tableOfContents,
+        relatedArticleIds,
+        readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
       } as Article;
     });
     
@@ -226,11 +259,27 @@ export const getRelatedArticlesServer = async (
         .filter(doc => doc.exists && doc.data()?.isPublished)
         .map(doc => {
           const data = doc.data()!;
+          
+          // tableOfContentsを安全に処理
+          let tableOfContents = data.tableOfContents || [];
+          if (!Array.isArray(tableOfContents)) {
+            tableOfContents = [];
+          }
+          
+          // relatedArticleIdsを安全に処理
+          let relatedArticleIds = data.relatedArticleIds || [];
+          if (!Array.isArray(relatedArticleIds)) {
+            relatedArticleIds = [];
+          }
+          
           return {
             id: doc.id,
             ...data,
             publishedAt: convertTimestamp(data.publishedAt),
             updatedAt: convertTimestamp(data.updatedAt),
+            tableOfContents,
+            relatedArticleIds,
+            readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
           } as Article;
         })
         .filter(article => article.mediaId === (mediaId || article.mediaId));
@@ -254,11 +303,27 @@ export const getRelatedArticlesServer = async (
       let autoArticles = snapshot.docs
         .map((doc) => {
           const data = doc.data();
+          
+          // tableOfContentsを安全に処理
+          let tableOfContents = data.tableOfContents || [];
+          if (!Array.isArray(tableOfContents)) {
+            tableOfContents = [];
+          }
+          
+          // relatedArticleIdsを安全に処理
+          let relatedArticleIds = data.relatedArticleIds || [];
+          if (!Array.isArray(relatedArticleIds)) {
+            relatedArticleIds = [];
+          }
+          
           return {
             id: doc.id,
             ...data,
             publishedAt: convertTimestamp(data.publishedAt),
             updatedAt: convertTimestamp(data.updatedAt),
+            tableOfContents,
+            relatedArticleIds,
+            readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
           } as Article;
         })
         .filter((article) => !excludeIds.includes(article.id))

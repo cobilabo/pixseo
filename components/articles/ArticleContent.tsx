@@ -38,19 +38,29 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
 
       // 見出し（h2, h3, h4）にIDを付与
       if (domNode.name && ['h2', 'h3', 'h4'].includes(domNode.name)) {
-        const tocItem = tableOfContents?.[headingCount];
+        const tocItem = Array.isArray(tableOfContents) ? tableOfContents[headingCount] : undefined;
         const id = tocItem?.id || `heading-${headingCount}`;
         headingCount++;
 
         const Tag = domNode.name as 'h2' | 'h3' | 'h4';
+        
+        // テキストを安全に抽出
+        const textContent = domNode.children?.map((child: any) => {
+          if (typeof child === 'string') return child;
+          if (child?.data && typeof child.data === 'string') return child.data;
+          if (child?.children) {
+            return child.children.map((c: any) => {
+              if (typeof c === 'string') return c;
+              if (c?.data && typeof c.data === 'string') return c.data;
+              return '';
+            }).join('');
+          }
+          return '';
+        }).join('') || '';
+        
         return (
           <Tag id={id} className="scroll-mt-20">
-            {domNode.children?.map((child: any, index: number) => {
-              if (typeof child === 'string' || child.data) {
-                return child.data || child;
-              }
-              return null;
-            })}
+            {textContent}
           </Tag>
         );
       }
