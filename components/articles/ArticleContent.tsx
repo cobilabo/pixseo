@@ -72,16 +72,7 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
         );
       }
 
-      // 参照元のスタイリング
-      if (domNode.name === 'p' && domNode.children?.[0]?.data?.includes('参照：')) {
-        return (
-          <p className="reference">
-            {domNode.children.map((child: any, index: number) => (
-              <span key={index}>{child.data || child.children}</span>
-            ))}
-          </p>
-        );
-      }
+      // その他の要素はそのまま返す（undefinedで元のノードを使用）
       return undefined;
     },
   };
