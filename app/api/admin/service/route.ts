@@ -36,7 +36,20 @@ export async function POST(request: Request) {
     console.log('[API Service] サービス作成開始');
     
     const body = await request.json();
-    const { name, slug, customDomain, ownerId, clientId, settings } = body;
+    const { 
+      name, 
+      slug, 
+      customDomain, 
+      ownerId, 
+      clientId, 
+      settings,
+      siteDescription,
+      logoLandscape,
+      logoSquare,
+      logoPortrait,
+      isActive,
+      allowIndexing
+    } = body;
 
     if (!name || !slug || !ownerId) {
       return NextResponse.json({ error: 'Name, slug, and ownerId are required' }, { status: 400 });
@@ -76,16 +89,12 @@ export async function POST(request: Request) {
       ownerId,
       memberIds,
       clientId: clientId || null,
-      settings: settings || {
-        siteDescription: '',
-        logos: {
-          landscape: '',
-          square: '',
-          portrait: '',
-        },
-      },
-      isActive: true,
-      allowIndexing: false, // デフォルトはNOINDEX（SEO保護）
+      siteDescription: siteDescription || '',
+      logoLandscape: logoLandscape || '',
+      logoSquare: logoSquare || '',
+      logoPortrait: logoPortrait || '',
+      isActive: isActive !== undefined ? isActive : false, // デフォルトOFF
+      allowIndexing: allowIndexing !== undefined ? allowIndexing : false, // デフォルトOFF（NOINDEX）
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };

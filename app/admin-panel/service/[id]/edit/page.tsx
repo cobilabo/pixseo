@@ -26,6 +26,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     logoPortrait: '',
     clientId: '',
     isActive: true,
+    allowIndexing: false,
   });
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
             logoPortrait: data.logoPortrait || data.settings?.logos?.portrait || '',
             clientId: data.clientId || '',
             isActive: data.isActive !== undefined ? data.isActive : true,
+            allowIndexing: data.allowIndexing || false,
           });
         }
       } catch (error) {
@@ -97,6 +99,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
           logoSquare: formData.logoSquare,
           logoPortrait: formData.logoPortrait,
           isActive: formData.isActive,
+          allowIndexing: formData.allowIndexing,
         }),
       });
 
@@ -162,7 +165,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
               />
 
               {/* スラッグ */}
-              <div className="relative">
+              <div className="relative slug-field-wrapper">
                 <FloatingInput
                   label="スラッグ（英数字とハイフンのみ）*"
                   value={formData.slug}
@@ -170,12 +173,14 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                   required
                   disabled
                 />
-                <style jsx>{`
-                  input:disabled {
-                    color: #9CA3AF !important;
-                  }
-                `}</style>
               </div>
+              <style jsx>{`
+                .slug-field-wrapper input:disabled {
+                  color: #9CA3AF !important;
+                  background-color: #ffffff !important;
+                  opacity: 1 !important;
+                }
+              `}</style>
 
               {/* クライアント選択 */}
               <FloatingSelect
@@ -210,8 +215,35 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
             </div>
           </form>
 
-          {/* フローティング: 有効化トグル */}
-          <div className="fixed bottom-32 right-8 w-32 z-50">
+          {/* トグルエリア（固定位置） */}
+          <div className="fixed bottom-36 right-8 w-32 space-y-4 z-50">
+            {/* インデックス許可トグル */}
+            <div className="bg-white rounded-full px-6 py-3 shadow-lg">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-700">インデックス</span>
+                <label className="cursor-pointer">
+                  <div className="relative inline-block w-14 h-8">
+                    <input
+                      type="checkbox"
+                      checked={formData.allowIndexing}
+                      onChange={(e) => setFormData({ ...formData, allowIndexing: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div 
+                      className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
+                        formData.allowIndexing ? 'bg-blue-600' : 'bg-gray-400'
+                      }`}
+                    >
+                      <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                        formData.allowIndexing ? 'translate-x-6' : 'translate-x-0'
+                      }`}></div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* 有効化トグル */}
             <div className="bg-white rounded-full px-6 py-3 shadow-lg">
               <div className="flex flex-col items-center gap-2">
                 <span className="text-xs font-medium text-gray-700 whitespace-nowrap">

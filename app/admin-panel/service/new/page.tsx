@@ -26,6 +26,8 @@ export default function NewServicePage() {
     logoSquare: '',
     logoPortrait: '',
     clientId: '',
+    isActive: false,
+    allowIndexing: false,
   });
 
   useEffect(() => {
@@ -71,14 +73,12 @@ export default function NewServicePage() {
           customDomain: formData.customDomain || undefined,
           ownerId: user.uid,
           clientId: formData.clientId || undefined,
-          settings: {
-            siteDescription: formData.siteDescription || '',
-            logos: {
-              landscape: formData.logoLandscape || '',
-              square: formData.logoSquare || '',
-              portrait: formData.logoPortrait || '',
-            },
-          },
+          siteDescription: formData.siteDescription || '',
+          logoLandscape: formData.logoLandscape || '',
+          logoSquare: formData.logoSquare || '',
+          logoPortrait: formData.logoPortrait || '',
+          isActive: formData.isActive,
+          allowIndexing: formData.allowIndexing,
         }),
       });
 
