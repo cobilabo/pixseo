@@ -124,7 +124,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
 
           {/* フローティング: おすすめトグル */}
           <div className="fixed bottom-32 right-8 z-50">
-            <div className="bg-white rounded-full px-6 py-4 shadow-lg flex items-center gap-4 w-full">
+            <div className="bg-white rounded-full px-6 py-4 shadow-lg flex flex-col items-center gap-2 w-full">
               <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 おすすめ
               </span>

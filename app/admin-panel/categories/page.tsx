@@ -42,6 +42,27 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleToggleRecommended = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isRecommended: !currentStatus }),
+      });
+
+      if (response.ok) {
+        fetchCategories();
+      } else {
+        throw new Error('更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error toggling category recommended:', error);
+      alert('おすすめ状態の更新に失敗しました');
+    }
+  };
+
   return (
     <AuthGuard>
       <AdminLayout>
@@ -66,9 +87,6 @@ export default function CategoriesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       おすすめ
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      並び順
-                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       操作
                     </th>
@@ -91,14 +109,25 @@ export default function CategoriesPage() {
                         {category.slug}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {category.isRecommended && (
-                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            おすすめ
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {category.order || '-'}
+                        <label className="cursor-pointer">
+                          <div className="relative inline-block w-14 h-8">
+                            <input
+                              type="checkbox"
+                              checked={category.isRecommended}
+                              onChange={() => handleToggleRecommended(category.id, category.isRecommended)}
+                              className="sr-only"
+                            />
+                            <div 
+                              className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
+                                category.isRecommended ? 'bg-blue-600' : 'bg-gray-400'
+                              }`}
+                            >
+                              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                                category.isRecommended ? 'translate-x-6' : 'translate-x-0'
+                              }`}></div>
+                            </div>
+                          </div>
+                        </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
