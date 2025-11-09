@@ -123,11 +123,12 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
           </form>
 
           {/* フローティング: おすすめトグル */}
-          <div className="fixed bottom-32 right-8 z-50">
-            <div className="bg-white rounded-full px-6 py-4 shadow-lg flex flex-col items-center gap-2 w-full">
-              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                おすすめ
-              </span>
+          <div className="fixed bottom-32 right-8 w-32 z-50">
+            <div className="bg-white rounded-full px-6 py-3 shadow-lg">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                  おすすめ
+                </span>
               <label className="cursor-pointer">
                 <div className="relative inline-block w-14 h-8">
                   <input
@@ -147,6 +148,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
                   </div>
                 </div>
               </label>
+              </div>
             </div>
           </div>
 

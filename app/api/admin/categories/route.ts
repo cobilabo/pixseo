@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       slug: doc.data().slug,
       description: doc.data().description || '',
       mediaId: doc.data().mediaId,
+      isRecommended: doc.data().isRecommended || false,
+      order: doc.data().order || 0,
     }));
 
     console.log(`[API /admin/categories] Found ${categories.length} categories`);
