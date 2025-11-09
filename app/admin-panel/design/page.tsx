@@ -23,7 +23,7 @@ export default function DesignPage() {
   const fetchDesignSettings = async () => {
     try {
       setFetchLoading(true);
-      const response = await apiClient.get('/admin/design');
+      const response = await apiClient.get('/api/admin/design');
       const data = await response.json();
       setTheme(data.theme || defaultTheme);
     } catch (error) {
@@ -41,7 +41,7 @@ export default function DesignPage() {
 
     try {
       setLoading(true);
-      const response = await apiClient.put('/admin/design', { theme });
+      const response = await apiClient.put('/api/admin/design', { theme });
       
       if (response.ok) {
         alert('デザイン設定を保存しました');

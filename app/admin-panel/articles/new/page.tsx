@@ -24,6 +24,7 @@ export default function NewArticlePage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -325,25 +326,57 @@ export default function NewArticlePage() {
 
           {/* SERP プレビュー */}
           <div className="bg-white rounded-xl p-6 mt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Google 検索結果プレビュー
-            </h3>
-            <div className="border border-gray-200 rounded-xl p-4 bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Google 検索結果プレビュー
+              </h3>
+              {/* PC / SP 切り替え */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSerpPreviewDevice('pc')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    serpPreviewDevice === 'pc'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  🖥️ PC
+                </button>
+                <button
+                  onClick={() => setSerpPreviewDevice('sp')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    serpPreviewDevice === 'sp'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  📱 SP
+                </button>
+              </div>
+            </div>
+            
+            <div className={`border border-gray-200 rounded-xl p-4 bg-white transition-all ${
+              serpPreviewDevice === 'sp' ? 'max-w-sm mx-auto' : ''
+            }`}>
               {/* タイトル */}
-              <div className="text-xl text-blue-600 hover:underline cursor-pointer mb-1">
+              <div className={`text-blue-600 hover:underline cursor-pointer mb-1 ${
+                serpPreviewDevice === 'pc' ? 'text-xl' : 'text-base'
+              }`}>
                 {formData.metaTitle || formData.title || 'タイトルを入力してください'}
               </div>
               {/* URL */}
-              <div className="text-sm mb-2">
+              <div className={serpPreviewDevice === 'pc' ? 'text-sm mb-2' : 'text-xs mb-1'}>
                 <span className="text-green-700">
                   {currentTenant?.slug ? `${currentTenant.slug}.pixseo.cloud` : 'example.pixseo.cloud'} › articles › {formData.slug || 'article-slug'}
                 </span>
               </div>
               {/* メタディスクリプション */}
-              <div className="text-sm text-gray-600 line-clamp-2">
+              <div className={`text-gray-600 line-clamp-2 ${
+                serpPreviewDevice === 'pc' ? 'text-sm' : 'text-xs'
+              }`}>
                 {formData.excerpt || 'メタディスクリプションを入力してください。検索結果に表示される説明文です。'}
               </div>
               {/* 文字数カウンター */}
