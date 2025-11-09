@@ -16,6 +16,8 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiGet } from '@/lib/api-client';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
+import FAQManager from '@/components/admin/FAQManager';
+import { FAQItem } from '@/types/article';
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function NewArticlePage() {
     metaDescription: '',
     googleMapsUrl: '',
     reservationUrl: '',
+    faqs: [] as FAQItem[],
   });
 
   useEffect(() => {
@@ -356,6 +359,14 @@ export default function NewArticlePage() {
               />
             </div>
           </form>
+
+          {/* FAQ管理 */}
+          <div className="bg-white rounded-xl p-6 mt-6 shadow-custom">
+            <FAQManager
+              value={formData.faqs}
+              onChange={(faqs) => setFormData({ ...formData, faqs })}
+            />
+          </div>
 
           {/* SERP プレビュー */}
           <div className="bg-white rounded-xl p-6 mt-6">

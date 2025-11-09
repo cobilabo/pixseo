@@ -14,6 +14,8 @@ import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
+import FAQManager from '@/components/admin/FAQManager';
+import { FAQItem } from '@/types/article';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -43,6 +45,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     metaDescription: '',
     googleMapsUrl: '',
     reservationUrl: '',
+    faqs: [] as FAQItem[],
   });
 
   useEffect(() => {
@@ -81,6 +84,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           metaDescription: articleData.metaDescription || '',
           googleMapsUrl: articleData.googleMapsUrl || '',
           reservationUrl: articleData.reservationUrl || '',
+          faqs: articleData.faqs || [],
         });
         
         setCategories(categoriesData);
@@ -402,6 +406,14 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               />
             </div>
           </form>
+
+          {/* FAQ管理 */}
+          <div className="bg-white rounded-xl p-6 mt-6 shadow-custom">
+            <FAQManager
+              value={formData.faqs}
+              onChange={(faqs) => setFormData({ ...formData, faqs })}
+            />
+          </div>
 
           {/* SERP プレビュー */}
           <div className="bg-white rounded-xl p-6 mt-6">

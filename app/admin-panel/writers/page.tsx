@@ -21,8 +21,8 @@ export default function WritersPage() {
       const data = await apiGet<Writer[]>('/api/admin/writers');
       // クライアント側でソート（新しい順）
       const sortedData = data.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
       setWriters(sortedData);
