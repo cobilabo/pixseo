@@ -17,16 +17,37 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
 
   useEffect(() => {
     setMounted(true);
-    
-    // Instagram埋め込みのscriptを再読み込み
-    if (typeof window !== 'undefined' && (window as any).instgrm) {
-      (window as any).instgrm.Embeds.process();
-    }
-    
-    return () => {
-      // クリーンアップ
-    };
   }, []);
+
+  // Instagram埋め込みを処理するuseEffect（mountedがtrueになった後に実行）
+  useEffect(() => {
+    if (!mounted) return;
+
+    // Instagram埋め込みスクリプトをロード
+    const loadInstagramScript = () => {
+      // すでにスクリプトが存在する場合は、processを実行
+      if ((window as any).instgrm) {
+        (window as any).instgrm.Embeds.process();
+        return;
+      }
+
+      // スクリプトが存在しない場合は、新規追加
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.instagram.com/embed.js';
+      script.onload = () => {
+        if ((window as any).instgrm) {
+          (window as any).instgrm.Embeds.process();
+        }
+      };
+      document.body.appendChild(script);
+    };
+
+    // Instagram埋め込みが含まれている場合のみスクリプトをロード
+    if (content.includes('instagram-media')) {
+      loadInstagramScript();
+    }
+  }, [mounted, content]);
 
   // ショートコードを処理
   const processedContent = ShortCodeRenderer.process(content);
