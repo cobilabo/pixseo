@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import parse, { DOMNode, Element } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
@@ -13,8 +13,16 @@ interface ArticleContentProps {
 }
 
 export default function ArticleContent({ content, tableOfContents }: ArticleContentProps) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    // スクロール位置を保存・復元（ページ遷移時）
+    setMounted(true);
+    
+    // Instagram埋め込みのscriptを再読み込み
+    if (typeof window !== 'undefined' && (window as any).instgrm) {
+      (window as any).instgrm.Embeds.process();
+    }
+    
     return () => {
       // クリーンアップ
     };
@@ -130,6 +138,19 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
       return undefined;
     },
   };
+
+  // SSR時はスケルトンを表示、クライアント側でのみコンテンツを表示
+  if (!mounted) {
+    return (
+      <div className="prose prose-lg max-w-none">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="prose prose-lg max-w-none" suppressHydrationWarning>
