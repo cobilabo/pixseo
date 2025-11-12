@@ -44,6 +44,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
           slug: categoryData.slug,
           description: categoryData.description || '',
           imageUrl: categoryData.imageUrl || '',
+          imageAlt: '',
           isRecommended: categoryData.isRecommended || false,
           order: categoryData.order || 0,
         });
