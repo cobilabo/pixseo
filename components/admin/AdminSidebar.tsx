@@ -225,8 +225,8 @@ const AdminSidebar = memo(function AdminSidebar({
           <Image 
             src="/logo_yoko_b_1.svg" 
             alt="PixSEO 管理画面" 
-            width={150}
-            height={40}
+            width={180}
+            height={48}
             priority
             style={{ height: 'auto' }}
           />
@@ -431,7 +431,7 @@ const AdminSidebar = memo(function AdminSidebar({
         {/* ログアウトボタン */}
         <button
           onClick={onSignOut}
-          className="w-full px-4 py-2 text-sm font-bold text-white bg-gray-600 rounded-full hover:bg-gray-700 transition-colors"
+          className="w-full px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-full hover:border-gray-400 hover:bg-gray-50 transition-colors"
         >
           ログアウト
         </button>

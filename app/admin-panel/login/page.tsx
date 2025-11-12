@@ -32,8 +32,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         {/* 白背景の正円コンテナ + 共通シャドウ */}
-        <div className="bg-white rounded-[50%] aspect-square flex items-center justify-center p-12 shadow-custom">
-          <div className="w-full space-y-8">
+        <div className="bg-white rounded-[50%] w-[28rem] h-[28rem] flex items-center justify-center p-12 shadow-custom mx-auto">
+          <div className="w-full max-w-xs space-y-8">
             {/* ロゴ */}
             <div className="flex justify-center mb-8">
               <div className="relative w-40 h-40">
@@ -49,7 +49,7 @@ export default function LoginPage() {
 
             {/* タイトル */}
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-gray-900 tracking-wide">
+              <h2 className="text-lg font-bold text-gray-900 tracking-wide">
                 ADMIN LOGIN
               </h2>
               <p className="text-xs text-gray-600 leading-relaxed">
