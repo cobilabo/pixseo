@@ -5,7 +5,7 @@ import { Category, Tag } from '@/types/article';
 import FloatingMultiSelect from './FloatingMultiSelect';
 import FloatingInput from './FloatingInput';
 import RichTextEditor from './RichTextEditor';
-import ImageGenerator from './ImageGenerator';
+import FeaturedImageUpload from './FeaturedImageUpload';
 
 interface ArticleGeneratorModalProps {
   isOpen: boolean;
@@ -39,8 +39,8 @@ export default function ArticleGeneratorModal({
     excerpt: string;
     content: string;
     featuredImage?: string;
+    featuredImageAlt?: string;
   } | null>(null);
-  const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duplicateCheck, setDuplicateCheck] = useState<{
     isDuplicate: boolean;
@@ -304,8 +304,6 @@ export default function ArticleGeneratorModal({
           {step === 'review' && generatedArticle && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">生成された記事</h3>
-
                 {/* 重複チェック結果 */}
                 {duplicateCheck && (
                   <div className={`mb-4 p-4 rounded-xl border ${
@@ -361,52 +359,17 @@ export default function ArticleGeneratorModal({
                   />
                 </div>
 
-                {/* アイキャッチ画像生成 */}
+                {/* アイキャッチ画像 */}
                 <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      アイキャッチ画像
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowImageGenerator(!showImageGenerator)}
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      {showImageGenerator ? '閉じる' : '🎨 AI画像を生成'}
-                    </button>
-                  </div>
-                  
-                  {generatedArticle.featuredImage ? (
-                    <div className="relative">
-                      <img
-                        src={generatedArticle.featuredImage}
-                        alt="Featured"
-                        className="w-full h-48 object-cover rounded-xl border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setGeneratedArticle({ ...generatedArticle, featuredImage: undefined })}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : showImageGenerator ? (
-                    <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                      <ImageGenerator
-                        onImageGenerated={(url) => {
-                          setGeneratedArticle({ ...generatedArticle, featuredImage: url });
-                          setShowImageGenerator(false);
-                        }}
-                        articleTitle={generatedArticle.title}
-                        articleContent={generatedArticle.content}
-                      />
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-500">
-                      画像が設定されていません
-                    </div>
-                  )}
+                  <FeaturedImageUpload
+                    value={generatedArticle.featuredImage}
+                    onChange={(url) => setGeneratedArticle({ ...generatedArticle, featuredImage: url })}
+                    alt={generatedArticle.featuredImageAlt || ''}
+                    onAltChange={(alt) => setGeneratedArticle({ ...generatedArticle, featuredImageAlt: alt })}
+                    showImageGenerator={true}
+                    imageGeneratorTitle={generatedArticle.title}
+                    imageGeneratorContent={generatedArticle.content}
+                  />
                 </div>
 
                 {/* 本文 */}
@@ -428,22 +391,22 @@ export default function ArticleGeneratorModal({
 
                 <div className="flex gap-4">
                   <button
-                    onClick={handleRewrite}
-                    className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium"
+                    onClick={handleClose}
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
                   >
-                    ✏️ リライト
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleRewrite}
+                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium"
+                  >
+                    リライト
                   </button>
                   <button
                     onClick={handleUseArticle}
                     className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
                   >
-                    ✓ この記事を使用
-                  </button>
-                  <button
-                    onClick={handleClose}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
-                  >
-                    キャンセル
+                    この記事を使用
                   </button>
                 </div>
               </div>
