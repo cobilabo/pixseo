@@ -191,20 +191,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           <form id="article-edit-form" onSubmit={handleSubmit}>
             {/* アイキャッチ画像（一番上・横長いっぱい） */}
             <div className="mb-6">
-              <div className="bg-white rounded-xl p-6 space-y-4">
-                {/* プレビューボタン */}
-                {formData.isPublished && (
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handlePreview}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      プレビュー
-                    </button>
-                  </div>
-                )}
-
+              <div className="bg-white rounded-xl p-6">
                 <FeaturedImageUpload
                   value={featuredImageUrl}
                   onChange={setFeaturedImageUrl}

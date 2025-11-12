@@ -106,36 +106,6 @@ export default function FeaturedImageUpload({
 
   return (
     <div className="space-y-4">
-      {/* ボタン群：アップロード、メディアライブラリ、AI生成 */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handleChange}
-          disabled={uploading}
-          className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {uploading ? 'アップロード中...' : 'アップロード'}
-        </button>
-        
-        <button
-          type="button"
-          onClick={() => setShowMediaLibrary(true)}
-          className="flex-1 px-4 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
-        >
-          メディアライブラリから選択
-        </button>
-        
-        {showImageGenerator && (
-          <button
-            type="button"
-            onClick={() => setShowAIGenerator(!showAIGenerator)}
-            className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
-          >
-            {showAIGenerator ? 'AI生成を閉じる' : '🎨 AI生成'}
-          </button>
-        )}
-      </div>
-
       <input
         ref={fileInputRef}
         type="file"
@@ -220,14 +190,44 @@ export default function FeaturedImageUpload({
           )}
         </div>
       ) : (
-        <div
-          className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors cursor-pointer bg-gray-50"
-          onClick={handleChange}
-        >
-          <svg className="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="text-sm font-medium text-gray-700">{label}</span>
+        <div className="relative w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+          {/* ボタン群（破線エリア上部に配置） */}
+          <div className="absolute top-0 left-0 right-0 p-3 flex gap-2 bg-white bg-opacity-90 backdrop-blur-sm border-b border-gray-200">
+            <button
+              type="button"
+              onClick={handleChange}
+              disabled={uploading}
+              className="flex-1 px-4 py-2.5 bg-transparent text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? 'アップロード中...' : 'アップロード'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setShowMediaLibrary(true)}
+              className="flex-1 px-4 py-2.5 bg-transparent text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+            >
+              メディアライブラリから選択
+            </button>
+            
+            {showImageGenerator && (
+              <button
+                type="button"
+                onClick={() => setShowAIGenerator(!showAIGenerator)}
+                className="flex-1 px-4 py-2.5 bg-transparent text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              >
+                {showAIGenerator ? 'AI生成を閉じる' : 'AI生成'}
+              </button>
+            )}
+          </div>
+
+          {/* アイコンとラベル（中央） */}
+          <div className="flex flex-col items-center justify-center cursor-pointer" onClick={handleChange}>
+            <svg className="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-700">{label}</span>
+          </div>
         </div>
       )}
 
@@ -237,7 +237,6 @@ export default function FeaturedImageUpload({
           label="画像の説明（alt属性）"
           value={altText}
           onChange={handleAltChange}
-          placeholder="画像の内容を説明してください"
         />
       )}
 

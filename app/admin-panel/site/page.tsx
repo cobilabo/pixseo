@@ -184,7 +184,6 @@ export default function SitePage() {
                 label="トップページ メインタイトル"
                 value={formData.mainTitle}
                 onChange={(value) => setFormData({ ...formData, mainTitle: value })}
-                placeholder="例：バリアフリー情報メディア"
               />
 
               {/* サブタイトル */}
@@ -192,7 +191,6 @@ export default function SitePage() {
                 label="トップページ サブタイトル"
                 value={formData.mainSubtitle}
                 onChange={(value) => setFormData({ ...formData, mainSubtitle: value })}
-                placeholder="例：おでかけ・外出に役立つ情報を探す"
               />
             </div>
           </form>
