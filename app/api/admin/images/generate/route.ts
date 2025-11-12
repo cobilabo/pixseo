@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminStorage, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,36 +86,69 @@ export async function POST(request: NextRequest) {
 
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     
-    // Firebase Storageにアップロード
+    // sharpで画像情報を取得
+    const image = sharp(imageBuffer);
+    const metadata = await image.metadata();
+    const originalWidth = metadata.width || parseInt(size.split('x')[0]);
+    const originalHeight = metadata.height || parseInt(size.split('x')[1]);
+
+    // WebPに変換（最適化）
+    const maxWidth = 2000;
+    const resizedImage = originalWidth > maxWidth
+      ? image.resize(maxWidth, null, { withoutEnlargement: true })
+      : image;
+    
+    const optimizedBuffer = await resizedImage
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // Firebase Storageにアップロード（WebP）
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
-    const fileName = `articles/ai-generated/${timestamp}_${randomString}.png`;
+    const fileName = `articles/ai-generated/${timestamp}_${randomString}.webp`;
     
     const bucket = adminStorage.bucket();
     const fileRef = bucket.file(fileName);
     
-    await fileRef.save(imageBuffer, {
+    await fileRef.save(optimizedBuffer, {
       metadata: {
-        contentType: 'image/png',
+        contentType: 'image/webp',
+      },
+    });
+
+    // サムネイル生成（300x300）
+    const thumbnailBuffer = await sharp(imageBuffer)
+      .resize(300, 300, { fit: 'cover' })
+      .webp({ quality: 70 })
+      .toBuffer();
+    
+    const thumbnailFileName = `articles/ai-generated/thumbnails/${timestamp}_${randomString}_thumb.webp`;
+    const thumbnailRef = bucket.file(thumbnailFileName);
+    
+    await thumbnailRef.save(thumbnailBuffer, {
+      metadata: {
+        contentType: 'image/webp',
       },
     });
 
     // 公開URLを生成
     await fileRef.makePublic();
+    await thumbnailRef.makePublic();
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    const thumbnailUrl = `https://storage.googleapis.com/${bucket.name}/${thumbnailFileName}`;
 
     // Firestoreのmediaコレクションに登録（メディアライブラリで閲覧可能にする）
     const mediaData = {
       mediaId,
-      name: `ai-generated_${timestamp}_${randomString}.png`,
-      originalName: `AI生成画像_${prompt.substring(0, 30)}....png`,
+      name: `ai-generated_${timestamp}_${randomString}.webp`,
+      originalName: `AI生成画像_${prompt.substring(0, 30)}....webp`,
       url: publicUrl,
-      thumbnailUrl: publicUrl, // AI生成画像はそのままサムネイルとして使用
+      thumbnailUrl: thumbnailUrl,
       type: 'image',
-      mimeType: 'image/png',
-      size: imageBuffer.length,
-      width: parseInt(size.split('x')[0]),
-      height: parseInt(size.split('x')[1]),
+      mimeType: 'image/webp',
+      size: optimizedBuffer.length,
+      width: originalWidth,
+      height: originalHeight,
       alt: prompt, // プロンプトをaltとして保存
       isAiGenerated: true,
       aiPrompt: prompt,
