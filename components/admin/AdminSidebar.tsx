@@ -431,7 +431,7 @@ const AdminSidebar = memo(function AdminSidebar({
         {/* ログアウトボタン */}
         <button
           onClick={onSignOut}
-          className="w-full px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-full hover:border-gray-400 hover:bg-gray-50 transition-colors"
+          className="w-full px-4 py-2 text-sm font-bold text-gray-400 bg-white border border-gray-200 rounded-full hover:border-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors"
         >
           ログアウト
         </button>

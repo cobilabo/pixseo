@@ -32,26 +32,21 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         {/* 白背景の正円コンテナ + 共通シャドウ */}
-        <div className="bg-white rounded-[50%] w-[28rem] h-[28rem] flex items-center justify-center p-12 shadow-custom mx-auto">
-          <div className="w-full max-w-xs space-y-8">
-            {/* ロゴ */}
-            <div className="flex justify-center mb-8">
-              <div className="relative w-40 h-40">
-                <Image
-                  src="/logo_tate_b.svg"
-                  alt="PIXSEO Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+        <div className="bg-white rounded-[50%] w-[32rem] h-[32rem] flex items-center justify-center p-12 shadow-custom mx-auto">
+          <div className="w-full max-w-xs space-y-6">
+            {/* ロゴとサブタイトル */}
+            <div className="text-center space-y-3">
+              <div className="flex justify-center">
+                <div className="relative w-40 h-40">
+                  <Image
+                    src="/logo_tate_b.svg"
+                    alt="PIXSEO Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* タイトル */}
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold text-gray-900 tracking-wide">
-                ADMIN LOGIN
-              </h2>
               <p className="text-xs text-gray-600 leading-relaxed">
                 SEO 対応、爆速スワイプ型オウンドメディア
               </p>
