@@ -4,15 +4,15 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
-// バナー一覧取得
+// ブロック一覧取得
 export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
     
-    console.log('[API Banners] バナー一覧取得開始', { mediaId });
+    console.log('[API Blocks] ブロック一覧取得開始', { mediaId });
     
-    let query: FirebaseFirestore.Query = adminDb.collection('banners');
+    let query: FirebaseFirestore.Query = adminDb.collection('blocks');
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     
     const snapshot = await query.orderBy('order').get();
     
-    const banners = snapshot.docs.map((doc) => {
+    const blocks = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -31,19 +31,19 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log('[API Banners] 取得したバナー数:', banners.length);
+    console.log('[API Blocks] 取得したブロック数:', blocks.length);
     
-    return NextResponse.json(banners);
+    return NextResponse.json(blocks);
   } catch (error: any) {
-    console.error('[API Banners] エラー:', error);
-    return NextResponse.json({ error: 'Failed to fetch banners' }, { status: 500 });
+    console.error('[API Blocks] エラー:', error);
+    return NextResponse.json({ error: 'Failed to fetch blocks' }, { status: 500 });
   }
 }
 
-// バナー作成
+// ブロック作成
 export async function POST(request: Request) {
   try {
-    console.log('[API Banners] バナー作成開始');
+    console.log('[API Blocks] ブロック作成開始');
     
     const body = await request.json();
     const { title, imageUrl, linkUrl, isActive, mediaId } = body;
@@ -57,14 +57,14 @@ export async function POST(request: Request) {
     }
 
     // 現在の最大order値を取得（同じmediaId内で）
-    const snapshot = await adminDb.collection('banners')
+    const snapshot = await adminDb.collection('blocks')
       .where('mediaId', '==', mediaId)
       .orderBy('order', 'desc')
       .limit(1)
       .get();
     const maxOrder = snapshot.empty ? 0 : (snapshot.docs[0].data().order || 0);
 
-    const bannerData = {
+    const blockData = {
       mediaId,
       title,
       imageUrl,
@@ -75,14 +75,14 @@ export async function POST(request: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const docRef = await adminDb.collection('banners').add(bannerData);
+    const docRef = await adminDb.collection('blocks').add(blockData);
     
-    console.log('[API Banners] バナー作成成功:', docRef.id);
+    console.log('[API Blocks] ブロック作成成功:', docRef.id);
     
     return NextResponse.json({ id: docRef.id });
   } catch (error: any) {
-    console.error('[API Banners] エラー:', error);
-    return NextResponse.json({ error: 'Failed to create banner' }, { status: 500 });
+    console.error('[API Blocks] エラー:', error);
+    return NextResponse.json({ error: 'Failed to create block' }, { status: 500 });
   }
 }
 

@@ -126,7 +126,7 @@ const AdminSidebar = memo(function AdminSidebar({
     },
   ];
 
-  // セクション3: サイト、デザイン、バナー、メディア
+  // セクション3: サイト、デザイン、ブロック、メディア
   const section3Navigation: MenuItem[] = [
     { 
       name: 'サイト', 
@@ -155,12 +155,12 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: 'バナー', 
-      href: '/banners',
+      name: 'ブロック', 
+      href: '/blocks',
       icon: (
         <Image 
           src="/block.svg" 
-          alt="バナー" 
+          alt="ブロック" 
           width={20}
           height={20}
           priority
@@ -342,7 +342,7 @@ const AdminSidebar = memo(function AdminSidebar({
           })}
         </div>
 
-        {/* セクション3: サイト、デザイン、バナー、メディア */}
+        {/* セクション3: サイト、デザイン、ブロック、メディア */}
         <div className="mb-4 p-2 bg-[#f1f6f9] rounded-lg">
           {section3Navigation.map((item) => {
             const isActive = item.exact 

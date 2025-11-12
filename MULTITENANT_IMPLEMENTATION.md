@@ -160,8 +160,8 @@ import { apiGet, apiPost } from '@/lib/api-client';
 const articles = await apiGet<Article[]>('/api/admin/articles');
 
 // POSTリクエスト
-await apiPost('/api/admin/banners', {
-  title: 'バナータイトル',
+await apiPost('/api/admin/blocks', {
+  title: 'ブロックタイトル',
   imageUrl: 'https://...',
   mediaId: currentTenant.id, // 明示的に指定
 });

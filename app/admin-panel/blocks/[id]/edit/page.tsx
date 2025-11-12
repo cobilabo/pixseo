@@ -7,7 +7,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 
-export default function EditBannerPage({ params }: { params: { id: string } }) {
+export default function EditBlockPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -19,9 +19,9 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    const fetchBanner = async () => {
+    const fetchBlock = async () => {
       try {
-        const response = await fetch(`/api/admin/banners/${params.id}`);
+        const response = await fetch(`/api/admin/blocks/${params.id}`);
         if (response.ok) {
           const data = await response.json();
           setFormData({
@@ -32,14 +32,14 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
           });
         }
       } catch (error) {
-        console.error('Error fetching banner:', error);
-        alert('バナー情報の取得に失敗しました');
+        console.error('Error fetching block:', error);
+        alert('ブロック情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
     };
 
-    fetchBanner();
+    fetchBlock();
   }, [params.id]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -53,7 +53,7 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/admin/banners/${params.id}`, {
+      const response = await fetch(`/api/admin/blocks/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -62,14 +62,14 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        alert('バナーを更新しました');
-        router.push('/banners');
+        alert('ブロックを更新しました');
+        router.push('/blocks');
       } else {
         throw new Error('更新に失敗しました');
       }
     } catch (error) {
-      console.error('Error updating banner:', error);
-      alert('バナーの更新に失敗しました');
+      console.error('Error updating block:', error);
+      alert('ブロックの更新に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -82,12 +82,12 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
           <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">バナー編集</h2>
+              <h2 className="text-xl font-bold text-gray-900">ブロック編集</h2>
 
-              {/* バナー画像 */}
+              {/* ブロック画像 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  バナー画像 *
+                  ブロック画像 *
                 </label>
                 <FeaturedImageUpload
                   value={formData.imageUrl}
@@ -148,7 +148,7 @@ export default function EditBannerPage({ params }: { params: { id: string } }) {
               disabled={loading}
               onClick={handleSubmit}
               className="bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              title="バナー更新"
+              title="ブロック更新"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

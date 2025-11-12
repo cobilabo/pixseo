@@ -9,7 +9,7 @@ import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiPost } from '@/lib/api-client';
 
-export default function NewBannerPage() {
+export default function NewBlockPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
@@ -36,16 +36,16 @@ export default function NewBannerPage() {
     setLoading(true);
 
     try {
-      await apiPost('/api/admin/banners', {
+      await apiPost('/api/admin/blocks', {
         ...formData,
         mediaId: currentTenant.id,
       });
 
-      alert('バナーを作成しました');
-      router.push('/banners');
+      alert('ブロックを作成しました');
+      router.push('/blocks');
     } catch (error) {
-      console.error('Error creating banner:', error);
-      alert('バナーの作成に失敗しました');
+      console.error('Error creating block:', error);
+      alert('ブロックの作成に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -57,12 +57,12 @@ export default function NewBannerPage() {
         <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">新規バナー作成</h2>
+              <h2 className="text-xl font-bold text-gray-900">新規ブロック作成</h2>
 
-              {/* バナー画像 */}
+              {/* ブロック画像 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  バナー画像 *
+                  ブロック画像 *
                 </label>
                 <FeaturedImageUpload
                   value={formData.imageUrl}
@@ -123,7 +123,7 @@ export default function NewBannerPage() {
               disabled={loading}
               onClick={handleSubmit}
               className="bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              title="バナー作成"
+              title="ブロック作成"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

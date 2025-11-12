@@ -4,38 +4,38 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
-// バナー取得
+// ブロック取得
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Banner Get] 取得開始:', params.id);
+    console.log('[API Block Get] 取得開始:', params.id);
     
-    const doc = await adminDb.collection('banners').doc(params.id).get();
+    const doc = await adminDb.collection('blocks').doc(params.id).get();
     
     if (!doc.exists) {
-      return NextResponse.json({ error: 'Banner not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Block not found' }, { status: 404 });
     }
     
     const data = doc.data();
-    const banner = {
+    const block = {
       id: doc.id,
       ...data,
       createdAt: data?.createdAt?.toDate?.() || new Date(),
       updatedAt: data?.updatedAt?.toDate?.() || new Date(),
     };
     
-    console.log('[API Banner Get] 取得成功');
+    console.log('[API Block Get] 取得成功');
     
-    return NextResponse.json(banner);
+    return NextResponse.json(block);
   } catch (error: any) {
-    console.error('[API Banner Get] エラー:', error);
-    return NextResponse.json({ error: 'Failed to get banner' }, { status: 500 });
+    console.error('[API Block Get] エラー:', error);
+    return NextResponse.json({ error: 'Failed to get block' }, { status: 500 });
   }
 }
 
-// バナー更新
+// ブロック更新
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Banner Update] 更新開始:', params.id);
+    console.log('[API Block Update] 更新開始:', params.id);
     
     const body = await request.json();
     const updateData: any = {
@@ -43,30 +43,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    await adminDb.collection('banners').doc(params.id).update(updateData);
+    await adminDb.collection('blocks').doc(params.id).update(updateData);
     
-    console.log('[API Banner Update] 更新成功');
+    console.log('[API Block Update] 更新成功');
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('[API Banner Update] エラー:', error);
-    return NextResponse.json({ error: 'Failed to update banner' }, { status: 500 });
+    console.error('[API Block Update] エラー:', error);
+    return NextResponse.json({ error: 'Failed to update block' }, { status: 500 });
   }
 }
 
-// バナー削除
+// ブロック削除
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Banner Delete] 削除開始:', params.id);
+    console.log('[API Block Delete] 削除開始:', params.id);
     
-    await adminDb.collection('banners').doc(params.id).delete();
+    await adminDb.collection('blocks').doc(params.id).delete();
     
-    console.log('[API Banner Delete] 削除成功');
+    console.log('[API Block Delete] 削除成功');
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('[API Banner Delete] エラー:', error);
-    return NextResponse.json({ error: 'Failed to delete banner' }, { status: 500 });
+    console.error('[API Block Delete] エラー:', error);
+    return NextResponse.json({ error: 'Failed to delete block' }, { status: 500 });
   }
 }
 
