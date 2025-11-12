@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminStorage } from '@/lib/firebase/admin';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,43 +22,86 @@ export async function POST(request: Request) {
       size: file.size
     });
 
-    // ファイル名を生成
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const extension = file.name.split('.').pop();
-    const fileName = `articles/${timestamp}_${randomString}.${extension}`;
-
-    console.log('[API Upload] 生成されたパス:', fileName);
-
     // ArrayBufferに変換
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    console.log('[API Upload] Admin Storage経由でアップロード中...');
-
-    // Admin SDKでアップロード
     const bucket = adminStorage.bucket();
-    const fileRef = bucket.file(fileName);
-    
-    await fileRef.save(buffer, {
-      metadata: {
-        contentType: file.type,
-      },
-    });
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
 
-    console.log('[API Upload] アップロード完了、公開URL取得中...');
+    // 画像かどうかをチェック
+    const isImage = file.type.startsWith('image/');
 
-    // 公開URLを生成
-    await fileRef.makePublic();
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    if (isImage) {
+      console.log('[API Upload] 画像を最適化中...');
+      
+      // sharpで画像情報を取得
+      const image = sharp(buffer);
+      const metadata = await image.metadata();
+      const width = metadata.width || 0;
+      const height = metadata.height || 0;
 
-    console.log('[API Upload] 公開URL:', publicUrl);
+      // 最大幅2000pxにリサイズ（アスペクト比維持）
+      const maxWidth = 2000;
+      const resizedImage = width > maxWidth 
+        ? image.resize(maxWidth, null, { withoutEnlargement: true })
+        : image;
 
-    return NextResponse.json({ url: publicUrl });
+      // WebP形式に変換（品質80%）
+      const optimizedBuffer = await resizedImage
+        .webp({ quality: 80 })
+        .toBuffer();
+      
+      const finalSize = optimizedBuffer.length;
+      
+      console.log('[API Upload] 最適化完了:', {
+        original: file.size,
+        optimized: finalSize,
+        reduction: `${((1 - finalSize / file.size) * 100).toFixed(1)}%`,
+      });
+
+      // WebP画像をアップロード
+      const fileName = `articles/${timestamp}_${randomString}.webp`;
+      const fileRef = bucket.file(fileName);
+      
+      await fileRef.save(optimizedBuffer, {
+        metadata: {
+          contentType: 'image/webp',
+        },
+      });
+
+      console.log('[API Upload] アップロード完了、公開URL取得中...');
+
+      // 公開URLを生成
+      await fileRef.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+      console.log('[API Upload] 公開URL:', publicUrl);
+
+      return NextResponse.json({ url: publicUrl });
+    } else {
+      // 画像以外はそのままアップロード
+      const extension = file.name.split('.').pop();
+      const fileName = `articles/${timestamp}_${randomString}.${extension}`;
+      const fileRef = bucket.file(fileName);
+      
+      await fileRef.save(buffer, {
+        metadata: {
+          contentType: file.type,
+        },
+      });
+
+      await fileRef.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+      console.log('[API Upload] 公開URL:', publicUrl);
+
+      return NextResponse.json({ url: publicUrl });
+    }
   } catch (error: any) {
     console.error('[API Upload] エラー:', error);
     console.error('[API Upload] エラー詳細:', error?.message);
     return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
   }
 }
-
