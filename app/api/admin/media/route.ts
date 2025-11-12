@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
       query = query.where('mediaId', '==', mediaId);
     }
     
-    const snapshot = await query.orderBy('createdAt', 'desc').get();
+    // orderByはクライアント側で行う（複合インデックスを避けるため）
+    const snapshot = await query.get();
     
     const media = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -29,6 +30,9 @@ export async function GET(request: NextRequest) {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       };
     });
+
+    // クライアント側でソートする代わりに、ここでソート
+    media.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     console.log('[API Media] 取得したメディア数:', media.length);
     
