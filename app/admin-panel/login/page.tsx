@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         {/* 白背景の正円コンテナ + 共通シャドウ */}
-        <div className="bg-white rounded-[50%] w-[34rem] h-[34rem] flex items-center justify-center p-12 shadow-custom mx-auto">
+        <div className="bg-white rounded-[50%] w-[34rem] h-[34rem] flex items-center justify-center pt-0 pb-12 px-12 shadow-custom mx-auto">
           <div className="w-full max-w-xs space-y-6">
             {/* ロゴとサブタイトル */}
             <div className="text-center space-y-3">
