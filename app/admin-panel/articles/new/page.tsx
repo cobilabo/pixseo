@@ -11,7 +11,6 @@ import FloatingMultiSelect from '@/components/admin/FloatingMultiSelect';
 import { createArticle } from '@/lib/firebase/articles-admin';
 import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
-import { useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiGet } from '@/lib/api-client';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
