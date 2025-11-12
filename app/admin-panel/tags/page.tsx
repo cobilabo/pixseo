@@ -5,11 +5,12 @@ import Link from 'next/link';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteTag } from '@/lib/firebase/tags-admin';
-import { Tag } from '@/types/article';
+import { Tag, Article } from '@/types/article';
 import { apiGet } from '@/lib/api-client';
 
 export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,13 +20,22 @@ export default function TagsPage() {
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const data = await apiGet<Tag[]>('/api/admin/tags');
-      setTags(data);
+      const [tagsData, articlesData] = await Promise.all([
+        apiGet<Tag[]>('/api/admin/tags'),
+        apiGet<Article[]>('/api/admin/articles'),
+      ]);
+      setTags(tagsData);
+      setArticles(articlesData);
     } catch (error) {
       console.error('Error fetching tags:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // タグの使用回数を計算
+  const getTagUsageCount = (tagId: string): number => {
+    return articles.filter(article => article.tagIds.includes(tagId)).length;
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -63,8 +73,8 @@ export default function TagsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       スラッグ
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      検索回数
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      使用回数
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       操作
@@ -82,8 +92,10 @@ export default function TagsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {tag.slug}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {tag.searchCount || 0}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {getTagUsageCount(tag.id)} 記事
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteCategory } from '@/lib/firebase/categories-admin';
-import { Category } from '@/types/article';
+import { Category, Article } from '@/types/article';
 import { apiGet } from '@/lib/api-client';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,13 +20,22 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await apiGet<Category[]>('/api/admin/categories');
-      setCategories(data);
+      const [categoriesData, articlesData] = await Promise.all([
+        apiGet<Category[]>('/api/admin/categories'),
+        apiGet<Article[]>('/api/admin/articles'),
+      ]);
+      setCategories(categoriesData);
+      setArticles(articlesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // カテゴリーの使用回数を計算
+  const getCategoryUsageCount = (categoryId: string): number => {
+    return articles.filter(article => article.categoryIds.includes(categoryId)).length;
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -87,6 +97,9 @@ export default function CategoriesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       スラッグ
                     </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      使用回数
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       おすすめ
                     </th>
@@ -125,6 +138,11 @@ export default function CategoriesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {category.slug}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {getCategoryUsageCount(category.id)} 記事
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <label className="cursor-pointer">
