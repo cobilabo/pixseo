@@ -36,9 +36,9 @@ export default function LoginPage() {
           <div className="w-full space-y-8">
             {/* ロゴ */}
             <div className="flex justify-center mb-8">
-              <div className="relative w-48 h-16">
+              <div className="relative w-40 h-40">
                 <Image
-                  src="/logo.png"
+                  src="/logo_tate_b.svg"
                   alt="PIXSEO Logo"
                   fill
                   className="object-contain"

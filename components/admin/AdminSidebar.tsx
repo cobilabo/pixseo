@@ -223,10 +223,10 @@ const AdminSidebar = memo(function AdminSidebar({
       <div className="p-4 border-b flex items-center justify-center">
         <Link href="/" className="flex items-center justify-center">
           <Image 
-            src="/logo.png" 
+            src="/logo_yoko_b_1.svg" 
             alt="PixSEO 管理画面" 
-            width={120}
-            height={32}
+            width={150}
+            height={40}
             priority
             style={{ height: 'auto' }}
           />
