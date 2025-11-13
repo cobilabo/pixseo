@@ -1,14 +1,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ContentBlock, BannerContent } from '@/types/block';
+import { FooterBlock } from '@/types/theme';
 
 interface BlockRendererProps {
-  blocks: ContentBlock[];
+  blocks: FooterBlock[];
   className?: string;
 }
 
 /**
- * ブロックを表示するコンポーネント
+ * フッターブロックを表示するコンポーネント
  */
 export default function BlockRenderer({ blocks, className = '' }: BlockRendererProps) {
   if (blocks.length === 0) {
@@ -16,34 +16,19 @@ export default function BlockRenderer({ blocks, className = '' }: BlockRendererP
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {blocks.map((block) => (
-        <BlockItem key={block.id} block={block} />
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(blocks.length, 4)} gap-6 ${className}`}>
+      {blocks.map((block, index) => (
+        <BannerBlock key={index} block={block} />
       ))}
     </div>
   );
 }
 
 /**
- * 個別のブロックアイテムを表示
- */
-function BlockItem({ block }: { block: ContentBlock }) {
-  // 現在はbanner typeのみ対応（将来的に他のtypeも追加可能）
-  if (block.type === 'banner') {
-    return <BannerBlock block={block} />;
-  }
-
-  // 未対応のtypeの場合は何も表示しない
-  return null;
-}
-
-/**
  * バナーブロックを表示
  */
-function BannerBlock({ block }: { block: ContentBlock }) {
-  const content = block.content as BannerContent;
-
-  if (!content.imageUrl) {
+function BannerBlock({ block }: { block: FooterBlock }) {
+  if (!block.imageUrl) {
     return null;
   }
 
@@ -51,8 +36,8 @@ function BannerBlock({ block }: { block: ContentBlock }) {
     <div className="relative w-full overflow-hidden rounded-lg bg-gray-100" style={{ backgroundColor: 'var(--block-background-color, #ffffff)' }}>
       <div className="relative w-full" style={{ paddingBottom: '50%' }}>
         <Image
-          src={content.imageUrl}
-          alt={content.altText || block.title}
+          src={block.imageUrl}
+          alt={block.alt || 'バナー画像'}
           fill
           className="object-cover transition-transform duration-300 hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -62,13 +47,13 @@ function BannerBlock({ block }: { block: ContentBlock }) {
   );
 
   // リンクがある場合はリンクでラップ
-  if (content.linkUrl) {
+  if (block.linkUrl) {
     return (
       <Link
-        href={content.linkUrl}
+        href={block.linkUrl}
         className="block transition-opacity hover:opacity-90"
-        target={content.linkUrl.startsWith('http') ? '_blank' : undefined}
-        rel={content.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+        target={block.linkUrl.startsWith('http') ? '_blank' : undefined}
+        rel={block.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
       >
         {imageElement}
       </Link>

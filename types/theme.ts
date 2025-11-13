@@ -29,9 +29,19 @@ export const THEME_LAYOUTS = {
 
 export type ThemeLayoutId = keyof typeof THEME_LAYOUTS;
 
+// フッターブロックの定義
+export interface FooterBlock {
+  imageUrl: string;
+  alt: string;
+  linkUrl: string;
+}
+
 export interface Theme {
   // レイアウトテーマ
   layoutTheme: ThemeLayoutId; // 'cobi' | 'furatto'
+  
+  // フッターブロック（最大4つ）
+  footerBlocks?: FooterBlock[];
   
   // 基本カラー
   primaryColor: string;             // メインカラー

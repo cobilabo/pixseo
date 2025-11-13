@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
+import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthGuard from '@/components/admin/AuthGuard';
 import { apiClient } from '@/lib/api-client';
 
-export default function DesignPage() {
+export default function ThemePage() {
   const { currentTenant } = useMediaTenant();
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
@@ -17,18 +18,18 @@ export default function DesignPage() {
 
   useEffect(() => {
     if (currentTenant) {
-      fetchDesignSettings();
+      fetchThemeSettings();
     }
   }, [currentTenant]);
 
-  const fetchDesignSettings = async () => {
+  const fetchThemeSettings = async () => {
     try {
       setFetchLoading(true);
-      const response = await apiClient.get('/api/admin/design');
+      const response = await apiClient.get('/api/admin/theme');
       const data = await response.json();
       setTheme(data.theme || defaultTheme);
     } catch (error) {
-      console.error('デザイン設定の取得に失敗しました:', error);
+      console.error('テーマ設定の取得に失敗しました:', error);
     } finally {
       setFetchLoading(false);
     }
@@ -42,7 +43,7 @@ export default function DesignPage() {
 
     try {
       setLoading(true);
-      const response = await apiClient.put('/api/admin/design', { theme });
+      const response = await apiClient.put('/api/admin/theme', { theme });
       
       if (response.ok) {
         alert('デザイン設定を保存しました');
@@ -66,6 +67,21 @@ export default function DesignPage() {
 
   const updateTheme = (key: keyof Theme, value: any) => {
     setTheme(prev => ({ ...prev, [key]: value }));
+  };
+
+  // フッターブロック関連の関数
+  const updateFooterBlock = (index: number, field: keyof FooterBlock, value: string) => {
+    const newBlocks = [...(theme.footerBlocks || [])];
+    while (newBlocks.length <= index) {
+      newBlocks.push({ imageUrl: '', alt: '', linkUrl: '' });
+    }
+    newBlocks[index] = { ...newBlocks[index], [field]: value };
+    setTheme(prev => ({ ...prev, footerBlocks: newBlocks }));
+  };
+
+  const removeFooterBlock = (index: number) => {
+    const newBlocks = (theme.footerBlocks || []).filter((_, i) => i !== index);
+    setTheme(prev => ({ ...prev, footerBlocks: newBlocks }));
   };
 
   const selectedThemeLayout = THEME_LAYOUTS[theme.layoutTheme as ThemeLayoutId] || THEME_LAYOUTS.cobi;
@@ -208,6 +224,72 @@ export default function DesignPage() {
               placeholder="例: .article-content p { line-height: 1.8; }"
               className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-none"
             />
+          </div>
+
+          {/* フッターブロック */}
+          <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">フッターブロック</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              フッターエリアに表示するバナーを最大4つまで設定できます。
+            </p>
+            
+            <div className="space-y-8">
+              {[0, 1, 2, 3].map((index) => {
+                const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
+                const hasImage = Boolean(block.imageUrl);
+                
+                return (
+                  <div key={index} className="p-6 border border-gray-200 rounded-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">バナー {index + 1}</h3>
+                      {hasImage && (
+                        <button
+                          type="button"
+                          onClick={() => removeFooterBlock(index)}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* 画像アップロード */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        バナー画像
+                      </label>
+                      <FeaturedImageUpload
+                        value={block.imageUrl}
+                        onChange={(url) => updateFooterBlock(index, 'imageUrl', url)}
+                      />
+                    </div>
+
+                    {/* Alt属性 */}
+                    {hasImage && (
+                      <>
+                        <div className="mb-4">
+                          <FloatingInput
+                            label="Alt属性"
+                            value={block.alt}
+                            onChange={(value) => updateFooterBlock(index, 'alt', value)}
+                          />
+                        </div>
+
+                        {/* リンクURL */}
+                        <div>
+                          <FloatingInput
+                            label="リンク先URL（任意）"
+                            value={block.linkUrl}
+                            onChange={(value) => updateFooterBlock(index, 'linkUrl', value)}
+                            type="url"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* フローティングボタン */}

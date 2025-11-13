@@ -4,7 +4,6 @@ import { getCategoryServer, getCategoriesServer } from '@/lib/firebase/categorie
 import { getArticlesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getAllBlocksByPlacementServer } from '@/lib/firebase/blocks-server';
 import MediaHeader from '@/components/layout/MediaHeader';
 import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
@@ -61,13 +60,12 @@ export default async function CategoryPage({ params }: PageProps) {
     notFound();
   }
 
-  // サイト設定、Theme、記事、カテゴリー、ブロックを並列取得
-  const [siteInfo, theme, articles, allCategories, blocksByPlacement] = await Promise.all([
+  // サイト設定、Theme、記事、カテゴリーを並列取得
+  const [siteInfo, theme, articles, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ categoryId: category.id, limit: 30 }),
     getCategoriesServer(),
-    mediaId ? getAllBlocksByPlacementServer(mediaId, theme.layoutTheme) : Promise.resolve({}),
   ]);
   
   // ThemeスタイルとカスタムCSSを生成
@@ -77,8 +75,8 @@ export default async function CategoryPage({ params }: PageProps) {
     ? allCategories.filter(cat => cat.mediaId === mediaId)
     : allCategories;
 
-  // 各配置場所のブロックを取得
-  const footerBlocks = blocksByPlacement['footer'] || [];
+  // フッターブロックを取得（themeから）
+  const footerBlocks = theme.footerBlocks?.filter(block => block.imageUrl) || [];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>

@@ -142,25 +142,12 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
-      name: 'デザイン', 
-      href: '/design',
+      name: 'テーマ', 
+      href: '/theme',
       icon: (
         <Image 
           src="/design.svg" 
-          alt="デザイン" 
-          width={20}
-          height={20}
-          priority
-        />
-      )
-    },
-    { 
-      name: 'ブロック', 
-      href: '/blocks',
-      icon: (
-        <Image 
-          src="/block.svg" 
-          alt="ブロック" 
+          alt="テーマ" 
           width={20}
           height={20}
           priority

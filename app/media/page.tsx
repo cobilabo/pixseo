@@ -4,7 +4,6 @@ import { getRecentArticlesServer, getPopularArticlesServer } from '@/lib/firebas
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getAllBlocksByPlacementServer } from '@/lib/firebase/blocks-server';
 import MediaHeader from '@/components/layout/MediaHeader';
 import SearchBar from '@/components/search/SearchBar';
 import ArticleCard from '@/components/articles/ArticleCard';
@@ -55,14 +54,13 @@ export default async function MediaPage() {
   const headersList = headers();
   const host = headersList.get('host') || '';
   
-  // サイト設定、Theme、ブロックを並列取得
-  const [siteInfo, theme, recentArticles, popularArticles, allCategories, blocksByPlacement] = await Promise.all([
+  // サイト設定、Themeを並列取得
+  const [siteInfo, theme, recentArticles, popularArticles, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
-    mediaId ? getAllBlocksByPlacementServer(mediaId, theme.layoutTheme) : Promise.resolve({}),
   ]);
   
   // ThemeスタイルとカスタムCSSを生成
@@ -73,9 +71,8 @@ export default async function MediaPage() {
     ? allCategories.filter(cat => cat.mediaId === mediaId)
     : allCategories;
 
-  // 各配置場所のブロックを取得
-  const footerBlocks = blocksByPlacement['footer'] || [];
-  const sidePanelBlocks = blocksByPlacement['side-panel'] || [];
+  // フッターブロックを取得（themeから）
+  const footerBlocks = theme.footerBlocks?.filter(block => block.imageUrl) || [];
 
   // JSON-LD 構造化データ（WebSite）
   const jsonLd = {
