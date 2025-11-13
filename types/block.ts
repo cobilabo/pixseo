@@ -2,7 +2,8 @@ export interface ContentBlock {
   id: string;
   type: 'banner' | 'text' | 'feature' | 'faq' | 'cta' | 'html';
   title: string;
-  placement: 'home_top' | 'home_middle' | 'home_bottom' | 'category' | 'article_top' | 'article_bottom';
+  placement: string; // テーマごとに異なる配置場所（例: 'footer', 'sidebar-top'）
+  layoutTheme?: string; // どのテーマ用のブロックか（例: 'cobi', 'furatto'）
   categoryIds?: string[]; // 特定カテゴリーのみ表示
   content: BlockContent;
   order: number;

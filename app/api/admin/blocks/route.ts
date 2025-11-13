@@ -46,19 +46,24 @@ export async function POST(request: Request) {
     console.log('[API Blocks] ブロック作成開始');
     
     const body = await request.json();
-    const { title, imageUrl, linkUrl, isActive, mediaId } = body;
+    const { title, imageUrl, linkUrl, placement, layoutTheme, isActive, mediaId } = body;
 
     if (!title || !imageUrl) {
       return NextResponse.json({ error: 'Title and image URL are required' }, { status: 400 });
+    }
+
+    if (!placement) {
+      return NextResponse.json({ error: 'Placement is required' }, { status: 400 });
     }
 
     if (!mediaId) {
       return NextResponse.json({ error: 'Media ID is required' }, { status: 400 });
     }
 
-    // 現在の最大order値を取得（同じmediaId内で）
+    // 現在の最大order値を取得（同じmediaId + placement内で）
     const snapshot = await adminDb.collection('blocks')
       .where('mediaId', '==', mediaId)
+      .where('placement', '==', placement)
       .orderBy('order', 'desc')
       .limit(1)
       .get();
@@ -69,6 +74,8 @@ export async function POST(request: Request) {
       title,
       imageUrl,
       linkUrl: linkUrl || '',
+      placement,
+      layoutTheme: layoutTheme || 'cobi',
       order: maxOrder + 1,
       isActive: isActive !== undefined ? isActive : true,
       createdAt: FieldValue.serverTimestamp(),

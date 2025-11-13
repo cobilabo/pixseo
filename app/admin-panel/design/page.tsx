@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -68,14 +68,60 @@ export default function DesignPage() {
     setTheme(prev => ({ ...prev, [key]: value }));
   };
 
+  const selectedThemeLayout = THEME_LAYOUTS[theme.layoutTheme as ThemeLayoutId] || THEME_LAYOUTS.cobi;
+
   return (
     <AuthGuard>
       <AdminLayout>
         {fetchLoading ? null : (
           <div className="animate-fadeIn pb-32 space-y-6">
           
+          {/* テーマ選択 */}
+          <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">レイアウトテーマ</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.values(THEME_LAYOUTS).map((layout) => (
+                <button
+                  key={layout.id}
+                  type="button"
+                  onClick={() => updateTheme('layoutTheme', layout.id)}
+                  className={`p-6 rounded-xl border-2 transition-all text-left ${
+                    theme.layoutTheme === layout.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">{layout.displayName}</h3>
+                    {theme.layoutTheme === layout.id && (
+                      <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">{layout.description}</p>
+                  <div className="text-xs text-gray-500">
+                    <span className="font-semibold">ブロック配置場所:</span>{' '}
+                    {layout.blockPlacements.map(p => p.label).join('、')}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>現在選択中:</strong> {selectedThemeLayout.displayName}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                ブロック作成時に、このテーマの配置場所が選択できます。
+              </p>
+            </div>
+          </div>
+          
           {/* 基本カラー */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">基本カラー</h2>
             <div className="grid grid-cols-3 gap-6">
               <ColorPicker label="メインカラー" value={theme.primaryColor} onChange={(v) => updateTheme('primaryColor', v)} />
               <ColorPicker label="サブカラー" value={theme.secondaryColor} onChange={(v) => updateTheme('secondaryColor', v)} />
@@ -85,6 +131,7 @@ export default function DesignPage() {
 
           {/* 背景色 */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">背景色</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="全体背景色" value={theme.backgroundColor} onChange={(v) => updateTheme('backgroundColor', v)} />
               <ColorPicker label="ヘッダー背景色" value={theme.headerBackgroundColor} onChange={(v) => updateTheme('headerBackgroundColor', v)} />
@@ -95,6 +142,7 @@ export default function DesignPage() {
 
           {/* リンク */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">リンク</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="リンクテキストカラー" value={theme.linkColor} onChange={(v) => updateTheme('linkColor', v)} />
               <ColorPicker label="リンクホバーカラー" value={theme.linkHoverColor} onChange={(v) => updateTheme('linkHoverColor', v)} />
@@ -103,6 +151,7 @@ export default function DesignPage() {
 
           {/* 装飾 */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">装飾</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="ボーダーカラー" value={theme.borderColor} onChange={(v) => updateTheme('borderColor', v)} />
               <FloatingInput
@@ -116,6 +165,7 @@ export default function DesignPage() {
 
           {/* 見出しデザイン（H2） */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">見出しデザイン（H2）</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="H2 テキストカラー" value={theme.h2Color} onChange={(v) => updateTheme('h2Color', v)} />
               <ColorPicker label="H2 背景色" value={theme.h2BackgroundColor || 'transparent'} onChange={(v) => updateTheme('h2BackgroundColor', v)} allowOff />
@@ -126,6 +176,7 @@ export default function DesignPage() {
 
           {/* 見出しデザイン（H3） */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">見出しデザイン（H3）</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="H3 テキストカラー" value={theme.h3Color} onChange={(v) => updateTheme('h3Color', v)} />
               <ColorPicker label="H3 背景色" value={theme.h3BackgroundColor || 'transparent'} onChange={(v) => updateTheme('h3BackgroundColor', v)} allowOff />
@@ -136,6 +187,7 @@ export default function DesignPage() {
 
           {/* 見出しデザイン（H4） */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">見出しデザイン（H4）</h2>
             <div className="grid grid-cols-2 gap-6">
               <ColorPicker label="H4 テキストカラー" value={theme.h4Color} onChange={(v) => updateTheme('h4Color', v)} />
               <ColorPicker label="H4 背景色" value={theme.h4BackgroundColor || 'transparent'} onChange={(v) => updateTheme('h4BackgroundColor', v)} allowOff />
@@ -146,6 +198,7 @@ export default function DesignPage() {
 
           {/* カスタムCSS */}
           <div className="bg-white rounded-[1.75rem] p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">カスタムCSS</h2>
             <p className="text-sm text-gray-600 mb-4">
               より細かいデザイン調整が必要な場合は、こちらにCSSを記述してください。
             </p>

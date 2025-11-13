@@ -1,30 +1,63 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
+import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { apiPost } from '@/lib/api-client';
+import { THEME_LAYOUTS, ThemeLayoutId } from '@/types/theme';
+import { apiPost, apiGet } from '@/lib/api-client';
 
 export default function NewBlockPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<ThemeLayoutId>('cobi');
   const [formData, setFormData] = useState({
     title: '',
     imageUrl: '',
     linkUrl: '',
+    placement: '',
     isActive: true,
   });
+
+  // 現在のテーマを取得
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        const response = await apiGet('/api/admin/design');
+        const data = await response.json();
+        if (data.theme?.layoutTheme) {
+          setCurrentTheme(data.theme.layoutTheme as ThemeLayoutId);
+          // デフォルトで最初の配置場所を選択
+          const firstPlacement = THEME_LAYOUTS[data.theme.layoutTheme as ThemeLayoutId]?.blockPlacements[0]?.value;
+          if (firstPlacement && !formData.placement) {
+            setFormData(prev => ({ ...prev, placement: firstPlacement }));
+          }
+        }
+      } catch (error) {
+        console.error('テーマの取得に失敗しました:', error);
+      }
+    };
+
+    if (currentTenant) {
+      fetchTheme();
+    }
+  }, [currentTenant]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!formData.title || !formData.imageUrl) {
       alert('タイトルと画像は必須です');
+      return;
+    }
+
+    if (!formData.placement) {
+      alert('配置場所を選択してください');
       return;
     }
 
@@ -39,6 +72,7 @@ export default function NewBlockPage() {
       await apiPost('/api/admin/blocks', {
         ...formData,
         mediaId: currentTenant.id,
+        layoutTheme: currentTheme,
       });
 
       alert('ブロックを作成しました');
@@ -51,6 +85,12 @@ export default function NewBlockPage() {
     }
   };
 
+  const themeLayout = THEME_LAYOUTS[currentTheme];
+  const placementOptions = themeLayout?.blockPlacements.map(p => ({
+    value: p.value,
+    label: p.label,
+  })) || [];
+
   return (
     <AuthGuard>
       <AdminLayout>
@@ -58,6 +98,16 @@ export default function NewBlockPage() {
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg p-6 space-y-6">
               <h2 className="text-xl font-bold text-gray-900">新規ブロック作成</h2>
+
+              {/* テーマ情報表示 */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-900">
+                  <strong>現在のテーマ:</strong> {themeLayout?.displayName}
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  このテーマの配置場所から選択できます
+                </p>
+              </div>
 
               {/* ブロック画像 */}
               <div>
@@ -75,6 +125,15 @@ export default function NewBlockPage() {
                 label="タイトル"
                 value={formData.title}
                 onChange={(value) => setFormData({ ...formData, title: value })}
+                required
+              />
+
+              {/* 配置場所 */}
+              <FloatingSelect
+                label="配置場所"
+                value={formData.placement}
+                onChange={(value) => setFormData({ ...formData, placement: value })}
+                options={placementOptions}
                 required
               />
 

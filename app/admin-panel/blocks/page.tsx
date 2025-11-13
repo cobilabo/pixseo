@@ -6,12 +6,15 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
 import Image from 'next/image';
 import { apiGet } from '@/lib/api-client';
+import { THEME_LAYOUTS, ThemeLayoutId } from '@/types/theme';
 
 interface ContentBlock {
   id: string;
   title: string;
   imageUrl: string;
   linkUrl?: string;
+  placement?: string;
+  layoutTheme?: string;
   order: number;
   isActive: boolean;
 }
@@ -116,6 +119,21 @@ export default function BlocksPage() {
     }
   };
 
+  // 配置場所のラベルを取得する関数
+  const getPlacementLabel = (block: ContentBlock): string => {
+    if (!block.placement || !block.layoutTheme) {
+      return '未設定';
+    }
+    
+    const themeLayout = THEME_LAYOUTS[block.layoutTheme as ThemeLayoutId];
+    if (!themeLayout) {
+      return block.placement;
+    }
+    
+    const placementObj = themeLayout.blockPlacements.find(p => p.value === block.placement);
+    return placementObj ? placementObj.label : block.placement;
+  };
+
   return (
     <AuthGuard>
       <AdminLayout>
@@ -147,6 +165,16 @@ export default function BlocksPage() {
                         {/* ブロック情報 */}
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {getPlacementLabel(block)}
+                            </span>
+                            {block.layoutTheme && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {THEME_LAYOUTS[block.layoutTheme as ThemeLayoutId]?.displayName || block.layoutTheme}
+                              </span>
+                            )}
+                          </div>
                           {block.linkUrl && (
                             <p className="text-sm text-gray-500 mt-1">
                               リンク先: {block.linkUrl}

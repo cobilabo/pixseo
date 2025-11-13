@@ -1,6 +1,37 @@
+// テーマレイアウト定義
+export const THEME_LAYOUTS = {
+  cobi: {
+    id: 'cobi',
+    name: 'Cobi',
+    displayName: 'Cobi（シンプル1カラム）',
+    description: 'シンプルで読みやすい1カラムレイアウト。記事コンテンツを中心に据えたデザイン。',
+    blockPlacements: [
+      { value: 'footer', label: 'フッターエリア' },
+      { value: 'side-panel', label: 'サイドパネル' },
+    ],
+  },
+  furatto: {
+    id: 'furatto',
+    name: 'Furatto',
+    displayName: 'ふらっと（バリアフリー特化）',
+    description: 'アクセシビリティを重視したバリアフリー情報メディア向けレイアウト。',
+    blockPlacements: [
+      { value: 'top-banner', label: 'トップバナー' },
+      { value: 'sidebar-top', label: 'サイドバー上部' },
+      { value: 'sidebar-middle', label: 'サイドバー中部' },
+      { value: 'sidebar-bottom', label: 'サイドバー下部' },
+      { value: 'article-top', label: '記事上部' },
+      { value: 'article-bottom', label: '記事下部' },
+      { value: 'footer', label: 'フッターエリア' },
+    ],
+  },
+} as const;
+
+export type ThemeLayoutId = keyof typeof THEME_LAYOUTS;
+
 export interface Theme {
   // レイアウトテーマ
-  layoutTheme: 'theme1'; // 将来的に theme2, theme3 などを追加可能
+  layoutTheme: ThemeLayoutId; // 'cobi' | 'furatto'
   
   // 基本カラー
   primaryColor: string;             // メインカラー
@@ -65,9 +96,9 @@ export interface Theme {
   dividerColor?: string;
 }
 
-// デフォルトテーマ（レイアウトテーマ1）
+// デフォルトテーマ（Cobiレイアウト）
 export const defaultTheme: Theme = {
-  layoutTheme: 'theme1',
+  layoutTheme: 'cobi',
   
   // 基本カラー
   primaryColor: '#3b82f6',          // blue-500（メインカラー）
