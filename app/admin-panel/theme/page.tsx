@@ -248,25 +248,13 @@ export default function ThemePage() {
             <div className="p-8">
               {/* バナーエリアタブ */}
               {activeTab === 'banner' && (
-                <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
                   {[0, 1, 2, 3].map((index) => {
                     const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
                     const hasImage = Boolean(block.imageUrl);
                     
                     return (
                       <div key={index} className="p-6 border border-gray-200 rounded-xl">
-                        {hasImage && (
-                          <div className="flex justify-end mb-4">
-                            <button
-                              type="button"
-                              onClick={() => removeFooterBlock(index)}
-                              className="text-sm text-red-600 hover:text-red-700"
-                            >
-                              削除
-                            </button>
-                          </div>
-                        )}
-                        
                         <div className="mb-4">
                           <FeaturedImageUpload
                             value={block.imageUrl}
@@ -293,8 +281,8 @@ export default function ThemePage() {
 
               {/* フッターコンテンツタブ (cobi テーマ専用) */}
               {activeTab === 'footer-content' && (
-                <div className="space-y-6">
-                  {[0, 1, 2].map((index) => {
+                <div className="grid grid-cols-2 gap-6">
+                  {[0, 1].map((index) => {
                     const content = theme.footerContents?.[index] || { imageUrl: '', alt: '', title: '', description: '', linkUrl: '' };
                     const hasImage = Boolean(content.imageUrl);
                     
@@ -363,34 +351,20 @@ export default function ThemePage() {
                         <div className="space-y-4">
                           {[0, 1, 2, 3, 4].map((linkIndex) => {
                             const link = section.links?.[linkIndex] || { text: '', url: '' };
-                            const hasLink = Boolean(link.text || link.url);
                             
                             return (
-                              <div key={linkIndex}>
-                                {hasLink && (
-                                  <div className="flex justify-end mb-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => removeTextLink(sectionIndex, linkIndex)}
-                                      className="text-xs text-red-600 hover:text-red-700"
-                                    >
-                                      削除
-                                    </button>
-                                  </div>
-                                )}
-                                <div className="grid grid-cols-2 gap-4">
-                                  <FloatingInput
-                                    label={`リンクテキスト ${linkIndex + 1}`}
-                                    value={link.text}
-                                    onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'text', value)}
-                                  />
-                                  <FloatingInput
-                                    label={`URL ${linkIndex + 1}`}
-                                    value={link.url}
-                                    onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'url', value)}
-                                    type="url"
-                                  />
-                                </div>
+                              <div key={linkIndex} className="grid grid-cols-2 gap-4">
+                                <FloatingInput
+                                  label={`リンクテキスト ${linkIndex + 1}`}
+                                  value={link.text}
+                                  onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'text', value)}
+                                />
+                                <FloatingInput
+                                  label={`URL ${linkIndex + 1}`}
+                                  value={link.url}
+                                  onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'url', value)}
+                                  type="url"
+                                />
                               </div>
                             );
                           })}

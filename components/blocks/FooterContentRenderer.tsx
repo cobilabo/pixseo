@@ -17,8 +17,8 @@ export default function FooterContentRenderer({ contents, className = '' }: Foot
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(contents.length, 3)} ${className}`}>
-      {contents.map((content, index) => (
+    <div className={`grid grid-cols-1 md:grid-cols-2 ${className}`}>
+      {contents.slice(0, 2).map((content, index) => (
         <ContentItem key={index} content={content} />
       ))}
     </div>
@@ -48,17 +48,17 @@ function ContentItem({ content }: { content: FooterContent }) {
       <div className="absolute inset-0 bg-black bg-opacity-40 transition-opacity group-hover:bg-opacity-30"></div>
 
       {/* テキストオーバーレイ */}
-      <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
+      <div className="absolute inset-0 flex flex-col justify-center p-8 text-white">
         {/* タイトル */}
         {content.title && (
-          <h3 className="text-3xl mb-3" style={{ fontWeight: 600 }}>
+          <h3 className="text-8xl mb-4" style={{ fontWeight: 600 }}>
             {content.title}
           </h3>
         )}
 
         {/* 説明 */}
         {content.description && (
-          <p className="text-lg opacity-90 line-clamp-2" style={{ fontWeight: 600 }}>
+          <p className="text-2xl opacity-90 line-clamp-2" style={{ fontWeight: 600 }}>
             {content.description}
           </p>
         )}

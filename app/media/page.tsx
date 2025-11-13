@@ -178,27 +178,76 @@ export default async function MediaPage() {
 
       {/* フッター */}
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* テキストリンクセクション */}
-          {footerTextLinkSections.length > 0 && (
-            <div className="mb-12">
-              <FooterTextLinksRenderer sections={footerTextLinkSections} />
-            </div>
-          )}
+        {footerTextLinkSections.length > 0 ? (
+          /* セクションがある場合: TCD106風レイアウト */
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+              {/* 左カラム: ロゴとディスクリプション */}
+              <div className="text-left">
+                <h3 className="text-2xl font-bold mb-4">{siteInfo.name}</h3>
+                {siteInfo.description && (
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {siteInfo.description}
+                  </p>
+                )}
+              </div>
 
-          {/* サイト情報 */}
-          <div className="text-center space-y-4 pt-8 border-t border-gray-700">
-            <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
-            {siteInfo.description && (
-              <p className="text-gray-300 max-w-2xl mx-auto">
-                {siteInfo.description}
+              {/* 中央・右カラム: セクション */}
+              {footerTextLinkSections.map((section, index) => {
+                const validLinks = section.links?.filter(link => link.text && link.url) || [];
+                if (!section.title && validLinks.length === 0) return null;
+
+                return (
+                  <div key={index} className={`text-left ${index > 0 ? 'lg:border-l lg:border-gray-600 lg:pl-8' : ''}`}>
+                    {section.title && (
+                      <h3 className="text-sm font-bold mb-4 uppercase tracking-wider">
+                        {section.title}
+                      </h3>
+                    )}
+                    {validLinks.length > 0 && (
+                      <ul className="space-y-2">
+                        {validLinks.map((link, linkIndex) => (
+                          <li key={linkIndex}>
+                            <a
+                              href={link.url}
+                              className="text-gray-300 hover:text-white transition-colors text-sm"
+                              target={link.url.startsWith('http') ? '_blank' : undefined}
+                              rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                            >
+                              {link.text}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* コピーライト */}
+            <div className="border-t border-gray-700 pt-6">
+              <p className="text-gray-400 text-sm text-center">
+                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
               </p>
-            )}
-            <p className="text-gray-400 text-sm pt-4">
-              © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
-            </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* セクションがない場合: 従来の中央配置レイアウト */
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center space-y-4">
+              <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+              {siteInfo.description && (
+                <p className="text-gray-300 max-w-2xl mx-auto">
+                  {siteInfo.description}
+                </p>
+              )}
+              <p className="text-gray-400 text-sm pt-4">
+                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+              </p>
+            </div>
+          </div>
+        )}
       </footer>
     </div>
   );
