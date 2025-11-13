@@ -4,9 +4,11 @@ import { getRecentArticlesServer, getPopularArticlesServer } from '@/lib/firebas
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getAllBlocksByPlacementServer } from '@/lib/firebase/blocks-server';
 import MediaHeader from '@/components/layout/MediaHeader';
 import SearchBar from '@/components/search/SearchBar';
 import ArticleCard from '@/components/articles/ArticleCard';
+import BlockRenderer from '@/components/blocks/BlockRenderer';
 import ExternalLinks from '@/components/common/ExternalLinks';
 import RecommendedCategories from '@/components/common/RecommendedCategories';
 
@@ -53,13 +55,14 @@ export default async function MediaPage() {
   const headersList = headers();
   const host = headersList.get('host') || '';
   
-  // サイト設定とThemeを並列取得
-  const [siteInfo, theme, recentArticles, popularArticles, allCategories] = await Promise.all([
+  // サイト設定、Theme、ブロックを並列取得
+  const [siteInfo, theme, recentArticles, popularArticles, allCategories, blocksByPlacement] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
+    mediaId ? getAllBlocksByPlacementServer(mediaId, theme.layoutTheme) : Promise.resolve({}),
   ]);
   
   // ThemeスタイルとカスタムCSSを生成
@@ -69,6 +72,10 @@ export default async function MediaPage() {
   const categories = mediaId 
     ? allCategories.filter(cat => cat.mediaId === mediaId)
     : allCategories;
+
+  // 各配置場所のブロックを取得
+  const footerBlocks = blocksByPlacement['footer'] || [];
+  const sidePanelBlocks = blocksByPlacement['side-panel'] || [];
 
   // JSON-LD 構造化データ（WebSite）
   const jsonLd = {
@@ -153,10 +160,12 @@ export default async function MediaPage() {
           </div>
         </section>
 
-        {/* 外部リンク */}
-        <section className="mb-12">
-          <ExternalLinks />
-        </section>
+        {/* ブロック表示エリア（フッター上部） */}
+        {footerBlocks.length > 0 && (
+          <section className="mb-12">
+            <BlockRenderer blocks={footerBlocks} />
+          </section>
+        )}
       </main>
 
       {/* フッター */}
