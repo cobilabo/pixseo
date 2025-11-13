@@ -410,7 +410,7 @@ const AdminSidebar = memo(function AdminSidebar({
       </nav>
 
       {/* フッター（ログイン情報・ログアウトボタン） */}
-      <div className="bg-white rounded-tl-[1.75rem] rounded-tr-[1.75rem] border-t border-gray-200 px-4 py-4 space-y-3">
+      <div className="border-t p-4 space-y-3">
         {/* ログイン情報 */}
         <div className="flex items-center gap-3">
           {userLogoUrl ? (
