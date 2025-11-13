@@ -112,8 +112,8 @@ export default function FloatingMultiSelect({
         <label
           className={`absolute left-3 transition-all pointer-events-none ${
             selectedOptions.length > 0 || isOpen
-              ? '-top-2 text-xs bg-white px-1 text-gray-900'
-              : 'top-3 text-sm text-gray-900'
+              ? '-top-2 text-xs bg-white px-1 text-gray-700'
+              : 'top-3 text-sm text-gray-500'
           }`}
         >
           {label}
