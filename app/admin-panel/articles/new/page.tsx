@@ -158,6 +158,45 @@ function NewArticlePageContent() {
     }
   };
 
+  const generateMetaTitle = async () => {
+    if (!formData.title) return;
+
+    setGeneratingMetaTitle(true);
+    try {
+      const response = await fetch('/api/admin/articles/generate-meta-title', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate meta title');
+      }
+
+      const data = await response.json();
+      
+      // metaTitleが空の場合のみ設定（既に入力されている場合は上書きしない）
+      if (!formData.metaTitle) {
+        setFormData(prev => ({ ...prev, metaTitle: data.metaTitle }));
+      }
+    } catch (error) {
+      console.error('Error generating meta title:', error);
+      // エラー時はフォールバック（タイトルをそのまま使用し、70文字にトリミング）
+      if (!formData.metaTitle) {
+        const fallbackMetaTitle = formData.title.length > 70 
+          ? formData.title.substring(0, 67) + '...'
+          : formData.title;
+        setFormData(prev => ({ ...prev, metaTitle: fallbackMetaTitle }));
+      }
+    } finally {
+      setGeneratingMetaTitle(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
