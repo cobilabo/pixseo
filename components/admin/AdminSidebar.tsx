@@ -235,7 +235,7 @@ const AdminSidebar = memo(function AdminSidebar({
 
       {/* サービス選択プルダウン（super_adminのみ） */}
       {isSuperAdmin && tenants.length > 0 && (
-        <div className="px-3 py-4 border-b">
+        <div className="px-3 py-4">
           <div className="flex">
             <select
               value={tenants.find(t => t.name === currentTenantName)?.id || ''}
@@ -410,31 +410,46 @@ const AdminSidebar = memo(function AdminSidebar({
       </nav>
 
       {/* フッター（ログイン情報・ログアウトボタン） */}
-      <div className="border-t p-4 space-y-3">
-        {/* ログイン情報 */}
-        <div className="flex items-center gap-3">
-          {userLogoUrl ? (
-            <Image 
-              src={userLogoUrl} 
-              alt="User"
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
-              priority
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-300"></div>
-          )}
-          <div className="text-sm text-gray-600 truncate flex-1">{userEmail}</div>
-        </div>
+      <div className="relative">
+        {/* 角丸の上ボーダー */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gray-200 rounded-tl-[1.75rem] rounded-tr-[1.75rem]"></div>
         
-        {/* ログアウトボタン */}
-        <button
-          onClick={onSignOut}
-          className="w-full px-4 py-2 text-sm text-gray-400 bg-white border border-gray-200 rounded-full hover:border-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors"
-        >
-          ログアウト
-        </button>
+        <div className="p-4 space-y-3">
+          {/* ログイン情報 */}
+          <div className="flex items-center gap-3">
+            {userLogoUrl ? (
+              <Image 
+                src={userLogoUrl} 
+                alt="User"
+                width={40}
+                height={40}
+                className="rounded-full object-cover"
+                priority
+              />
+            ) : userEmail === 'admin@pixseo.cloud' ? (
+              <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
+                <Image 
+                  src="/symbol_w_1.svg" 
+                  alt="Admin"
+                  width={24}
+                  height={24}
+                  priority
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+            )}
+            <div className="text-sm text-gray-600 truncate flex-1">{userEmail}</div>
+          </div>
+          
+          {/* ログアウトボタン */}
+          <button
+            onClick={onSignOut}
+            className="w-full px-4 py-2 text-sm text-gray-400 bg-white border border-gray-200 rounded-full hover:border-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            ログアウト
+          </button>
+        </div>
       </div>
     </aside>
   );
