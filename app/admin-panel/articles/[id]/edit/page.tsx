@@ -450,6 +450,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   }
                 }}
                 options={articles.map(a => ({ value: a.id, label: a.title }))}
+                variant="badge"
+                badgeColor="gray"
               />
             </div>
           </form>

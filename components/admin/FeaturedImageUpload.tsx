@@ -17,6 +17,7 @@ interface FeaturedImageUploadProps {
   showImageGenerator?: boolean; // デフォルトはfalse
   imageGeneratorTitle?: string; // AI生成時のタイトル
   imageGeneratorContent?: string; // AI生成時のコンテンツ
+  autoGenerateAlt?: boolean; // alt属性を自動生成するか（デフォルトはtrue）
 }
 
 export default function FeaturedImageUpload({ 

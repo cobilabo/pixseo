@@ -428,6 +428,8 @@ function NewArticlePageContent() {
                   }
                 }}
                 options={articles.map(a => ({ value: a.id, label: a.title }))}
+                variant="badge"
+                badgeColor="gray"
               />
             </div>
           </form>
