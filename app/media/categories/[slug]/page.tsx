@@ -142,8 +142,8 @@ export default async function CategoryPage({ params }: PageProps) {
       {/* フッター */}
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+          <div className="py-12">
+            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 ${footerTextLinkSections.length === 1 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-8 pb-8`}>
               {/* 左カラム: ロゴとディスクリプション */}
               <div className="text-left">
                 <h3 className="text-2xl font-bold mb-4">{siteInfo.name}</h3>
@@ -154,15 +154,15 @@ export default async function CategoryPage({ params }: PageProps) {
                 )}
               </div>
 
-              {/* 中央・右カラム: セクション */}
+              {/* セクション */}
               {footerTextLinkSections.map((section, index) => {
                 const validLinks = section.links?.filter(link => link.text && link.url) || [];
                 if (!section.title && validLinks.length === 0) return null;
 
                 return (
-                  <div key={index} className={`text-left ${index > 0 ? 'lg:border-l lg:border-gray-600 lg:pl-8' : ''}`}>
+                  <div key={index} className="text-left lg:border-l lg:border-gray-600 lg:pl-8">
                     {section.title && (
-                      <h3 className="text-sm font-bold mb-4 uppercase tracking-wider">
+                      <h3 className="text-base font-bold mb-4 uppercase tracking-wider">
                         {section.title}
                       </h3>
                     )}
@@ -188,7 +188,7 @@ export default async function CategoryPage({ params }: PageProps) {
             </div>
 
             {/* コピーライト */}
-            <div className="border-t border-gray-700 pt-6">
+            <div className="w-full border-t border-gray-700 pt-6">
               <p className="text-gray-400 text-sm text-center">
                 © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
               </p>

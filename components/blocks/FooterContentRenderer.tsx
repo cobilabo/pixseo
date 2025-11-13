@@ -51,14 +51,14 @@ function ContentItem({ content }: { content: FooterContent }) {
       <div className="absolute inset-0 flex flex-col justify-center p-8 text-white">
         {/* タイトル */}
         {content.title && (
-          <h3 className="text-8xl mb-4" style={{ fontWeight: 600 }}>
+          <h3 className="text-6xl mb-4" style={{ fontWeight: 600 }}>
             {content.title}
           </h3>
         )}
 
         {/* 説明 */}
         {content.description && (
-          <p className="text-2xl opacity-90 line-clamp-2" style={{ fontWeight: 600 }}>
+          <p className="text-xl opacity-90 line-clamp-2" style={{ fontWeight: 600 }}>
             {content.description}
           </p>
         )}
