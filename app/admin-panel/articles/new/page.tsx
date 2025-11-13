@@ -35,6 +35,7 @@ function NewArticlePageContent() {
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   const [generatingSlug, setGeneratingSlug] = useState(false);
   const [generatingTags, setGeneratingTags] = useState(false);
+  const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -411,11 +412,28 @@ function NewArticlePageContent() {
               />
 
               {/* メタタイトル */}
-              <FloatingInput
-                label="メタタイトル（SEO用）"
-                value={formData.metaTitle}
-                onChange={(value) => setFormData({ ...formData, metaTitle: value })}
-              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <FloatingInput
+                    label="メタタイトル（SEO用）"
+                    value={formData.metaTitle}
+                    onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={generateMetaTitle}
+                  disabled={generatingMetaTitle || !formData.title}
+                  className="w-12 h-12 mb-0.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  title="メタタイトル自動生成"
+                >
+                  {generatingMetaTitle ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Image src="/ai.svg" alt="AI" width={20} height={20} className="brightness-0 invert" />
+                  )}
+                </button>
+              </div>
 
               {/* 関連記事 */}
               <FloatingMultiSelect
