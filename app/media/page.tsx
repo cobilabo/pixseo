@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { headers } from 'next/headers';
 import { getRecentArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { adminDb } from '@/lib/firebase/admin';
 import SearchBar from '@/components/search/SearchBar';
 import ArticleCard from '@/components/articles/ArticleCard';
@@ -104,11 +106,17 @@ export default async function MediaPage() {
     }
   }
   
-  // 記事データを並列取得（サーバーサイド）
-  const [recentArticles, popularArticles] = await Promise.all([
+  // 記事データとカテゴリーを並列取得（サーバーサイド）
+  const [recentArticles, popularArticles, allCategories] = await Promise.all([
     getRecentArticlesServer(10, mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
+    getCategoriesServer(),
   ]);
+  
+  // mediaIdでカテゴリーをフィルタリング
+  const categories = mediaId 
+    ? allCategories.filter(cat => cat.mediaId === mediaId)
+    : allCategories;
 
   // JSON-LD 構造化データ（WebSite）
   const jsonLd = {
@@ -153,6 +161,46 @@ export default async function MediaPage() {
           </div>
         </div>
       </header>
+
+      {/* カテゴリーバー */}
+      {categories.length > 0 && (
+        <section className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex gap-6 overflow-x-auto scrollbar-hide">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/categories/${category.slug}`}
+                  className="flex-shrink-0 group"
+                >
+                  <div className="flex flex-col items-center gap-2 min-w-[100px]">
+                    {category.image ? (
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-100 ring-2 ring-gray-200 group-hover:ring-blue-500 transition-all">
+                        <Image
+                          src={category.image}
+                          alt={category.imageAlt || category.name}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ring-2 ring-gray-200 group-hover:ring-blue-500 transition-all">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {category.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors text-center">
+                      {category.name}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* メインコンテンツ */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
