@@ -36,12 +36,39 @@ export interface FooterBlock {
   linkUrl: string;
 }
 
+// フッターコンテンツの定義（画像+タイトル+説明）
+export interface FooterContent {
+  imageUrl: string;
+  alt: string;
+  title: string;
+  description: string;
+  linkUrl: string;
+}
+
+// テキストリンクの定義
+export interface FooterTextLink {
+  text: string;
+  url: string;
+}
+
+// テキストリンクセクションの定義
+export interface FooterTextLinkSection {
+  title: string;
+  links: FooterTextLink[];
+}
+
 export interface Theme {
   // レイアウトテーマ
   layoutTheme: ThemeLayoutId; // 'cobi' | 'furatto'
   
   // フッターブロック（最大4つ）
   footerBlocks?: FooterBlock[];
+  
+  // フッターコンテンツ（最大3つ）- cobi テーマ用
+  footerContents?: FooterContent[];
+  
+  // テキストリンクセクション（2セット）- cobi テーマ用
+  footerTextLinkSections?: FooterTextLinkSection[];
   
   // 基本カラー
   primaryColor: string;             // メインカラー

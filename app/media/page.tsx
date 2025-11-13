@@ -159,9 +159,9 @@ export default async function MediaPage() {
 
         {/* ブロック表示エリア（フッター上部） */}
         {footerBlocks.length > 0 && (
-          <section className="mb-12">
+        <section className="mb-12">
             <BlockRenderer blocks={footerBlocks} />
-          </section>
+        </section>
         )}
       </main>
 

@@ -79,8 +79,8 @@ export default function FloatingMultiSelect({
           isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
         }`}
       >
-        <div
-          onClick={() => setIsOpen(!isOpen)}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
           className="min-h-[3rem] px-4 py-3 cursor-pointer"
         >
           {selectedOptions.length > 0 ? (
@@ -98,26 +98,26 @@ export default function FloatingMultiSelect({
                       badgeColor === 'gray' ? 'hover:bg-white/20' : 'hover:bg-white/50'
                     }`}
                     title="削除"
-                  >
+      >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </span>
+        </span>
               ))}
             </div>
           ) : null}
-        </div>
-        
-        <label
+      </div>
+
+      <label
           className={`absolute left-2 transition-all pointer-events-none ${
             selectedOptions.length > 0 || isOpen
               ? '-top-2.5 text-xs bg-white px-2 text-gray-700'
               : 'top-1/2 -translate-y-1/2 text-sm text-gray-500 px-2'
           }`}
-        >
-          {label}
-        </label>
+      >
+        {label}
+      </label>
       </div>
 
       {isOpen && (
@@ -137,7 +137,7 @@ export default function FloatingMultiSelect({
             {availableOptions.length > 0 ? (
               availableOptions.map(option => (
                 <button
-                  key={option.value}
+                key={option.value}
                   type="button"
                   onClick={() => handleToggle(option.value)}
                   className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 transition-colors"
@@ -150,7 +150,7 @@ export default function FloatingMultiSelect({
                 {searchTerm ? '検索結果なし' : 'すべて選択済み'}
               </div>
             )}
-          </div>
+            </div>
         </div>
       )}
     </div>

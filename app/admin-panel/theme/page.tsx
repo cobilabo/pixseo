@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -83,6 +83,56 @@ export default function ThemePage() {
   const removeFooterBlock = (index: number) => {
     const newBlocks = (theme.footerBlocks || []).filter((_, i) => i !== index);
     setTheme(prev => ({ ...prev, footerBlocks: newBlocks }));
+  };
+
+  // フッターコンテンツ関連の関数
+  const updateFooterContent = (index: number, field: keyof FooterContent, value: string) => {
+    const newContents = [...(theme.footerContents || [])];
+    while (newContents.length <= index) {
+      newContents.push({ imageUrl: '', alt: '', title: '', description: '', linkUrl: '' });
+    }
+    newContents[index] = { ...newContents[index], [field]: value };
+    setTheme(prev => ({ ...prev, footerContents: newContents }));
+  };
+
+  const removeFooterContent = (index: number) => {
+    const newContents = (theme.footerContents || []).filter((_, i) => i !== index);
+    setTheme(prev => ({ ...prev, footerContents: newContents }));
+  };
+
+  // テキストリンクセクション関連の関数
+  const updateTextLinkSection = (sectionIndex: number, field: 'title', value: string) => {
+    const newSections = [...(theme.footerTextLinkSections || [])];
+    while (newSections.length <= sectionIndex) {
+      newSections.push({ title: '', links: [] });
+    }
+    newSections[sectionIndex] = { ...newSections[sectionIndex], [field]: value };
+    setTheme(prev => ({ ...prev, footerTextLinkSections: newSections }));
+  };
+
+  const updateTextLink = (sectionIndex: number, linkIndex: number, field: keyof FooterTextLink, value: string) => {
+    const newSections = [...(theme.footerTextLinkSections || [])];
+    while (newSections.length <= sectionIndex) {
+      newSections.push({ title: '', links: [] });
+    }
+    const links = [...(newSections[sectionIndex].links || [])];
+    while (links.length <= linkIndex) {
+      links.push({ text: '', url: '' });
+    }
+    links[linkIndex] = { ...links[linkIndex], [field]: value };
+    newSections[sectionIndex] = { ...newSections[sectionIndex], links };
+    setTheme(prev => ({ ...prev, footerTextLinkSections: newSections }));
+  };
+
+  const removeTextLink = (sectionIndex: number, linkIndex: number) => {
+    const newSections = [...(theme.footerTextLinkSections || [])];
+    if (newSections[sectionIndex]) {
+      newSections[sectionIndex] = {
+        ...newSections[sectionIndex],
+        links: newSections[sectionIndex].links.filter((_, i) => i !== linkIndex),
+      };
+      setTheme(prev => ({ ...prev, footerTextLinkSections: newSections }));
+    }
   };
 
   const selectedThemeLayout = THEME_LAYOUTS[theme.layoutTheme as ThemeLayoutId] || THEME_LAYOUTS.cobi;
@@ -167,57 +217,206 @@ export default function ThemePage() {
             <div className="p-8">
               {/* ブロックタブ */}
               {activeTab === 'block' && (
-                <div className="space-y-6">
-                  {[0, 1, 2, 3].map((index) => {
-                    const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
-                    const hasImage = Boolean(block.imageUrl);
-                    
-                    return (
-                      <div key={index} className="p-6 border border-gray-200 rounded-xl">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-gray-900">バナー {index + 1}</h3>
-                          {hasImage && (
-                            <button
-                              type="button"
-                              onClick={() => removeFooterBlock(index)}
-                              className="text-sm text-red-600 hover:text-red-700"
-                            >
-                              削除
-                            </button>
-                          )}
-                        </div>
+                <div className="space-y-8">
+                  {/* バナーブロック */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-gray-900">バナーブロック</h3>
+                    <div className="space-y-6">
+                      {[0, 1, 2, 3].map((index) => {
+                        const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
+                        const hasImage = Boolean(block.imageUrl);
                         
-                        <div className="mb-4">
-                          <FeaturedImageUpload
-                            value={block.imageUrl}
-                            onChange={(url) => updateFooterBlock(index, 'imageUrl', url)}
-                            label={`バナー ${index + 1}`}
-                          />
-                        </div>
-
-                        {hasImage && (
-                          <>
+                        return (
+                          <div key={index} className="p-6 border border-gray-200 rounded-xl">
+                            {hasImage && (
+                              <div className="flex justify-end mb-4">
+                                <button
+                                  type="button"
+                                  onClick={() => removeFooterBlock(index)}
+                                  className="text-sm text-red-600 hover:text-red-700"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            )}
+                            
                             <div className="mb-4">
-                              <FloatingInput
-                                label="Alt属性"
-                                value={block.alt}
-                                onChange={(value) => updateFooterBlock(index, 'alt', value)}
+                              <FeaturedImageUpload
+                                value={block.imageUrl}
+                                onChange={(url) => updateFooterBlock(index, 'imageUrl', url)}
+                                label={`バナー ${index + 1}`}
                               />
                             </div>
 
-                            <div>
-                              <FloatingInput
-                                label="リンク先URL（任意）"
-                                value={block.linkUrl}
-                                onChange={(value) => updateFooterBlock(index, 'linkUrl', value)}
-                                type="url"
-                              />
+                            {hasImage && (
+                              <>
+                                <div className="mb-4">
+                                  <FloatingInput
+                                    label="Alt属性"
+                                    value={block.alt}
+                                    onChange={(value) => updateFooterBlock(index, 'alt', value)}
+                                  />
+                                </div>
+
+                                <div>
+                                  <FloatingInput
+                                    label="リンク先URL（任意）"
+                                    value={block.linkUrl}
+                                    onChange={(value) => updateFooterBlock(index, 'linkUrl', value)}
+                                    type="url"
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* フッターコンテンツ (cobi テーマ専用) */}
+                  {theme.layoutTheme === 'cobi' && (
+                    <div className="space-y-4 pt-8 border-t">
+                      <h3 className="text-lg font-bold text-gray-900">フッターコンテンツ</h3>
+                      <p className="text-sm text-gray-600">画像、タイトル、説明を含むコンテンツブロック（最大3つ）</p>
+                      <div className="space-y-6">
+                        {[0, 1, 2].map((index) => {
+                          const content = theme.footerContents?.[index] || { imageUrl: '', alt: '', title: '', description: '', linkUrl: '' };
+                          const hasImage = Boolean(content.imageUrl);
+                          
+                          return (
+                            <div key={index} className="p-6 border border-gray-200 rounded-xl">
+                              {hasImage && (
+                                <div className="flex justify-end mb-4">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeFooterContent(index)}
+                                    className="text-sm text-red-600 hover:text-red-700"
+                                  >
+                                    削除
+                                  </button>
+                                </div>
+                              )}
+                              
+                              <div className="mb-4">
+                                <FeaturedImageUpload
+                                  value={content.imageUrl}
+                                  onChange={(url) => updateFooterContent(index, 'imageUrl', url)}
+                                  label={`コンテンツ ${index + 1}`}
+                                />
+                              </div>
+
+                              {hasImage && (
+                                <>
+                                  <div className="mb-4">
+                                    <FloatingInput
+                                      label="Alt属性"
+                                      value={content.alt}
+                                      onChange={(value) => updateFooterContent(index, 'alt', value)}
+                                    />
+                                  </div>
+
+                                  <div className="mb-4">
+                                    <FloatingInput
+                                      label="タイトル"
+                                      value={content.title}
+                                      onChange={(value) => updateFooterContent(index, 'title', value)}
+                                    />
+                                  </div>
+
+                                  <div className="mb-4">
+                                    <FloatingInput
+                                      label="説明"
+                                      value={content.description}
+                                      onChange={(value) => updateFooterContent(index, 'description', value)}
+                                      multiline
+                                      rows={3}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <FloatingInput
+                                      label="リンク先URL"
+                                      value={content.linkUrl}
+                                      onChange={(value) => updateFooterContent(index, 'linkUrl', value)}
+                                      type="url"
+                                    />
+                                  </div>
+                                </>
+                              )}
                             </div>
-                          </>
-                        )}
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+
+                  {/* テキストリンクセクション (cobi テーマ専用) */}
+                  {theme.layoutTheme === 'cobi' && (
+                    <div className="space-y-4 pt-8 border-t">
+                      <h3 className="text-lg font-bold text-gray-900">テキストリンクセクション</h3>
+                      <p className="text-sm text-gray-600">セクションタイトルとテキストリンクのグループ（2セット）</p>
+                      <div className="space-y-6">
+                        {[0, 1].map((sectionIndex) => {
+                          const section = theme.footerTextLinkSections?.[sectionIndex] || { title: '', links: [] };
+                          
+                          return (
+                            <div key={sectionIndex} className="p-6 border border-gray-200 rounded-xl">
+                              <h4 className="font-semibold text-gray-900 mb-4">セクション {sectionIndex + 1}</h4>
+                              
+                              <div className="mb-4">
+                                <FloatingInput
+                                  label="セクションタイトル"
+                                  value={section.title}
+                                  onChange={(value) => updateTextLinkSection(sectionIndex, 'title', value)}
+                                  placeholder="例: COMPANY"
+                                />
+                              </div>
+
+                              <div className="space-y-4">
+                                <p className="text-sm font-medium text-gray-700">リンク（最大5つ）</p>
+                                {[0, 1, 2, 3, 4].map((linkIndex) => {
+                                  const link = section.links?.[linkIndex] || { text: '', url: '' };
+                                  const hasLink = Boolean(link.text || link.url);
+                                  
+                                  return (
+                                    <div key={linkIndex} className="p-4 bg-gray-50 rounded-lg">
+                                      {hasLink && (
+                                        <div className="flex justify-end mb-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => removeTextLink(sectionIndex, linkIndex)}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                          >
+                                            削除
+                                          </button>
+                                        </div>
+                                      )}
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <FloatingInput
+                                          label="リンクテキスト"
+                                          value={link.text}
+                                          onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'text', value)}
+                                          placeholder="例: 事業内容"
+                                        />
+                                        <FloatingInput
+                                          label="URL"
+                                          value={link.url}
+                                          onChange={(value) => updateTextLink(sectionIndex, linkIndex, 'url', value)}
+                                          type="url"
+                                          placeholder="例: /about"
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
