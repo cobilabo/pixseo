@@ -128,17 +128,17 @@ export default async function TagPage({ params }: PageProps) {
             <BlockRenderer blocks={footerBlocks} />
           </section>
         )}
-
-        {/* フッターコンテンツ */}
-        {footerContents.length > 0 && (
-          <section className="mb-12">
-            <FooterContentRenderer contents={footerContents} />
-          </section>
-        )}
       </main>
 
+      {/* フッターコンテンツ（画面横いっぱい） */}
+      {footerContents.length > 0 && (
+        <section className="w-full">
+          <FooterContentRenderer contents={footerContents} />
+        </section>
+      )}
+
       {/* フッター */}
-      <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white mt-16">
+      <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* テキストリンクセクション */}
           {footerTextLinkSections.length > 0 && (

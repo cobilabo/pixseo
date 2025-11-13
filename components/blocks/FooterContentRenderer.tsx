@@ -9,7 +9,7 @@ interface FooterContentRendererProps {
 
 /**
  * フッターコンテンツを表示するコンポーネント
- * 画像 + タイトル + 説明のリッチコンテンツ
+ * 画像 + タイトル + 説明のリッチコンテンツ（画面横いっぱい、余白なし）
  */
 export default function FooterContentRenderer({ contents, className = '' }: FooterContentRendererProps) {
   if (contents.length === 0) {
@@ -17,7 +17,7 @@ export default function FooterContentRenderer({ contents, className = '' }: Foot
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(contents.length, 3)} gap-8 ${className}`}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(contents.length, 3)} ${className}`}>
       {contents.map((content, index) => (
         <ContentItem key={index} content={content} />
       ))}
@@ -34,33 +34,35 @@ function ContentItem({ content }: { content: FooterContent }) {
   }
 
   const contentElement = (
-    <div className="group">
+    <div className="group relative w-full overflow-hidden" style={{ paddingBottom: '60%' }}>
       {/* 画像 */}
-      <div className="relative w-full overflow-hidden rounded-lg bg-gray-100 mb-4" style={{ backgroundColor: 'var(--block-background-color, #ffffff)' }}>
-        <div className="relative w-full" style={{ paddingBottom: '60%' }}>
-          <Image
-            src={content.imageUrl}
-            alt={content.alt || content.title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
+      <Image
+        src={content.imageUrl}
+        alt={content.alt || content.title}
+        fill
+        className="object-cover transition-transform duration-300 group-hover:scale-105"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      />
+
+      {/* 半透明の黒フィルター */}
+      <div className="absolute inset-0 bg-black bg-opacity-40 transition-opacity group-hover:bg-opacity-30"></div>
+
+      {/* テキストオーバーレイ */}
+      <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
+        {/* タイトル */}
+        {content.title && (
+          <h3 className="text-xl font-bold mb-2">
+            {content.title}
+          </h3>
+        )}
+
+        {/* 説明 */}
+        {content.description && (
+          <p className="text-sm opacity-90 line-clamp-2">
+            {content.description}
+          </p>
+        )}
       </div>
-
-      {/* タイトル */}
-      {content.title && (
-        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-          {content.title}
-        </h3>
-      )}
-
-      {/* 説明 */}
-      {content.description && (
-        <p className="text-sm text-gray-600 line-clamp-3">
-          {content.description}
-        </p>
-      )}
     </div>
   );
 
@@ -69,7 +71,7 @@ function ContentItem({ content }: { content: FooterContent }) {
     return (
       <Link
         href={content.linkUrl}
-        className="block transition-opacity hover:opacity-90"
+        className="block"
         target={content.linkUrl.startsWith('http') ? '_blank' : undefined}
         rel={content.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
       >
