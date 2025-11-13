@@ -220,7 +220,7 @@ const AdminSidebar = memo(function AdminSidebar({
       flex flex-col
     `}>
       {/* ロゴ */}
-      <div className="p-4 border-b flex items-center justify-center">
+      <div className="p-4 flex items-center justify-center">
         <Link href="/" className="flex items-center justify-center">
           <Image 
             src="/logo_yoko_b_1.svg" 
@@ -410,10 +410,7 @@ const AdminSidebar = memo(function AdminSidebar({
       </nav>
 
       {/* フッター（ログイン情報・ログアウトボタン） */}
-      <div className="relative">
-        {/* 角丸の上ボーダー */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gray-200 rounded-tl-[1.75rem] rounded-tr-[1.75rem]"></div>
-        
+      <div className="relative bg-white rounded-tl-[1.75rem] rounded-tr-[1.75rem] border-t border-gray-200">
         <div className="p-4 space-y-3">
           {/* ログイン情報 */}
           <div className="flex items-center gap-3">
