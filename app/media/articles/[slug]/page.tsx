@@ -9,8 +9,10 @@ import {
   getWriterServer,
   getAdjacentArticlesServer 
 } from '@/lib/firebase/articles-server';
+import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { Article } from '@/types/article';
+import MediaHeader from '@/components/layout/MediaHeader';
 import ArticleContent from '@/components/articles/ArticleContent';
 import RelatedArticles from '@/components/articles/RelatedArticles';
 import ArticleHeader from '@/components/articles/ArticleHeader';
@@ -120,8 +122,13 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  // カテゴリー、タグ、ライター、前後の記事、関連記事を並行取得
-  const [categories, tags, writer, adjacentArticles, relatedArticles] = await Promise.all([
+  // サイト情報を取得
+  const { name: siteName } = mediaId 
+    ? await getSiteInfo(mediaId) 
+    : { name: 'メディアサイト' };
+
+  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリーを並行取得
+  const [categories, tags, writer, adjacentArticles, relatedArticles, allCategories] = await Promise.all([
     // カテゴリー情報を取得
     getCategoriesServer(article.categoryIds || []).catch((error) => {
       console.error('[Article Page] Error fetching categories:', error);
@@ -147,7 +154,17 @@ export default async function ArticlePage({ params }: PageProps) {
       console.error('[Article Page] Error fetching related articles:', error);
       return [];
     }),
+    // 全カテゴリーを取得（ヘッダー用）
+    getAllCategoriesServer().catch((error) => {
+      console.error('[Article Page] Error fetching all categories:', error);
+      return [];
+    }),
   ]);
+  
+  // mediaIdでカテゴリーをフィルタリング
+  const headerCategories = mediaId 
+    ? allCategories.filter(cat => cat.mediaId === mediaId)
+    : allCategories;
   
   // パンくずリスト用のカテゴリー（最初の1つ）
   const category = categories.length > 0 ? categories[0] : null;
@@ -209,27 +226,8 @@ export default async function ArticlePage({ params }: PageProps) {
         />
       )}
 
-      {/* ヘッダー */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <a href="/" className="text-2xl font-bold text-gray-900">
-              ふらっと。
-            </a>
-            <nav className="hidden md:flex space-x-6">
-              <a href="/" className="text-gray-700 hover:text-gray-900">
-                トップ
-              </a>
-              <a href="/articles" className="text-gray-700 hover:text-gray-900">
-                記事一覧
-              </a>
-              <a href="/search" className="text-gray-700 hover:text-gray-900">
-                検索
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      {/* ヘッダー＆カテゴリーバー */}
+      <MediaHeader siteName={siteName} categories={headerCategories} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* パンくずリスト */}
