@@ -1,5 +1,9 @@
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { getArticlesServer } from '@/lib/firebase/articles-server';
+import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { adminDb } from '@/lib/firebase/admin';
+import MediaHeader from '@/components/layout/MediaHeader';
 import ArticleCard from '@/components/articles/ArticleCard';
 import SearchBar from '@/components/search/SearchBar';
 
@@ -12,31 +16,57 @@ export const metadata: Metadata = {
 };
 
 export default async function ArticlesPage() {
-  const articles = await getArticlesServer({ limit: 30 });
+  const headersList = headers();
+  const mediaIdFromHeader = headersList.get('x-media-id');
+  const host = headersList.get('host') || '';
+  
+  // ホスト名からスラッグを抽出してmediaIdを取得
+  let mediaId = mediaIdFromHeader;
+  
+  if (!mediaId && host.endsWith('.pixseo.cloud') && host !== 'admin.pixseo.cloud') {
+    const slug = host.replace('.pixseo.cloud', '');
+    try {
+      const tenantsSnapshot = await adminDb
+        .collection('mediaTenants')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+      if (!tenantsSnapshot.empty) {
+        mediaId = tenantsSnapshot.docs[0].id;
+      }
+    } catch (error) {
+      console.error('[Articles Page] Error fetching mediaId:', error);
+    }
+  }
+  
+  // サイト名を取得
+  let siteName = 'メディアサイト';
+  if (mediaId) {
+    try {
+      const tenantDoc = await adminDb.collection('mediaTenants').doc(mediaId).get();
+      if (tenantDoc.exists) {
+        siteName = tenantDoc.data()?.name || 'メディアサイト';
+      }
+    } catch (error) {
+      console.error('[Articles Page] Error fetching site name:', error);
+    }
+  }
+  
+  // 記事とカテゴリーを並列取得
+  const [articles, allCategories] = await Promise.all([
+    getArticlesServer({ limit: 30 }),
+    getCategoriesServer(),
+  ]);
+  
+  // mediaIdでカテゴリーをフィルタリング
+  const categories = mediaId 
+    ? allCategories.filter(cat => cat.mediaId === mediaId)
+    : allCategories;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <a href="/" className="text-2xl font-bold text-gray-900">
-              ふらっと。
-            </a>
-            <nav className="hidden md:flex space-x-6">
-              <a href="/" className="text-gray-700 hover:text-gray-900">
-                トップ
-              </a>
-              <a href="/articles" className="text-gray-700 hover:text-gray-900">
-                記事一覧
-              </a>
-              <a href="/search" className="text-gray-700 hover:text-gray-900">
-                検索
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      {/* ヘッダー＆カテゴリーバー */}
+      <MediaHeader siteName={siteName} categories={categories} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 検索バー */}
@@ -46,7 +76,10 @@ export default async function ArticlesPage() {
 
         {/* 記事一覧 */}
         <section>
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">記事一覧</h1>
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-bold text-gray-900 mb-1">記事一覧</h1>
+            <p className="text-xs text-gray-500 uppercase tracking-wider">All Articles</p>
+          </div>
           {articles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {articles.map((article) => (
