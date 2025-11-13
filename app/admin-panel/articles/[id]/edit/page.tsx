@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import RichTextEditor from '@/components/admin/RichTextEditor';
