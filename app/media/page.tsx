@@ -8,6 +8,8 @@ import MediaHeader from '@/components/layout/MediaHeader';
 import SearchBar from '@/components/search/SearchBar';
 import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
+import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
+import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ExternalLinks from '@/components/common/ExternalLinks';
 import RecommendedCategories from '@/components/common/RecommendedCategories';
 
@@ -73,6 +75,8 @@ export default async function MediaPage() {
 
   // フッターブロックを取得（themeから）
   const footerBlocks = theme.footerBlocks?.filter(block => block.imageUrl) || [];
+  const footerContents = theme.footerContents?.filter(content => content.imageUrl) || [];
+  const footerTextLinkSections = theme.footerTextLinkSections?.filter(section => section.title || section.links?.length > 0) || [];
 
   // JSON-LD 構造化データ（WebSite）
   const jsonLd = {
@@ -159,16 +163,31 @@ export default async function MediaPage() {
 
         {/* ブロック表示エリア（フッター上部） */}
         {footerBlocks.length > 0 && (
-        <section className="mb-12">
+          <section className="mb-12">
             <BlockRenderer blocks={footerBlocks} />
-        </section>
+          </section>
+        )}
+
+        {/* フッターコンテンツ */}
+        {footerContents.length > 0 && (
+          <section className="mb-12">
+            <FooterContentRenderer contents={footerContents} />
+          </section>
         )}
       </main>
 
       {/* フッター */}
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center space-y-4">
+          {/* テキストリンクセクション */}
+          {footerTextLinkSections.length > 0 && (
+            <div className="mb-12">
+              <FooterTextLinksRenderer sections={footerTextLinkSections} />
+            </div>
+          )}
+
+          {/* サイト情報 */}
+          <div className="text-center space-y-4 pt-8 border-t border-gray-700">
             <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
             {siteInfo.description && (
               <p className="text-gray-300 max-w-2xl mx-auto">

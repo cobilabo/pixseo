@@ -6,6 +6,8 @@ import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
 import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
+import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
+import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import SearchBar from '@/components/search/SearchBar';
 
 // ISR: 60秒ごとに再生成
@@ -60,6 +62,8 @@ export default async function ArticlesPage() {
 
   // フッターブロックを取得（themeから）
   const footerBlocks = theme.footerBlocks?.filter(block => block.imageUrl) || [];
+  const footerContents = theme.footerContents?.filter(content => content.imageUrl) || [];
+  const footerTextLinkSections = theme.footerTextLinkSections?.filter(section => section.title || section.links?.length > 0) || [];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
@@ -100,12 +104,27 @@ export default async function ArticlesPage() {
             <BlockRenderer blocks={footerBlocks} />
           </section>
         )}
+
+        {/* フッターコンテンツ */}
+        {footerContents.length > 0 && (
+          <section className="mb-12">
+            <FooterContentRenderer contents={footerContents} />
+          </section>
+        )}
       </main>
 
       {/* フッター */}
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* テキストリンクセクション */}
+          {footerTextLinkSections.length > 0 && (
+            <div className="mb-12">
+              <FooterTextLinksRenderer sections={footerTextLinkSections} />
+            </div>
+          )}
+
+          {/* サイト情報 */}
+          <div className="text-center pt-8 border-t border-gray-700">
             <p className="text-gray-400">© {new Date().getFullYear()} {siteInfo.name}. All rights reserved.</p>
           </div>
         </div>
