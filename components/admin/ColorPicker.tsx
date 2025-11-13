@@ -22,13 +22,13 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange, allow
         onChange={(e) => onChange(e.target.value)}
         placeholder={allowOff ? "" : "#000000"}
         disabled={isOff && allowOff}
-        className={`w-full pl-16 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono peer text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 ${
+        className={`w-full pl-14 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono peer text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 ${
           allowOff ? 'pr-20' : 'pr-4'
         }`}
-        style={{ paddingLeft: '3.5rem' }}
+        style={{ paddingLeft: '3rem' }}
       />
       {/* カラーピッカー（正円・フル） */}
-      <div className="absolute left-3 top-[50%] -translate-y-[50%] w-10 h-10 rounded-full overflow-hidden border-2 border-gray-300 bg-white flex items-center justify-center">
+      <div className="absolute left-3 top-[50%] -translate-y-[50%] w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300 bg-white flex items-center justify-center">
         <input
           type="color"
           value={isOff ? '#000000' : value}
@@ -36,8 +36,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange, allow
           disabled={isOff && allowOff}
           className="cursor-pointer"
           style={{
-            width: '60px',
-            height: '60px',
+            width: '48px',
+            height: '48px',
             border: 'none',
             outline: 'none',
             WebkitAppearance: 'none',
@@ -51,7 +51,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange, allow
       </div>
       {/* フロートラベル */}
       <label
-        className={`absolute left-14 transition-all pointer-events-none ${
+        className={`absolute left-12 transition-all pointer-events-none ${
           hasValue || !isOff
             ? 'text-xs -top-2.5 bg-white px-2 text-gray-700'
             : 'text-sm top-[50%] -translate-y-[50%] text-gray-500 px-2'
