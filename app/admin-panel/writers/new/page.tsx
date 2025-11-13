@@ -67,7 +67,7 @@ export default function NewWriterPage() {
               <FeaturedImageUpload
                 value={formData.iconUrl}
                 onChange={(url) => setFormData({ ...formData, iconUrl: url })}
-                label="アイコン画像を選択"
+                label="アイコン画像"
               />
 
               {/* ハンドルネーム */}

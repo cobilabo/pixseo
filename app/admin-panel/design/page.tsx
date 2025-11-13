@@ -93,7 +93,7 @@ export default function DesignPage() {
                 <FeaturedImageUpload
                   value={theme.h2Icon || ''}
                   onChange={(url) => updateTheme('h2Icon', url)}
-                  label="H2 アイコン画像を選択"
+                  label="H2 アイコン画像"
                 />
               </div>
               {/* 右：カラーピッカー 2x2 */}
@@ -114,7 +114,7 @@ export default function DesignPage() {
                 <FeaturedImageUpload
                   value={theme.h3Icon || ''}
                   onChange={(url) => updateTheme('h3Icon', url)}
-                  label="H3 アイコン画像を選択"
+                  label="H3 アイコン画像"
                 />
               </div>
               {/* 右：カラーピッカー 2x2 */}
@@ -135,7 +135,7 @@ export default function DesignPage() {
                 <FeaturedImageUpload
                   value={theme.h4Icon || ''}
                   onChange={(url) => updateTheme('h4Icon', url)}
-                  label="H4 アイコン画像を選択"
+                  label="H4 アイコン画像"
                 />
               </div>
               {/* 右：カラーピッカー 2x2 */}

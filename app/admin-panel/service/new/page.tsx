@@ -111,7 +111,7 @@ export default function NewServicePage() {
                   <FeaturedImageUpload
                     value={formData.logoLandscape}
                     onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
-                    label="ロゴ(横長)画像を選択"
+                    label="ロゴタイプ画像"
                   />
                 </div>
 
@@ -120,7 +120,7 @@ export default function NewServicePage() {
                   <FeaturedImageUpload
                     value={formData.logoSquare}
                     onChange={(url) => setFormData({ ...formData, logoSquare: url })}
-                    label="ロゴ(正方形)画像を選択"
+                    label="シンボルマーク画像"
                   />
                 </div>
 
@@ -129,7 +129,7 @@ export default function NewServicePage() {
                   <FeaturedImageUpload
                     value={formData.logoPortrait}
                     onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
-                    label="ロゴ(縦長)画像を選択"
+                    label="ファビコン画像"
                   />
                 </div>
               </div>

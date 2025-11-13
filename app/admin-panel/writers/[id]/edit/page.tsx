@@ -85,7 +85,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
               <FeaturedImageUpload
                 value={formData.iconUrl}
                 onChange={(url) => setFormData({ ...formData, iconUrl: url })}
-                label="アイコン画像を選択"
+                label="アイコン画像"
               />
 
               {/* ハンドルネーム */}

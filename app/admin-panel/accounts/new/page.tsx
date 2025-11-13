@@ -79,7 +79,7 @@ export default function NewAccountPage() {
               <FeaturedImageUpload
                 value={formData.logoUrl}
                 onChange={(url) => setFormData({ ...formData, logoUrl: url })}
-                label="アイコン画像を選択"
+                label="アイコン画像"
               />
 
               {/* メールアドレス */}
