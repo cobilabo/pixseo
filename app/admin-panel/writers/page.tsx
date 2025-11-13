@@ -7,9 +7,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { apiGet } from '@/lib/api-client';
 import { Writer } from '@/types/writer';
+import { Article } from '@/types/article';
 
 export default function WritersPage() {
   const [writers, setWriters] = useState<Writer[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,19 +20,29 @@ export default function WritersPage() {
 
   const fetchWriters = async () => {
     try {
-      const data = await apiGet<Writer[]>('/api/admin/writers');
+      const [writersData, articlesData] = await Promise.all([
+        apiGet<Writer[]>('/api/admin/writers'),
+        apiGet<Article[]>('/api/admin/articles'),
+      ]);
+      
       // クライアント側でソート（新しい順）
-      const sortedData = data.sort((a, b) => {
+      const sortedData = writersData.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
       setWriters(sortedData);
+      setArticles(articlesData);
     } catch (error) {
       console.error('Error fetching writers:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // ライターの記事数を計算
+  const getWriterArticleCount = (writerId: string): number => {
+    return articles.filter(article => article.writerId === writerId).length;
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -79,6 +91,9 @@ export default function WritersPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         紹介文
                       </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        記事数
+                      </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         操作
                       </th>
@@ -109,6 +124,11 @@ export default function WritersPage() {
                           <div className="text-sm text-gray-500 truncate max-w-md">
                             {writer.bio || '-'}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {getWriterArticleCount(writer.id)} 記事
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
