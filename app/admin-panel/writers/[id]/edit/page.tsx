@@ -56,6 +56,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
         },
         body: JSON.stringify({
           icon: formData.iconUrl,
+          iconAlt: formData.iconAlt,
           handleName: formData.handleName,
           bio: formData.bio,
         }),
