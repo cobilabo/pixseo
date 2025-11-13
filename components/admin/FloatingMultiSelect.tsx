@@ -110,10 +110,10 @@ export default function FloatingMultiSelect({
         </div>
         
         <label
-          className={`absolute left-3 transition-all pointer-events-none ${
+          className={`absolute left-2 transition-all pointer-events-none ${
             selectedOptions.length > 0 || isOpen
-              ? '-top-2 text-xs bg-white px-1 text-gray-700'
-              : 'top-3 text-sm text-gray-500'
+              ? '-top-2.5 text-xs bg-white px-2 text-gray-700'
+              : 'top-1/2 -translate-y-1/2 text-sm text-gray-500 px-2'
           }`}
         >
           {label}
@@ -140,7 +140,7 @@ export default function FloatingMultiSelect({
                   key={option.value}
                   type="button"
                   onClick={() => handleToggle(option.value)}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   {option.label}
                 </button>
