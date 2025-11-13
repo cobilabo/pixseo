@@ -20,6 +20,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [userLogoUrl, setUserLogoUrl] = useState<string>('');
 
   const isSuperAdmin = userRole === 'super_admin';
+  
+  // /admin-panelプレフィックスを削除してサイドバーに渡す
+  const sidebarPathname = pathname.replace(/^\/admin-panel/, '') || '/';
 
   // ユーザーのロゴURLを取得（キャッシュ付き）
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-blue-50">
       {/* サイドバー */}
       <AdminSidebar
-        pathname={pathname}
+        pathname={sidebarPathname}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         userEmail={user?.email}

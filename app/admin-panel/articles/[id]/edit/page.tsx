@@ -361,7 +361,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   showImageGenerator={true}
                   imageGeneratorTitle={formData.title}
                   imageGeneratorContent={formData.content}
-                />
+                    />
               </div>
             </div>
 
@@ -379,13 +379,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               {/* タグ - AI自動生成ボタン付き */}
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <FloatingMultiSelect
-                    label="タグ"
-                    values={formData.tagIds}
-                    onChange={(values) => setFormData({ ...formData, tagIds: values })}
-                    options={tags.map(tag => ({ value: tag.id, label: tag.name }))}
+              <FloatingMultiSelect
+                label="タグ"
+                values={formData.tagIds}
+                onChange={(values) => setFormData({ ...formData, tagIds: values })}
+                options={tags.map(tag => ({ value: tag.id, label: tag.name }))}
                     badgeColor="blue"
-                  />
+              />
                 </div>
                 <button
                   type="button"
@@ -413,12 +413,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               {/* スラッグ - 自動生成ボタン付き */}
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <FloatingInput
-                    label="スラッグ（URL）"
-                    value={formData.slug}
-                    onChange={(value) => setFormData({ ...formData, slug: value })}
-                    required
-                  />
+              <FloatingInput
+                label="スラッグ（URL）"
+                value={formData.slug}
+                onChange={(value) => setFormData({ ...formData, slug: value })}
+                required
+              />
                 </div>
                 <button
                   type="button"
@@ -486,11 +486,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               {/* メタタイトル */}
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <FloatingInput
-                    label="メタタイトル（SEO用）"
-                    value={formData.metaTitle}
-                    onChange={(value) => setFormData({ ...formData, metaTitle: value })}
-                  />
+              <FloatingInput
+                label="メタタイトル（SEO用）"
+                value={formData.metaTitle}
+                onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+              />
                 </div>
                 <button
                   type="button"
