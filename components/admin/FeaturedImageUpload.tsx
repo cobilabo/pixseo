@@ -195,9 +195,7 @@ export default function FeaturedImageUpload({
               className="bg-white text-gray-900 w-12 h-12 rounded-full flex items-center justify-center border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="アップロード"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
+              <Image src="/upload.svg" alt="Upload" width={24} height={24} />
             </button>
             
             {/* メディアライブラリボタン */}

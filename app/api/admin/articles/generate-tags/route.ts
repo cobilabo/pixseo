@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     console.log('[API /admin/articles/generate-tags] 生成されたタグ候補:', suggestedTagNames);
 
     // 各タグについて、既存タグとの類似度をチェックして統合または作成
-    const finalTags = [];
+    const finalTags: Array<{ id: string; name: string; slug: string; isExisting: boolean }> = [];
 
     for (const suggestedName of suggestedTagNames) {
       // 既存タグとの類似度をチェック

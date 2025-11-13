@@ -321,9 +321,7 @@ export default function ArticlesPage() {
             className="bg-purple-600 text-white w-14 h-14 rounded-full hover:bg-purple-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
             title="AI記事生成"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
+            <Image src="/ai.svg" alt="AI" width={24} height={24} className="brightness-0 invert" />
           </button>
           
           {/* 新規記事作成ボタン */}
