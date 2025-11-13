@@ -220,7 +220,7 @@ const AdminSidebar = memo(function AdminSidebar({
       flex flex-col
     `}>
       {/* ロゴ */}
-      <div className="p-4 flex items-center justify-center">
+      <div className="pt-8 pb-4 px-4 flex items-center justify-center">
         <Link href="/" className="flex items-center justify-center">
           <Image 
             src="/logo_yoko_b_1.svg" 
@@ -445,6 +445,11 @@ const AdminSidebar = memo(function AdminSidebar({
         >
           ログアウト
         </button>
+        
+        {/* Powered by */}
+        <div className="text-center text-xs text-gray-400">
+          powered by cobilabo
+        </div>
       </div>
     </aside>
   );
