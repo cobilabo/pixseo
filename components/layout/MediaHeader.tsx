@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { MenuSettings } from '@/types/theme';
 import HamburgerMenu from './HamburgerMenu';
+import SearchPanel from './SearchPanel';
 
 interface MediaHeaderProps {
   siteName: string;
@@ -28,130 +28,105 @@ export default function MediaHeader({
   menuBackgroundColor = '#1f2937',
   menuTextColor = '#ffffff',
 }: MediaHeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/media/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
-      setSearchQuery('');
-    }
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
   };
 
-  useEffect(() => {
-    if (isSearchOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isSearchOpen]);
-
   return (
-    <header className="fixed top-4 left-0 right-0 z-50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-full shadow-lg backdrop-blur-md bg-white/80 px-6 py-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
-          {/* ロゴ、検索、ハンバーガーを横並び */}
-          <div className="flex items-center gap-4">
-            {/* ロゴ */}
-            <Link href="/media" className="flex items-center flex-shrink-0">
-              <div className="flex items-center gap-3">
-                {siteInfo?.faviconUrl && (
-                  <Image
-                    src={siteInfo.faviconUrl}
-                    alt={`${siteName} アイコン`}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                    priority
-                    unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
-                  />
-                )}
-                {siteInfo?.logoUrl ? (
-                  <Image
-                    src={siteInfo.logoUrl}
-                    alt={siteName}
-                    width={120}
-                    height={32}
-                    className="h-8 w-auto"
-                    priority
-                    unoptimized={siteInfo.logoUrl.endsWith('.svg')}
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-gray-900">
-                    {siteName}
-                  </span>
-                )}
-              </div>
-            </Link>
+    <>
+      <header className="fixed top-4 left-0 right-0 z-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-full shadow-lg backdrop-blur-md bg-white/80 px-6 py-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
+            {/* ハンバーガー、ロゴ、検索を左・中央・右に配置 */}
+            <div className="flex items-center justify-between">
+              {/* 左：ハンバーガーメニュー */}
+              <button
+                onClick={toggleMenu}
+                className="relative w-12 h-12 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                aria-label="メニュー"
+              >
+                <Image
+                  src="/menu.svg"
+                  alt="メニュー"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
+              </button>
 
-            {/* 検索エリア */}
-            <div className="flex-1 flex items-center justify-end">
-              <div className="relative flex items-center" style={{ 
-                width: isSearchOpen ? '100%' : 'auto',
-                transition: 'width 300ms ease-in-out'
-              }}>
-                {/* 検索フィールド（展開時） */}
-                {isSearchOpen && (
-                  <form onSubmit={handleSearch} className="flex-1 mr-2">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="キーワードで検索"
-                      className="w-full pb-2 text-base text-gray-900 bg-transparent border-b-[3px] border-black focus:outline-none placeholder:text-sm placeholder:text-gray-500"
-                      style={{
-                        animation: 'slideIn 300ms ease-in-out'
-                      }}
+              {/* 中央：ロゴ */}
+              <Link href="/media" className="absolute left-1/2 -translate-x-1/2 flex items-center">
+                <div className="flex items-center gap-3">
+                  {siteInfo?.faviconUrl && (
+                    <Image
+                      src={siteInfo.faviconUrl}
+                      alt={`${siteName} アイコン`}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8"
+                      priority
+                      unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
                     />
-                  </form>
-                )}
+                  )}
+                  {siteInfo?.logoUrl ? (
+                    <Image
+                      src={siteInfo.logoUrl}
+                      alt={siteName}
+                      width={120}
+                      height={32}
+                      className="h-8 w-auto"
+                      priority
+                      unoptimized={siteInfo.logoUrl.endsWith('.svg')}
+                    />
+                  ) : (
+                    <span className="text-xl font-bold text-gray-900">
+                      {siteName}
+                    </span>
+                  )}
+                </div>
+              </Link>
 
-                {/* 虫眼鏡アイコンボタン */}
-                <button
-                  onClick={toggleSearch}
-                  className="relative w-12 h-12 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                  aria-label="検索"
-                >
-                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* ハンバーガーメニュー */}
-            <div className="flex-shrink-0">
-              <HamburgerMenu
-                menuSettings={menuSettings}
-                menuBackgroundColor={menuBackgroundColor}
-                menuTextColor={menuTextColor}
-              />
+              {/* 右：検索アイコン */}
+              <button
+                onClick={toggleSearch}
+                className="relative w-12 h-12 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                aria-label="検索"
+              >
+                <Image
+                  src="/search.svg"
+                  alt="検索"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* アニメーション用のスタイル */}
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
-    </header>
+      {/* ハンバーガーメニューパネル（左から） */}
+      <HamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        menuSettings={menuSettings}
+        menuBackgroundColor={menuBackgroundColor}
+        menuTextColor={menuTextColor}
+      />
+
+      {/* 検索パネル（左から） */}
+      <SearchPanel
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
+    </>
   );
 }
 

@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { MenuSettings } from '@/types/theme';
 
 interface HamburgerMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
   menuSettings: MenuSettings;
   menuBackgroundColor: string;
   menuTextColor: string;
 }
 
-export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuTextColor }: HamburgerMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackgroundColor, menuTextColor }: HamburgerMenuProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -31,14 +32,6 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
     };
   }, [isOpen]);
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
-
   // 有効な追加メニューのみフィルタリング
   const validCustomMenus = menuSettings.customMenus?.filter(menu => menu.label && menu.url) || [];
 
@@ -56,7 +49,7 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 9998
           }}
-          onClick={closeMenu}
+          onClick={onClose}
         />
       )}
 
@@ -65,22 +58,22 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
         style={{ 
           position: 'fixed',
           top: 0,
-          right: 0,
+          left: 0,
           height: '100vh',
           width: '320px',
           backgroundColor: menuBackgroundColor || '#1f2937', 
           color: menuTextColor || '#ffffff',
           zIndex: 9999,
-          boxShadow: '-4px 0 12px rgba(0, 0, 0, 0.3)',
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          boxShadow: '4px 0 12px rgba(0, 0, 0, 0.3)',
+          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 300ms ease-in-out'
         }}
       >
         <div className="flex flex-col h-full">
           {/* 閉じるボタン */}
-          <div className="flex justify-end p-6">
+          <div className="flex justify-start p-6">
             <button
-              onClick={closeMenu}
+              onClick={onClose}
               className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity"
               aria-label="閉じる"
             >
@@ -107,7 +100,7 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
               <li>
                 <Link
                   href="/media"
-                  onClick={closeMenu}
+                  onClick={onClose}
                   className="block text-lg font-medium hover:opacity-70 transition-opacity"
                 >
                   {menuSettings.topLabel || 'トップ'}
@@ -118,7 +111,7 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
               <li>
                 <Link
                   href="/media/articles"
-                  onClick={closeMenu}
+                  onClick={onClose}
                   className="block text-lg font-medium hover:opacity-70 transition-opacity"
                 >
                   {menuSettings.articlesLabel || '記事一覧'}
@@ -129,7 +122,7 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
               <li>
                 <Link
                   href="/media/search"
-                  onClick={closeMenu}
+                  onClick={onClose}
                   className="block text-lg font-medium hover:opacity-70 transition-opacity"
                 >
                   {menuSettings.searchLabel || '検索'}
@@ -148,7 +141,7 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
                 <li key={index}>
                   <Link
                     href={menu.url}
-                    onClick={closeMenu}
+                    onClick={onClose}
                     className="block text-lg font-medium hover:opacity-70 transition-opacity"
                     target={menu.url.startsWith('http') ? '_blank' : undefined}
                     rel={menu.url.startsWith('http') ? 'noopener noreferrer' : undefined}
@@ -164,37 +157,6 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
     </>
   );
 
-  return (
-    <>
-      {/* ハンバーガーボタン */}
-      <button
-        onClick={toggleMenu}
-        className="relative w-12 h-12 flex flex-col items-center justify-center gap-1.5 hover:opacity-80 transition-opacity"
-        aria-label="メニュー"
-      >
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? 'rotate-45 translate-y-2' : ''
-          }`}
-        />
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? 'opacity-0' : ''
-          }`}
-        />
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? '-rotate-45 -translate-y-2' : ''
-          }`}
-        />
-      </button>
-
-      {/* メニューパネルをportalでbodyに直接マウント */}
-      {mounted && createPortal(menuPanel, document.body)}
-    </>
-  );
+  return <>{mounted && createPortal(menuPanel, document.body)}</>;
 }
 
