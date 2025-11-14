@@ -4,6 +4,7 @@ import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
+import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
 import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
@@ -71,10 +72,9 @@ export default async function ArticlesPage() {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* ヘッダー＆カテゴリーバー */}
+      {/* ヘッダー */}
       <MediaHeader 
         siteName={siteInfo.name} 
-        categories={categories} 
         siteInfo={siteInfo}
         menuSettings={theme.menuSettings}
         menuBackgroundColor={theme.menuBackgroundColor}
@@ -85,6 +85,9 @@ export default async function ArticlesPage() {
       {theme.firstView && (
         <FirstView settings={theme.firstView} />
       )}
+
+      {/* カテゴリーバー */}
+      <CategoryBar categories={categories} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 検索バー */}

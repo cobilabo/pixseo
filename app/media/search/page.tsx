@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import SearchBar from '@/components/search/SearchBar';
 import SearchContent from '@/components/search/SearchContent';
 import MediaHeader from '@/components/layout/MediaHeader';
+import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
@@ -56,7 +57,7 @@ export default async function SearchPage() {
         {/* ヘッダー */}
         <MediaHeader 
           siteName={siteInfo.name} 
-          categories={categories}
+          siteInfo={siteInfo}
           menuSettings={theme.menuSettings}
           menuBackgroundColor={theme.menuBackgroundColor}
           menuTextColor={theme.menuTextColor}
@@ -66,6 +67,9 @@ export default async function SearchPage() {
         {theme.firstView && (
           <FirstView settings={theme.firstView} />
         )}
+
+        {/* カテゴリーバー */}
+        <CategoryBar categories={categories} />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 検索バー */}
