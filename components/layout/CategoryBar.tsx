@@ -21,7 +21,7 @@ export default function CategoryBar({ categories, excludeCategoryId }: CategoryB
   const categoryHeight = excludeCategoryId ? 'h-48' : 'h-96';
 
   return (
-    <section className="relative z-20 pt-12 pb-8 rounded-t-3xl" style={{ backgroundColor: 'var(--background-color, #f9fafb)' }}>
+    <section className="relative z-20 pt-12 pb-8 rounded-t-3xl bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto scrollbar-hide">
           {filteredCategories.map((category, index) => (
