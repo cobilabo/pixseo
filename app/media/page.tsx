@@ -8,7 +8,6 @@ import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
-import SearchBar from '@/components/search/SearchBar';
 import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
@@ -123,11 +122,6 @@ export default async function MediaPage() {
         menuBackgroundColor={theme.menuBackgroundColor}
         menuTextColor={theme.menuTextColor}
       />
-
-      {/* 検索バー */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <SearchBar />
-      </div>
 
       {/* カテゴリーバー */}
       <CategoryBar categories={categories} />

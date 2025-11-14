@@ -67,17 +67,21 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
       {/* オーバーレイ */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[59] transition-opacity"
           onClick={closeMenu}
         />
       )}
 
       {/* メニューパネル */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-80 shadow-2xl transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ backgroundColor: menuBackgroundColor, color: menuTextColor }}
+        style={{ 
+          backgroundColor: menuBackgroundColor, 
+          color: menuTextColor,
+          zIndex: 60
+        }}
       >
         <div className="flex flex-col h-full">
           {/* 閉じるボタン */}

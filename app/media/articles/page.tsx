@@ -11,7 +11,6 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
-import SearchBar from '@/components/search/SearchBar';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 
 // ISR: 60秒ごとに再生成
@@ -87,11 +86,6 @@ export default async function ArticlesPage() {
         menuBackgroundColor={theme.menuBackgroundColor}
         menuTextColor={theme.menuTextColor}
       />
-
-      {/* 検索バー */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <SearchBar />
-      </div>
 
       {/* カテゴリーバー */}
       <CategoryBar categories={categories} />

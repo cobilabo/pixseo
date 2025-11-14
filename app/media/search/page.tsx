@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
-import SearchBar from '@/components/search/SearchBar';
 import SearchContent from '@/components/search/SearchContent';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
@@ -68,11 +67,6 @@ export default async function SearchPage() {
           menuBackgroundColor={theme.menuBackgroundColor}
           menuTextColor={theme.menuTextColor}
         />
-
-        {/* 検索バー */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          <SearchBar />
-        </div>
 
         {/* カテゴリーバー */}
         <CategoryBar categories={categories} />
