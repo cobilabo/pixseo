@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { getCategoryServer, getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getArticlesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
