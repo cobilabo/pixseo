@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Block } from '@/types/theme';
+import { FooterBlock } from '@/types/theme';
 
 interface SidebarBannersProps {
-  blocks: Block[];
+  blocks: FooterBlock[];
 }
 
 export default function SidebarBanners({ blocks }: SidebarBannersProps) {
@@ -15,11 +15,11 @@ export default function SidebarBanners({ blocks }: SidebarBannersProps) {
     <div className="space-y-4">
       {blocks.map((block, index) => (
         <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-          {block.url ? (
+          {block.linkUrl ? (
             <Link 
-              href={block.url} 
-              target={block.url.startsWith('http') ? '_blank' : undefined}
-              rel={block.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+              href={block.linkUrl} 
+              target={block.linkUrl.startsWith('http') ? '_blank' : undefined}
+              rel={block.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
               className="block hover:opacity-80 transition-opacity"
             >
               <div className="relative w-full aspect-[16/9]">
