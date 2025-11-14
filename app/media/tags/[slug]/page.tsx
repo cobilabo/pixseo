@@ -96,9 +96,18 @@ export default async function TagPage({ params }: PageProps) {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* FV（ファーストビュー）- 最上部に配置 */}
+      {/* FV（ファーストビュー）- タグ名を表示 */}
       {theme.firstView && (
-        <FirstView settings={theme.firstView} />
+        <FirstView 
+          settings={{
+            imageUrl: theme.firstView.imageUrl || '',
+            catchphrase: '',
+            description: ''
+          }}
+          customTitle={`${tag.name}の記事`}
+          customSubtitle="TAG"
+          showCustomContent={true}
+        />
       )}
 
       {/* ヘッダー - FVの上に重ねる */}
@@ -111,21 +120,17 @@ export default async function TagPage({ params }: PageProps) {
       />
 
       {/* カテゴリーバー */}
-      <CategoryBar categories={categories} />
+      <CategoryBar categories={categories} variant="half" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
-            {/* タグヘッダー */}
-            <section className="mb-8">
-              <div className="text-center mb-4">
-                <h1 className="text-xl font-bold text-gray-900 mb-1">
-                  {tag.name}の記事
-                </h1>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Tag</p>
-              </div>
-            </section>
+            {/* 見出し */}
+            <div className="text-center mb-8">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+            </div>
 
             {/* 記事一覧 */}
             <section>

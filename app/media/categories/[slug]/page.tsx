@@ -119,12 +119,18 @@ export default async function CategoryPage({ params }: PageProps) {
       />
 
       {/* カテゴリーバー - 選択中のカテゴリを除外 */}
-      <CategoryBar categories={categories} excludeCategoryId={category.id} />
+      <CategoryBar categories={categories} excludeCategoryId={category.id} variant="half" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
+            {/* 見出し */}
+            <div className="text-center mb-8">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+            </div>
+
             {/* カテゴリー説明（オプション） */}
             {category.description && (
               <section className="mb-8">

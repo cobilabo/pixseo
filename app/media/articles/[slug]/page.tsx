@@ -265,13 +265,22 @@ export default async function ArticlePage({ params }: PageProps) {
         menuTextColor={theme.menuTextColor}
       />
 
-      {/* FV（ファーストビュー） */}
-      {theme.firstView && (
-        <FirstView settings={theme.firstView} />
+      {/* FV（ファーストビュー）- アイキャッチ画像 */}
+      {article.featuredImage && (
+        <FirstView 
+          settings={{
+            imageUrl: article.featuredImage,
+            catchphrase: '',
+            description: ''
+          }}
+          customTitle={article.title}
+          customSubtitle=""
+          showCustomContent={true}
+        />
       )}
 
       {/* カテゴリーバー */}
-      <CategoryBar categories={headerCategories} />
+      <CategoryBar categories={headerCategories} variant="half" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

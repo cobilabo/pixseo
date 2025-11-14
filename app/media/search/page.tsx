@@ -76,17 +76,23 @@ export default async function SearchPage() {
           menuTextColor={theme.menuTextColor}
         />
 
-        {/* カテゴリーバー */}
-        <CategoryBar categories={categories} />
+      {/* カテゴリーバー */}
+      <CategoryBar categories={categories} variant="half" />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* メインカラム（70%） */}
-            <div className="flex-1 lg:w-[70%]">
-              {/* 検索コンテンツ */}
-              <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
-                <SearchContent />
-              </Suspense>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* メインカラム（70%） */}
+          <div className="flex-1 lg:w-[70%]">
+            {/* 見出し */}
+            <div className="text-center mb-8">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+            </div>
+
+            {/* 検索コンテンツ */}
+            <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
+              <SearchContent />
+            </Suspense>
             </div>
 
             {/* サイドバー（30%） */}

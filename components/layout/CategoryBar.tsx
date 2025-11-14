@@ -5,9 +5,10 @@ import { Category } from '@/types/article';
 interface CategoryBarProps {
   categories: Category[];
   excludeCategoryId?: string;
+  variant?: 'full' | 'half';
 }
 
-export default function CategoryBar({ categories, excludeCategoryId }: CategoryBarProps) {
+export default function CategoryBar({ categories, excludeCategoryId, variant = 'half' }: CategoryBarProps) {
   // 選択中のカテゴリを除外
   const filteredCategories = excludeCategoryId 
     ? categories.filter(cat => cat.id !== excludeCategoryId)
@@ -17,8 +18,8 @@ export default function CategoryBar({ categories, excludeCategoryId }: CategoryB
     return null;
   }
 
-  // カテゴリページ（excludeCategoryIdが指定されている）では高さを半分に
-  const categoryHeight = excludeCategoryId ? 'h-48' : 'h-96';
+  // 高さを制御（デフォルトは半分）
+  const categoryHeight = variant === 'full' ? 'h-96' : 'h-48';
 
   return (
     <section className="relative z-20 pt-12 pb-8 rounded-t-3xl bg-transparent">

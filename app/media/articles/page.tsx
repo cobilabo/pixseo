@@ -93,7 +93,7 @@ export default async function ArticlesPage() {
       />
 
       {/* カテゴリーバー */}
-      <CategoryBar categories={categories} />
+      <CategoryBar categories={categories} variant="half" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
         <div className="flex flex-col lg:flex-row gap-8">
@@ -102,8 +102,8 @@ export default async function ArticlesPage() {
             {/* 記事一覧 */}
             <section>
               <div className="text-center mb-8">
-                <h1 className="text-xl font-bold text-gray-900 mb-1">記事一覧</h1>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">All Articles</p>
+                <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
               </div>
               {articles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
