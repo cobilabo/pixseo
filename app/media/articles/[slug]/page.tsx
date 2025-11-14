@@ -378,8 +378,8 @@ export default async function ArticlePage({ params }: PageProps) {
               </div>
 
               {/* セクション */}
-              {footerTextLinkSections.map((section, index) => {
-                const validLinks = section.links?.filter(link => link.text && link.url) || [];
+              {footerTextLinkSections.map((section: FooterTextLinkSection, index: number) => {
+                const validLinks = section.links?.filter((link: any) => link.text && link.url) || [];
                 if (!section.title && validLinks.length === 0) return null;
 
                 return (
@@ -391,7 +391,7 @@ export default async function ArticlePage({ params }: PageProps) {
                     )}
                     {validLinks.length > 0 && (
                       <ul className="space-y-2">
-                        {validLinks.map((link, linkIndex) => (
+                        {validLinks.map((link: any, linkIndex: number) => (
                           <li key={linkIndex}>
                             <a
                               href={link.url}
