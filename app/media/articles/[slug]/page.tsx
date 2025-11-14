@@ -13,6 +13,7 @@ import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/ca
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Article } from '@/types/article';
+import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
@@ -178,8 +179,8 @@ export default async function ArticlePage({ params }: PageProps) {
   const combinedStyles = getCombinedStyles(theme);
   
   // フッターデータを取得
-  const footerContents = theme.footerContents?.filter(content => content.imageUrl) || [];
-  const footerTextLinkSections = theme.footerTextLinkSections?.filter(section => section.title || section.links?.length > 0) || [];
+  const footerContents = theme.footerContents?.filter((content: FooterContent) => content.imageUrl) || [];
+  const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: FooterTextLinkSection) => section.title || section.links?.length > 0) || [];
   
   // パンくずリスト用のカテゴリー（最初の1つ）
   const category = categories.length > 0 ? categories[0] : null;
