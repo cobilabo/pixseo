@@ -91,9 +91,18 @@ export default async function CategoryPage({ params }: PageProps) {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* FV（ファーストビュー）- 最上部に配置 */}
-      {theme.firstView && (
-        <FirstView settings={theme.firstView} />
+      {/* FV（ファーストビュー）- カテゴリ画像を使用 */}
+      {(category.imageUrl || theme.firstView) && (
+        <FirstView 
+          settings={{
+            imageUrl: category.imageUrl || theme.firstView?.imageUrl || '',
+            catchphrase: '',
+            description: ''
+          }}
+          customTitle={`${category.name}の記事`}
+          customSubtitle="Category"
+          showCustomContent={true}
+        />
       )}
 
       {/* ヘッダー - FVの上に重ねる */}
@@ -110,22 +119,16 @@ export default async function CategoryPage({ params }: PageProps) {
         <SearchBar />
       </div>
 
-      {/* カテゴリーバー */}
-      <CategoryBar categories={categories} />
+      {/* カテゴリーバー - 選択中のカテゴリを除外 */}
+      <CategoryBar categories={categories} excludeCategoryId={category.id} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
-        {/* カテゴリーヘッダー */}
-        <section className="mb-8">
-          <div className="text-center mb-4">
-            <h1 className="text-xl font-bold text-gray-900 mb-1">
-              {category.name}の記事
-            </h1>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Category</p>
-          </div>
-          {category.description && (
+        {/* カテゴリー説明（オプション） */}
+        {category.description && (
+          <section className="mb-8">
             <p className="text-gray-600 text-center">{category.description}</p>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* 記事一覧 */}
         <section>

@@ -25,8 +25,8 @@ export default function MediaHeader({
   menuTextColor = '#ffffff',
 }: MediaHeaderProps) {
   return (
-    <header className="absolute top-0 left-0 right-0 z-50 bg-white shadow-sm rounded-b-2xl" style={{ backgroundColor: 'var(--header-background-color, #ffffff)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+    <header className="fixed top-4 left-4 right-4 z-50 rounded-full shadow-lg backdrop-blur-md bg-white/90" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
+      <div className="max-w-7xl mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
           <Link href="/media" className="flex items-center space-x-3">
             <div className="flex items-center gap-3">

@@ -6,9 +6,12 @@ import { FirstViewSettings } from '@/types/theme';
 
 interface FirstViewProps {
   settings: FirstViewSettings;
+  customTitle?: string;
+  customSubtitle?: string;
+  showCustomContent?: boolean;
 }
 
-export default function FirstView({ settings }: FirstViewProps) {
+export default function FirstView({ settings, customTitle, customSubtitle, showCustomContent = false }: FirstViewProps) {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -55,16 +58,33 @@ export default function FirstView({ settings }: FirstViewProps) {
       
       {/* テキストコンテンツ（通常スクロール） */}
       <div className="relative z-10 flex flex-col items-center justify-center text-white px-4 h-full" style={{ paddingTop: '220px' }}>
-        {settings.catchphrase && (
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
-            {settings.catchphrase}
-          </h1>
-        )}
-        
-        {settings.description && (
-          <p className="text-base md:text-lg text-center max-w-3xl drop-shadow-md whitespace-pre-line leading-relaxed tracking-wide">
-            {settings.description}
-          </p>
+        {showCustomContent ? (
+          <>
+            {customTitle && (
+              <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
+                {customTitle}
+              </h1>
+            )}
+            {customSubtitle && (
+              <p className="text-xs text-gray-200 uppercase tracking-wider drop-shadow-md">
+                {customSubtitle}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            {settings.catchphrase && (
+              <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
+                {settings.catchphrase}
+              </h1>
+            )}
+            
+            {settings.description && (
+              <p className="text-base md:text-lg text-center max-w-3xl drop-shadow-md whitespace-pre-line leading-relaxed tracking-wide">
+                {settings.description}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
