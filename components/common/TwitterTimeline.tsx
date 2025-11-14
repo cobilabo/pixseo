@@ -30,19 +30,36 @@ export default function TwitterTimeline({ username }: TwitterTimelineProps) {
 
   useEffect(() => {
     if (isVisible && typeof window !== 'undefined') {
+      // 既に読み込まれているかチェック
+      const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
+      if (existingScript) {
+        console.log('[TwitterTimeline] Widget script already loaded');
+        // 既存のウィジェットを再レンダリング
+        if ((window as any).twttr?.widgets) {
+          (window as any).twttr.widgets.load();
+        }
+        return;
+      }
+
       // Twitterウィジェットのスクリプトを読み込み
+      console.log('[TwitterTimeline] Loading Twitter widget script...');
       const script = document.createElement('script');
       script.src = 'https://platform.twitter.com/widgets.js';
       script.async = true;
       script.charset = 'utf-8';
+      
+      script.onload = () => {
+        console.log('[TwitterTimeline] Widget script loaded successfully');
+      };
+      
+      script.onerror = () => {
+        console.error('[TwitterTimeline] Failed to load widget script (possible rate limit or network error)');
+      };
+      
       document.body.appendChild(script);
 
       return () => {
-        // クリーンアップ
-        const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
-        if (existingScript) {
-          document.body.removeChild(existingScript);
-        }
+        // クリーンアップは行わない（ページ全体で共有）
       };
     }
   }, [isVisible]);
@@ -61,7 +78,7 @@ export default function TwitterTimeline({ username }: TwitterTimelineProps) {
             data-chrome="noheader nofooter noborders"
             href={`https://twitter.com/${username}?ref_src=twsrc%5Etfw`}
           >
-            Loading...
+            Tweets by {username}
           </a>
         </div>
       ) : (
