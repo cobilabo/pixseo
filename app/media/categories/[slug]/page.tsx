@@ -91,7 +91,12 @@ export default async function CategoryPage({ params }: PageProps) {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* ヘッダー */}
+      {/* FV（ファーストビュー）- 最上部に配置 */}
+      {theme.firstView && (
+        <FirstView settings={theme.firstView} />
+      )}
+
+      {/* ヘッダー - FVの上に重ねる */}
       <MediaHeader 
         siteName={siteInfo.name} 
         siteInfo={siteInfo}
@@ -100,20 +105,15 @@ export default async function CategoryPage({ params }: PageProps) {
         menuTextColor={theme.menuTextColor}
       />
 
-      {/* FV（ファーストビュー） */}
-      {theme.firstView && (
-        <FirstView settings={theme.firstView} />
-      )}
-
       {/* 検索バー */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SearchBar />
       </div>
 
       {/* カテゴリーバー */}
       <CategoryBar categories={categories} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
         {/* カテゴリーヘッダー */}
         <section className="mb-8">
           <div className="text-center mb-4">
@@ -161,7 +161,7 @@ export default async function CategoryPage({ params }: PageProps) {
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
-            <div className={`max-w-7xl mx-auto px-2 sm:px-4 grid grid-cols-1 md:grid-cols-2 ${footerTextLinkSections.length === 1 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-8 pb-8`}>
+            <div className={`max-w-7xl mx-auto px-1 sm:px-2 grid grid-cols-1 md:grid-cols-2 ${footerTextLinkSections.length === 1 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-8 pb-8`}>
               {/* 左カラム: ロゴとディスクリプション */}
               <div className="text-left">
                 <div className="flex items-center gap-3 mb-4">
@@ -236,7 +236,7 @@ export default async function CategoryPage({ params }: PageProps) {
             </div>
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-12">
+          <div className="max-w-7xl mx-auto px-1 sm:px-2 py-12">
             <div className="text-center space-y-4">
               <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
               {siteInfo.description && (

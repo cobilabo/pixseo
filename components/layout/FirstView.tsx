@@ -29,7 +29,7 @@ export default function FirstView({ settings }: FirstViewProps) {
   const parallaxOffset = scrollY * 0.5;
 
   return (
-    <div className="relative w-full -mb-32">
+    <div className="relative w-full h-[700px] -mb-40">
       {/* 背景画像（パララックス効果あり） */}
       <div className="absolute inset-0 overflow-hidden">
         <div 
@@ -54,7 +54,7 @@ export default function FirstView({ settings }: FirstViewProps) {
       </div>
       
       {/* テキストコンテンツ（通常スクロール） */}
-      <div className="relative z-10 flex flex-col items-center justify-center text-white px-4 pt-24" style={{ height: '600px' }}>
+      <div className="relative z-10 flex flex-col items-center justify-end text-white px-4 pb-24 h-full">
         {settings.catchphrase && (
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
             {settings.catchphrase}
