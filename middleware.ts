@@ -47,6 +47,13 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(url, 301); // 永久リダイレクト
         }
         
+        // /media/search/, /media/articles/ などは /media を削除してリダイレクト
+        if (pathname.startsWith('/media/')) {
+          const url = request.nextUrl.clone();
+          url.pathname = pathname.replace('/media', ''); // /media を削除
+          return NextResponse.redirect(url, 301); // 永久リダイレクト
+        }
+        
         // その他の /media/* パスはそのまま（内部パス用）
         const response = NextResponse.next();
         response.headers.set('x-media-id', mediaId);
