@@ -135,7 +135,7 @@ export default async function SearchPage() {
                   if (!section.title && validLinks.length === 0) return null;
 
                   return (
-                    <div key={index} className="text-left border-l border-gray-600 px-8">
+                    <div key={index} className="text-right border-l border-gray-600 px-8">
                       {section.title && (
                         <h3 className="text-base font-bold mb-4 uppercase tracking-wider">
                           {section.title}
