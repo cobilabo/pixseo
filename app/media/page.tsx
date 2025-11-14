@@ -15,6 +15,10 @@ import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer
 import ExternalLinks from '@/components/common/ExternalLinks';
 import RecommendedCategories from '@/components/common/RecommendedCategories';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
+import PopularArticles from '@/components/common/PopularArticles';
+import RecommendedArticles from '@/components/common/RecommendedArticles';
+import TwitterTimeline from '@/components/common/TwitterTimeline';
+import SidebarBanners from '@/components/common/SidebarBanners';
 
 // 動的レンダリング + Firestoreキャッシュで高速化
 // headers()を使用しているため、完全な静的生成はできない
@@ -126,62 +130,72 @@ export default async function MediaPage() {
       {/* カテゴリーバー */}
       <CategoryBar categories={categories} />
 
-      {/* メインコンテンツ */}
+      {/* メインコンテンツ - 2カラムレイアウト */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
-        {/* おすすめカテゴリー */}
-        <section className="mb-12">
-          <RecommendedCategories />
-        </section>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* メインカラム（70%） */}
+          <div className="flex-1 lg:w-[70%]">
+            {/* 新着記事 */}
+            <section className="mb-12">
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {recentArticles.length > 0 ? (
+                  recentArticles.map((article) => (
+                    <ArticleCard key={article.id} article={article} />
+                  ))
+                ) : (
+                  <p className="text-gray-500 col-span-full text-center py-8">
+                    記事がまだありません
+                  </p>
+                )}
+              </div>
+            </section>
 
-        {/* 新着記事 */}
-        <section className="mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+            {/* 人気記事ランキング */}
+            <section className="mb-12">
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">人気記事ランキング</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Popular Articles</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {popularArticles.length > 0 ? (
+                  popularArticles.map((article, index) => (
+                    <div key={article.id} className="relative">
+                      <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
+                        {index + 1}
+                      </span>
+                      <ArticleCard article={article} />
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 col-span-full text-center py-8">
+                    記事がまだありません
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentArticles.length > 0 ? (
-              recentArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))
-            ) : (
-              <p className="text-gray-500 col-span-full text-center py-8">
-                記事がまだありません
-              </p>
+
+          {/* サイドバー（30%） */}
+          <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 人気記事 */}
+            <PopularArticles articles={popularArticles} />
+
+            {/* おすすめ記事 */}
+            <RecommendedArticles articles={recentArticles} />
+
+            {/* バナーエリア */}
+            {footerBlocks.length > 0 && (
+              <SidebarBanners blocks={footerBlocks} />
             )}
-          </div>
-        </section>
 
-        {/* 人気記事ランキング */}
-        <section className="mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">人気記事ランキング</h2>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Popular Articles</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularArticles.length > 0 ? (
-              popularArticles.map((article, index) => (
-                <div key={article.id} className="relative">
-                  <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
-                    {index + 1}
-                  </span>
-                  <ArticleCard article={article} />
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 col-span-full text-center py-8">
-                記事がまだありません
-              </p>
-            )}
-          </div>
-        </section>
-
-        {/* ブロック表示エリア（フッター上部） */}
-        {footerBlocks.length > 0 && (
-          <section className="mb-12">
-            <BlockRenderer blocks={footerBlocks} />
-          </section>
-        )}
+            {/* Xタイムライン */}
+            <TwitterTimeline username="moncson" />
+          </aside>
+        </div>
       </main>
 
       {/* フッターコンテンツ（画面横いっぱい） */}
