@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { MenuSettings } from '@/types/theme';
 
@@ -12,6 +13,11 @@ interface HamburgerMenuProps {
 
 export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuTextColor }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // メニューが開いているときはスクロールを無効化
   useEffect(() => {
@@ -36,39 +42,20 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
   // 有効な追加メニューのみフィルタリング
   const validCustomMenus = menuSettings.customMenus?.filter(menu => menu.label && menu.url) || [];
 
-  return (
+  const menuPanel = (
     <>
-      {/* ハンバーガーボタン */}
-      <button
-        onClick={toggleMenu}
-        className="relative w-12 h-12 flex flex-col items-center justify-center gap-1.5 hover:opacity-80 transition-opacity"
-        style={{ zIndex: 61 }}
-        aria-label="メニュー"
-      >
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? 'rotate-45 translate-y-2' : ''
-          }`}
-        />
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? 'opacity-0' : ''
-          }`}
-        />
-        <span
-          style={{ height: '3px' }}
-          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-            isOpen ? '-rotate-45 -translate-y-2' : ''
-          }`}
-        />
-      </button>
-
       {/* オーバーレイ */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-[59] transition-opacity"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9998
+          }}
           onClick={closeMenu}
         />
       )}
@@ -78,14 +65,15 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
         style={{ 
           position: 'fixed',
           top: 0,
-          right: isOpen ? 0 : '-320px',
+          right: 0,
           height: '100vh',
           width: '320px',
           backgroundColor: menuBackgroundColor || '#1f2937', 
           color: menuTextColor || '#ffffff',
-          zIndex: 60,
+          zIndex: 9999,
           boxShadow: '-4px 0 12px rgba(0, 0, 0, 0.3)',
-          transition: 'right 300ms ease-in-out'
+          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 300ms ease-in-out'
         }}
       >
         <div className="flex flex-col h-full">
@@ -173,6 +161,39 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
           </nav>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ハンバーガーボタン */}
+      <button
+        onClick={toggleMenu}
+        className="relative w-12 h-12 flex flex-col items-center justify-center gap-1.5 hover:opacity-80 transition-opacity"
+        aria-label="メニュー"
+      >
+        <span
+          style={{ height: '3px' }}
+          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
+            isOpen ? 'rotate-45 translate-y-2' : ''
+          }`}
+        />
+        <span
+          style={{ height: '3px' }}
+          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
+            isOpen ? 'opacity-0' : ''
+          }`}
+        />
+        <span
+          style={{ height: '3px' }}
+          className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
+            isOpen ? '-rotate-45 -translate-y-2' : ''
+          }`}
+        />
+      </button>
+
+      {/* メニューパネルをportalでbodyに直接マウント */}
+      {mounted && createPortal(menuPanel, document.body)}
     </>
   );
 }

@@ -84,7 +84,7 @@ export default function MediaHeader({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="キーワードで検索"
-                  className="w-full px-4 py-2 pr-12 text-sm text-gray-900 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-200 placeholder:text-xs"
+                  className="w-full px-4 py-2 pr-12 text-sm text-gray-900 bg-black/20 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-200 placeholder:text-xs placeholder:text-gray-600"
                 />
                 <button
                   type="submit"
