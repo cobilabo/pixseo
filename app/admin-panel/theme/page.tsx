@@ -28,9 +28,20 @@ export default function ThemePage() {
       setFetchLoading(true);
       const response = await apiClient.get('/api/admin/theme');
       const data = await response.json();
-      setTheme(data.theme || defaultTheme);
+      const fetchedTheme = data.theme || {};
+      // デフォルト値とマージ
+      setTheme({
+        ...defaultTheme,
+        ...fetchedTheme,
+        menuSettings: {
+          ...defaultTheme.menuSettings,
+          ...fetchedTheme.menuSettings,
+          customMenus: fetchedTheme.menuSettings?.customMenus || defaultTheme.menuSettings?.customMenus || [],
+        },
+      });
     } catch (error) {
       console.error('テーマ設定の取得に失敗しました:', error);
+      setTheme(defaultTheme);
     } finally {
       setFetchLoading(false);
     }
@@ -289,30 +300,25 @@ export default function ThemePage() {
             <div className="p-8">
               {/* バナーエリアタブ */}
               {activeTab === 'banner' && (
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-8">
                   {[0, 1, 2, 3].map((index) => {
                     const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
                     const hasImage = Boolean(block.imageUrl);
                     
                     return (
-                      <div key={index} className="p-6 border border-gray-200 rounded-xl">
-                        <div className="mb-4">
-                          <FeaturedImageUpload
-                            value={block.imageUrl}
-                            onChange={(url) => updateFooterBlock(index, 'imageUrl', url)}
-                            label={`バナー ${index + 1}`}
-                          />
-                        </div>
-
+                      <div key={index} className="space-y-4">
+                        <FeaturedImageUpload
+                          value={block.imageUrl}
+                          onChange={(url) => updateFooterBlock(index, 'imageUrl', url)}
+                          label={`バナー ${index + 1}`}
+                        />
                         {hasImage && (
-                          <div>
-                            <FloatingInput
-                              label="リンク先URL"
-                              value={block.linkUrl}
-                              onChange={(value) => updateFooterBlock(index, 'linkUrl', value)}
-                              type="url"
-                            />
-                          </div>
+                          <FloatingInput
+                            label="リンク先URL"
+                            value={block.linkUrl}
+                            onChange={(value) => updateFooterBlock(index, 'linkUrl', value)}
+                            type="url"
+                          />
                         )}
                       </div>
                     );
@@ -322,49 +328,38 @@ export default function ThemePage() {
 
               {/* フッターコンテンツタブ (cobi テーマ専用) */}
               {activeTab === 'footer-content' && (
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-8">
                   {[0, 1].map((index) => {
                     const content = theme.footerContents?.[index] || { imageUrl: '', alt: '', title: '', description: '', linkUrl: '' };
                     const hasImage = Boolean(content.imageUrl);
                     
                     return (
-                      <div key={index} className="p-6 border border-gray-200 rounded-xl">
-                        <div className="mb-4">
-                          <FeaturedImageUpload
-                            value={content.imageUrl}
-                            onChange={(url) => updateFooterContent(index, 'imageUrl', url)}
-                            label={`コンテンツ ${index + 1}`}
-                          />
-                        </div>
-
+                      <div key={index} className="space-y-4">
+                        <FeaturedImageUpload
+                          value={content.imageUrl}
+                          onChange={(url) => updateFooterContent(index, 'imageUrl', url)}
+                          label={`コンテンツ ${index + 1}`}
+                        />
                         {hasImage && (
                           <>
-                            <div className="mb-4">
-                              <FloatingInput
-                                label="タイトル"
-                                value={content.title}
-                                onChange={(value) => updateFooterContent(index, 'title', value)}
-                              />
-                            </div>
-
-                            <div className="mb-4">
-                              <FloatingInput
-                                label="説明"
-                                value={content.description}
-                                onChange={(value) => updateFooterContent(index, 'description', value)}
-                                multiline
-                                rows={3}
-                              />
-                            </div>
-
-                            <div>
-                              <FloatingInput
-                                label="リンク先URL"
-                                value={content.linkUrl}
-                                onChange={(value) => updateFooterContent(index, 'linkUrl', value)}
-                                type="url"
-                              />
-                            </div>
+                            <FloatingInput
+                              label="タイトル"
+                              value={content.title}
+                              onChange={(value) => updateFooterContent(index, 'title', value)}
+                            />
+                            <FloatingInput
+                              label="説明"
+                              value={content.description}
+                              onChange={(value) => updateFooterContent(index, 'description', value)}
+                              multiline
+                              rows={3}
+                            />
+                            <FloatingInput
+                              label="リンク先URL"
+                              value={content.linkUrl}
+                              onChange={(value) => updateFooterContent(index, 'linkUrl', value)}
+                              type="url"
+                            />
                           </>
                         )}
                       </div>
@@ -375,21 +370,21 @@ export default function ThemePage() {
 
               {/* フッターセクションタブ (cobi テーマ専用) */}
               {activeTab === 'footer-section' && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {[0, 1].map((sectionIndex) => {
                     const section = theme.footerTextLinkSections?.[sectionIndex] || { title: '', links: [] };
                     
                     return (
-                      <div key={sectionIndex} className="p-6 border border-gray-200 rounded-xl">
-                        <div className="mb-4">
+                      <div key={sectionIndex}>
+                        {sectionIndex === 1 && (
+                          <div className="border-t border-gray-200 -mt-4 mb-8" />
+                        )}
+                        <div className="space-y-4">
                           <FloatingInput
                             label={`セクションタイトル ${sectionIndex + 1}`}
                             value={section.title}
                             onChange={(value) => updateTextLinkSection(sectionIndex, 'title', value)}
                           />
-                        </div>
-
-                        <div className="space-y-4">
                           {[0, 1, 2, 3, 4].map((linkIndex) => {
                             const link = section.links?.[linkIndex] || { text: '', url: '' };
                             
@@ -418,56 +413,43 @@ export default function ThemePage() {
 
               {/* メニュータブ */}
               {activeTab === 'menu' && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* 基本メニュー */}
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h3 className="text-lg font-semibold mb-4">基本メニュー</h3>
-                    <div className="space-y-4">
-                      <FloatingInput
-                        label="トップ"
-                        value={theme.menuSettings?.topLabel || 'トップ'}
-                        onChange={(value) => updateMenuLabel('topLabel', value)}
-                      />
-                      <FloatingInput
-                        label="記事一覧"
-                        value={theme.menuSettings?.articlesLabel || '記事一覧'}
-                        onChange={(value) => updateMenuLabel('articlesLabel', value)}
-                      />
-                      <FloatingInput
-                        label="検索"
-                        value={theme.menuSettings?.searchLabel || '検索'}
-                        onChange={(value) => updateMenuLabel('searchLabel', value)}
-                      />
-                    </div>
-                  </div>
+                  <FloatingInput
+                    label="トップ"
+                    value={theme.menuSettings?.topLabel || 'トップ'}
+                    onChange={(value) => updateMenuLabel('topLabel', value)}
+                  />
+                  <FloatingInput
+                    label="記事一覧"
+                    value={theme.menuSettings?.articlesLabel || '記事一覧'}
+                    onChange={(value) => updateMenuLabel('articlesLabel', value)}
+                  />
+                  <FloatingInput
+                    label="検索"
+                    value={theme.menuSettings?.searchLabel || '検索'}
+                    onChange={(value) => updateMenuLabel('searchLabel', value)}
+                  />
 
                   {/* 追加メニュー */}
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h3 className="text-lg font-semibold mb-4">追加メニュー</h3>
-                    <div className="space-y-6">
-                      {[0, 1, 2, 3, 4].map((index) => {
-                        const menu = theme.menuSettings?.customMenus?.[index] || { label: '', url: '' };
-                        return (
-                          <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                            <h4 className="text-sm font-medium text-gray-700 mb-3">追加メニュー {index + 1}</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                              <FloatingInput
-                                label="表示名"
-                                value={menu.label}
-                                onChange={(value) => updateCustomMenu(index, 'label', value)}
-                              />
-                              <FloatingInput
-                                label="リンク先URL"
-                                value={menu.url}
-                                onChange={(value) => updateCustomMenu(index, 'url', value)}
-                                type="url"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {[0, 1, 2, 3, 4].map((index) => {
+                    const menu = theme.menuSettings?.customMenus?.[index] || { label: '', url: '' };
+                    return (
+                      <div key={index} className="grid grid-cols-2 gap-4">
+                        <FloatingInput
+                          label={`追加メニュー ${index + 1} - 表示名`}
+                          value={menu.label}
+                          onChange={(value) => updateCustomMenu(index, 'label', value)}
+                        />
+                        <FloatingInput
+                          label={`追加メニュー ${index + 1} - URL`}
+                          value={menu.url}
+                          onChange={(value) => updateCustomMenu(index, 'url', value)}
+                          type="url"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -531,10 +513,9 @@ export default function ThemePage() {
               {activeTab === 'css' && (
                 <div>
                   <FloatingInput
-                    label="カスタムCSS"
+                    label="カスタムCSS（例：.article-content p { line-height:1.8; }）"
                     value={theme.customCss || ''}
                     onChange={(v) => updateTheme('customCss', v)}
-                    placeholder="例: .article-content p { line-height: 1.8; }"
                     multiline
                     rows={16}
                   />
