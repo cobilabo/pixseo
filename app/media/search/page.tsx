@@ -12,13 +12,15 @@ export default async function SearchPage() {
   // サーバーサイドでデータを取得
   const mediaId = await getMediaIdFromHost();
   const [siteInfo, theme] = await Promise.all([
-    getSiteInfo(mediaId),
-    getTheme(mediaId),
+    getSiteInfo(mediaId || ''),
+    getTheme(mediaId || ''),
   ]);
 
   // カテゴリーを取得してmediaIdでフィルタリング
   const allCategories = await getCategoriesServer();
-  const categories = allCategories.filter(cat => cat.mediaId === mediaId);
+  const categories = mediaId 
+    ? allCategories.filter(cat => cat.mediaId === mediaId)
+    : allCategories;
 
   // スタイルとフッター情報を準備
   const combinedStyles = getCombinedStyles(theme);
