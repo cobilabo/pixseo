@@ -80,13 +80,15 @@ export default function FilterSearch({ filters, onChange }: FilterSearchProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* カテゴリー */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="filter-category" className="block text-sm font-medium text-gray-700 mb-2">
             カテゴリー
           </label>
           <select
+            id="filter-category"
             value={filters.categoryId}
             onChange={(e) => handleCategoryChange(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="カテゴリーで絞り込み"
           >
             <option value="">すべて</option>
             {categories.map((category) => (
@@ -99,13 +101,15 @@ export default function FilterSearch({ filters, onChange }: FilterSearchProps) {
 
         {/* タグ */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="filter-tag" className="block text-sm font-medium text-gray-700 mb-2">
             タグ
           </label>
           <select
+            id="filter-tag"
             value={filters.tagId}
             onChange={(e) => handleTagChange(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="タグで絞り込み"
           >
             <option value="">すべて</option>
             {tags.map((tag) => (
