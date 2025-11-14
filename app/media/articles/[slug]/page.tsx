@@ -274,6 +274,21 @@ export default async function ArticlePage({ params }: PageProps) {
           }}
           customTitle={article.title}
           customSubtitle=""
+          customMeta={`公開: ${
+            article.publishedAt ? (
+              article.publishedAt instanceof Date 
+                ? article.publishedAt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
+                : new Date((article.publishedAt as any).toDate()).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
+            ) : '日付不明'
+          }${
+            article.updatedAt ? ` • 更新: ${
+              article.updatedAt instanceof Date 
+                ? article.updatedAt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
+                : new Date((article.updatedAt as any).toDate()).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
+            }` : ''
+          }${
+            article.viewCount !== undefined ? ` • ${article.viewCount} views` : ''
+          }`}
           showCustomContent={true}
         />
       )}
@@ -290,25 +305,6 @@ export default async function ArticlePage({ params }: PageProps) {
 
             {/* カテゴリー・タグバッジ */}
             <CategoryTagBadges categories={categories} tags={tags} />
-
-            {/* 公開・更新・閲覧数情報 */}
-            <div className="text-center text-sm text-gray-600 mb-8">
-              公開: {article.publishedAt ? (
-                article.publishedAt instanceof Date 
-                  ? article.publishedAt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
-                  : new Date((article.publishedAt as any).toDate()).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
-              ) : '日付不明'}
-              {article.updatedAt && (
-                <> • 更新: {
-                  article.updatedAt instanceof Date 
-                    ? article.updatedAt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
-                    : new Date((article.updatedAt as any).toDate()).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
-                }</>
-              )}
-              {article.viewCount !== undefined && (
-                <> • {article.viewCount} views</>
-              )}
-            </div>
 
             {/* 読了時間 */}
             {article.readingTime && (

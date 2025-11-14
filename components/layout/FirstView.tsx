@@ -9,9 +9,10 @@ interface FirstViewProps {
   customTitle?: string;
   customSubtitle?: string;
   showCustomContent?: boolean;
+  customMeta?: string; // 記事の公開日・更新日・閲覧数などのメタ情報
 }
 
-export default function FirstView({ settings, customTitle, customSubtitle, showCustomContent = false }: FirstViewProps) {
+export default function FirstView({ settings, customTitle, customSubtitle, showCustomContent = false, customMeta }: FirstViewProps) {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -64,6 +65,11 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
               <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
                 {customTitle}
               </h1>
+            )}
+            {customMeta && (
+              <p className="text-sm text-gray-200 mb-4 drop-shadow-md">
+                {customMeta}
+              </p>
             )}
             {customSubtitle && (
               <p className="text-xs text-gray-200 uppercase tracking-wider drop-shadow-md">
