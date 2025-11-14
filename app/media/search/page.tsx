@@ -8,16 +8,20 @@ import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-hel
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SearchPage() {
   // サーバーサイドでデータを取得
   const mediaId = await getMediaIdFromHost();
-  const [siteInfo, theme] = await Promise.all([
+  
+  // サイト設定、Theme、カテゴリーを並列取得
+  const [siteInfo, theme, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
+    getCategoriesServer(),
   ]);
 
-  // カテゴリーを取得してmediaIdでフィルタリング
-  const allCategories = await getCategoriesServer();
+  // mediaIdでカテゴリーをフィルタリング
   const categories = mediaId 
     ? allCategories.filter(cat => cat.mediaId === mediaId)
     : allCategories;
