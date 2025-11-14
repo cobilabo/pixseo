@@ -85,7 +85,7 @@ export default async function SearchPage() {
           <div className="flex-1 lg:w-[70%]">
             {/* 見出し */}
             <div className="text-center mb-8">
-              <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
               <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
             </div>
 

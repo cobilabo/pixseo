@@ -13,9 +13,9 @@ export default function RecommendedArticles({ articles }: RecommendedArticlesPro
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
         おすすめ記事
-      </h3>
+      </h2>
       <div className="space-y-4">
         {articles.slice(0, 5).map((article) => (
           <Link
@@ -36,9 +36,9 @@ export default function RecommendedArticles({ articles }: RecommendedArticlesPro
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                 {article.title}
-              </h4>
+              </h3>
               {article.publishedAt && (
                 <p className="text-xs text-gray-500 mt-1">
                   {new Date(article.publishedAt).toLocaleDateString('ja-JP')}

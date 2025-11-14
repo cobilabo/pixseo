@@ -102,7 +102,7 @@ export default async function ArticlesPage() {
             {/* 記事一覧 */}
             <section>
               <div className="text-center mb-8">
-                <h1 className="text-xl font-bold text-gray-900 mb-1">新着記事</h1>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
               </div>
               {articles.length > 0 ? (
