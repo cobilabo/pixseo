@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Image from 'next/image';
 import { getCategoryServer, getCategoriesServer } from '@/lib/firebase/categories-server';
-import { getArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
@@ -13,6 +13,10 @@ import BlockRenderer from '@/components/blocks/BlockRenderer';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
+import PopularArticles from '@/components/common/PopularArticles';
+import RecommendedArticles from '@/components/common/RecommendedArticles';
+import TwitterTimeline from '@/components/common/TwitterTimeline';
+import SidebarBanners from '@/components/common/SidebarBanners';
 
 // ISR: 60秒ごとに再生成
 export const revalidate = 60;
@@ -66,10 +70,11 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [siteInfo, theme, articles, allCategories] = await Promise.all([
+  const [siteInfo, theme, articles, popularArticles, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ categoryId: category.id, limit: 30 }),
+    getPopularArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
   ]);
   
@@ -117,34 +122,49 @@ export default async function CategoryPage({ params }: PageProps) {
       <CategoryBar categories={categories} excludeCategoryId={category.id} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
-        {/* カテゴリー説明（オプション） */}
-        {category.description && (
-          <section className="mb-8">
-            <p className="text-gray-600 text-center">{category.description}</p>
-          </section>
-        )}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* メインカラム（70%） */}
+          <div className="flex-1 lg:w-[70%]">
+            {/* カテゴリー説明（オプション） */}
+            {category.description && (
+              <section className="mb-8">
+                <p className="text-gray-600 text-center">{category.description}</p>
+              </section>
+            )}
 
-        {/* 記事一覧 */}
-        <section>
-          {articles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-600">このカテゴリーにはまだ記事がありません</p>
-            </div>
-          )}
-        </section>
+            {/* 記事一覧 */}
+            <section>
+              {articles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {articles.map((article) => (
+                    <ArticleCard key={article.id} article={article} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">このカテゴリーにはまだ記事がありません</p>
+                </div>
+              )}
+            </section>
+          </div>
 
-        {/* ブロック表示エリア（フッター上部） */}
-        {footerBlocks.length > 0 && (
-          <section className="mb-12">
-            <BlockRenderer blocks={footerBlocks} />
-          </section>
-        )}
+          {/* サイドバー（30%） */}
+          <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 人気記事 */}
+            <PopularArticles articles={popularArticles} />
+
+            {/* おすすめ記事 */}
+            <RecommendedArticles articles={articles} />
+
+            {/* バナーエリア */}
+            {footerBlocks.length > 0 && (
+              <SidebarBanners blocks={footerBlocks} />
+            )}
+
+            {/* Xタイムライン */}
+            <TwitterTimeline username="moncson" />
+          </aside>
+        </div>
       </main>
 
       {/* フッターコンテンツ（画面横いっぱい） */}

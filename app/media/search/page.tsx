@@ -9,6 +9,11 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import PopularArticles from '@/components/common/PopularArticles';
+import RecommendedArticles from '@/components/common/RecommendedArticles';
+import TwitterTimeline from '@/components/common/TwitterTimeline';
+import SidebarBanners from '@/components/common/SidebarBanners';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,10 +22,12 @@ export default async function SearchPage() {
   const mediaId = await getMediaIdFromHost();
   
   // サイト設定、Theme、カテゴリーを並列取得
-  const [siteInfo, theme, allCategories] = await Promise.all([
+  const [siteInfo, theme, allCategories, popularArticles, recentArticles] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
+    getPopularArticlesServer(10, mediaId || undefined),
+    getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
   ]);
 
   // mediaIdでカテゴリーをフィルタリング
@@ -30,6 +37,7 @@ export default async function SearchPage() {
 
   // スタイルとフッター情報を準備
   const combinedStyles = getCombinedStyles(theme);
+  const footerBlocks = theme.footerBlocks?.filter(block => block.imageUrl) || [];
   const footerContents = theme.footerContents?.filter(content => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter(section => section.title || section.links?.length > 0) || [];
 
@@ -72,10 +80,32 @@ export default async function SearchPage() {
         <CategoryBar categories={categories} />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: theme.backgroundColor }}>
-          {/* 検索コンテンツ */}
-          <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
-            <SearchContent />
-          </Suspense>
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* メインカラム（70%） */}
+            <div className="flex-1 lg:w-[70%]">
+              {/* 検索コンテンツ */}
+              <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
+                <SearchContent />
+              </Suspense>
+            </div>
+
+            {/* サイドバー（30%） */}
+            <aside className="w-full lg:w-[30%] space-y-6">
+              {/* 人気記事 */}
+              <PopularArticles articles={popularArticles} />
+
+              {/* おすすめ記事 */}
+              <RecommendedArticles articles={recentArticles} />
+
+              {/* バナーエリア */}
+              {footerBlocks.length > 0 && (
+                <SidebarBanners blocks={footerBlocks} />
+              )}
+
+              {/* Xタイムライン */}
+              <TwitterTimeline username="moncson" />
+            </aside>
+          </div>
         </main>
 
         {/* フッターコンテンツ */}
