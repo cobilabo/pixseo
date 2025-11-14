@@ -305,8 +305,8 @@ export default async function ArticlePage({ params }: PageProps) {
                     : new Date((article.updatedAt as any).toDate()).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })
                 }</>
               )}
-              {article.views !== undefined && (
-                <> • {article.views} views</>
+              {article.viewCount !== undefined && (
+                <> • {article.viewCount} views</>
               )}
             </div>
 
