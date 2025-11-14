@@ -11,8 +11,11 @@ import {
 } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
+import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Article } from '@/types/article';
 import MediaHeader from '@/components/layout/MediaHeader';
+import CategoryBar from '@/components/layout/CategoryBar';
+import FirstView from '@/components/layout/FirstView';
 import ArticleContent from '@/components/articles/ArticleContent';
 import RelatedArticles from '@/components/articles/RelatedArticles';
 import ArticleHeader from '@/components/articles/ArticleHeader';
@@ -122,10 +125,12 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  // サイト情報を取得
-  const { name: siteName } = mediaId 
-    ? await getSiteInfo(mediaId) 
-    : { name: 'メディアサイト' };
+  // サイト情報、テーマを取得
+  const [siteInfo, theme] = await Promise.all([
+    mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false }),
+    mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
+  ]);
+  const siteName = siteInfo.name;
 
   // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリーを並行取得
   const [categories, tags, writer, adjacentArticles, relatedArticles, allCategories] = await Promise.all([
@@ -165,6 +170,9 @@ export default async function ArticlePage({ params }: PageProps) {
   const headerCategories = mediaId 
     ? allCategories.filter(cat => cat.mediaId === mediaId)
     : allCategories;
+
+  // ThemeスタイルとカスタムCSSを生成
+  const combinedStyles = getCombinedStyles(theme);
   
   // パンくずリスト用のカテゴリー（最初の1つ）
   const category = categories.length > 0 ? categories[0] : null;
@@ -211,7 +219,10 @@ export default async function ArticlePage({ params }: PageProps) {
   } : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor || '#f9fafb' }}>
+      {/* Themeスタイル注入 */}
+      <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+
       {/* JSON-LD構造化データ */}
       <script
         type="application/ld+json"
@@ -226,8 +237,22 @@ export default async function ArticlePage({ params }: PageProps) {
         />
       )}
 
-      {/* ヘッダー＆カテゴリーバー */}
-      <MediaHeader siteName={siteName} categories={headerCategories} />
+      {/* ヘッダー */}
+      <MediaHeader 
+        siteName={siteName}
+        siteInfo={siteInfo}
+        menuSettings={theme.menuSettings}
+        menuBackgroundColor={theme.menuBackgroundColor}
+        menuTextColor={theme.menuTextColor}
+      />
+
+      {/* FV（ファーストビュー） */}
+      {theme.firstView && (
+        <FirstView settings={theme.firstView} />
+      )}
+
+      {/* カテゴリーバー */}
+      <CategoryBar categories={headerCategories} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* パンくずリスト */}
