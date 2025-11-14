@@ -62,10 +62,15 @@ export default async function SearchPage() {
         {/* Themeスタイル注入 */}
         <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-        {/* FV（ファーストビュー）- 最上部に配置 */}
-        {theme.firstView && (
-          <FirstView settings={theme.firstView} />
-        )}
+      {/* FV（ファーストビュー）- 最上部に配置 */}
+      {theme.firstView && (
+        <FirstView 
+          settings={theme.firstView}
+          customTitle="検索"
+          customSubtitle="SEARCH"
+          showCustomContent={true}
+        />
+      )}
 
         {/* ヘッダー - FVの上に重ねる */}
         <MediaHeader 

@@ -55,7 +55,7 @@ export default async function ArticlesPage() {
   const [siteInfo, theme, articles, popularArticles, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
-    getArticlesServer({ limit: 30 }),
+    getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
   ]);
@@ -80,7 +80,12 @@ export default async function ArticlesPage() {
 
       {/* FV（ファーストビュー）- 最上部に配置 */}
       {theme.firstView && (
-        <FirstView settings={theme.firstView} />
+        <FirstView 
+          settings={theme.firstView}
+          customTitle="記事一覧"
+          customSubtitle="ARTICLES"
+          showCustomContent={true}
+        />
       )}
 
       {/* ヘッダー - FVの上に重ねる */}
