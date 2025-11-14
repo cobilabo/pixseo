@@ -89,7 +89,14 @@ export default async function TagPage({ params }: PageProps) {
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
       {/* ヘッダー＆カテゴリーバー */}
-      <MediaHeader siteName={siteInfo.name} categories={categories} siteInfo={siteInfo} />
+      <MediaHeader 
+        siteName={siteInfo.name} 
+        categories={categories} 
+        siteInfo={siteInfo}
+        menuSettings={theme.menuSettings}
+        menuBackgroundColor={theme.menuBackgroundColor}
+        menuTextColor={theme.menuTextColor}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 検索バー */}
