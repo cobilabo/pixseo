@@ -45,19 +45,19 @@ export default function HamburgerMenu({ menuSettings, menuBackgroundColor, menuT
         aria-label="メニュー"
       >
         <span
-          style={{ height: '2px' }}
+          style={{ height: '3px' }}
           className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
             isOpen ? 'rotate-45 translate-y-2' : ''
           }`}
         />
         <span
-          style={{ height: '2px' }}
+          style={{ height: '3px' }}
           className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
             isOpen ? 'opacity-0' : ''
           }`}
         />
         <span
-          style={{ height: '2px' }}
+          style={{ height: '3px' }}
           className={`block w-6 bg-gray-800 rounded-full transition-all duration-300 ${
             isOpen ? '-rotate-45 -translate-y-2' : ''
           }`}
