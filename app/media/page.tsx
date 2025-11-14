@@ -198,9 +198,9 @@ export default async function MediaPage() {
       <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
-            <div className={`max-w-7xl mx-auto px-0 grid grid-cols-1 md:grid-cols-2 ${footerTextLinkSections.length === 1 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-8 pb-8`}>
+            <div className={`w-full grid ${footerTextLinkSections.length === 1 ? 'grid-cols-2' : 'grid-cols-3'} pb-8`}>
               {/* 左カラム: ロゴとディスクリプション */}
-              <div className="text-left">
+              <div className="text-left px-8">
                 <div className="flex items-center gap-3 mb-4">
                   {siteInfo.faviconUrl && (
                     <Image
@@ -208,7 +208,7 @@ export default async function MediaPage() {
                       alt={`${siteInfo.name} アイコン`}
                       width={32}
                       height={32}
-                      className="w-8 h-8"
+                      className="w-8 h-8 brightness-0 invert"
                       unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
                     />
                   )}
@@ -238,7 +238,7 @@ export default async function MediaPage() {
                 if (!section.title && validLinks.length === 0) return null;
 
                 return (
-                  <div key={index} className="text-left lg:border-l lg:border-gray-600 lg:pl-8">
+                  <div key={index} className="text-left border-l border-gray-600 px-8">
                     {section.title && (
                       <h3 className="text-base font-bold mb-4 uppercase tracking-wider">
                         {section.title}
