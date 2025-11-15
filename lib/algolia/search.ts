@@ -24,6 +24,10 @@ export async function searchArticlesWithAlgolia(
       filters += ` AND mediaId:${mediaId}`;
     }
 
+    console.log('[Algolia Search] Query:', keyword);
+    console.log('[Algolia Search] Filters:', filters);
+    console.log('[Algolia Search] MediaId:', mediaId);
+
     const result = await searchClient.searchSingleIndex({
       indexName: ARTICLES_INDEX,
       searchParams: {
@@ -33,6 +37,8 @@ export async function searchArticlesWithAlgolia(
         filters,
       },
     });
+
+    console.log('[Algolia Search] Results:', result.nbHits, 'hits');
 
     const articles = result.hits.map((hit: any) => ({
       id: hit.objectID,
