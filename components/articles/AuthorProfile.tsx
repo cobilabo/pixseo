@@ -30,9 +30,9 @@ export default function AuthorProfile({ writer }: AuthorProfileProps) {
       </div>
       
       {/* アイコン（背景画像と白い部分の境界線に配置） */}
-      <div className="relative flex justify-center -mt-8">
+      <div className="relative flex justify-center -mt-12">
         {writer.icon ? (
-          <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <Image
               src={writer.icon}
               alt={writer.handleName}
@@ -41,14 +41,14 @@ export default function AuthorProfile({ writer }: AuthorProfileProps) {
             />
           </div>
         ) : (
-          <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-gray-500 text-xl font-bold">
+          <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-gray-500 text-2xl font-bold">
             {writer.handleName.charAt(0)}
           </div>
         )}
       </div>
 
       {/* 著者情報エリア（下部） */}
-      <div className="p-6 pt-4">
+      <div className="p-6 pt-8">
         <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">
           {writer.handleName}
         </h3>
