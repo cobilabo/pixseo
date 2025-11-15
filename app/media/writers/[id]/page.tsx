@@ -207,7 +207,7 @@ export default async function WriterPage({ params }: PageProps) {
 
             {/* バナーエリア */}
             {theme.bannerBlocks && theme.bannerBlocks.length > 0 && (
-              <SidebarBanners banners={theme.bannerBlocks} />
+              <SidebarBanners blocks={theme.bannerBlocks} />
             )}
           </aside>
         </div>
