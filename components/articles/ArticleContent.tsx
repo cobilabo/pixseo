@@ -219,6 +219,8 @@ if (typeof window !== 'undefined') {
       margin-top: 2em !important;
       margin-bottom: 1em !important;
       font-weight: 700 !important;
+      padding-left: 0.75em !important;
+      border-left: 4px solid var(--primary-color, #3b82f6) !important;
     }
     .article-content h3 {
       font-size: 1.375em !important;
@@ -227,6 +229,8 @@ if (typeof window !== 'undefined') {
       margin-top: 1.8em !important;
       margin-bottom: 0.8em !important;
       font-weight: 600 !important;
+      padding-left: 0.5em !important;
+      border-left: 3px solid var(--primary-color, #3b82f6) !important;
     }
     .article-content h4 {
       font-size: 1.125em !important;
@@ -235,6 +239,8 @@ if (typeof window !== 'undefined') {
       margin-top: 1.5em !important;
       margin-bottom: 0.6em !important;
       font-weight: 600 !important;
+      padding-bottom: 0.25em !important;
+      border-bottom: 2px solid var(--primary-color, #3b82f6) !important;
     }
     .article-content ul,
     .article-content ol {
@@ -248,32 +254,25 @@ if (typeof window !== 'undefined') {
       counter-reset: list-counter !important;
     }
     .article-content li {
-      margin-bottom: 1em !important;
-      padding: 1em 1.25em !important;
-      background: #f9fafb !important;
-      border-left: 4px solid #3b82f6 !important;
+      margin-bottom: 0.75em !important;
+      padding: 0.75em 1em !important;
+      background: transparent !important;
+      border: 2px solid var(--secondary-color, #93c5fd) !important;
       border-radius: 8px !important;
       position: relative !important;
-      padding-left: 3.5em !important;
       counter-increment: list-counter !important;
+      font-size: 0.9em !important;
     }
     .article-content ol > li::before {
       content: "No. " counter(list-counter) !important;
-      position: absolute !important;
-      left: 1.25em !important;
-      top: 1em !important;
+      display: inline-block !important;
+      margin-right: 0.5em !important;
       font-weight: 700 !important;
-      color: #3b82f6 !important;
+      color: var(--primary-color, #3b82f6) !important;
       font-size: 0.875em !important;
     }
     .article-content ul > li::before {
-      content: "•" !important;
-      position: absolute !important;
-      left: 1.25em !important;
-      top: 1em !important;
-      font-weight: 700 !important;
-      color: #3b82f6 !important;
-      font-size: 1.2em !important;
+      content: "" !important;
     }
   `;
   if (!document.querySelector('#article-content-styles')) {
