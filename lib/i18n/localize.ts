@@ -53,7 +53,12 @@ export function localizeArticle(article: any, lang: Lang) {
   return {
     id: article.id,
     slug: article.slug,
-    ...localized,
+    title: localized.title || article.title || '',
+    content: localized.content || article.content || '',
+    excerpt: localized.excerpt || article.excerpt || '',
+    metaTitle: localized.metaTitle || article.metaTitle || localized.title || article.title || '',
+    metaDescription: localized.metaDescription || article.metaDescription || localized.excerpt || article.excerpt || '',
+    aiSummary: localized.aiSummary || article.aiSummary || '',
     faqs,
     // 共通フィールド
     writerId: article.writerId,
@@ -85,7 +90,10 @@ export function localizeCategory(category: any, lang: Lang) {
   return {
     id: category.id,
     slug: category.slug,
-    ...localized,
+    name: localized.name || category.name || '',
+    description: localized.description || category.description || '',
+    imageUrl: category.imageUrl,
+    imageAlt: category.imageAlt,
     featuredImage: category.featuredImage,
     featuredImageAlt: category.featuredImageAlt,
     isRecommended: category.isRecommended,
@@ -103,7 +111,7 @@ export function localizeTag(tag: any, lang: Lang) {
   return {
     id: tag.id,
     slug: tag.slug,
-    ...localized,
+    name: localized.name || tag.name || '',
     mediaId: tag.mediaId,
   };
 }
@@ -116,7 +124,8 @@ export function localizeWriter(writer: any, lang: Lang) {
   
   return {
     id: writer.id,
-    ...localized,
+    handleName: localized.handleName || writer.handleName || '',
+    bio: localized.bio || writer.bio || '',
     icon: writer.icon,
     iconAlt: writer.iconAlt,
     backgroundImage: writer.backgroundImage,
@@ -132,6 +141,7 @@ export function localizePage(page: any, lang: Lang) {
   const localized = localizeFields(page, lang, [
     'title',
     'content',
+    'excerpt',
     'metaTitle',
     'metaDescription',
   ]);
@@ -139,7 +149,11 @@ export function localizePage(page: any, lang: Lang) {
   return {
     id: page.id,
     slug: page.slug,
-    ...localized,
+    title: localized.title || page.title || '',
+    content: localized.content || page.content || '',
+    excerpt: localized.excerpt || page.excerpt || '',
+    metaTitle: localized.metaTitle || page.metaTitle || localized.title || page.title || '',
+    metaDescription: localized.metaDescription || page.metaDescription || localized.excerpt || page.excerpt || '',
     featuredImage: page.featuredImage,
     featuredImageAlt: page.featuredImageAlt,
     isPublished: page.isPublished,
@@ -154,11 +168,12 @@ export function localizePage(page: any, lang: Lang) {
  * サイト情報をローカライズ
  */
 export function localizeSiteInfo(siteInfo: any, lang: Lang) {
-  const localized = localizeFields(siteInfo, lang, ['name', 'siteDescription']);
+  const localized = localizeFields(siteInfo, lang, ['name', 'description']);
   
   return {
     ...siteInfo,
-    ...localized,
+    name: localized.name || siteInfo.name || '',
+    description: localized.description || siteInfo.description || '',
   };
 }
 
@@ -168,38 +183,61 @@ export function localizeSiteInfo(siteInfo: any, lang: Lang) {
 export function localizeTheme(theme: any, lang: Lang) {
   const localized = { ...theme };
   
-  // FVテキスト
-  const fvFields = localizeFields(theme, lang, ['fvCatchphrase', 'fvDescription']);
-  Object.assign(localized, fvFields);
+  // FV設定
+  if (theme.firstView) {
+    const fvFields = localizeFields(theme.firstView, lang, ['catchphrase', 'description']);
+    localized.firstView = {
+      ...theme.firstView,
+      catchphrase: fvFields.catchphrase || theme.firstView.catchphrase || '',
+      description: fvFields.description || theme.firstView.description || '',
+    };
+  }
   
   // フッターコンテンツ
   if (theme.footerContents) {
-    localized.footerContents = theme.footerContents.map((content: any) => ({
-      ...content,
-      ...localizeFields(content, lang, ['title', 'description']),
-    }));
+    localized.footerContents = theme.footerContents.map((content: any) => {
+      const contentFields = localizeFields(content, lang, ['title', 'description']);
+      return {
+        ...content,
+        title: contentFields.title || content.title || '',
+        description: contentFields.description || content.description || '',
+      };
+    });
   }
   
   // フッターテキストリンクセクション
   if (theme.footerTextLinkSections) {
-    localized.footerTextLinkSections = theme.footerTextLinkSections.map((section: any) => ({
-      ...section,
-      ...localizeFields(section, lang, ['title']),
-      links: section.links?.map((link: any) => ({
-        ...link,
-        ...localizeFields(link, lang, ['text']),
-      })) || [],
-    }));
+    localized.footerTextLinkSections = theme.footerTextLinkSections.map((section: any) => {
+      const sectionFields = localizeFields(section, lang, ['title']);
+      return {
+        ...section,
+        title: sectionFields.title || section.title || '',
+        links: section.links?.map((link: any) => {
+          const linkFields = localizeFields(link, lang, ['text']);
+          return {
+            ...link,
+            text: linkFields.text || link.text || '',
+          };
+        }) || [],
+      };
+    });
   }
   
-  // メニュー
-  if (theme.menu?.additionalMenus) {
-    localized.menu = {
-      ...theme.menu,
-      additionalMenus: theme.menu.additionalMenus.map((menu: any) => ({
-        ...menu,
-        ...localizeFields(menu, lang, ['text']),
-      })),
+  // メニュー設定
+  if (theme.menuSettings) {
+    const menuFields = localizeFields(theme.menuSettings, lang, ['topLabel', 'articlesLabel', 'searchLabel']);
+    localized.menuSettings = {
+      ...theme.menuSettings,
+      topLabel: menuFields.topLabel || theme.menuSettings.topLabel || 'トップ',
+      articlesLabel: menuFields.articlesLabel || theme.menuSettings.articlesLabel || '記事一覧',
+      searchLabel: menuFields.searchLabel || theme.menuSettings.searchLabel || '検索',
+      customMenus: theme.menuSettings.customMenus?.map((menu: any) => {
+        const customMenuFields = localizeFields(menu, lang, ['label']);
+        return {
+          ...menu,
+          label: customMenuFields.label || menu.label || '',
+        };
+      }) || [],
     };
   }
   
