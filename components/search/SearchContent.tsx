@@ -7,13 +7,15 @@ import SimpleSearch from '@/components/search/SimpleSearch';
 import ArticleCard from '@/components/articles/ArticleCard';
 import { Article } from '@/types/article';
 import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
+import { Lang } from '@/types/lang';
 
 interface SearchContentProps {
   faviconUrl?: string;
   mediaId?: string;
+  lang?: Lang;
 }
 
-export default function SearchContent({ faviconUrl, mediaId }: SearchContentProps) {
+export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: SearchContentProps) {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [articles, setArticles] = useState<Article[]>([]);
@@ -72,7 +74,7 @@ export default function SearchContent({ faviconUrl, mediaId }: SearchContentProp
             {/* 記事グリッド - ホームページと同じスタイル（2カラム） */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} lang={lang} />
               ))}
             </div>
           </>
