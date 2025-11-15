@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Article, Category } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 interface PopularArticlesProps {
   articles: Article[];
   categories?: Category[];
+  lang?: Lang;
 }
 
-export default function PopularArticles({ articles, categories = [] }: PopularArticlesProps) {
+export default function PopularArticles({ articles, categories = [], lang = 'ja' }: PopularArticlesProps) {
   if (articles.length === 0) {
     return null;
   }
@@ -34,7 +36,7 @@ export default function PopularArticles({ articles, categories = [] }: PopularAr
           return (
             <Link
               key={article.id}
-              href={`/media/articles/${article.slug}`}
+              href={`/${lang}/articles/${article.slug}`}
               className="flex gap-3 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (

@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 interface CategoryBarProps {
   categories: Category[];
   excludeCategoryId?: string;
   variant?: 'full' | 'half';
+  lang?: Lang;
 }
 
-export default function CategoryBar({ categories, excludeCategoryId, variant = 'half' }: CategoryBarProps) {
+export default function CategoryBar({ categories, excludeCategoryId, variant = 'half', lang = 'ja' }: CategoryBarProps) {
   // 選択中のカテゴリを除外
   const filteredCategories = excludeCategoryId 
     ? categories.filter(cat => cat.id !== excludeCategoryId)
@@ -28,7 +30,7 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
           {filteredCategories.map((category, index) => (
             <Link
               key={category.id}
-              href={`/categories/${category.slug}`}
+              href={`/${lang}/categories/${category.slug}`}
               className={`relative flex-1 min-w-[150px] ${categoryHeight} group overflow-hidden ${
                 index === 0 ? 'rounded-tl-3xl rounded-bl-3xl' : ''
               } ${

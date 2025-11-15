@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Article, Category } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 interface RecommendedArticlesProps {
   articles: Article[];
   categories?: Category[];
+  lang?: Lang;
 }
 
-export default function RecommendedArticles({ articles, categories = [] }: RecommendedArticlesProps) {
+export default function RecommendedArticles({ articles, categories = [], lang = 'ja' }: RecommendedArticlesProps) {
   if (articles.length === 0) {
     return null;
   }
@@ -34,7 +36,7 @@ export default function RecommendedArticles({ articles, categories = [] }: Recom
           return (
             <Link
               key={article.id}
-              href={`/media/articles/${article.slug}`}
+              href={`/${lang}/articles/${article.slug}`}
               className="flex gap-3 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (
