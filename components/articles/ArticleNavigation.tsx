@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Article, Category } from '@/types/article';
 
 interface ArticleNavigationProps {
@@ -6,13 +7,15 @@ interface ArticleNavigationProps {
   nextArticle?: Article | null;
   previousCategories?: Category[];
   nextCategories?: Category[];
+  logoUrl?: string;
 }
 
 export default function ArticleNavigation({ 
   previousArticle, 
   nextArticle,
   previousCategories = [],
-  nextCategories = []
+  nextCategories = [],
+  logoUrl
 }: ArticleNavigationProps) {
   if (!previousArticle && !nextArticle) {
     return null;
@@ -84,9 +87,20 @@ export default function ArticleNavigation({
             </Link>
           ) : (
             <div className="bg-gray-50 rounded-lg p-5 flex flex-col items-center justify-center text-gray-400 text-sm h-full" style={{ minHeight: '160px' }}>
-              <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              {logoUrl ? (
+                <div className="relative w-20 h-20 mb-3 opacity-30">
+                  <Image
+                    src={logoUrl}
+                    alt="Site Logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              ) : (
+                <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              )}
               次の記事はありません
             </div>
           )}
@@ -149,9 +163,20 @@ export default function ArticleNavigation({
             </Link>
           ) : (
             <div className="bg-gray-50 rounded-lg p-5 flex flex-col items-center justify-center text-gray-400 text-sm h-full" style={{ minHeight: '160px' }}>
-              <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              {logoUrl ? (
+                <div className="relative w-20 h-20 mb-3 opacity-30">
+                  <Image
+                    src={logoUrl}
+                    alt="Site Logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              ) : (
+                <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              )}
               前の記事はありません
             </div>
           )}
