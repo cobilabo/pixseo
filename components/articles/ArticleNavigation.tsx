@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { Article } from '@/types/article';
-import { Category } from '@/types/category';
+import { Article, Category } from '@/types/article';
 
 interface ArticleNavigationProps {
   previousArticle?: Article | null;
@@ -63,7 +62,14 @@ export default function ArticleNavigation({
                       <span>•</span>
                       <div className="flex gap-1.5 flex-wrap">
                         {previousCategories.slice(0, 2).map((cat) => (
-                          <span key={cat.id} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs">
+                          <span 
+                            key={cat.id} 
+                            className="px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{ 
+                              backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
+                              color: 'var(--primary-color, #3b82f6)'
+                            }}
+                          >
                             {cat.name}
                           </span>
                         ))}
@@ -115,7 +121,14 @@ export default function ArticleNavigation({
                       <span>•</span>
                       <div className="flex gap-1.5 flex-wrap justify-end">
                         {nextCategories.slice(0, 2).map((cat) => (
-                          <span key={cat.id} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs">
+                          <span 
+                            key={cat.id} 
+                            className="px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{ 
+                              backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
+                              color: 'var(--primary-color, #3b82f6)'
+                            }}
+                          >
                             {cat.name}
                           </span>
                         ))}

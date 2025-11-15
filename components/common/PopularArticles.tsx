@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Article } from '@/types/article';
-import { Category } from '@/types/category';
+import { Article, Category } from '@/types/article';
 
 interface PopularArticlesProps {
   articles: Article[];
@@ -75,7 +74,14 @@ export default function PopularArticles({ articles, categories = [] }: PopularAr
                         <span>•</span>
                         <div className="flex gap-1 flex-wrap">
                           {articleCategories.slice(0, 2).map((cat) => (
-                            <span key={cat.id} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
+                            <span 
+                              key={cat.id} 
+                              className="px-1.5 py-0.5 rounded text-xs font-medium"
+                              style={{ 
+                                backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
+                                color: 'var(--primary-color, #3b82f6)'
+                              }}
+                            >
                               {cat.name}
                             </span>
                           ))}
