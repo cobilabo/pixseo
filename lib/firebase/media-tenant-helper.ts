@@ -64,6 +64,7 @@ export async function getMediaIdFromHost(): Promise<string | null> {
 
 export interface SiteInfo {
   allowIndexing: boolean;
+  // 後方互換性のため既存フィールドを保持
   name: string;
   description?: string;
   faviconUrl?: string;
@@ -72,6 +73,15 @@ export interface SiteInfo {
   ogImageUrl?: string;
   mainTitle?: string;
   mainSubtitle?: string;
+  // 多言語フィールド
+  name_ja?: string;
+  name_en?: string;
+  name_zh?: string;
+  name_ko?: string;
+  description_ja?: string;
+  description_en?: string;
+  description_zh?: string;
+  description_ko?: string;
 }
 
 /**

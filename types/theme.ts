@@ -40,27 +40,55 @@ export interface FooterBlock {
 export interface FooterContent {
   imageUrl: string;
   alt: string;
+  // 後方互換性のため既存フィールドを保持
   title: string;
   description: string;
   linkUrl: string;
+  // 多言語フィールド
+  title_ja?: string;
+  title_en?: string;
+  title_zh?: string;
+  title_ko?: string;
+  description_ja?: string;
+  description_en?: string;
+  description_zh?: string;
+  description_ko?: string;
 }
 
 // テキストリンクの定義
 export interface FooterTextLink {
+  // 後方互換性のため既存フィールドを保持
   text: string;
   url: string;
+  // 多言語フィールド
+  text_ja?: string;
+  text_en?: string;
+  text_zh?: string;
+  text_ko?: string;
 }
 
 // テキストリンクセクションの定義
 export interface FooterTextLinkSection {
+  // 後方互換性のため既存フィールドを保持
   title: string;
   links: FooterTextLink[];
+  // 多言語フィールド
+  title_ja?: string;
+  title_en?: string;
+  title_zh?: string;
+  title_ko?: string;
 }
 
 // メニュー項目の定義
 export interface MenuItem {
+  // 後方互換性のため既存フィールドを保持
   label: string;
   url: string;
+  // 多言語フィールド
+  label_ja?: string;
+  label_en?: string;
+  label_zh?: string;
+  label_ko?: string;
 }
 
 // メニュー設定の定義
@@ -74,8 +102,18 @@ export interface MenuSettings {
 // FV（ファーストビュー）設定の定義
 export interface FirstViewSettings {
   imageUrl: string;           // FV画像
+  // 後方互換性のため既存フィールドを保持
   catchphrase: string;        // キャッチコピー
   description: string;        // ディスクリプション
+  // 多言語フィールド
+  catchphrase_ja?: string;
+  catchphrase_en?: string;
+  catchphrase_zh?: string;
+  catchphrase_ko?: string;
+  description_ja?: string;
+  description_en?: string;
+  description_zh?: string;
+  description_ko?: string;
 }
 
 export interface Theme {
