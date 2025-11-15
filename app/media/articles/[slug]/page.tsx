@@ -330,6 +330,14 @@ export default async function ArticlePage({ params }: PageProps) {
               />
             </article>
 
+            {/* 前後の記事ナビゲーション */}
+            <ArticleNavigation 
+              previousArticle={adjacentArticles.previousArticle} 
+              nextArticle={adjacentArticles.nextArticle}
+              previousCategories={previousCategories}
+              nextCategories={nextCategories}
+            />
+
             {/* SNSシェアボタン */}
             <SocialShare title={typeof article.title === 'string' ? article.title : ''} />
 
@@ -354,14 +362,6 @@ export default async function ArticlePage({ params }: PageProps) {
                 </a>
               </div>
             )}
-
-            {/* 前後の記事ナビゲーション */}
-            <ArticleNavigation 
-              previousArticle={adjacentArticles.previousArticle} 
-              nextArticle={adjacentArticles.nextArticle}
-              previousCategories={previousCategories}
-              nextCategories={nextCategories}
-            />
 
             {/* 関連記事 */}
             {relatedArticles.length > 0 && (
