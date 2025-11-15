@@ -84,7 +84,7 @@ export default function SearchContent({ faviconUrl }: SearchContentProps) {
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center text-gray-400">
+          <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center text-gray-900">
             {faviconUrl ? (
               <div className="relative w-20 h-20 mb-4 opacity-30">
                 <Image

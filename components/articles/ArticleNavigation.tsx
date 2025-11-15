@@ -86,7 +86,7 @@ export default function ArticleNavigation({
               </div>
             </Link>
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-5 flex flex-col items-center justify-center text-gray-400 text-sm h-full" style={{ minHeight: '160px' }}>
+            <div className="bg-white rounded-lg shadow-md p-5 flex flex-col items-center justify-center text-gray-900 text-sm h-full" style={{ minHeight: '160px' }}>
               {logoUrl ? (
                 <div className="relative w-16 h-16 mb-3 opacity-30">
                   <Image
@@ -162,7 +162,7 @@ export default function ArticleNavigation({
               </div>
             </Link>
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-5 flex flex-col items-center justify-center text-gray-400 text-sm h-full" style={{ minHeight: '160px' }}>
+            <div className="bg-white rounded-lg shadow-md p-5 flex flex-col items-center justify-center text-gray-900 text-sm h-full" style={{ minHeight: '160px' }}>
               {logoUrl ? (
                 <div className="relative w-16 h-16 mb-3 opacity-30">
                   <Image
