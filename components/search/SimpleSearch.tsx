@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 interface SimpleSearchProps {
@@ -9,10 +10,25 @@ interface SimpleSearchProps {
 }
 
 export default function SimpleSearch({ onSearch, initialKeyword = '' }: SimpleSearchProps) {
+  const router = useRouter();
   const [keyword, setKeyword] = useState(initialKeyword);
+
+  // initialKeywordが変更されたら検索フィールドを更新
+  useEffect(() => {
+    setKeyword(initialKeyword);
+  }, [initialKeyword]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // URLパラメーターを更新
+    if (keyword.trim()) {
+      router.push(`/search/?q=${encodeURIComponent(keyword.trim())}`);
+    } else {
+      router.push('/search/');
+    }
+    
+    // 検索を実行
     onSearch(keyword);
   };
 
