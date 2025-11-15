@@ -69,18 +69,36 @@ async function syncAllArticles() {
         }
       }
 
+      // HTMLタグを除去してテキストのみ抽出（検索用）
+      let contentText = '';
+      if (data.content) {
+        contentText = data.content
+          .replace(/<[^>]*>/g, '') // HTMLタグを削除
+          .replace(/&nbsp;/g, ' ') // &nbsp;をスペースに変換
+          .replace(/&amp;/g, '&') // &amp;を&に変換
+          .replace(/&lt;/g, '<') // &lt;を<に変換
+          .replace(/&gt;/g, '>') // &gt;を>に変換
+          .replace(/&quot;/g, '"') // &quot;を"に変換
+          .replace(/\s+/g, ' ') // 連続した空白を1つに
+          .trim()
+          .substring(0, 3000); // 最初の3000文字のみ（約3KB、安全マージン）
+      }
+
       // Algoliaレコードを作成
       const record: AlgoliaArticleRecord = {
         objectID: doc.id,
         title: data.title || '',
         slug: data.slug || '',
         excerpt: data.excerpt,
-        content: data.content || '',
+        contentText, // HTMLタグを除去したテキスト
         mediaId: data.mediaId || '',
         categories: categoryNames,
         tags: tagNames,
         publishedAt: data.publishedAt?.toDate?.()?.getTime() || Date.now(),
         isPublished: data.isPublished || false,
+        featuredImage: data.featuredImage,
+        featuredImageAlt: data.featuredImageAlt,
+        viewCount: data.viewCount || 0,
       };
 
       records.push(record);
