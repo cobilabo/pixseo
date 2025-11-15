@@ -6,6 +6,7 @@ import {
   orderBy, 
   limit 
 } from 'firebase/firestore';
+import * as admin from 'firebase-admin';
 import { adminDb } from './admin';
 import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
@@ -524,7 +525,7 @@ export const getAdjacentArticlesServer = async (
     
     // Date を Firestore Timestamp に変換
     const currentPublishedAt = currentArticle.publishedAt instanceof Date 
-      ? adminDb.Timestamp.fromDate(currentArticle.publishedAt)
+      ? admin.firestore.Timestamp.fromDate(currentArticle.publishedAt)
       : currentArticle.publishedAt;
     
     console.log('[getAdjacentArticlesServer] Converted publishedAt:', currentPublishedAt);
