@@ -76,7 +76,7 @@ export default function TwitterTimeline({ username }: TwitterTimelineProps) {
             data-height="500"
             data-theme="light"
             data-chrome="noheader nofooter noborders"
-            href={`https://twitter.com/${username}?ref_src=twsrc%5Etfw`}
+            href={`https://x.com/${username}?ref_src=twsrc%5Etfw`}
           >
             Tweets by {username}
           </a>
