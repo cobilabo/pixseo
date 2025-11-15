@@ -3,12 +3,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Writer } from '@/types/writer';
+import { Lang } from '@/types/lang';
 
 interface AuthorProfileProps {
   writer: Writer;
+  lang?: Lang;
 }
 
-export default function AuthorProfile({ writer }: AuthorProfileProps) {
+export default function AuthorProfile({ writer, lang = 'ja' }: AuthorProfileProps) {
   if (!writer) {
     return null;
   }
@@ -61,7 +63,7 @@ export default function AuthorProfile({ writer }: AuthorProfileProps) {
           </p>
         )}
         <Link 
-          href={`/writers/${writer.id}`}
+          href={`/${lang}/writers/${writer.id}`}
           className="block"
         >
           <button 
