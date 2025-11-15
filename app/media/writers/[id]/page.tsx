@@ -135,19 +135,17 @@ export default async function WriterPage({ params }: PageProps) {
         menuTextColor={theme.menuTextColor}
       />
 
-      {/* FV（ライター用） */}
-      {writer.backgroundImage && (
-        <FirstView
-          settings={{
-            imageUrl: writer.backgroundImage,
-            catchphrase: writer.handleName,
-            description: `${articles.length} 記事`,
-          }}
-          customTitle={writer.handleName}
-          customSubtitle="WRITER"
-          showCustomContent={true}
-        />
-      )}
+      {/* FV（ライター用） - 常に表示 */}
+      <FirstView
+        settings={{
+          imageUrl: writer.backgroundImage || '',
+          catchphrase: writer.handleName,
+          description: `${articles.length} 記事`,
+        }}
+        customTitle={writer.handleName}
+        customSubtitle="WRITER"
+        showCustomContent={true}
+      />
 
       {/* カテゴリーバー */}
       <CategoryBar 
@@ -160,38 +158,93 @@ export default async function WriterPage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* 左側：記事一覧 */}
           <div className="flex-1 lg:w-[70%]">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-              新着記事 <span className="text-base font-normal text-gray-500">/ Recent Articles</span>
-            </h2>
-
-            {articles.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center text-gray-400">
-                {siteInfo.faviconUrl ? (
-                  <div className="relative w-20 h-20 mb-4 opacity-30">
+            {/* ライター情報 */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+              <div className="relative h-48">
+                {writer.backgroundImage ? (
+                  <Image
+                    src={writer.backgroundImage}
+                    alt={writer.backgroundImageAlt || writer.handleName}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full" 
+                    style={{ backgroundColor: 'var(--primary-color, #3b82f6)' }}
+                  />
+                )}
+              </div>
+              
+              <div className="relative flex justify-center -mt-16">
+                {writer.icon ? (
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
                     <Image
-                      src={siteInfo.faviconUrl}
-                      alt="Site Icon"
+                      src={writer.icon}
+                      alt={writer.handleName}
                       fill
-                      className="object-contain"
+                      className="object-cover"
                     />
                   </div>
                 ) : (
-                  <svg className="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-gray-500 text-4xl font-bold">
+                    {writer.handleName.charAt(0)}
+                  </div>
                 )}
-                <p className="text-sm">このカテゴリーにはまだ記事がありません</p>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {articles.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                  />
-                ))}
+
+              <div className="p-8 pt-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+                  {writer.handleName}
+                </h1>
+                {writer.bio && (
+                  <p className="text-base text-gray-600 leading-relaxed text-center mb-6">
+                    {writer.bio}
+                  </p>
+                )}
+                <div className="text-center text-sm text-gray-500">
+                  {articles.length} 記事
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* 見出し */}
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+            </div>
+
+            {/* 記事一覧 */}
+            <section>
+              {articles.length > 0 ? (
+                <div className="space-y-6">
+                  {articles.map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  {siteInfo.faviconUrl ? (
+                    <div className="relative w-20 h-20 mx-auto mb-4 opacity-30">
+                      <Image
+                        src={siteInfo.faviconUrl}
+                        alt="Site Icon"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  <p className="text-gray-600">このライターの記事はまだありません</p>
+                </div>
+              )}
+            </section>
           </div>
 
           {/* 右側：サイドバー */}

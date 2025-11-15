@@ -49,23 +49,39 @@ export default function AuthorProfile({ writer }: AuthorProfileProps) {
       </div>
 
       {/* 著者情報エリア（下部） */}
-      <div className="p-6 pt-8">
-        <Link 
-          href={`/writers/${writer.id}`}
-          className="block group"
-        >
-          <h3 className="text-lg font-bold text-center mb-2 transition-colors" style={{ color: 'var(--link-text-color, #1f2937)' }}>
-            <span className="group-hover:hidden">{writer.handleName}</span>
-            <span className="hidden group-hover:inline" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
-              {writer.handleName}
-            </span>
-          </h3>
-        </Link>
+      <div className="p-6 pt-4">
+        <h3 className="text-lg font-bold text-center mb-3" style={{ color: 'var(--link-text-color, #1f2937)' }}>
+          {writer.handleName}
+        </h3>
         {writer.bio && (
-          <p className="text-sm text-gray-600 leading-relaxed text-center">
+          <p className="text-sm text-gray-600 leading-relaxed text-center mb-4">
             {writer.bio}
           </p>
         )}
+        <Link 
+          href={`/writers/${writer.id}`}
+          className="block"
+        >
+          <button 
+            className="w-full py-2 px-4 rounded-full font-medium text-sm transition-colors"
+            style={{ 
+              border: '2px solid var(--border-color, #e5e7eb)',
+              color: 'var(--link-text-color, #1f2937)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--primary-color, #3b82f6)';
+              e.currentTarget.style.borderColor = 'var(--primary-color, #3b82f6)';
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'var(--border-color, #e5e7eb)';
+              e.currentTarget.style.color = 'var(--link-text-color, #1f2937)';
+            }}
+          >
+            VIEW MORE
+          </button>
+        </Link>
       </div>
     </div>
   );
