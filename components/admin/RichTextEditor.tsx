@@ -608,7 +608,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           padding-bottom: 0.5rem;
           font-size: 1.375rem;
           font-weight: 700;
-          border-bottom: 4px solid ${theme.primaryColor || '#3b82f6'};
+          position: relative;
+          border-bottom: none;
+        }
+        
+        [contenteditable="true"] h2::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 6px;
+          background-color: ${theme.primaryColor || '#3b82f6'};
+          border-radius: 3px;
         }
 
         [contenteditable="true"] h3 {
@@ -618,8 +630,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           padding-left: 0;
           font-size: 1.25rem;
           font-weight: 600;
-          border-bottom: 3px solid ${theme.primaryColor || '#3b82f6'};
+          position: relative;
+          border-bottom: none;
           border-left: none;
+        }
+        
+        [contenteditable="true"] h3::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: ${theme.primaryColor || '#3b82f6'};
+          border-radius: 1.5px;
         }
 
         [contenteditable="true"] h4 {
@@ -664,23 +688,31 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         /* テーブル */
         [contenteditable="true"] table.custom-table {
           width: 100%;
-          border-collapse: collapse;
+          border-collapse: separate;
+          border-spacing: 0;
           margin: 1.5rem 0;
           border: 1px solid ${theme.tableBorderColor};
+          border-radius: 8px;
+          overflow: hidden;
+          font-size: 0.875rem;
         }
 
         [contenteditable="true"] table.custom-table th {
           background-color: ${theme.tableHeaderBackgroundColor};
           color: ${theme.tableHeaderTextColor};
-          border: 1px solid ${theme.tableBorderColor};
+          border-bottom: 2px solid ${theme.tableBorderColor};
           padding: 0.75rem;
           font-weight: 600;
           text-align: left;
         }
 
         [contenteditable="true"] table.custom-table td {
-          border: 1px solid ${theme.tableBorderColor};
+          border-bottom: 1px solid ${theme.tableBorderColor};
           padding: 0.75rem;
+        }
+
+        [contenteditable="true"] table.custom-table tbody tr:last-child td {
+          border-bottom: none;
         }
 
         [contenteditable="true"] table.custom-table tr:nth-child(even) {
