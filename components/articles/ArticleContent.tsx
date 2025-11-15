@@ -213,19 +213,15 @@ if (typeof window !== 'undefined') {
       margin-bottom: 1.5em !important;
     }
     .article-content h2 {
-      font-size: 1.5em !important;
+      font-size: 1.375em !important;
       line-height: 1.6 !important;
       letter-spacing: 0.02em !important;
       margin-top: 2em !important;
       margin-bottom: 1em !important;
       font-weight: 700 !important;
-      padding: 0.5em 0.75em !important;
-      background-color: var(--menu-bg-color, #1f2937) !important;
-      color: var(--menu-text-color, #ffffff) !important;
-      border-radius: 8px !important;
-      border: none !important;
-      border-left: none !important;
-      border-bottom: none !important;
+      padding-bottom: 0.5em !important;
+      color: #111827 !important;
+      border-bottom: 4px solid var(--primary-color, #3b82f6) !important;
     }
     .article-content h3 {
       font-size: 1.25em !important;

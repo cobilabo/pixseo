@@ -603,16 +603,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* エディタ内のスタイル適用 */}
       <style jsx global>{`
         [contenteditable="true"] h2 {
-          color: ${theme.menuTextColor || '#ffffff'};
-          background-color: ${theme.menuBackgroundColor || '#1f2937'};
+          color: #111827;
           margin: 1.5rem 0 1rem 0;
-          padding: 0.5rem 0.75rem;
-          font-size: 1.5rem;
+          padding-bottom: 0.5rem;
+          font-size: 1.375rem;
           font-weight: 700;
-          border-radius: 8px;
-          border: none;
-          border-left: none;
-          border-bottom: none;
+          border-bottom: 4px solid ${theme.primaryColor || '#3b82f6'};
         }
 
         [contenteditable="true"] h3 {
