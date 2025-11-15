@@ -1,16 +1,18 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Article } from '@/types/article';
+import { Lang } from '@/types/lang';
 import { formatDate } from '@/lib/utils/date';
 
 interface ArticleCardProps {
   article: Article;
+  lang?: Lang;
 }
 
-export default function ArticleCard({ article }: ArticleCardProps) {
+export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) {
   return (
     <Link
-      href={`/articles/${article.slug}`}
+      href={`/${lang}/articles/${article.slug}`}
       className="block bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
     >
       {article.featuredImage && (
