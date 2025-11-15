@@ -157,8 +157,7 @@ export default async function ArticlePage({ params }: PageProps) {
       return null;
     }) : Promise.resolve(null),
     // 前後の記事を取得
-    getAdjacentArticlesServer(article, mediaId || undefined).catch((error) => {
-      console.error('[Article Page] Error fetching adjacent articles:', error);
+    getAdjacentArticlesServer(article, mediaId || undefined).catch(() => {
       return { previousArticle: null, nextArticle: null };
     }),
     // 関連記事を取得
