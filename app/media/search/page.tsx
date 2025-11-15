@@ -92,12 +92,6 @@ export default async function SearchPage() {
             <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
               <SearchContent faviconUrl={siteInfo.faviconUrl} />
             </Suspense>
-
-            {/* 見出し */}
-            <div className="text-center mb-8 mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
-            </div>
             </div>
 
             {/* サイドバー（30%） */}
