@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia } from '@/lib/algolia/sync';
+import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
+import { SUPPORTED_LANGS } from '@/types/lang';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,13 +59,74 @@ export async function POST(request: NextRequest) {
     );
 
     const now = new Date();
-    const articleData: any = {
+    let articleData: any = {
       ...cleanData,
       publishedAt: now,
       updatedAt: now,
       viewCount: 0,
       likeCount: 0,
     };
+
+    // 🌐 多言語翻訳処理
+    // 日本語フィールドを保存
+    articleData.title_ja = articleData.title;
+    articleData.content_ja = articleData.content;
+    articleData.excerpt_ja = articleData.excerpt || '';
+    articleData.metaTitle_ja = articleData.metaTitle || articleData.title;
+    articleData.metaDescription_ja = articleData.metaDescription || articleData.excerpt || '';
+    
+    // 日本語でAIサマリーを生成
+    try {
+      const aiSummaryJa = await generateAISummary(articleData.content, 'ja');
+      articleData.aiSummary_ja = aiSummaryJa;
+      console.log('[API] AIサマリー生成完了（ja）');
+    } catch (error) {
+      console.error('[API] AIサマリー生成エラー（ja）:', error);
+      // エラーでも続行
+    }
+
+    // FAQsの日本語版を保存
+    if (articleData.faqs && Array.isArray(articleData.faqs) && articleData.faqs.length > 0) {
+      articleData.faqs_ja = articleData.faqs;
+    }
+
+    // 他の言語への翻訳
+    const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+    for (const lang of otherLangs) {
+      try {
+        console.log(`[API] 翻訳開始（${lang}）`);
+        
+        // 記事本体を翻訳
+        const translated = await translateArticle({
+          title: articleData.title,
+          content: articleData.content,
+          excerpt: articleData.excerpt || '',
+          metaTitle: articleData.metaTitle || articleData.title,
+          metaDescription: articleData.metaDescription || articleData.excerpt || '',
+        }, lang);
+
+        articleData[`title_${lang}`] = translated.title;
+        articleData[`content_${lang}`] = translated.content;
+        articleData[`excerpt_${lang}`] = translated.excerpt;
+        articleData[`metaTitle_${lang}`] = translated.metaTitle;
+        articleData[`metaDescription_${lang}`] = translated.metaDescription;
+
+        // AIサマリーを生成
+        const aiSummary = await generateAISummary(translated.content, lang);
+        articleData[`aiSummary_${lang}`] = aiSummary;
+
+        // FAQsを翻訳
+        if (articleData.faqs && Array.isArray(articleData.faqs) && articleData.faqs.length > 0) {
+          const translatedFaqs = await translateFAQs(articleData.faqs, lang);
+          articleData[`faqs_${lang}`] = translatedFaqs;
+        }
+
+        console.log(`[API] 翻訳完了（${lang}）`);
+      } catch (error) {
+        console.error(`[API] 翻訳エラー（${lang}）:`, error);
+        // エラーでも他の言語の翻訳は続行
+      }
+    }
 
     const docRef = await adminDb.collection('articles').add(articleData);
     console.log('[API] Firestore作成完了:', docRef.id);
