@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
       return {
         id: doc.id,
         icon: data.icon || data.iconUrl || '', // 互換性のため両方チェック
+        iconAlt: data.iconAlt || '',
+        backgroundImage: data.backgroundImage || '',
+        backgroundImageAlt: data.backgroundImageAlt || '',
         handleName: data.handleName,
         bio: data.bio || '',
         mediaId: data.mediaId,
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { icon, handleName, bio, mediaId } = body;
+    const { icon, iconAlt, backgroundImage, backgroundImageAlt, handleName, bio, mediaId } = body;
     
     if (!handleName || !mediaId) {
       return NextResponse.json(
@@ -65,6 +68,9 @@ export async function POST(request: NextRequest) {
     
     const writerData = {
       icon: icon || '',
+      iconAlt: iconAlt || '',
+      backgroundImage: backgroundImage || '',
+      backgroundImageAlt: backgroundImageAlt || '',
       handleName,
       bio: bio || '',
       mediaId,
