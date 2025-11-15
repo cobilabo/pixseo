@@ -15,6 +15,8 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
   const [formData, setFormData] = useState({
     iconUrl: '',
     iconAlt: '',
+    backgroundImageUrl: '',
+    backgroundImageAlt: '',
     handleName: '',
     bio: '',
   });
@@ -28,6 +30,8 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
           setFormData({
             iconUrl: data.icon || '',
             iconAlt: data.iconAlt || '',
+            backgroundImageUrl: data.backgroundImage || '',
+            backgroundImageAlt: data.backgroundImageAlt || '',
             handleName: data.handleName || '',
             bio: data.bio || '',
           });
@@ -57,6 +61,8 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
         body: JSON.stringify({
           icon: formData.iconUrl,
           iconAlt: formData.iconAlt,
+          backgroundImage: formData.backgroundImageUrl,
+          backgroundImageAlt: formData.backgroundImageAlt,
           handleName: formData.handleName,
           bio: formData.bio,
         }),
@@ -91,6 +97,15 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
                 alt={formData.iconAlt}
                 onAltChange={(alt) => setFormData({ ...formData, iconAlt: alt })}
                 label="アイコン画像"
+              />
+
+              {/* 背景画像 */}
+              <FeaturedImageUpload
+                value={formData.backgroundImageUrl}
+                onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
+                alt={formData.backgroundImageAlt}
+                onAltChange={(alt) => setFormData({ ...formData, backgroundImageAlt: alt })}
+                label="背景画像"
               />
 
               {/* ハンドルネーム */}

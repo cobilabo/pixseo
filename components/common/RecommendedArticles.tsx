@@ -50,8 +50,11 @@ export default function RecommendedArticles({ articles, categories = [] }: Recom
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors mb-2">
-                  {article.title}
+                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 transition-colors" style={{ color: 'inherit' }}>
+                  <span className="group-hover:opacity-0 transition-opacity">{article.title}</span>
+                  <span className="absolute opacity-0 group-hover:opacity-100 transition-opacity line-clamp-2" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
+                    {article.title}
+                  </span>
                 </h3>
                 
                 <div className="space-y-1 text-xs text-gray-600">
