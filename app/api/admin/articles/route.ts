@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     );
 
     const now = new Date();
-    const articleData = {
+    const articleData: any = {
       ...cleanData,
       publishedAt: now,
       updatedAt: now,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     console.log('[API] Firestore作成完了:', docRef.id);
 
     // 公開済みの場合、Algoliaに同期
-    if (articleData.isPublished) {
+    if (articleData.isPublished === true) {
       try {
         console.log('[API] Algolia同期開始:', docRef.id);
         
