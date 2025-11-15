@@ -1,11 +1,13 @@
 import { RelatedArticle } from '@/types/article';
+import { Lang } from '@/types/lang';
 import ArticleCard from './ArticleCard';
 
 interface RelatedArticlesProps {
   articles: RelatedArticle[];
+  lang?: Lang;
 }
 
-export default function RelatedArticles({ articles }: RelatedArticlesProps) {
+export default function RelatedArticles({ articles, lang = 'ja' }: RelatedArticlesProps) {
   // 配列チェック
   if (!Array.isArray(articles) || articles.length === 0) {
     return null;
@@ -51,6 +53,7 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
                 googleMapsUrl: '',
                 reservationUrl: '',
               }}
+              lang={lang}
             />
           );
         })}
