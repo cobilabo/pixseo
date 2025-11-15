@@ -79,7 +79,7 @@ export default function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
       >
         <div className="flex flex-col h-full">
           {/* 閉じるボタン */}
-          <div className="flex justify-start p-6">
+          <div className="flex justify-end p-6">
             <button
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity"
@@ -103,7 +103,6 @@ export default function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
 
           {/* 検索フォーム */}
           <div className="flex-1 px-8 py-4">
-            <h2 className="text-xl font-bold mb-6">キーワード検索</h2>
             <form onSubmit={handleSearch}>
               <div className="mb-6">
                 <input
