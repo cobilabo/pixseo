@@ -58,12 +58,15 @@ export default function SearchContent({ faviconUrl, mediaId }: SearchContentProp
           </div>
         ) : articles.length > 0 ? (
           <>
-            <div className="mb-4">
-              <p className="text-gray-600">
+            {/* タイトル部分 - ホームページと同じスタイル */}
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
                 {articles.length}件の記事が見つかりました
-              </p>
+              </h2>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Search Results</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 記事グリッド - ホームページと同じスタイル（2カラム） */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {articles.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}
