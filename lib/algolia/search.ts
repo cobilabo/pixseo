@@ -48,6 +48,9 @@ export async function searchArticlesWithAlgolia(
       mediaId: hit.mediaId,
       publishedAt: new Date(hit.publishedAt),
       isPublished: hit.isPublished,
+      featuredImage: hit.featuredImage,
+      featuredImageAlt: hit.featuredImageAlt,
+      viewCount: hit.viewCount || 0,
       // カテゴリーとタグは別途取得が必要
     }));
 

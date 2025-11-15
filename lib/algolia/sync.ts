@@ -13,6 +13,9 @@ export interface AlgoliaArticleRecord {
   tags: string[]; // タグ名の配列
   publishedAt: number; // Unixタイムスタンプ
   isPublished: boolean;
+  featuredImage?: string; // アイキャッチ画像URL
+  featuredImageAlt?: string; // アイキャッチ画像のalt属性
+  viewCount?: number; // 閲覧数
 }
 
 /**
@@ -42,6 +45,9 @@ export async function syncArticleToAlgolia(
         ? article.publishedAt.getTime()
         : new Date(article.publishedAt).getTime(),
       isPublished: article.isPublished,
+      featuredImage: article.featuredImage,
+      featuredImageAlt: article.featuredImageAlt,
+      viewCount: article.viewCount || 0,
     };
 
     await adminClient.saveObject({
