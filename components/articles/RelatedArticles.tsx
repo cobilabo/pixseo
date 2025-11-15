@@ -12,8 +12,11 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
   }
 
   return (
-    <section className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">関連記事</h2>
+    <section className="mb-8">
+      <div className="text-center mb-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">関連記事</h2>
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Related Articles</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {articles.map((article) => {
           // 各記事の安全チェック

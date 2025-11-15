@@ -44,13 +44,16 @@ export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 mb-8">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">この記事をシェア</h3>
-      <div className="flex flex-wrap gap-3">
+    <div className="mb-8">
+      <div className="text-center mb-8">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">この記事をシェア</h3>
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Share This Article</p>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Twitter */}
         <button
           onClick={shareOnTwitter}
-          className="flex items-center gap-2 bg-[#0c7abf] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 bg-[#0c7abf] text-white px-4 py-3 rounded-lg hover:opacity-90 transition-opacity"
           aria-label="Twitterでシェア"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -62,7 +65,7 @@ export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
         {/* Facebook */}
         <button
           onClick={shareOnFacebook}
-          className="flex items-center gap-2 bg-[#0e5aa8] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 bg-[#0e5aa8] text-white px-4 py-3 rounded-lg hover:opacity-90 transition-opacity"
           aria-label="Facebookでシェア"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -74,7 +77,7 @@ export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
         {/* LINE */}
         <button
           onClick={shareOnLine}
-          className="flex items-center gap-2 bg-[#008a00] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 bg-[#008a00] text-white px-4 py-3 rounded-lg hover:opacity-90 transition-opacity"
           aria-label="LINEでシェア"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -86,7 +89,7 @@ export default function SocialShare({ title, url: propUrl }: SocialShareProps) {
         {/* URL コピー */}
         <button
           onClick={copyToClipboard}
-          className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 bg-gray-700 text-white px-4 py-3 rounded-lg hover:opacity-90 transition-opacity"
           aria-label="URLをコピー"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
