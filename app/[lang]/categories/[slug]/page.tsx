@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const category = localizeCategory(rawCategory, lang);
-  const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name_ja: 'メディアサイト', allowIndexing: false, faviconUrl: undefined };
+  const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined, allowIndexing: false };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
 
   return {

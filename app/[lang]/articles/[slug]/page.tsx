@@ -74,7 +74,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // サイトのインデックス設定を取得
   const rawSiteInfo = mediaId 
     ? await getSiteInfo(mediaId) 
-    : { allowIndexing: false, name_ja: 'メディアサイト', name_en: 'Media Site', name_zh: '媒体网站', name_ko: '미디어 사이트' };
+    : { 
+        allowIndexing: false, 
+        name: 'メディアサイト',
+        name_ja: 'メディアサイト', 
+        name_en: 'Media Site', 
+        name_zh: '媒体网站', 
+        name_ko: '미디어 사이트',
+        description: '',
+        logoUrl: '',
+        faviconUrl: '',
+      };
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   
@@ -163,6 +173,7 @@ export default async function ArticlePage({ params }: PageProps) {
   // サイト情報、テーマを取得
   const [rawSiteInfo, rawTheme] = await Promise.all([
     mediaId ? getSiteInfo(mediaId) : Promise.resolve({ 
+      name: 'メディアサイト',
       name_ja: 'メディアサイト', 
       name_en: 'Media Site',
       name_zh: '媒体网站',
