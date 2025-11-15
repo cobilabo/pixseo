@@ -14,8 +14,24 @@ export default function ArticleNavigation({
   previousCategories = [],
   nextCategories = []
 }: ArticleNavigationProps) {
+  // デバッグ用ログ
+  console.log('[ArticleNavigation] previousArticle:', previousArticle ? previousArticle.id : null);
+  console.log('[ArticleNavigation] nextArticle:', nextArticle ? nextArticle.id : null);
+  
   if (!previousArticle && !nextArticle) {
-    return null;
+    console.log('[ArticleNavigation] Both articles are null, not rendering');
+    // デバッグのため、一時的に表示
+    return (
+      <div className="mb-8 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+        <p className="text-sm text-yellow-800">
+          [デバッグ] 前後の記事が見つかりませんでした。
+        </p>
+        <p className="text-xs text-yellow-600 mt-2">
+          previousArticle: {previousArticle ? 'あり' : 'null'}、
+          nextArticle: {nextArticle ? 'あり' : 'null'}
+        </p>
+      </div>
+    );
   }
 
   const formatDate = (date: Date | any) => {

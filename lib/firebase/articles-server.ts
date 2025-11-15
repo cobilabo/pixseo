@@ -580,9 +580,19 @@ export const getAdjacentArticlesServer = async (
       return await buildAdjacentArticlesResult(prevQuery, nextQuery);
     }
   } catch (error) {
+    console.error('[getAdjacentArticlesServer] ❌ ERROR OCCURRED ❌');
     console.error('[getAdjacentArticlesServer] Error:', error);
     console.error('[getAdjacentArticlesServer] Error details:', error instanceof Error ? error.message : String(error));
     console.error('[getAdjacentArticlesServer] Error stack:', error instanceof Error ? error.stack : '');
+    
+    // Firestore インデックスエラーかチェック
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('index') || errorMessage.includes('Index')) {
+      console.error('[getAdjacentArticlesServer] 🔥 FIRESTORE INDEX ERROR DETECTED 🔥');
+      console.error('[getAdjacentArticlesServer] Firestore の複合インデックスが必要です。');
+      console.error('[getAdjacentArticlesServer] Firebase Console でインデックスを作成してください。');
+    }
+    
     return { previousArticle: null, nextArticle: null };
   }
 };
