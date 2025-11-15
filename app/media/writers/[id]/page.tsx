@@ -252,14 +252,98 @@ export default async function WriterPage({ params }: PageProps) {
         </div>
       </main>
 
+      {/* フッターコンテンツ（画面横いっぱい） */}
+      {footerContents.length > 0 && (
+        <section className="w-full">
+          <FooterContentRenderer contents={footerContents} />
+        </section>
+      )}
+
       {/* フッター */}
-      <FooterContentRenderer
-        footerContents={footerContents}
-        footerTextLinkSections={footerTextLinkSections}
-        siteName={siteName}
-        siteDescription={siteInfo.description}
-        logoUrl={siteInfo.logoUrl}
-      />
+      <footer style={{ backgroundColor: theme.footerBackgroundColor }} className="text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* フッターテキストリンクセクションとサイト情報 */}
+          {footerTextLinkSections.length > 0 ? (
+            <div className={`grid gap-8 mb-8 ${footerTextLinkSections.length === 2 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+              {/* 左側: ロゴと説明 */}
+              <div>
+                {siteInfo.logoUrl && (
+                  <div className="mb-4">
+                    <Image
+                      src={siteInfo.logoUrl}
+                      alt={siteName}
+                      width={150}
+                      height={50}
+                      className="h-12 w-auto"
+                    />
+                  </div>
+                )}
+                <h3 className="text-lg font-bold mb-2">{siteName}</h3>
+                {siteInfo.description && (
+                  <p className="text-sm text-gray-300 whitespace-pre-line">
+                    {siteInfo.description}
+                  </p>
+                )}
+              </div>
+
+              {/* 右側: テキストリンクセクション */}
+              {footerTextLinkSections.map((section, idx) => (
+                <div key={idx} className={idx === 0 && footerTextLinkSections.length === 2 ? 'border-l border-gray-600 pl-8' : footerTextLinkSections.length === 2 ? 'border-l border-gray-600 pl-8' : ''}>
+                  {section.title && (
+                    <h4 className="text-base font-bold mb-4">{section.title}</h4>
+                  )}
+                  {section.links && section.links.length > 0 && (
+                    <ul className="space-y-2">
+                      {section.links.map((link, linkIdx) => (
+                        link.text && link.url ? (
+                          <li key={linkIdx}>
+                            <a 
+                              href={link.url} 
+                              className="text-sm text-gray-300 hover:text-white transition-colors"
+                              target={link.url.startsWith('http') ? '_blank' : '_self'}
+                              rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                            >
+                              {link.text}
+                            </a>
+                          </li>
+                        ) : null
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* フッターテキストリンクがない場合: 中央配置 */
+            <div className="text-center mb-8">
+              {siteInfo.logoUrl && (
+                <div className="mb-4 flex justify-center">
+                  <Image
+                    src={siteInfo.logoUrl}
+                    alt={siteName}
+                    width={150}
+                    height={50}
+                    className="h-12 w-auto"
+                  />
+                </div>
+              )}
+              <h3 className="text-lg font-bold mb-2">{siteName}</h3>
+              {siteInfo.description && (
+                <p className="text-sm text-gray-300 whitespace-pre-line">
+                  {siteInfo.description}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* コピーライト */}
+          <div className="border-t border-gray-600 pt-8 text-center">
+            <p className="text-sm text-gray-400">
+              © {new Date().getFullYear()} {siteName}. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {/* スクロールトップボタン */}
       <ScrollToTopButton />
