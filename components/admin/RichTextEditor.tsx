@@ -610,15 +610,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           font-size: 1.5rem;
           font-weight: 700;
           border-radius: 8px;
+          border: none;
+          border-left: none;
+          border-bottom: none;
         }
 
         [contenteditable="true"] h3 {
           color: #1f2937;
           margin: 1.25rem 0 0.75rem 0;
           padding-bottom: 0.5rem;
+          padding-left: 0;
           font-size: 1.25rem;
           font-weight: 600;
           border-bottom: 3px solid ${theme.primaryColor || '#3b82f6'};
+          border-left: none;
         }
 
         [contenteditable="true"] h4 {
