@@ -287,14 +287,14 @@ export default async function WriterPage({ params }: PageProps) {
               </div>
 
               {/* 右側: テキストリンクセクション */}
-              {footerTextLinkSections.map((section, idx) => (
+              {footerTextLinkSections.map((section: FooterTextLinkSection, idx: number) => (
                 <div key={idx} className={idx === 0 && footerTextLinkSections.length === 2 ? 'border-l border-gray-600 pl-8' : footerTextLinkSections.length === 2 ? 'border-l border-gray-600 pl-8' : ''}>
                   {section.title && (
                     <h4 className="text-base font-bold mb-4">{section.title}</h4>
                   )}
                   {section.links && section.links.length > 0 && (
                     <ul className="space-y-2">
-                      {section.links.map((link, linkIdx) => (
+                      {section.links.map((link: any, linkIdx: number) => (
                         link.text && link.url ? (
                           <li key={linkIdx}>
                             <a 
