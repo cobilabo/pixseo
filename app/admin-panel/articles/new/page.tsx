@@ -10,7 +10,6 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FloatingMultiSelect from '@/components/admin/FloatingMultiSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
-import { createArticle } from '@/lib/firebase/articles-admin';
 import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
@@ -234,17 +233,29 @@ function NewArticlePageContent() {
       console.log('[handleSubmit] 目次:', tableOfContents);
       console.log('[handleSubmit] 読了時間:', readingTime, '分');
       
-      await createArticle({
-        ...formData,
-        content: cleanedContent, // クリーニング済みのコンテンツを使用
-        writerId: formData.writerId, // ライターID（必須）
-        featuredImage: featuredImageUrl,
-        featuredImageAlt: featuredImageAlt, // alt属性を追加
-        mediaId: currentTenant.id,
-        tableOfContents,
-        readingTime,
+      // APIエンドポイント経由で作成（Algolia同期も含む）
+      const response = await fetch('/api/admin/articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          content: cleanedContent, // クリーニング済みのコンテンツを使用
+          writerId: formData.writerId, // ライターID（必須）
+          featuredImage: featuredImageUrl,
+          featuredImageAlt: featuredImageAlt, // alt属性を追加
+          mediaId: currentTenant.id,
+          tableOfContents,
+          readingTime,
+        }),
       });
       
+      if (!response.ok) {
+        throw new Error(`作成に失敗しました: ${response.status}`);
+      }
+      
+      console.log('[handleSubmit] 作成成功');
       alert('記事を作成しました');
       router.push('/articles');
     } catch (error) {
