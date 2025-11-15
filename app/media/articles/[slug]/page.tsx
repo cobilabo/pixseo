@@ -178,6 +178,16 @@ export default async function ArticlePage({ params }: PageProps) {
     }),
   ]);
   
+  // 前後の記事のカテゴリー情報を取得
+  const [previousCategories, nextCategories] = await Promise.all([
+    adjacentArticles.previousArticle && adjacentArticles.previousArticle.categoryIds?.length
+      ? getCategoriesServer(adjacentArticles.previousArticle.categoryIds).catch(() => [])
+      : Promise.resolve([]),
+    adjacentArticles.nextArticle && adjacentArticles.nextArticle.categoryIds?.length
+      ? getCategoriesServer(adjacentArticles.nextArticle.categoryIds).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+  
   // mediaIdでカテゴリーをフィルタリング
   const headerCategories = mediaId 
     ? allCategories.filter(cat => cat.mediaId === mediaId)
@@ -348,7 +358,9 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* 前後の記事ナビゲーション */}
             <ArticleNavigation 
               previousArticle={adjacentArticles.previousArticle} 
-              nextArticle={adjacentArticles.nextArticle} 
+              nextArticle={adjacentArticles.nextArticle}
+              previousCategories={previousCategories}
+              nextCategories={nextCategories}
             />
 
             {/* 関連記事 */}
@@ -363,10 +375,10 @@ export default async function ArticlePage({ params }: PageProps) {
             {writer && <AuthorProfile writer={writer} />}
 
             {/* 人気記事 */}
-            <PopularArticles articles={popularArticles} />
+            <PopularArticles articles={popularArticles} categories={allCategories} />
 
             {/* おすすめ記事 */}
-            <RecommendedArticles articles={relatedArticles} />
+            <RecommendedArticles articles={relatedArticles} categories={allCategories} />
 
             {/* バナーエリア */}
             {footerBlocks.length > 0 && (
