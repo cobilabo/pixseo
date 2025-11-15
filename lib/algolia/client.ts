@@ -1,4 +1,4 @@
-import algoliasearch from 'algoliasearch';
+import { algoliasearch } from 'algoliasearch';
 
 // フロントエンド用クライアント（検索のみ）
 export const searchClient = algoliasearch(
@@ -16,10 +16,3 @@ export const adminClient = process.env.ALGOLIA_ADMIN_KEY
 
 // インデックス名
 export const ARTICLES_INDEX = 'pixseo_articles_production';
-
-// フロントエンド用インデックス
-export const articlesIndex = searchClient.initIndex(ARTICLES_INDEX);
-
-// サーバーサイド用インデックス
-export const articlesAdminIndex = adminClient?.initIndex(ARTICLES_INDEX);
-

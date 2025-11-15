@@ -1,4 +1,4 @@
-import { articlesIndex } from './client';
+import { searchClient, ARTICLES_INDEX } from './client';
 import { Article } from '@/types/article';
 
 export interface AlgoliaSearchOptions {
@@ -17,18 +17,22 @@ export async function searchArticlesWithAlgolia(
   const { keyword, mediaId, page = 0, hitsPerPage = 20 } = options;
 
   try {
-    const searchOptions: any = {
-      page,
-      hitsPerPage,
-      filters: 'isPublished:true', // 公開済みのみ
-    };
+    let filters = 'isPublished:true';
 
     // mediaIdでフィルタリング
     if (mediaId) {
-      searchOptions.filters += ` AND mediaId:${mediaId}`;
+      filters += ` AND mediaId:${mediaId}`;
     }
 
-    const result = await articlesIndex.search(keyword, searchOptions);
+    const result = await searchClient.searchSingleIndex({
+      indexName: ARTICLES_INDEX,
+      searchParams: {
+        query: keyword,
+        page,
+        hitsPerPage,
+        filters,
+      },
+    });
 
     const articles = result.hits.map((hit: any) => ({
       id: hit.objectID,
@@ -43,11 +47,10 @@ export async function searchArticlesWithAlgolia(
 
     return {
       articles,
-      totalHits: result.nbHits,
+      totalHits: result.nbHits || 0,
     };
   } catch (error) {
     console.error('[Algolia] Search error:', error);
     return { articles: [], totalHits: 0 };
   }
 }
-

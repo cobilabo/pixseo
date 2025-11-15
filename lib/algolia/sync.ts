@@ -1,5 +1,5 @@
 import { Article } from '@/types/article';
-import { articlesAdminIndex } from './client';
+import { adminClient, ARTICLES_INDEX } from './client';
 
 // AlgoliaRecord型（Algoliaに保存する形式）
 export interface AlgoliaArticleRecord {
@@ -23,7 +23,7 @@ export async function syncArticleToAlgolia(
   categoryNames: string[] = [],
   tagNames: string[] = []
 ): Promise<void> {
-  if (!articlesAdminIndex) {
+  if (!adminClient) {
     console.error('[Algolia] Admin client not initialized');
     return;
   }
@@ -44,7 +44,11 @@ export async function syncArticleToAlgolia(
       isPublished: article.isPublished,
     };
 
-    await articlesAdminIndex.saveObject(record);
+    await adminClient.saveObject({
+      indexName: ARTICLES_INDEX,
+      body: record,
+    });
+    
     console.log(`[Algolia] Synced article: ${article.id}`);
   } catch (error) {
     console.error('[Algolia] Error syncing article:', error);
@@ -56,13 +60,17 @@ export async function syncArticleToAlgolia(
  * 記事をAlgoliaから削除
  */
 export async function deleteArticleFromAlgolia(articleId: string): Promise<void> {
-  if (!articlesAdminIndex) {
+  if (!adminClient) {
     console.error('[Algolia] Admin client not initialized');
     return;
   }
 
   try {
-    await articlesAdminIndex.deleteObject(articleId);
+    await adminClient.deleteObject({
+      indexName: ARTICLES_INDEX,
+      objectID: articleId,
+    });
+    
     console.log(`[Algolia] Deleted article: ${articleId}`);
   } catch (error) {
     console.error('[Algolia] Error deleting article:', error);
@@ -76,17 +84,20 @@ export async function deleteArticleFromAlgolia(articleId: string): Promise<void>
 export async function bulkSyncArticlesToAlgolia(
   records: AlgoliaArticleRecord[]
 ): Promise<void> {
-  if (!articlesAdminIndex) {
+  if (!adminClient) {
     console.error('[Algolia] Admin client not initialized');
     return;
   }
 
   try {
-    await articlesAdminIndex.saveObjects(records);
+    await adminClient.saveObjects({
+      indexName: ARTICLES_INDEX,
+      objects: records as unknown as Array<Record<string, unknown>>,
+    });
+    
     console.log(`[Algolia] Bulk synced ${records.length} articles`);
   } catch (error) {
     console.error('[Algolia] Error bulk syncing articles:', error);
     throw error;
   }
 }
-
