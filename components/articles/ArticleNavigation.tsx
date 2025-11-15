@@ -41,9 +41,9 @@ export default function ArticleNavigation({
                 <span className="font-medium">次の記事</span>
               </div>
               
-              <h3 className="text-base font-bold text-gray-900 transition-colors line-clamp-2 mb-3" style={{ color: 'inherit' }}>
-                <span className="group-hover:opacity-0 transition-opacity">{nextArticle.title}</span>
-                <span className="absolute inset-0 flex items-start p-5 pt-[52px] opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
+              <h3 className="text-base font-bold transition-colors line-clamp-2 mb-3" style={{ color: 'var(--link-text-color, #1f2937)' }}>
+                <span className="group-hover:hidden">{nextArticle.title}</span>
+                <span className="hidden group-hover:inline" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
                   {nextArticle.title}
                 </span>
               </h3>
@@ -83,7 +83,7 @@ export default function ArticleNavigation({
               </div>
             </Link>
           ) : (
-            <div className="bg-gray-50 rounded-lg p-5 text-center text-gray-400 text-sm">
+            <div className="bg-gray-50 rounded-lg p-5 flex items-center justify-center text-gray-400 text-sm" style={{ minHeight: '140px' }}>
               次の記事はありません
             </div>
           )}
@@ -103,9 +103,9 @@ export default function ArticleNavigation({
                 </svg>
               </div>
               
-              <h3 className="text-base font-bold text-gray-900 transition-colors line-clamp-2 mb-3 text-right" style={{ color: 'inherit' }}>
-                <span className="group-hover:opacity-0 transition-opacity">{previousArticle.title}</span>
-                <span className="absolute inset-0 flex items-start p-5 pt-[52px] text-right opacity-0 group-hover:opacity-100 transition-opacity justify-end" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
+              <h3 className="text-base font-bold transition-colors line-clamp-2 mb-3 text-right" style={{ color: 'var(--link-text-color, #1f2937)' }}>
+                <span className="group-hover:hidden">{previousArticle.title}</span>
+                <span className="hidden group-hover:inline" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
                   {previousArticle.title}
                 </span>
               </h3>
@@ -145,7 +145,7 @@ export default function ArticleNavigation({
               </div>
             </Link>
           ) : (
-            <div className="bg-gray-50 rounded-lg p-5 text-center text-gray-400 text-sm">
+            <div className="bg-gray-50 rounded-lg p-5 flex items-center justify-center text-gray-400 text-sm" style={{ minHeight: '140px' }}>
               前の記事はありません
             </div>
           )}

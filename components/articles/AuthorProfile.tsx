@@ -22,30 +22,33 @@ export default function AuthorProfile({ writer }: AuthorProfileProps) {
             className="object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500" />
+          <div 
+            className="w-full h-full" 
+            style={{ backgroundColor: 'var(--primary-color, #3b82f6)' }}
+          />
         )}
-        
-        {/* アイコン（背景画像の上に中央配置） */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {writer.icon ? (
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
-              <Image
-                src={writer.icon}
-                alt={writer.handleName}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-gray-500 text-xl font-bold">
-              {writer.handleName.charAt(0)}
-            </div>
-          )}
-        </div>
+      </div>
+      
+      {/* アイコン（背景画像と白い部分の境界線に配置） */}
+      <div className="relative flex justify-center -mt-8">
+        {writer.icon ? (
+          <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
+            <Image
+              src={writer.icon}
+              alt={writer.handleName}
+              fill
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-gray-500 text-xl font-bold">
+            {writer.handleName.charAt(0)}
+          </div>
+        )}
       </div>
 
       {/* 著者情報エリア（下部） */}
-      <div className="p-6 pt-10">
+      <div className="p-6 pt-4">
         <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">
           {writer.handleName}
         </h3>
