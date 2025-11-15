@@ -177,12 +177,6 @@ export default async function ArticlePage({ params }: PageProps) {
     }),
   ]);
   
-  // デバッグ: 前後の記事を確認
-  console.log('[Article Page] adjacentArticles:', {
-    previousArticle: adjacentArticles.previousArticle ? adjacentArticles.previousArticle.id : null,
-    nextArticle: adjacentArticles.nextArticle ? adjacentArticles.nextArticle.id : null,
-  });
-  
   // 前後の記事のカテゴリー情報を取得
   const [previousCategories, nextCategories] = await Promise.all([
     adjacentArticles.previousArticle && adjacentArticles.previousArticle.categoryIds?.length

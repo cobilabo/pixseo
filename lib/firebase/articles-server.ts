@@ -549,10 +549,8 @@ export const getAdjacentArticlesServer = async (
         .orderBy('publishedAt', 'desc')
         .limit(1)
         .get();
-      console.log('[getAdjacentArticlesServer] Previous query result count:', prevQuery.size);
       
       // 次の記事を取得
-      console.log('[getAdjacentArticlesServer] Querying for next article...');
       const nextQuery = await articlesRef
         .where('isPublished', '==', true)
         .where('mediaId', '==', mediaId)
@@ -560,39 +558,23 @@ export const getAdjacentArticlesServer = async (
         .orderBy('publishedAt', 'asc')
         .limit(1)
         .get();
-      console.log('[getAdjacentArticlesServer] Next query result count:', nextQuery.size);
       
       return await buildAdjacentArticlesResult(prevQuery, nextQuery);
     } else {
       const prevQuery = await prevQueryBuilder.get();
-      console.log('[getAdjacentArticlesServer] Previous query result count:', prevQuery.size);
       
       // 次の記事を取得
-      console.log('[getAdjacentArticlesServer] Querying for next article...');
       const nextQuery = await articlesRef
         .where('isPublished', '==', true)
         .where('publishedAt', '>', currentPublishedAt)
         .orderBy('publishedAt', 'asc')
         .limit(1)
         .get();
-      console.log('[getAdjacentArticlesServer] Next query result count:', nextQuery.size);
       
       return await buildAdjacentArticlesResult(prevQuery, nextQuery);
     }
   } catch (error) {
-    console.error('[getAdjacentArticlesServer] ❌ ERROR OCCURRED ❌');
-    console.error('[getAdjacentArticlesServer] Error:', error);
-    console.error('[getAdjacentArticlesServer] Error details:', error instanceof Error ? error.message : String(error));
-    console.error('[getAdjacentArticlesServer] Error stack:', error instanceof Error ? error.stack : '');
-    
-    // Firestore インデックスエラーかチェック
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes('index') || errorMessage.includes('Index')) {
-      console.error('[getAdjacentArticlesServer] 🔥 FIRESTORE INDEX ERROR DETECTED 🔥');
-      console.error('[getAdjacentArticlesServer] Firestore の複合インデックスが必要です。');
-      console.error('[getAdjacentArticlesServer] Firebase Console でインデックスを作成してください。');
-    }
-    
+    console.error('[getAdjacentArticlesServer] Error fetching adjacent articles:', error);
     return { previousArticle: null, nextArticle: null };
   }
 };
@@ -617,7 +599,6 @@ async function buildAdjacentArticlesResult(
       relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
       readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
-    console.log('[getAdjacentArticlesServer] Previous article found:', previousArticle.id, previousArticle.title);
   }
   
   if (!nextQuery.empty) {
@@ -632,13 +613,7 @@ async function buildAdjacentArticlesResult(
       relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
       readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
-    console.log('[getAdjacentArticlesServer] Next article found:', nextArticle.id, nextArticle.title);
   }
-  
-  console.log('[getAdjacentArticlesServer] Returning:', {
-    previousArticle: previousArticle ? previousArticle.id : null,
-    nextArticle: nextArticle ? nextArticle.id : null,
-  });
   
   return { previousArticle, nextArticle };
 }
