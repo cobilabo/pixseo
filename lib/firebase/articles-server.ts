@@ -497,6 +497,9 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
       id: writerDoc.id,
       handleName: data?.handleName || '',
       icon: data?.icon,
+      iconAlt: data?.iconAlt,
+      backgroundImage: data?.backgroundImage,
+      backgroundImageAlt: data?.backgroundImageAlt,
       bio: data?.bio,
       mediaId: data?.mediaId || '',
     };
