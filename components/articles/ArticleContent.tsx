@@ -119,6 +119,11 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
         );
       }
 
+      // h1タグを除外（FVで既にタイトル表示済み）
+      if (domNode.name === 'h1') {
+        return <></>;
+      }
+
       // 見出し（h2, h3, h4）にIDを付与
       if (domNode.name && ['h2', 'h3', 'h4'].includes(domNode.name)) {
         const tocItem = Array.isArray(tableOfContents) ? tableOfContents[headingCount] : undefined;
@@ -235,9 +240,40 @@ if (typeof window !== 'undefined') {
     .article-content ol {
       line-height: 2.0 !important;
       letter-spacing: 0.02em !important;
+      counter-reset: list-counter !important;
+      list-style: none !important;
+      padding-left: 0 !important;
+    }
+    .article-content ol {
+      counter-reset: list-counter !important;
     }
     .article-content li {
-      margin-bottom: 0.5em !important;
+      margin-bottom: 1em !important;
+      padding: 1em 1.25em !important;
+      background: #f9fafb !important;
+      border-left: 4px solid #3b82f6 !important;
+      border-radius: 8px !important;
+      position: relative !important;
+      padding-left: 3.5em !important;
+      counter-increment: list-counter !important;
+    }
+    .article-content ol > li::before {
+      content: "No. " counter(list-counter) !important;
+      position: absolute !important;
+      left: 1.25em !important;
+      top: 1em !important;
+      font-weight: 700 !important;
+      color: #3b82f6 !important;
+      font-size: 0.875em !important;
+    }
+    .article-content ul > li::before {
+      content: "•" !important;
+      position: absolute !important;
+      left: 1.25em !important;
+      top: 1em !important;
+      font-weight: 700 !important;
+      color: #3b82f6 !important;
+      font-size: 1.2em !important;
     }
   `;
   if (!document.querySelector('#article-content-styles')) {
