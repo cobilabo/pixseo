@@ -2,14 +2,16 @@
 
 import Link from 'next/link';
 import { Article, Category } from '@/types/article';
+import { Lang } from '@/types/lang';
 import { useEffect, useState } from 'react';
 
 interface BreadcrumbsProps {
   article: Article;
   category?: Category | null;
+  lang?: Lang;
 }
 
-export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
+export default function Breadcrumbs({ article, category, lang = 'ja' }: BreadcrumbsProps) {
   const [origin, setOrigin] = useState('https://furatto.pixseo.cloud');
   
   useEffect(() => {
@@ -33,13 +35,13 @@ export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
         '@type': 'ListItem',
         position: 2,
         name: '記事一覧',
-        item: `${origin}/articles`,
+        item: `${origin}/${lang}/articles`,
       },
       ...(category ? [{
         '@type': 'ListItem',
         position: 3,
         name: category.name,
-        item: `${origin}/categories/${category.slug}`,
+        item: `${origin}/${lang}/categories/${category.slug}`,
       }] : []),
       {
         '@type': 'ListItem',
@@ -62,7 +64,7 @@ export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
         <ol className="flex items-center space-x-2 text-sm text-gray-600">
           <li>
             <Link 
-              href="/" 
+              href={`/${lang}`}
               className="hover:text-blue-600 transition-colors flex items-center"
             >
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
@@ -80,7 +82,7 @@ export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
 
           <li>
             <Link 
-              href="/articles" 
+              href={`/${lang}/articles`}
               className="hover:text-blue-600 transition-colors"
             >
               記事一覧
@@ -97,7 +99,7 @@ export default function Breadcrumbs({ article, category }: BreadcrumbsProps) {
 
               <li>
                 <Link 
-                  href={`/categories/${category.slug}`}
+                  href={`/${lang}/categories/${category.slug}`}
                   className="hover:text-blue-600 transition-colors"
                 >
                   {category.name}

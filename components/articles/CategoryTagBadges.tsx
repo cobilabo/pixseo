@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { Category, Tag } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 interface CategoryTagBadgesProps {
   categories: Category[];
   tags: Tag[];
+  lang?: Lang;
 }
 
-export default function CategoryTagBadges({ categories, tags }: CategoryTagBadgesProps) {
+export default function CategoryTagBadges({ categories, tags, lang = 'ja' }: CategoryTagBadgesProps) {
   if (categories.length === 0 && tags.length === 0) {
     return null;
   }
@@ -17,7 +19,7 @@ export default function CategoryTagBadges({ categories, tags }: CategoryTagBadge
       {categories.map((category) => (
         <Link
           key={category.id}
-          href={`/categories/${category.slug}`}
+          href={`/${lang}/categories/${category.slug}`}
           className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors"
           style={{ 
             backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
@@ -35,7 +37,7 @@ export default function CategoryTagBadges({ categories, tags }: CategoryTagBadge
       {tags.map((tag) => (
         <Link
           key={tag.id}
-          href={`/tags/${tag.slug}`}
+          href={`/${lang}/tags/${tag.slug}`}
           className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
