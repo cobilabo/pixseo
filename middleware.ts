@@ -1,158 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { DEFAULT_LANG, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 
-export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || '';
+export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-
-  // 静的ファイルやNext.js内部パスはスキップ
+  
+  // 静的ファイルやAPIルートは除外
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon.ico') ||
-    pathname.startsWith('/public') ||
-    pathname.includes('.')
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/static') ||
+    pathname.includes('.') // .svg, .png, .jpg等
   ) {
     return NextResponse.next();
   }
-
-  // 管理画面ドメインの場合
-  if (hostname === 'admin.pixseo.cloud' || hostname === 'pixseo-lovat.vercel.app') {
-    // APIやadmin-panelで始まるパスはそのまま
-    if (pathname.startsWith('/api') || pathname.startsWith('/admin-panel')) {
-      return NextResponse.next();
-    }
-    
-    // それ以外のパスは /admin-panel/* にrewrite
-    const url = request.nextUrl.clone();
-    url.pathname = `/admin-panel${pathname}`;
-    return NextResponse.rewrite(url);
+  
+  // 管理画面は除外
+  if (pathname.startsWith('/admin-panel')) {
+    return NextResponse.next();
   }
-
-  // サービスドメイン（{slug}.pixseo.cloud）の場合
-  if (hostname.endsWith('.pixseo.cloud') && hostname !== 'admin.pixseo.cloud') {
-    try {
-      // スラッグを抽出
-      const slug = hostname.replace('.pixseo.cloud', '');
-      const mediaId = await getMediaIdBySlug(slug);
-      
-      if (!mediaId) {
-        return new NextResponse('Service not found', { status: 404 });
-      }
-
-      // /media 配下のパスをチェック
-      if (pathname.startsWith('/media')) {
-        // ルート /media または /media/ への直接アクセスは / にリダイレクト
-        if (pathname === '/media' || pathname === '/media/') {
-          const url = request.nextUrl.clone();
-          url.pathname = '/';
-          return NextResponse.redirect(url, 301); // 永久リダイレクト
-        }
-        
-        // /media/search/, /media/articles/ などは /media を削除してリダイレクト
-        if (pathname.startsWith('/media/')) {
-          const url = request.nextUrl.clone();
-          url.pathname = pathname.replace('/media', ''); // /media を削除
-          return NextResponse.redirect(url, 301); // 永久リダイレクト
-        }
-        
-        // その他の /media/* パスはそのまま（内部パス用）
-        const response = NextResponse.next();
-        response.headers.set('x-media-id', mediaId);
-        return response;
-      }
-
-      // ルートアクセスの場合は /media にrewrite
-      if (pathname === '/' || pathname === '') {
-        const url = request.nextUrl.clone();
-        url.pathname = '/media';
-        
-        const response = NextResponse.rewrite(url);
-        response.headers.set('x-media-id', mediaId);
-        
-        return response;
-      }
-
-      // その他のパス（/articles/, /search など）は /media 配下にrewrite
-      const url = request.nextUrl.clone();
-      url.pathname = `/media${pathname}`;
-      
-      const response = NextResponse.rewrite(url);
-      response.headers.set('x-media-id', mediaId);
-      
-      return response;
-    } catch (error) {
-      console.error('[Middleware] Error:', error);
-      return NextResponse.next();
-    }
+  
+  // パスを分解
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const firstSegment = pathSegments[0];
+  
+  // すでに言語パスが含まれている場合
+  if (firstSegment && isValidLang(firstSegment)) {
+    // 有効な言語なのでそのまま
+    return NextResponse.next();
   }
-
-  // その他のドメイン（開発環境など）
-  return NextResponse.next();
-}
-
-// スラッグからmediaIdを取得する関数
-async function getMediaIdBySlug(slug: string): Promise<string | null> {
-  try {
-    // Firestore REST APIを使用してサービス情報を取得
-    // セキュリティルールで公開読み取りが許可されているため、認証不要
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    
-    if (!projectId) {
-      console.error('[Middleware] Firebase project ID not found');
-      return null;
-    }
-
-    // Firestore REST API エンドポイント
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/mediaTenants`;
-    
-    try {
-      const response = await fetch(`${firestoreUrl}?pageSize=1000`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store', // Edge Runtimeではnextオプションが使えない
-      });
-
-      if (!response.ok) {
-        console.error('[Middleware] Firestore API error:', response.status, await response.text());
-        return null;
-      }
-
-      const data = await response.json();
-      
-      // ドキュメントからスラッグに一致するものを検索
-      if (data.documents) {
-        for (const doc of data.documents) {
-          const docSlug = doc.fields?.slug?.stringValue;
-          if (docSlug === slug) {
-            // ドキュメントIDを抽出
-            const docPath = doc.name;
-            const mediaId = docPath.split('/').pop();
-            return mediaId || null;
-          }
-        }
-      }
-
-      return null;
-    } catch (fetchError) {
-      console.error('[Middleware] Error fetching from Firestore:', fetchError);
-      return null;
-    }
-  } catch (error) {
-    console.error('[Middleware] Error in getMediaIdBySlug:', error);
-    return null;
-  }
+  
+  // 言語パスがない場合、デフォルト言語を追加してリダイレクト
+  const newPath = `/${DEFAULT_LANG}${pathname === '/' ? '' : pathname}`;
+  const url = request.nextUrl.clone();
+  url.pathname = newPath;
+  
+  return NextResponse.redirect(url);
 }
 
 export const config = {
+  // 管理画面とAPIを除外
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * 1. /api routes
+     * 2. /_next (Next.js internals)
+     * 3. /_static (inside /public)
+     * 4. /admin-panel (admin routes)
+     * 5. all root files inside /public (e.g. /favicon.ico)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next|_static|admin-panel|[\\w-]+\\.\\w+).*)',
   ],
 };
-
