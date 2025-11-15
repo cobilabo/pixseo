@@ -68,11 +68,11 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
       </div>
       
              {/* テキストコンテンツ（通常スクロール） */}
-             <div className="relative z-10 flex flex-col items-center justify-center text-white px-4 h-full" style={{ paddingTop: '240px' }}>
+             <div className="relative z-10 flex flex-col items-center justify-center text-white px-4 h-full" style={{ paddingTop: '140px' }}>
         {showCustomContent ? (
           <>
             {writerIcon && (
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg mb-6">
+              <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-lg mb-8">
                 <Image
                   src={writerIcon}
                   alt="Writer Icon"
@@ -82,16 +82,16 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
               </div>
             )}
             {customTitle && (
-              <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 drop-shadow-lg">
+              <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 drop-shadow-lg">
                 {customTitle}
               </h1>
             )}
             {customMeta && (
-              <p className="text-sm text-gray-200 mb-4 drop-shadow-md">
+              <p className="text-base text-gray-200 drop-shadow-md">
                 {customMeta}
               </p>
             )}
-            {customSubtitle && (
+            {customSubtitle && !customMeta && (
               <p className="text-xs text-gray-200 uppercase tracking-wider drop-shadow-md">
                 {customSubtitle}
               </p>

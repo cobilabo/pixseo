@@ -143,7 +143,7 @@ export default async function WriterPage({ params }: PageProps) {
           description: `${articles.length} 記事`,
         }}
         customTitle={writer.handleName}
-        customSubtitle="WRITER"
+        customMeta={`${articles.length} 記事`}
         showCustomContent={true}
         writerIcon={writer.icon}
       />
