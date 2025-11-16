@@ -293,6 +293,7 @@ function NewArticlePageContent() {
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
+          categoryIds: formData.categoryIds, // カテゴリーIDを渡してタグの重複を回避
         }),
       });
 

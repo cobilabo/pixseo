@@ -59,10 +59,23 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
 
     setLoading(true);
     try {
-      await updateTag(params.id, {
-        ...formData,
-        mediaId: tag.mediaId,
+      // API経由で更新（翻訳処理を含む）
+      const response = await fetch('/api/admin/tags/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: params.id,
+          ...formData,
+          mediaId: tag.mediaId,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update tag');
+      }
       
       alert('タグを更新しました');
       router.push('/tags');

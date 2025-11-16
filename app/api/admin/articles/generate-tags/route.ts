@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();
-    const { title, content } = body;
+    const { title, content, categoryIds } = body;
 
     if (!mediaId) {
       return NextResponse.json(
@@ -51,6 +51,19 @@ export async function POST(request: NextRequest) {
 
     const existingTagNames = existingTags.map(tag => tag.name).join(', ');
 
+    // カテゴリー名を取得（重複回避のため）
+    let categoryNames: string[] = [];
+    if (categoryIds && Array.isArray(categoryIds) && categoryIds.length > 0) {
+      const categoryDocs = await Promise.all(
+        categoryIds.map(id => adminDb.collection('categories').doc(id).get())
+      );
+      categoryNames = categoryDocs
+        .filter(doc => doc.exists)
+        .map(doc => doc.data()?.name || '')
+        .filter(name => name);
+    }
+    const categoryNamesStr = categoryNames.join(', ');
+
     // 本文からテキストのみを抽出（HTMLタグを除去）
     const plainContent = content.replace(/<[^>]*>/g, ' ').substring(0, 1000);
 
@@ -66,21 +79,35 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `あなたはSEOに強いタグ生成の専門家です。記事の内容を分析し、SEOに効果的な広義で汎用的なタグを5個生成してください。
+            content: `あなたはSEOに強いタグ生成の専門家です。記事の内容を分析し、SEOに効果的な広義で汎用的なタグを日本語で5個生成してください。
 
 重要なルール:
+- **必ず日本語でタグを生成**（例：「AI」「マーケティング」「デザイン」）
 - 広く使われる一般的なキーワードを使用（細かすぎる分類は避ける）
 - 例：良い「AI」「マーケティング」、悪い「AI駆動UX」「AIツール統合」
 - 類似する概念は1つのタグに統合（例：「持続可能性」「持続可能なデザイン」→「サステナビリティ」）
 - SEOで検索されやすい汎用的なキーワードを優先
 - 1-2単語程度の短いタグ
 - 既存タグと類似する場合は既存タグ名を必ず使用
+- **カテゴリー名と重複するタグは生成しない**（カテゴリーより具体的な内容にする）
 
-既存タグ: ${existingTagNames || 'なし'}`,
+既存タグ: ${existingTagNames || 'なし'}
+記事のカテゴリー: ${categoryNamesStr || 'なし'}（これらと重複しないタグを生成）`,
           },
           {
             role: 'user',
-            content: `以下の記事から、検索されやすい広義で汎用的なタグを5個生成してください。細かすぎる分類は避け、広く使われる一般的なキーワードを使用してください。既存タグと類似する場合は既存タグ名を使用してください。\n\nタイトル: ${title}\n\n本文:\n${plainContent}\n\nタグをカンマ区切りで出力してください（説明は不要）。`,
+            content: `以下の記事から、検索されやすい広義で汎用的なタグを日本語で5個生成してください。
+- カテゴリー名（${categoryNamesStr || 'なし'}）と重複するタグは絶対に生成しない
+- カテゴリーより具体的な内容のタグを生成
+- 細かすぎる分類は避け、広く使われる一般的なキーワードを使用
+- 既存タグと類似する場合は既存タグ名を使用
+
+タイトル: ${title}
+
+本文:
+${plainContent}
+
+日本語のタグをカンマ区切りで出力してください（説明は不要）。`,
           },
         ],
         temperature: 0.2,
