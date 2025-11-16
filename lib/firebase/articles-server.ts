@@ -383,13 +383,27 @@ export const getCategoryServer = async (categoryId: string): Promise<Category | 
     }
     
     const data = categoryDoc.data();
-    const category: Category = {
+    const category: any = {
       id: categoryDoc.id,
       name: data?.name || '',
+      name_ja: data?.name_ja || data?.name || '',
+      name_en: data?.name_en || data?.name || '',
+      name_zh: data?.name_zh || data?.name || '',
+      name_ko: data?.name_ko || data?.name || '',
       slug: data?.slug || '',
       description: data?.description,
+      description_ja: data?.description_ja || data?.description || '',
+      description_en: data?.description_en || data?.description || '',
+      description_zh: data?.description_zh || data?.description || '',
+      description_ko: data?.description_ko || data?.description || '',
+      imageUrl: data?.imageUrl,
+      imageAlt: data?.imageAlt,
+      featuredImage: data?.featuredImage,
+      featuredImageAlt: data?.featuredImageAlt,
       mediaId: data?.mediaId || '',
       isRecommended: data?.isRecommended || false,
+      order: data?.order,
+      displayOrder: data?.displayOrder,
     };
     
     // キャッシュに保存
@@ -439,9 +453,13 @@ export const getTagServer = async (tagId: string): Promise<Tag | null> => {
     }
     
     const data = tagDoc.data();
-    const tag: Tag = {
+    const tag: any = {
       id: tagDoc.id,
       name: data?.name || '',
+      name_ja: data?.name_ja || data?.name || '',
+      name_en: data?.name_en || data?.name || '',
+      name_zh: data?.name_zh || data?.name || '',
+      name_ko: data?.name_ko || data?.name || '',
       slug: data?.slug || '',
       mediaId: data?.mediaId || '',
     };
@@ -493,14 +511,22 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
     }
     
     const data = writerDoc.data();
-    const writer: Writer = {
+    const writer: any = {
       id: writerDoc.id,
       handleName: data?.handleName || '',
+      handleName_ja: data?.handleName_ja || data?.handleName || '',
+      handleName_en: data?.handleName_en || data?.handleName || '',
+      handleName_zh: data?.handleName_zh || data?.handleName || '',
+      handleName_ko: data?.handleName_ko || data?.handleName || '',
       icon: data?.icon,
       iconAlt: data?.iconAlt,
       backgroundImage: data?.backgroundImage,
       backgroundImageAlt: data?.backgroundImageAlt,
       bio: data?.bio,
+      bio_ja: data?.bio_ja || data?.bio || '',
+      bio_en: data?.bio_en || data?.bio || '',
+      bio_zh: data?.bio_zh || data?.bio || '',
+      bio_ko: data?.bio_ko || data?.bio || '',
       mediaId: data?.mediaId || '',
     };
     
