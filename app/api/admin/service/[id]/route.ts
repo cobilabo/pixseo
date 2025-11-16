@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { translateText } from '@/lib/openai/translate';
+import { SUPPORTED_LANGS } from '@/types/lang';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,7 +93,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    if (name !== undefined) updateData.name = name;
+    if (name !== undefined) {
+      updateData.name = name;
+      updateData.name_ja = name;
+    }
     if (slug !== undefined) updateData.slug = slug;
     if (customDomain !== undefined) updateData.customDomain = customDomain || null;
     if (settings !== undefined) updateData.settings = settings;
@@ -105,6 +110,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (logoPortrait !== undefined) updateData.logoPortrait = logoPortrait;
     if (allowIndexing !== undefined) updateData.allowIndexing = allowIndexing;
     if (theme !== undefined) updateData.theme = theme;
+
+    // 多言語翻訳処理
+    const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+    for (const lang of otherLangs) {
+      try {
+        // サイト名の翻訳
+        if (name !== undefined) {
+          console.log(`[Service Translation] ${lang} サイト名翻訳開始...`);
+          updateData[`name_${lang}`] = await translateText(name, lang, 'サイト名');
+          console.log(`[Service Translation] ${lang} サイト名翻訳成功`);
+        }
+        
+        // サイト説明文の翻訳
+        if (siteDescription !== undefined) {
+          console.log(`[Service Translation] ${lang} サイト説明文翻訳開始...`);
+          updateData[`siteDescription_${lang}`] = await translateText(siteDescription, lang, 'サイト説明文');
+          console.log(`[Service Translation] ${lang} サイト説明文翻訳成功`);
+        }
+      } catch (error) {
+        console.error(`[Service Translation Error] ${lang}:`, error);
+        // エラー時は日本語をそのまま使用
+        if (name !== undefined) updateData[`name_${lang}`] = name;
+        if (siteDescription !== undefined) updateData[`siteDescription_${lang}`] = siteDescription;
+      }
+    }
 
     // クライアントが変更された場合の処理
     if (clientId !== undefined && clientId !== oldClientId) {
