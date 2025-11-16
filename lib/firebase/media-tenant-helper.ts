@@ -130,6 +130,15 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
       ogImageUrl: data?.ogImage || undefined,
       mainTitle: data?.mainTitle || undefined,
       mainSubtitle: data?.mainSubtitle || undefined,
+      // 多言語フィールド
+      name_ja: data?.name_ja || data?.name,
+      name_en: data?.name_en || data?.name,
+      name_zh: data?.name_zh || data?.name,
+      name_ko: data?.name_ko || data?.name,
+      description_ja: data?.settings?.siteDescription_ja || data?.siteDescription,
+      description_en: data?.settings?.siteDescription_en || data?.siteDescription,
+      description_zh: data?.settings?.siteDescription_zh || data?.siteDescription,
+      description_ko: data?.settings?.siteDescription_ko || data?.siteDescription,
     };
 
     // キャッシュに保存
