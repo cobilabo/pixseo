@@ -139,7 +139,7 @@ ${patternPrompt}
     // 少なくとも1つのテーマが生成されていることを確認
     if (themes.length === 0) {
       // フォールバック: 改行で分割して最初の5行を使用
-      const lines = generatedContent.split('\n').filter(line => line.trim());
+      const lines = generatedContent.split('\n').filter((line: string) => line.trim());
       themes.push(...lines.slice(0, 5));
     }
 
