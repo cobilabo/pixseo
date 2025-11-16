@@ -586,7 +586,8 @@ A: [回答]`;
           });
 
           const headingMatch = headingMatches[position];
-          const insertPosition = headingMatch.index! + headingMatch[0].length;
+          if (!headingMatch || headingMatch.index === undefined) continue;
+          const insertPosition = headingMatch.index + headingMatch[0].length;
           
           const imageHtml = `\n<figure class="inline-image my-6">
   <img src="${inlineImagePublicUrl}" alt="${title} - ${headingContext}" class="w-full rounded-lg shadow-md" />
