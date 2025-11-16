@@ -4,6 +4,7 @@ import { DEFAULT_LANG, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const hostname = request.nextUrl.hostname;
   
   // 静的ファイルやAPIルートは除外
   if (
@@ -15,8 +16,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // 管理画面は除外
-  if (pathname.startsWith('/admin-panel')) {
+  // 管理画面（admin.pixseo.cloudサブドメインも含む）は除外
+  if (
+    pathname.startsWith('/admin-panel') ||
+    hostname.startsWith('admin.') ||
+    pathname.startsWith('/admin')
+  ) {
     return NextResponse.next();
   }
   
@@ -47,8 +52,9 @@ export const config = {
      * 2. /_next (Next.js internals)
      * 3. /_static (inside /public)
      * 4. /admin-panel (admin routes)
-     * 5. all root files inside /public (e.g. /favicon.ico)
+     * 5. /admin (admin routes for admin.pixseo.cloud subdomain)
+     * 6. all root files inside /public (e.g. /favicon.ico)
      */
-    '/((?!api|_next|_static|admin-panel|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|_static|admin-panel|admin|[\\w-]+\\.\\w+).*)',
   ],
 };
