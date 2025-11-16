@@ -13,6 +13,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import ArticleGeneratorModal from '@/components/admin/ArticleGeneratorModal';
 import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
 import ScheduledGenerationModal from '@/components/admin/ScheduledGenerationModal';
+import AdvancedArticleGeneratorModal from '@/components/admin/AdvancedArticleGeneratorModal';
 import { useRouter } from 'next/navigation';
 
 export default function ArticlesPage() {
@@ -25,6 +26,7 @@ export default function ArticlesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [isAdvancedGeneratorModalOpen, setIsAdvancedGeneratorModalOpen] = useState(false);
   const [isPatternModalOpen, setIsPatternModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
@@ -351,13 +353,24 @@ export default function ArticlesPage() {
             </svg>
           </button>
 
-          {/* AI記事生成ボタン */}
+          {/* AI高度生成ボタン（新規） */}
           <button
-            onClick={() => setIsGeneratorModalOpen(true)}
+            onClick={() => setIsAdvancedGeneratorModalOpen(true)}
             className="bg-purple-600 text-white w-14 h-14 rounded-full hover:bg-purple-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
-            title="AI記事生成"
+            title="AI高度記事生成（12ステップ）"
           >
             <Image src="/ai.svg" alt="AI" width={24} height={24} className="brightness-0 invert" />
+          </button>
+
+          {/* AI記事生成ボタン（簡易版） */}
+          <button
+            onClick={() => setIsGeneratorModalOpen(true)}
+            className="bg-indigo-600 text-white w-14 h-14 rounded-full hover:bg-indigo-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+            title="AI記事生成（簡易版）"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
           </button>
           
           {/* 新規記事作成ボタン */}
@@ -392,7 +405,19 @@ export default function ArticlesPage() {
           writers={writers}
         />
 
-        {/* AI記事生成モーダル */}
+        {/* AI高度記事生成モーダル（新規） */}
+        <AdvancedArticleGeneratorModal
+          isOpen={isAdvancedGeneratorModalOpen}
+          onClose={() => setIsAdvancedGeneratorModalOpen(false)}
+          onSuccess={(articleId) => {
+            setIsAdvancedGeneratorModalOpen(false);
+            fetchArticles(); // 記事一覧を更新
+          }}
+          categories={categories}
+          writers={writers}
+        />
+
+        {/* AI記事生成モーダル（簡易版） */}
         <ArticleGeneratorModal
           isOpen={isGeneratorModalOpen}
           onClose={() => setIsGeneratorModalOpen(false)}
