@@ -74,8 +74,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ArticlesPage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   
-  // mediaIdを取得
+  // mediaIdとhostを取得
   const mediaId = await getMediaIdFromHost();
+  const headersList = headers();
+  const host = headersList.get('host') || '';
   
   // サイト設定、Theme、記事、カテゴリーを並列取得
   const [rawSiteInfo, rawTheme, articles, popularArticles, allCategories] = await Promise.all([
