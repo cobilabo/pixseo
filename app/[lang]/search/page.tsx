@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
+import Link from 'next/link';
 import SearchContent from '@/components/search/SearchContent';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';

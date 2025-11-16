@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 import { 
   getArticleServer, 
   getRelatedArticlesServer, 

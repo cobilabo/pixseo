@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
+import Link from 'next/link';
 import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';

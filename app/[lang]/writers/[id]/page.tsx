@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 import { getWriterServer, getArticlesByWriterServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';

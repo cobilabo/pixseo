@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
+import Link from 'next/link';
 import { getTagServer } from '@/lib/firebase/tags-server';
 import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
