@@ -18,6 +18,7 @@ import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
+import { t } from '@/lib/i18n/translations';
 
 interface PageProps {
   params: {
