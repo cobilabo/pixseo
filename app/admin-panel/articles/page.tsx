@@ -106,13 +106,23 @@ export default function ArticlesPage() {
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`「${title}」を削除してもよろしいですか？`)) {
+    if (!confirm(`「${title}」を削除してもよろしいですか？\n\n※ この操作は取り消せません。FirestoreとAlgoliaの両方から削除されます。`)) {
       return;
     }
 
     try {
-      await deleteArticle(id);
+      // API経由で削除（FirestoreとAlgoliaの両方から削除）
+      const response = await fetch(`/api/admin/articles/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete article');
+      }
+
       setArticles(articles.filter((article) => article.id !== id));
+      alert('記事を削除しました');
     } catch (error) {
       console.error('Error deleting article:', error);
       alert('記事の削除に失敗しました');

@@ -5,6 +5,50 @@ import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sy
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * 記事削除API（AlgoliaとFirestoreから削除）
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+    console.log(`[API DELETE /admin/articles/${id}] Deleting article...`);
+    
+    // Firestoreから削除
+    const articleRef = adminDb.collection('articles').doc(id);
+    const doc = await articleRef.get();
+
+    if (!doc.exists) {
+      return NextResponse.json(
+        { error: 'Article not found' },
+        { status: 404 }
+      );
+    }
+
+    await articleRef.delete();
+    console.log(`[API DELETE /admin/articles/${id}] Deleted from Firestore`);
+    
+    // Algoliaから削除
+    try {
+      await deleteArticleFromAlgolia(id);
+      console.log(`[API DELETE /admin/articles/${id}] Deleted from Algolia`);
+    } catch (algoliaError) {
+      console.error(`[API DELETE /admin/articles/${id}] Algolia delete error:`, algoliaError);
+      // Algoliaの削除エラーは致命的ではないので処理は続行
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(`[API DELETE /admin/articles] Error:`, error);
+    return NextResponse.json(
+      { error: 'Failed to delete article', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
