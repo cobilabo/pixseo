@@ -7,6 +7,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { Writer } from '@/types/writer';
+import { WritingStyle } from '@/types/writing-style';
 
 export default function EditWriterPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -19,6 +20,15 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
     backgroundImageAlt: '',
     handleName: '',
     bio: '',
+  });
+  
+  // ライティング特徴管理
+  const [writingStyles, setWritingStyles] = useState<WritingStyle[]>([]);
+  const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
+  const [styleFormData, setStyleFormData] = useState({
+    name: '',
+    description: '',
+    prompt: '',
   });
 
   useEffect(() => {
@@ -45,7 +55,104 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
     };
 
     fetchWriter();
+    fetchWritingStyles();
   }, [params.id]);
+
+  const fetchWritingStyles = async () => {
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch(`/api/admin/writing-styles?writerId=${params.id}`, {
+        headers: {
+          'x-media-id': currentTenantId || '',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch writing styles');
+
+      const data = await response.json();
+      setWritingStyles(data.styles || []);
+    } catch (error) {
+      console.error('Error fetching writing styles:', error);
+    }
+  };
+
+  const handleStyleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!styleFormData.name || !styleFormData.prompt) {
+      alert('ライティング特徴名とプロンプトは必須です');
+      return;
+    }
+
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const url = editingStyleId
+        ? `/api/admin/writing-styles/${editingStyleId}`
+        : '/api/admin/writing-styles';
+
+      const response = await fetch(url, {
+        method: editingStyleId ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-media-id': currentTenantId || '',
+        },
+        body: JSON.stringify({
+          ...styleFormData,
+          writerId: params.id,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save writing style');
+
+      alert(editingStyleId ? '更新しました' : '作成しました');
+      setStyleFormData({ name: '', description: '', prompt: '' });
+      setEditingStyleId(null);
+      fetchWritingStyles();
+    } catch (error) {
+      console.error('Error saving writing style:', error);
+      alert('保存に失敗しました');
+    }
+  };
+
+  const handleStyleEdit = (style: WritingStyle) => {
+    setStyleFormData({
+      name: style.name,
+      description: style.description,
+      prompt: style.prompt,
+    });
+    setEditingStyleId(style.id);
+  };
+
+  const handleStyleDelete = async (id: string) => {
+    if (!confirm('このライティング特徴を削除しますか？')) return;
+
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch(`/api/admin/writing-styles/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-media-id': currentTenantId || '',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to delete writing style');
+
+      alert('削除しました');
+      fetchWritingStyles();
+    } catch (error) {
+      console.error('Error deleting writing style:', error);
+      alert('削除に失敗しました');
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -126,6 +233,125 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
               />
             </div>
           </form>
+
+          {/* ライティング特徴管理セクション */}
+          <div className="bg-white rounded-xl p-6 space-y-6 mt-6">
+            <h2 className="text-xl font-bold text-gray-900">ライティング特徴管理</h2>
+            <p className="text-sm text-gray-500">
+              このライターのライティングスタイル（ですます調、フランクな口調など）を登録
+            </p>
+
+            {/* 新規作成・編集フォーム */}
+            <form onSubmit={handleStyleSubmit} className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingStyleId ? 'ライティング特徴編集' : '新規ライティング特徴作成'}
+              </h3>
+              
+              <div className="space-y-4">
+                <FloatingInput
+                  label="ライティング特徴名（例: ですます調、フランクな口調）"
+                  value={styleFormData.name}
+                  onChange={(value) => setStyleFormData({ ...styleFormData, name: value })}
+                  required
+                />
+
+                <FloatingInput
+                  label="説明（任意）"
+                  value={styleFormData.description}
+                  onChange={(value) => setStyleFormData({ ...styleFormData, description: value })}
+                  multiline
+                  rows={2}
+                />
+
+                <FloatingInput
+                  label="プロンプト（リライト時にGrok APIに渡す指示文）"
+                  value={styleFormData.prompt}
+                  onChange={(value) => setStyleFormData({ ...styleFormData, prompt: value })}
+                  multiline
+                  rows={6}
+                  required
+                  placeholder="例: 記事を以下のスタイルでリライトしてください：
+- 「ですます」調を使用
+- 親しみやすく温かみのある表現
+- 読者に語りかけるような口調
+- 専門用語は分かりやすく説明"
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+                  >
+                    {editingStyleId ? '更新' : '作成'}
+                  </button>
+
+                  {editingStyleId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingStyleId(null);
+                        setStyleFormData({ name: '', description: '', prompt: '' });
+                      }}
+                      className="bg-gray-300 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-400 transition-colors"
+                    >
+                      キャンセル
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
+
+            {/* ライティング特徴一覧 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">登録済みライティング特徴</h3>
+              
+              {writingStyles.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  まだライティング特徴が登録されていません
+                </p>
+              ) : (
+                writingStyles.map((style) => (
+                  <div
+                    key={style.id}
+                    className="p-6 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {style.name}
+                        </h4>
+                        {style.description && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {style.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleStyleEdit(style)}
+                          className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded-lg hover:bg-blue-50"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => handleStyleDelete(style.id)}
+                          className="text-red-600 hover:text-red-800 px-3 py-1 rounded-lg hover:bg-red-50"
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-100">
+                      <p className="text-xs text-gray-500 mb-2">プロンプト:</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {style.prompt}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
           {/* フローティングボタン */}
           <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">

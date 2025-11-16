@@ -11,6 +11,8 @@ import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import ArticleGeneratorModal from '@/components/admin/ArticleGeneratorModal';
+import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
+import ScheduledGenerationModal from '@/components/admin/ScheduledGenerationModal';
 import { useRouter } from 'next/navigation';
 
 export default function ArticlesPage() {
@@ -23,6 +25,8 @@ export default function ArticlesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   useEffect(() => {
     fetchArticles();
@@ -325,6 +329,28 @@ export default function ArticlesPage() {
 
         {/* フローティングボタン */}
         <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+          {/* 定期実行設定ボタン */}
+          <button
+            onClick={() => setIsScheduleModalOpen(true)}
+            className="bg-green-600 text-white w-14 h-14 rounded-full hover:bg-green-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+            title="定期実行設定"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+          
+          {/* 構成パターン管理ボタン */}
+          <button
+            onClick={() => setIsPatternModalOpen(true)}
+            className="bg-orange-600 text-white w-14 h-14 rounded-full hover:bg-orange-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+            title="構成パターン管理"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+
           {/* AI記事生成ボタン */}
           <button
             onClick={() => setIsGeneratorModalOpen(true)}
@@ -345,6 +371,26 @@ export default function ArticlesPage() {
             </svg>
           </Link>
         </div>
+
+        {/* 構成パターン管理モーダル */}
+        <ArticlePatternModal
+          isOpen={isPatternModalOpen}
+          onClose={() => setIsPatternModalOpen(false)}
+          onSuccess={() => {
+            // 成功時の処理（必要に応じて）
+          }}
+        />
+
+        {/* 定期実行設定モーダル */}
+        <ScheduledGenerationModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onSuccess={() => {
+            // 成功時の処理（必要に応じて）
+          }}
+          categories={categories}
+          writers={writers}
+        />
 
         {/* AI記事生成モーダル */}
         <ArticleGeneratorModal

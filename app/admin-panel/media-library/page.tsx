@@ -5,6 +5,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
 import { apiGet, apiPostFormData } from '@/lib/api-client';
+import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
 
 interface MediaFile {
   id: string;
@@ -28,6 +29,7 @@ export default function MediaPage() {
   const [uploading, setUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'image' | 'video'>('all');
+  const [isImagePromptModalOpen, setIsImagePromptModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -258,21 +260,44 @@ export default function MediaPage() {
             className="hidden"
           />
 
-          {/* フローティングアップロードボタン */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="メディアをアップロード"
-          >
-            {uploading ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          {/* フローティングボタン */}
+          <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+            {/* 画像プロンプトパターン管理ボタン */}
+            <button
+              onClick={() => setIsImagePromptModalOpen(true)}
+              className="bg-purple-600 text-white w-14 h-14 rounded-full hover:bg-purple-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+              title="画像プロンプトパターン管理"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            )}
-          </button>
+            </button>
+
+            {/* アップロードボタン */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              title="メディアをアップロード"
+            >
+              {uploading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* 画像プロンプトパターン管理モーダル */}
+          <ImagePromptPatternModal
+            isOpen={isImagePromptModalOpen}
+            onClose={() => setIsImagePromptModalOpen(false)}
+            onSuccess={() => {
+              // 成功時の処理（必要に応じて）
+            }}
+          />
         </div>
         )}
       </AdminLayout>
