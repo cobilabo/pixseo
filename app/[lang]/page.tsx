@@ -177,8 +177,8 @@ export default async function HomePage({ params }: PageProps) {
             {/* 新着記事 */}
             <section className="mb-12">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {localizedRecentArticles.length > 0 ? (
@@ -187,7 +187,7 @@ export default async function HomePage({ params }: PageProps) {
                   ))
                 ) : (
                   <p className="text-gray-500 col-span-full text-center py-8">
-                    記事がまだありません
+                    {t('message.noArticles', lang)}
                   </p>
                 )}
               </div>
@@ -196,8 +196,8 @@ export default async function HomePage({ params }: PageProps) {
             {/* 人気記事ランキング */}
             <section className="mb-12">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">人気記事ランキング</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Popular Articles</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.popularArticles', lang)}</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.popularArticlesEn', lang)}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {localizedPopularArticles.length > 0 ? (
@@ -211,7 +211,7 @@ export default async function HomePage({ params }: PageProps) {
                   ))
                 ) : (
                   <p className="text-gray-500 col-span-full text-center py-8">
-                    記事がまだありません
+                    {t('message.noArticles', lang)}
                   </p>
                 )}
               </div>
@@ -318,7 +318,7 @@ export default async function HomePage({ params }: PageProps) {
             {/* コピーライト */}
             <div className="w-full border-t border-gray-700 pt-6">
               <p className="text-gray-400 text-sm text-center">
-                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+                © {new Date().getFullYear()} {siteInfo.name}. {t('common.allRightsReserved', lang)}
               </p>
             </div>
           </div>
@@ -332,7 +332,7 @@ export default async function HomePage({ params }: PageProps) {
                 </p>
               )}
               <p className="text-gray-400 text-sm pt-4">
-                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+                © {new Date().getFullYear()} {siteInfo.name}. {t('common.allRightsReserved', lang)}
               </p>
             </div>
           </div>

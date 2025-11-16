@@ -8,6 +8,7 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import { Article } from '@/types/article';
 import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
 import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 
 interface SearchContentProps {
   faviconUrl?: string;
@@ -61,16 +62,16 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: Sear
       <section>
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">検索中...</p>
+            <p className="text-gray-600">{t('common.loading', lang)}</p>
           </div>
         ) : articles.length > 0 ? (
           <>
             {/* タイトル部分 - ホームページと同じスタイル */}
             <div className="text-center mb-8">
               <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {articles.length}件の記事が見つかりました
+                {articles.length}{t('section.searchResults', lang)}
               </h2>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Search Results</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.searchResultsEn', lang)}</p>
             </div>
             {/* 記事グリッド - ホームページと同じスタイル（2カラム） */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -97,8 +98,8 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: Sear
             )}
             <p className="text-sm">
               {keyword
-                ? '記事が見つかりませんでした'
-                : '検索キーワードを入力してください'}
+                ? t('message.noSearchResults', lang)
+                : t('message.enterSearchKeyword', lang)}
             </p>
           </div>
         )}

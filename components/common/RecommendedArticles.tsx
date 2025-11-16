@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 
 interface RecommendedArticlesProps {
   articles: Article[];
@@ -27,7 +28,7 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
-        おすすめ記事
+        {t('section.recommendedArticles', lang)}
       </h2>
       <div className="space-y-4">
         {articles.slice(0, 5).map((article) => {
@@ -61,11 +62,11 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
                 
                 <div className="space-y-1 text-xs text-gray-600">
                   <div className="flex items-center gap-1.5">
-                    <span>公開: {formatDate(article.publishedAt)}</span>
+                    <span>{t('article.publishedAt', lang)}: {formatDate(article.publishedAt)}</span>
                     {article.updatedAt && (
                       <>
                         <span>•</span>
-                        <span>更新: {formatDate(article.updatedAt)}</span>
+                        <span>{t('article.updatedAt', lang)}: {formatDate(article.updatedAt)}</span>
                       </>
                     )}
                   </div>

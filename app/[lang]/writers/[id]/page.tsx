@@ -7,6 +7,7 @@ import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-hel
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeWriter, localizeArticle } from '@/lib/i18n/localize';
+import { t } from '@/lib/i18n/translations';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
@@ -133,8 +134,8 @@ export default async function WriterPage({ params }: PageProps) {
             )}
             <section>
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">新着記事</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Recent Articles</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
               </div>
               {localizedArticles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{localizedArticles.map((article) => (<ArticleCard key={article.id} article={article} lang={lang} />))}</div>
