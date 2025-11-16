@@ -117,8 +117,19 @@ export default function AdvancedArticleGeneratorModal({
   };
 
   const handleGenerate = async () => {
-    if (!formData.categoryId || !formData.patternId || !formData.writerId || !formData.writingStyleId || !formData.imagePromptPatternId) {
-      setError('すべての項目を選択してください');
+    // デバッグ用：選択されている値を出力
+    console.log('[Advanced Generate] Form data:', formData);
+
+    // より詳細なバリデーション
+    const missingFields: string[] = [];
+    if (!formData.categoryId) missingFields.push('カテゴリー');
+    if (!formData.patternId) missingFields.push('構成パターン');
+    if (!formData.writerId) missingFields.push('ライター');
+    if (!formData.writingStyleId) missingFields.push('ライティング特徴');
+    if (!formData.imagePromptPatternId) missingFields.push('画像プロンプトパターン');
+
+    if (missingFields.length > 0) {
+      setError(`以下の項目を選択してください: ${missingFields.join('、')}`);
       return;
     }
 
@@ -193,6 +204,15 @@ export default function AdvancedArticleGeneratorModal({
                 options={patterns.map(p => ({ value: p.id, label: p.name }))}
                 required
               />
+              {patterns.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ 構成パターンが登録されていません。
+                    <br />
+                    「構成パターン管理」ボタンから登録してください。
+                  </p>
+                </div>
+              )}
 
               <FloatingSelect
                 label="ライター *"
@@ -203,13 +223,24 @@ export default function AdvancedArticleGeneratorModal({
               />
 
               {formData.writerId && (
-                <FloatingSelect
-                  label="ライティング特徴 *"
-                  value={formData.writingStyleId}
-                  onChange={(value) => setFormData({ ...formData, writingStyleId: value })}
-                  options={writingStyles.map(s => ({ value: s.id, label: s.name }))}
-                  required
-                />
+                <>
+                  <FloatingSelect
+                    label="ライティング特徴 *"
+                    value={formData.writingStyleId}
+                    onChange={(value) => setFormData({ ...formData, writingStyleId: value })}
+                    options={writingStyles.map(s => ({ value: s.id, label: s.name }))}
+                    required
+                  />
+                  {writingStyles.length === 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ 選択したライターにライティング特徴が登録されていません。
+                        <br />
+                        ライター編集画面でライティング特徴を登録してください。
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               <FloatingSelect
@@ -219,6 +250,15 @@ export default function AdvancedArticleGeneratorModal({
                 options={imagePromptPatterns.map(p => ({ value: p.id, label: p.name }))}
                 required
               />
+              {imagePromptPatterns.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ 画像プロンプトパターンが登録されていません。
+                    <br />
+                    メディアライブラリの「画像プロンプトパターン管理」から登録してください。
+                  </p>
+                </div>
+              )}
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
