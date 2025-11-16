@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { translateText } from '@/lib/openai/translate';
+import { SUPPORTED_LANGS } from '@/types/lang';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,13 +157,29 @@ export async function POST(request: NextRequest) {
 
           // 新規タグを作成
           console.log(`[新規タグ作成] "${suggestedName}" (slug: ${finalSlug})`);
-          const newTagRef = await adminDb.collection('tags').add({
+          
+          // タグデータを準備
+          const tagData: any = {
             mediaId,
             name: suggestedName,
+            name_ja: suggestedName,
             slug: finalSlug,
             createdAt: new Date(),
             updatedAt: new Date(),
-          });
+          };
+          
+          // 他言語へ翻訳
+          const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+          for (const lang of otherLangs) {
+            try {
+              tagData[`name_${lang}`] = await translateText(suggestedName, lang, 'タグ名');
+            } catch (error) {
+              console.error(`[Tag Translation Error] ${lang}:`, error);
+              tagData[`name_${lang}`] = suggestedName;
+            }
+          }
+          
+          const newTagRef = await adminDb.collection('tags').add(tagData);
 
           finalTags.push({
             id: newTagRef.id,
