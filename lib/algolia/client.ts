@@ -1,4 +1,5 @@
 import { algoliasearch } from 'algoliasearch';
+import { Lang } from '@/types/lang';
 
 // フロントエンド用クライアント（検索のみ）
 export const searchClient = algoliasearch(
@@ -14,5 +15,12 @@ export const adminClient = process.env.ALGOLIA_ADMIN_KEY
     )
   : null;
 
-// インデックス名
-export const ARTICLES_INDEX = 'pixseo_articles_production';
+// 言語別インデックス名
+export const ARTICLES_INDEX_BASE = 'pixseo_articles_production';
+
+export function getArticlesIndexName(lang: Lang): string {
+  return `${ARTICLES_INDEX_BASE}_${lang}`;
+}
+
+// 後方互換性のため（既存コードで使用されている場合）
+export const ARTICLES_INDEX = getArticlesIndexName('ja');

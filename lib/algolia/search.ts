@@ -1,20 +1,22 @@
-import { searchClient, ARTICLES_INDEX } from './client';
+import { searchClient, getArticlesIndexName } from './client';
 import { Article } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 export interface AlgoliaSearchOptions {
   keyword: string;
+  lang: Lang;
   mediaId?: string;
   page?: number;
   hitsPerPage?: number;
 }
 
 /**
- * Algoliaで記事を検索
+ * Algoliaで記事を検索（言語別インデックス）
  */
 export async function searchArticlesWithAlgolia(
   options: AlgoliaSearchOptions
 ): Promise<{ articles: Partial<Article>[]; totalHits: number }> {
-  const { keyword, mediaId, page = 0, hitsPerPage = 20 } = options;
+  const { keyword, lang, mediaId, page = 0, hitsPerPage = 20 } = options;
 
   try {
     let filters = 'isPublished:true';
@@ -24,12 +26,16 @@ export async function searchArticlesWithAlgolia(
       filters += ` AND mediaId:${mediaId}`;
     }
 
+    // 言語別インデックスを使用
+    const indexName = getArticlesIndexName(lang);
+
     console.log('[Algolia Search] Query:', keyword);
+    console.log('[Algolia Search] Index:', indexName);
     console.log('[Algolia Search] Filters:', filters);
     console.log('[Algolia Search] MediaId:', mediaId);
 
     const result = await searchClient.searchSingleIndex({
-      indexName: ARTICLES_INDEX,
+      indexName,
       searchParams: {
         query: keyword,
         page,

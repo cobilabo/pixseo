@@ -1,5 +1,7 @@
 import { Article } from '@/types/article';
-import { adminClient, ARTICLES_INDEX } from './client';
+import { Lang, SUPPORTED_LANGS } from '@/types/lang';
+import { adminClient, getArticlesIndexName } from './client';
+import { localizeArticle } from '@/lib/i18n/localize';
 
 // AlgoliaRecord型（Algoliaに保存する形式）
 export interface AlgoliaArticleRecord {
@@ -19,7 +21,7 @@ export interface AlgoliaArticleRecord {
 }
 
 /**
- * 記事をAlgoliaに追加/更新
+ * 記事を全言語のAlgoliaインデックスに追加/更新
  */
 export async function syncArticleToAlgolia(
   article: Article,
@@ -32,45 +34,61 @@ export async function syncArticleToAlgolia(
   }
 
   try {
-    // HTMLタグを除去してテキストのみ抽出（検索用）
-    let contentText = '';
-    if (article.content) {
-      contentText = article.content
-        .replace(/<[^>]*>/g, '') // HTMLタグを削除
-        .replace(/&nbsp;/g, ' ') // &nbsp;をスペースに変換
-        .replace(/&amp;/g, '&') // &amp;を&に変換
-        .replace(/&lt;/g, '<') // &lt;を<に変換
-        .replace(/&gt;/g, '>') // &gt;を>に変換
-        .replace(/&quot;/g, '"') // &quot;を"に変換
-        .replace(/\s+/g, ' ') // 連続した空白を1つに
-        .trim()
-        .substring(0, 3000); // 最初の3000文字のみ（約3KB、安全マージン）
-    }
+    // 各言語ごとにインデックスに保存
+    const syncPromises = SUPPORTED_LANGS.map(async (lang) => {
+      try {
+        // 記事を言語別にローカライズ
+        const localizedArticle = localizeArticle(article, lang);
+        
+        // HTMLタグを除去してテキストのみ抽出（検索用）
+        let contentText = '';
+        if (localizedArticle.content) {
+          contentText = localizedArticle.content
+            .replace(/<[^>]*>/g, '') // HTMLタグを削除
+            .replace(/&nbsp;/g, ' ') // &nbsp;をスペースに変換
+            .replace(/&amp;/g, '&') // &amp;を&に変換
+            .replace(/&lt;/g, '<') // &lt;を<に変換
+            .replace(/&gt;/g, '>') // &gt;を>に変換
+            .replace(/&quot;/g, '"') // &quot;を"に変換
+            .replace(/\s+/g, ' ') // 連続した空白を1つに
+            .trim()
+            .substring(0, 3000); // 最初の3000文字のみ（約3KB、安全マージン）
+        }
 
-    const record: AlgoliaArticleRecord = {
-      objectID: article.id,
-      title: article.title,
-      slug: article.slug,
-      excerpt: article.excerpt,
-      contentText, // HTMLタグを除去したテキスト
-      mediaId: article.mediaId,
-      categories: categoryNames,
-      tags: tagNames,
-      publishedAt: article.publishedAt instanceof Date
-        ? article.publishedAt.getTime()
-        : new Date(article.publishedAt).getTime(),
-      isPublished: article.isPublished,
-      featuredImage: article.featuredImage,
-      featuredImageAlt: article.featuredImageAlt,
-      viewCount: article.viewCount || 0,
-    };
+        const record: AlgoliaArticleRecord = {
+          objectID: article.id,
+          title: localizedArticle.title,
+          slug: article.slug, // slugは言語共通
+          excerpt: localizedArticle.excerpt,
+          contentText, // HTMLタグを除去したテキスト
+          mediaId: article.mediaId,
+          categories: categoryNames,
+          tags: tagNames,
+          publishedAt: article.publishedAt instanceof Date
+            ? article.publishedAt.getTime()
+            : new Date(article.publishedAt).getTime(),
+          isPublished: article.isPublished,
+          featuredImage: article.featuredImage,
+          featuredImageAlt: article.featuredImageAlt,
+          viewCount: article.viewCount || 0,
+        };
 
-    await adminClient.saveObject({
-      indexName: ARTICLES_INDEX,
-      body: record,
+        const indexName = getArticlesIndexName(lang);
+        await adminClient.saveObject({
+          indexName,
+          body: record,
+        });
+        
+        console.log(`[Algolia] Synced article to ${lang} index: ${article.id}`);
+      } catch (error) {
+        console.error(`[Algolia] Error syncing article to ${lang} index:`, error);
+        // 1つの言語で失敗しても他の言語は続行
+      }
     });
-    
-    console.log(`[Algolia] Synced article: ${article.id}`);
+
+    // 全言語の同期を並行実行
+    await Promise.all(syncPromises);
+    console.log(`[Algolia] Successfully synced article ${article.id} to all language indexes`);
   } catch (error) {
     console.error('[Algolia] Error syncing article:', error);
     throw error;
@@ -78,7 +96,7 @@ export async function syncArticleToAlgolia(
 }
 
 /**
- * 記事をAlgoliaから削除
+ * 記事を全言語のAlgoliaインデックスから削除
  */
 export async function deleteArticleFromAlgolia(articleId: string): Promise<void> {
   if (!adminClient) {
@@ -87,12 +105,23 @@ export async function deleteArticleFromAlgolia(articleId: string): Promise<void>
   }
 
   try {
-    await adminClient.deleteObject({
-      indexName: ARTICLES_INDEX,
-      objectID: articleId,
+    // 各言語のインデックスから削除
+    const deletePromises = SUPPORTED_LANGS.map(async (lang) => {
+      try {
+        const indexName = getArticlesIndexName(lang);
+        await adminClient.deleteObject({
+          indexName,
+          objectID: articleId,
+        });
+        console.log(`[Algolia] Deleted article from ${lang} index: ${articleId}`);
+      } catch (error) {
+        console.error(`[Algolia] Error deleting article from ${lang} index:`, error);
+        // 1つの言語で失敗しても他の言語は続行
+      }
     });
-    
-    console.log(`[Algolia] Deleted article: ${articleId}`);
+
+    await Promise.all(deletePromises);
+    console.log(`[Algolia] Successfully deleted article ${articleId} from all language indexes`);
   } catch (error) {
     console.error('[Algolia] Error deleting article:', error);
     throw error;
@@ -100,10 +129,11 @@ export async function deleteArticleFromAlgolia(articleId: string): Promise<void>
 }
 
 /**
- * 複数の記事を一括でAlgoliaに同期
+ * 複数の記事を指定言語のAlgoliaインデックスに一括同期
  */
 export async function bulkSyncArticlesToAlgolia(
-  records: AlgoliaArticleRecord[]
+  records: AlgoliaArticleRecord[],
+  lang: Lang
 ): Promise<void> {
   if (!adminClient) {
     console.error('[Algolia] Admin client not initialized');
@@ -111,14 +141,15 @@ export async function bulkSyncArticlesToAlgolia(
   }
 
   try {
+    const indexName = getArticlesIndexName(lang);
     await adminClient.saveObjects({
-      indexName: ARTICLES_INDEX,
+      indexName,
       objects: records as unknown as Array<Record<string, unknown>>,
     });
     
-    console.log(`[Algolia] Bulk synced ${records.length} articles`);
+    console.log(`[Algolia] Bulk synced ${records.length} articles to ${lang} index`);
   } catch (error) {
-    console.error('[Algolia] Error bulk syncing articles:', error);
+    console.error(`[Algolia] Error bulk syncing articles to ${lang} index:`, error);
     throw error;
   }
 }

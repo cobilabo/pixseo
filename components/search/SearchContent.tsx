@@ -39,6 +39,7 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: Sear
     try {
       const { articles: results } = await searchArticlesWithAlgolia({
         keyword: searchKeyword,
+        lang,
         mediaId,
         hitsPerPage: 50,
       });
