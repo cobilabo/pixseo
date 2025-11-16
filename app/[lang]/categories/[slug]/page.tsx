@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import Image from 'next/image';
 import { getCategoryServer, getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
@@ -87,6 +88,10 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   const category = localizeCategory(rawCategory, lang);
+
+  // hostを取得
+  const headersList = headers();
+  const host = headersList.get('host') || '';
 
   // サイト設定、Theme、記事、カテゴリーを並列取得
   const [rawSiteInfo, rawTheme, articles, popularArticles, allCategories] = await Promise.all([
