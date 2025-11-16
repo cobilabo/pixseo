@@ -114,9 +114,35 @@ export default async function CategoryPage({ params }: PageProps) {
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
+  // JSON-LD構造化データ（CollectionPage）
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${category.name} - ${siteInfo.name}`,
+    description: category.description || `${siteInfo.name}の${category.name}カテゴリーの記事一覧`,
+    url: `https://${host}/${lang}/categories/${rawCategory.slug}`,
+    inLanguage: LANG_REGIONS[lang],
+    isPartOf: {
+      '@type': 'WebSite',
+      name: siteInfo.name,
+      url: `https://${host}/${lang}`,
+    },
+    about: {
+      '@type': 'Thing',
+      name: category.name,
+      description: category.description,
+    },
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+
+      {/* JSON-LD構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {rawTheme.firstView && rawCategory.imageUrl && (
         <FirstView 

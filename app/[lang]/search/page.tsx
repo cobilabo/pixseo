@@ -1,4 +1,6 @@
 import { Suspense } from 'react';
+import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import Image from 'next/image';
 import SearchContent from '@/components/search/SearchContent';
 import MediaHeader from '@/components/layout/MediaHeader';
@@ -14,7 +16,7 @@ import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
-import { Lang, isValidLang } from '@/types/lang';
+import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 
 interface PageProps {
@@ -24,6 +26,57 @@ interface PageProps {
 }
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
+  const mediaId = await getMediaIdFromHost();
+  const headersList = headers();
+  const host = headersList.get('host') || '';
+  
+  const rawSiteInfo = mediaId 
+    ? await getSiteInfo(mediaId)
+    : {
+        name: 'メディアサイト',
+        name_ja: 'メディアサイト',
+        name_en: 'Media Site',
+        name_zh: '媒体网站',
+        name_ko: '미디어 사이트',
+        description: '',
+        logoUrl: '',
+        faviconUrl: '',
+        allowIndexing: false,
+      };
+
+  const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
+
+  const title = `検索 | ${siteInfo.name}`;
+  const description = `${siteInfo.name}の記事を検索`;
+
+  return {
+    title,
+    description,
+    robots: {
+      index: false, // 検索ページはnoindex
+      follow: true,
+    },
+    alternates: {
+      canonical: `https://${host}/${lang}/search`,
+      languages: {
+        'ja-JP': `https://${host}/ja/search`,
+        'en-US': `https://${host}/en/search`,
+        'zh-CN': `https://${host}/zh/search`,
+        'ko-KR': `https://${host}/ko/search`,
+        'x-default': `https://${host}/ja/search`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      locale: LANG_REGIONS[lang],
+      alternateLocale: SUPPORTED_LANGS.filter(l => l !== lang).map(l => LANG_REGIONS[l]),
+    },
+  };
+}
 
 export default async function SearchPage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';

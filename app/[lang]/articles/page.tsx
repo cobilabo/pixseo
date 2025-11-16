@@ -103,10 +103,31 @@ export default async function ArticlesPage({ params }: PageProps) {
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
+  // JSON-LD構造化データ（CollectionPage）
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `記事一覧 - ${siteInfo.name}`,
+    description: `${siteInfo.name}の記事一覧`,
+    url: `https://${host}/${lang}/articles`,
+    inLanguage: LANG_REGIONS[lang],
+    isPartOf: {
+      '@type': 'WebSite',
+      name: siteInfo.name,
+      url: `https://${host}/${lang}`,
+    },
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+
+      {/* JSON-LD構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* FV（ファーストビュー）- 最上部に配置 */}
       {rawTheme.firstView && (

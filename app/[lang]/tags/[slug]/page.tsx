@@ -96,9 +96,35 @@ export default async function TagPage({ params }: PageProps) {
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
+  // JSON-LD構造化データ（CollectionPage）
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${tag.name} - ${siteInfo.name}`,
+    description: `${siteInfo.name}の${tag.name}タグの記事一覧`,
+    url: `https://${host}/${lang}/tags/${rawTag.slug}`,
+    inLanguage: LANG_REGIONS[lang],
+    isPartOf: {
+      '@type': 'WebSite',
+      name: siteInfo.name,
+      url: `https://${host}/${lang}`,
+    },
+    about: {
+      '@type': 'Thing',
+      name: tag.name,
+    },
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+
+      {/* JSON-LD構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {rawTheme.firstView && (
         <FirstView settings={theme.firstView} customTitle={tag.name} customSubtitle="TAG" customMeta={`${localizedArticles.length}件の記事`} showCustomContent={true} />
       )}
