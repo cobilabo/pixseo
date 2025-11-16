@@ -17,10 +17,16 @@ export async function GET(request: NextRequest) {
     const snapshot = await adminDb
       .collection('articlePatterns')
       .where('mediaId', '==', mediaId)
-      .orderBy('createdAt', 'desc')
       .get();
+    
+    // クライアント側でソート（インデックス不要）
+    const sortedDocs = snapshot.docs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis() || 0;
+      const bTime = b.data().createdAt?.toMillis() || 0;
+      return bTime - aTime;
+    });
 
-    const patterns: ArticlePattern[] = snapshot.docs.map(doc => ({
+    const patterns: ArticlePattern[] = sortedDocs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),

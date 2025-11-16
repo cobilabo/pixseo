@@ -25,9 +25,16 @@ export async function GET(request: NextRequest) {
       query = query.where('writerId', '==', writerId);
     }
 
-    const snapshot = await query.orderBy('createdAt', 'desc').get();
+    const snapshot = await query.get();
+    
+    // クライアント側でソート（インデックス不要）
+    const sortedDocs = snapshot.docs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis() || 0;
+      const bTime = b.data().createdAt?.toMillis() || 0;
+      return bTime - aTime;
+    });
 
-    const styles: WritingStyle[] = snapshot.docs.map(doc => ({
+    const styles: WritingStyle[] = sortedDocs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),
