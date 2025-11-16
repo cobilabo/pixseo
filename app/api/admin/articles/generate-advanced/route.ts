@@ -520,7 +520,7 @@ A: [回答]`;
     console.log('[Step 11] Generating inline images...');
 
     const headings = content.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
-    const headingTexts = headings.map(h => h.replace(/<[^>]*>/g, '').trim());
+    const headingTexts = headings.map((h: string) => h.replace(/<[^>]*>/g, '').trim());
 
     if (headingTexts.length >= 2) {
       const targetImageCount = Math.min(2, Math.floor(headingTexts.length / 2));
