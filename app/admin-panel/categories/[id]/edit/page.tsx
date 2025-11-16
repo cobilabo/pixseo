@@ -104,10 +104,23 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
 
     setLoading(true);
     try {
-      await updateCategory(params.id, {
-        ...formData,
-        mediaId: category.mediaId,
+      // API経由で更新（翻訳処理を含む）
+      const response = await fetch('/api/admin/categories/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: params.id,
+          ...formData,
+          mediaId: category.mediaId,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update category');
+      }
       
       alert('カテゴリーを更新しました');
       router.push('/categories');

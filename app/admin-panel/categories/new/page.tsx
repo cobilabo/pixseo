@@ -73,10 +73,22 @@ export default function NewCategoryPage() {
 
     setLoading(true);
     try {
-      await createCategory({
-        ...formData,
-        mediaId: currentTenant.id,
+      // API経由で作成（翻訳処理を含む）
+      const response = await fetch('/api/admin/categories/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          mediaId: currentTenant.id,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create category');
+      }
       
       alert('カテゴリーを作成しました');
       router.push('/categories');
