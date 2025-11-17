@@ -16,6 +16,7 @@ import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-hel
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 import { 
   localizeSiteInfo, 
   localizeTheme, 
