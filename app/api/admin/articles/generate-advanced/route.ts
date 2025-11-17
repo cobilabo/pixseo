@@ -206,7 +206,8 @@ ${patternData.prompt}
 - 自然で親しみやすい、プロのライターが書いたような文章
 - 「〜如き」「〜べき」のような古い表現や不自然な日本語は使わない
 - 「〜してください」のような指示形の過度な使用を避ける
-- 文末に文字数やメタ情報は含めない
+- 文末、段落の最後、セクションの最後に「（文字数: XXX）」「（約XXX文字）」などのメタ情報は絶対に含めない
+- 記事本文内に統計情報として文字数を記載しない
 
 記事の形式（必ず以下の形式で出力してください）:
 タイトル: [記事タイトル]
@@ -226,13 +227,14 @@ ${patternData.prompt}
             role: 'system',
             content: `あなたはSEOに強いプロのライターです。現在は${currentYear}年${currentMonth}月です。
 
-【最重要】
+【最重要：絶対遵守事項】
 1. 自然で読みやすい日本語を使用してください
 2. AIが生成したような不自然な表現は避けてください
 3. 「〜如き」のような古い表現は使わないでください
 4. 「デザイナーは〜してください」のような指示形を過度に使わないでください
-5. 文末に文字数などのメタ情報は絶対に含めないでください
+5. 文末や段落の最後に「（文字数: 約XXX文字）」「（このセクションの文字数: 約XXX文字）」などのメタ情報は絶対に含めないでください
 6. 説教臭い文章ではなく、情報提供型の自然な文章にしてください
+7. 文章内に文字数のカウントや統計情報を記載しないでください
 
 【記事の要件】
 - 各H2見出しの下には最低600文字以上の充実した説明文
@@ -467,17 +469,25 @@ A: [回答]`;
     });
 
     const faqText = faqResponse.choices[0].message.content?.trim() || '';
-    const faqMatches = faqText.matchAll(/Q:\s*(.+?)\nA:\s*(.+?)(?=\n\nQ:|$)/gs);
+    console.log('[Step 10] FAQ raw response:', faqText.substring(0, 200));
+    
+    // より柔軟な正規表現でマッチング
+    const faqMatches = Array.from(faqText.matchAll(/Q[：:]\s*([^\n]+)\n+A[：:]\s*([^\n]+(?:\n(?!Q[：:]).+)*)/gi));
     
     const faqs_ja: Array<{ question: string; answer: string }> = [];
     for (const match of faqMatches) {
-      faqs_ja.push({
-        question: match[1].trim(),
-        answer: match[2].trim(),
-      });
+      if (match[1] && match[2]) {
+        faqs_ja.push({
+          question: match[1].trim(),
+          answer: match[2].trim().replace(/\n+/g, ' '),
+        });
+      }
     }
 
     console.log(`[Step 10] Generated ${faqs_ja.length} FAQs`);
+    if (faqs_ja.length > 0) {
+      console.log('[Step 10] First FAQ:', JSON.stringify(faqs_ja[0]));
+    }
 
     // === STEP 11: 記事内画像生成＆配置 ===
     console.log('[Step 11] Generating inline images...');

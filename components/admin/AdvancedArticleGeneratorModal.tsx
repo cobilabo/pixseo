@@ -124,35 +124,40 @@ export default function AdvancedArticleGeneratorModal({
     setGenerating(true);
     setError(null);
 
+    // モーダルを即座に閉じる
+    onClose();
+    
+    // トースト通知を表示
+    alert('AI記事生成を開始しました。\n\n数分後に記事一覧に自動的に追加されます。\n他の作業を続けても問題ありません。');
+
     try {
       const currentTenantId = typeof window !== 'undefined' 
         ? localStorage.getItem('currentTenantId') 
         : null;
 
-      const response = await fetch('/api/admin/articles/generate-advanced', {
+      // バックグラウンドで実行（await しない）
+      fetch('/api/admin/articles/generate-advanced', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-media-id': currentTenantId || '',
         },
         body: JSON.stringify(formData),
+      }).then(response => {
+        if (response.ok) {
+          console.log('[Advanced Generate] Article generation completed');
+          // 成功時はページをリロードして新しい記事を表示
+          if (typeof window !== 'undefined') {
+            window.location.reload();
+          }
+        } else {
+          console.error('[Advanced Generate] Article generation failed');
+        }
+      }).catch(err => {
+        console.error('[Advanced Generate] Error:', err);
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '記事の生成に失敗しました');
-      }
-
-      const data = await response.json();
-      
-      alert(`記事を生成しました！\n\nタイトル: ${data.title}\n\n記事は非公開として保存されました。`);
-      onSuccess(data.articleId);
-      onClose();
     } catch (err) {
-      console.error('Error generating article:', err);
-      setError(err instanceof Error ? err.message : '記事の生成に失敗しました');
-    } finally {
-      setGenerating(false);
+      console.error('Error starting article generation:', err);
     }
   };
 
@@ -238,40 +243,27 @@ export default function AdvancedArticleGeneratorModal({
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>⚠️ 注意:</strong> この処理には3〜5分程度かかります。完了まで画面を閉じないでください。
+                  <strong>⚠️ 注意:</strong> 生成開始後、バックグラウンドで処理されます。完了すると記事一覧に自動追加されます（約4-7分）。
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-              <p className="text-lg font-semibold text-gray-900 mb-2">生成中...</p>
-              <p className="text-sm text-gray-500 text-center">
-                記事を自動生成しています。<br />
-                この処理には3〜5分程度かかります。<br />
-                しばらくお待ちください...
-              </p>
-            </div>
-          )}
+          )
         </div>
 
         <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            disabled={generating}
-            className="bg-gray-300 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-400 transition-colors disabled:opacity-50"
+            className="bg-gray-300 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-400 transition-colors"
           >
-            {generating ? 'キャンセル不可' : 'キャンセル'}
+            キャンセル
           </button>
           
-          {!generating && (
-            <button
-              onClick={handleGenerate}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
-            >
-              生成開始
-            </button>
-          )}
+          <button
+            onClick={handleGenerate}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            生成開始
+          </button>
         </div>
       </div>
     </div>
