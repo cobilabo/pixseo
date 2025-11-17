@@ -137,123 +137,122 @@ export async function PUT(
     // 公開ステータスが変更された場合
     const statusChanged = wasPublished !== body.isPublished;
     
-    // 🚀 公開に切り替えた場合、バックグラウンドで翻訳（常に実行）
+    // 🚀 公開に切り替えた場合、翻訳とAlgolia登録を実行（同期的に実行）
     if (body.isPublished === true && statusChanged) {
-      console.log(`[API] ===== バックグラウンド処理開始（翻訳 + Algolia） =====`);
+      console.log(`[API] ===== 翻訳処理開始（同期） =====`);
       console.log(`[API] 記事ID: ${id}`);
       console.log(`[API] タイトル: ${existingData?.title}`);
       console.log(`[API] wasPublished: ${wasPublished}, isPublished: ${body.isPublished}, statusChanged: ${statusChanged}`);
       
-      // バックグラウンド処理（レスポンスを待たない）
-      Promise.resolve().then(async () => {
-        try {
-          console.log(`[Background ${id}] ===== 処理開始 =====`);
-          const translationData: any = {};
+      try {
+        const translationData: any = {};
 
-          // 既存データから翻訳用のデータを取得
-          const contentToTranslate = existingData?.content || '';
-          const titleToTranslate = existingData?.title || '';
-          const excerptToTranslate = existingData?.excerpt || '';
-          const metaTitleToTranslate = existingData?.metaTitle || titleToTranslate;
-          const metaDescriptionToTranslate = existingData?.metaDescription || excerptToTranslate;
-          const faqsToTranslate = existingData?.faqs_ja;
+        // 既存データから翻訳用のデータを取得
+        const contentToTranslate = existingData?.content || '';
+        const titleToTranslate = existingData?.title || '';
+        const excerptToTranslate = existingData?.excerpt || '';
+        const metaTitleToTranslate = existingData?.metaTitle || titleToTranslate;
+        const metaDescriptionToTranslate = existingData?.metaDescription || excerptToTranslate;
+        const faqsToTranslate = existingData?.faqs_ja;
 
-          console.log(`[Background ${id}] 翻訳対象: title="${titleToTranslate}", content length=${contentToTranslate.length}`);
+        console.log(`[API ${id}] 翻訳対象: title="${titleToTranslate}", content length=${contentToTranslate.length}`);
 
-          // AIサマリー生成（日本語）
-          if (contentToTranslate) {
-            try {
-              const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
-              translationData.aiSummary_ja = aiSummaryJa;
-              console.log(`[Background ${id}] AIサマリー生成完了（ja）`);
-            } catch (error) {
-              console.error(`[Background ${id}] AIサマリー生成エラー（ja）:`, error);
-            }
+        // AIサマリー生成（日本語）
+        if (contentToTranslate) {
+          try {
+            const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
+            translationData.aiSummary_ja = aiSummaryJa;
+            console.log(`[API ${id}] AIサマリー生成完了（ja）`);
+          } catch (error) {
+            console.error(`[API ${id}] AIサマリー生成エラー（ja）:`, error);
           }
-
-          // 他の言語への翻訳
-          const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-          for (const lang of otherLangs) {
-            try {
-              console.log(`[Background ${id}] 翻訳開始（${lang}）`);
-              
-              // 記事本体を翻訳
-              const translated = await translateArticle({
-                title: titleToTranslate,
-                content: contentToTranslate,
-                excerpt: excerptToTranslate,
-                metaTitle: metaTitleToTranslate,
-                metaDescription: metaDescriptionToTranslate,
-              }, lang);
-
-              translationData[`title_${lang}`] = translated.title;
-              translationData[`content_${lang}`] = translated.content;
-              translationData[`excerpt_${lang}`] = translated.excerpt;
-              translationData[`metaTitle_${lang}`] = translated.metaTitle;
-              translationData[`metaDescription_${lang}`] = translated.metaDescription;
-
-              // AIサマリーを生成
-              const aiSummary = await generateAISummary(translated.content, lang);
-              translationData[`aiSummary_${lang}`] = aiSummary;
-
-              // FAQsを翻訳
-              if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
-                const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
-                translationData[`faqs_${lang}`] = translatedFaqs;
-              }
-
-              console.log(`[Background ${id}] 翻訳完了（${lang}）`);
-            } catch (error) {
-              console.error(`[Background ${id}] 翻訳エラー（${lang}）:`, error);
-            }
-          }
-
-          // 翻訳データを保存
-          if (Object.keys(translationData).length > 0) {
-            await articleRef.update(translationData);
-            console.log(`[Background ${id}] 翻訳データ保存完了`);
-          }
-
-          // Algolia同期（翻訳データを含む最新データを取得）
-          const finalDoc = await articleRef.get();
-          if (finalDoc.exists) {
-            const finalData = finalDoc.data()!;
-            const article: Article = {
-              id: finalDoc.id,
-              ...finalData,
-              publishedAt: finalData.publishedAt?.toDate() || new Date(),
-              updatedAt: finalData.updatedAt?.toDate() || new Date(),
-            } as Article;
-
-            // カテゴリー名を取得
-            const categoryNames: string[] = [];
-            if (article.categoryIds && Array.isArray(article.categoryIds)) {
-              for (const catId of article.categoryIds) {
-                const catDoc = await adminDb.collection('categories').doc(catId).get();
-                if (catDoc.exists) {
-                  categoryNames.push(catDoc.data()?.name || '');
-                }
-              }
-            }
-
-            // タグ名を取得
-            const tagNames: string[] = [];
-            if (article.tagIds && Array.isArray(article.tagIds)) {
-              for (const tagId of article.tagIds) {
-                const tagDoc = await adminDb.collection('tags').doc(tagId).get();
-                if (tagDoc.exists) {
-                  tagNames.push(tagDoc.data()?.name || '');
-                }
-              }
-            }
-
-            await syncArticleToAlgolia(article, categoryNames, tagNames);
-            console.log(`[Background ${id}] Algolia同期完了（全4言語）`);
-          }
-        } catch (bgError) {
-          console.error(`[Background ${id}] バックグラウンド処理エラー:`, bgError);
         }
-      });
+
+        // 他の言語への翻訳
+        const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+        for (const lang of otherLangs) {
+          try {
+            console.log(`[API ${id}] 翻訳開始（${lang}）`);
+            
+            // 記事本体を翻訳
+            const translated = await translateArticle({
+              title: titleToTranslate,
+              content: contentToTranslate,
+              excerpt: excerptToTranslate,
+              metaTitle: metaTitleToTranslate,
+              metaDescription: metaDescriptionToTranslate,
+            }, lang);
+
+            translationData[`title_${lang}`] = translated.title;
+            translationData[`content_${lang}`] = translated.content;
+            translationData[`excerpt_${lang}`] = translated.excerpt;
+            translationData[`metaTitle_${lang}`] = translated.metaTitle;
+            translationData[`metaDescription_${lang}`] = translated.metaDescription;
+
+            // AIサマリーを生成
+            const aiSummary = await generateAISummary(translated.content, lang);
+            translationData[`aiSummary_${lang}`] = aiSummary;
+
+            // FAQsを翻訳
+            if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
+              const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
+              translationData[`faqs_${lang}`] = translatedFaqs;
+            }
+
+            console.log(`[API ${id}] 翻訳完了（${lang}）`);
+          } catch (error) {
+            console.error(`[API ${id}] 翻訳エラー（${lang}）:`, error);
+          }
+        }
+
+        // 翻訳データを保存
+        if (Object.keys(translationData).length > 0) {
+          await articleRef.update(translationData);
+          console.log(`[API ${id}] 翻訳データ保存完了`);
+        }
+
+        // Algolia同期（翻訳データを含む最新データを取得）
+        const finalDoc = await articleRef.get();
+        if (finalDoc.exists) {
+          const finalData = finalDoc.data()!;
+          const article: Article = {
+            id: finalDoc.id,
+            ...finalData,
+            publishedAt: finalData.publishedAt?.toDate() || new Date(),
+            updatedAt: finalData.updatedAt?.toDate() || new Date(),
+          } as Article;
+
+          // カテゴリー名を取得
+          const categoryNames: string[] = [];
+          if (article.categoryIds && Array.isArray(article.categoryIds)) {
+            for (const catId of article.categoryIds) {
+              const catDoc = await adminDb.collection('categories').doc(catId).get();
+              if (catDoc.exists) {
+                categoryNames.push(catDoc.data()?.name || '');
+              }
+            }
+          }
+
+          // タグ名を取得
+          const tagNames: string[] = [];
+          if (article.tagIds && Array.isArray(article.tagIds)) {
+            for (const tagId of article.tagIds) {
+              const tagDoc = await adminDb.collection('tags').doc(tagId).get();
+              if (tagDoc.exists) {
+                tagNames.push(tagDoc.data()?.name || '');
+              }
+            }
+          }
+
+          await syncArticleToAlgolia(article, categoryNames, tagNames);
+          console.log(`[API ${id}] Algolia同期完了（全4言語）`);
+        }
+        
+        console.log(`[API ${id}] ===== 翻訳処理完了 =====`);
+      } catch (translationError) {
+        console.error(`[API ${id}] 翻訳処理エラー:`, translationError);
+        // エラーが発生しても記事の公開状態は更新済みなので処理は続行
+      }
     } else if (!body.isPublished) {
       // 非公開にした場合は同期的にAlgoliaから削除
       try {
