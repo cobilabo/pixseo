@@ -134,7 +134,7 @@ export default async function SearchPage({ params }: PageProps) {
       {rawTheme.firstView && (
         <FirstView 
           settings={theme.firstView}
-          customTitle="検索"
+          customTitle={t('meta.search', lang)}
           customSubtitle="SEARCH"
           showCustomContent={true}
         />

@@ -138,7 +138,7 @@ export default async function ArticlesPage({ params }: PageProps) {
       {rawTheme.firstView && (
         <FirstView 
           settings={theme.firstView}
-          customTitle="記事一覧"
+          customTitle={t('meta.articleList', lang)}
           customSubtitle="ARTICLES"
           showCustomContent={true}
         />
