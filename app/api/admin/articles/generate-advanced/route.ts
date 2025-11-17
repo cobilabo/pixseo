@@ -370,7 +370,43 @@ ${existingTagsText}
         console.log(`[Step 5-6] Using existing tag: "${existingTag.name}" (normalized: "${normalizedTag}")`);
       } else {
         // 新規タグを作成し、翻訳
-        const slug = tagName.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+        // スラッグを英語で生成
+        let slug = tagName.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+        
+        // 日本語が含まれている場合はOpenAIで英語化
+        if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(slug)) {
+          try {
+            const slugResponse = await openai.chat.completions.create({
+              model: 'gpt-4o',
+              messages: [
+                {
+                  role: 'system',
+                  content: '日本語のタグ名を、SEOに最適化された短く簡潔な英語のURLスラッグに変換してください。スラッグは小文字のみを使用し、単語間はハイフン(-)で区切ってください。最大3単語以内に収めてください。',
+                },
+                {
+                  role: 'user',
+                  content: `以下の日本語タグ名を英語のURLスラッグに変換してください。\n\nタグ名: ${tagName}\n\nスラッグのみを出力してください（説明は不要）。`,
+                },
+              ],
+              temperature: 0.2,
+              max_tokens: 50,
+            });
+            
+            const generatedSlug = slugResponse.choices[0].message.content?.trim() || '';
+            if (generatedSlug) {
+              slug = generatedSlug
+                .toLowerCase()
+                .replace(/[^a-z0-9-]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            }
+          } catch (error) {
+            console.error('[Step 5-6] Failed to generate English slug:', error);
+            // フォールバック: 日本語を削除
+            slug = slug.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '') || `tag-${Date.now()}`;
+          }
+        }
+        
         const tagData: any = {
           name: tagName,
           name_ja: tagName,

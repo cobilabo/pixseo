@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
@@ -12,6 +13,7 @@ export default function NewTagPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
+  const [generatingSlug, setGeneratingSlug] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -60,12 +62,37 @@ export default function NewTagPage() {
     }
   };
 
-  const generateSlug = () => {
-    const slug = formData.name
-      .toLowerCase()
-      .replace(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    setFormData({ ...formData, slug });
+  const generateSlug = async () => {
+    if (!formData.name) {
+      alert('タグ名を入力してください');
+      return;
+    }
+
+    setGeneratingSlug(true);
+    try {
+      const response = await fetch('/api/admin/generate-slug', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          type: 'tag',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate slug');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, slug: data.slug }));
+    } catch (error) {
+      console.error('Error generating slug:', error);
+      alert('スラッグの生成に失敗しました');
+    } finally {
+      setGeneratingSlug(false);
+    }
   };
 
   return (
@@ -78,25 +105,34 @@ export default function NewTagPage() {
               <FloatingInput
                 label="タグ名 *"
                 value={formData.name}
-                onChange={(value) => {
-                  setFormData({ ...formData, name: value });
-                  // 自動でスラッグを生成
-                  const slug = value
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-                  setFormData({ ...formData, name: value, slug });
-                }}
+                onChange={(value) => setFormData({ ...formData, name: value })}
                 required
               />
 
               {/* スラッグ */}
-              <FloatingInput
-                label="スラッグ（英数字とハイフンのみ）*"
-                value={formData.slug}
-                onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                required
-              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <FloatingInput
+                    label="スラッグ（英数字とハイフンのみ）*"
+                    value={formData.slug}
+                    onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={generateSlug}
+                  disabled={generatingSlug || !formData.name}
+                  className="mt-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title="AIで英語スラッグを生成"
+                >
+                  {generatingSlug ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Image src="/ai.svg" alt="AI" width={20} height={20} className="brightness-0 invert" />
+                  )}
+                </button>
+              </div>
             </div>
           </form>
 
