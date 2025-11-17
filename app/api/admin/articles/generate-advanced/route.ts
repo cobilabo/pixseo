@@ -198,9 +198,10 @@ ${patternData.prompt}
 - SEOを意識した構成
 - 3,000文字以上
 - 見出し（H2, H3）を適切に使用
+- 各見出し（H2, H3）の下には最低300文字以上の説明文を記載
+- 見出しと本文のバランスを重視し、読みやすい文章構成にする
 - 情報が整理しやすい場合は表（<table>タグ）を使用
 - 自然で親しみやすい文章
-- タイトルには${currentYear}年であることを明示
 
 記事の形式（必ず以下の形式で出力してください）:
 タイトル: [記事タイトル]
@@ -251,8 +252,6 @@ ${patternData.prompt}
     // === STEP 4: ライティング特徴リライト ===
     console.log('[Step 4] Rewriting with writing style...');
 
-    const plainContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-
     const rewritePrompt = `以下の記事を、指定されたライティングスタイルでリライトしてください。
 
 【ライティングスタイル】
@@ -261,16 +260,17 @@ ${styleData.name}
 【スタイルの詳細】
 ${styleData.prompt}
 
-【元の記事本文】
-${plainContent}
+【元の記事本文（HTML形式）】
+${content}
 
 【重要な指示】
 1. 記事の内容や情報は変更せず、文章のトーンや表現のみを変更してください
-2. HTMLタグは使用せず、プレーンテキストで出力してください
-3. 記事の構成（見出し、段落など）は維持してください
-4. 指定されたライティングスタイルに完全に従ってください
+2. 元のHTML構造（h2, h3, p, table等のタグ）を完全に維持してください
+3. HTMLタグ内のテキストのみをリライトし、タグ自体は変更しないでください
+4. 記事の構成（見出しの階層、段落の順序）は維持してください
+5. 指定されたライティングスタイルに完全に従ってください
 
-リライトした本文のみを出力してください:`;
+リライトした本文（HTML形式）のみを出力してください:`;
 
     const rewriteResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -302,26 +302,18 @@ ${plainContent}
       const rewriteData = await rewriteResponse.json();
       const rewrittenContent = rewriteData.choices?.[0]?.message?.content || '';
 
-      if (rewrittenContent) {
-        // 段落ごとに<p>タグで囲む
-        const paragraphs = rewrittenContent
-          .split('\n')
-          .filter((p: string) => p.trim())
-          .map((p: string) => {
-            if (p.trim().length < 50 && !p.includes('。') && !p.includes('、')) {
-              return `<h2>${p.trim()}</h2>`;
-            }
-            return `<p>${p.trim()}</p>`;
-          })
-          .join('\n');
-        
-        content = paragraphs;
-        console.log('[Step 4] Content rewritten with style');
+      if (rewrittenContent && rewrittenContent.trim().length > 0) {
+        // GrokがHTML形式で返したコンテンツをそのまま使用（HTML構造を保持）
+        content = rewrittenContent.trim();
+        console.log('[Step 4] Content rewritten with style (HTML structure preserved)');
       }
     }
 
     // === STEP 5 & 6: タグ自動割り当て＆新規タグ登録 ===
     console.log('[Step 5-6] Generating and assigning tags...');
+
+    // タグ生成用にプレーンテキストを抽出
+    const plainContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
     const tagPrompt = `以下の記事から、検索されやすい広義で汎用的なタグを日本語で5個生成してください。
 
@@ -519,28 +511,22 @@ A: [回答]`;
     // === STEP 11: 記事内画像生成＆配置 ===
     console.log('[Step 11] Generating inline images...');
 
-    const headings = content.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
-    const headingTexts = headings.map((h: string) => h.replace(/<[^>]*>/g, '').trim());
+    const headingMatches = Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)) as RegExpMatchArray[];
+    const headingTexts = headingMatches.map((match: RegExpMatchArray) => match[0].replace(/<[^>]*>/g, '').trim());
 
-    if (headingTexts.length >= 2) {
-      const targetImageCount = Math.min(2, Math.floor(headingTexts.length / 2));
-      const positions: number[] = [];
-      
-      if (targetImageCount === 1) {
-        positions.push(Math.floor(headingTexts.length / 2));
-      } else {
-        positions.push(Math.floor(headingTexts.length / 3));
-        positions.push(Math.floor((headingTexts.length * 2) / 3));
-      }
+    // h2タグが2つ以上ある場合のみ画像を挿入（最大2枚）
+    if (headingMatches.length >= 2) {
+      // 1枚目: 最初のh2タグの直後
+      // 2枚目: 2番目のh2タグの直後
+      const targetPositions = [0, 1].filter(idx => idx < headingMatches.length);
 
-      const headingMatches = Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)) as RegExpMatchArray[];
-
-      for (let i = positions.length - 1; i >= 0; i--) {
+      // 後ろから順に挿入（インデックスがずれないように）
+      for (let i = targetPositions.length - 1; i >= 0; i--) {
         try {
-          const position = positions[i];
-          if (position >= headingTexts.length) continue;
-
+          const position = targetPositions[i];
+          const headingMatch = headingMatches[position];
           const headingContext = headingTexts[position];
+
           const inlineImagePrompt = `${imagePatternData.prompt}\n\nContext: This image is for an article titled "${title}". The image should represent the following section: "${headingContext}".`;
 
           const inlineImageResponse = await openai.images.generate({
@@ -585,7 +571,7 @@ A: [回答]`;
             usageContext: 'inline-image',
           });
 
-          const headingMatch = headingMatches[position];
+          // h2タグの直後に画像を挿入
           if (!headingMatch || headingMatch.index === undefined) continue;
           const insertPosition = headingMatch.index + headingMatch[0].length;
           
@@ -597,6 +583,8 @@ A: [回答]`;
             content.substring(0, insertPosition) + 
             imageHtml + 
             content.substring(insertPosition);
+          
+          console.log(`[Step 11] Inserted image after h2 tag #${position + 1}`);
         } catch (error) {
           console.error('[Step 11] Error generating inline image:', error);
         }
