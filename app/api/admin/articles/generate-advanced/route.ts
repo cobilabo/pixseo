@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[Advanced Generate] Starting 12-step article generation...');
 
-    if (!mediaId || !categoryId || !patternId || !writerId || !writingStyleId || !imagePromptPatternId) {
+    if (!mediaId || !categoryId || !patternId || !writerId || !imagePromptPatternId) {
       return NextResponse.json(
         { error: 'All parameters are required' },
         { status: 400 }
@@ -38,21 +38,19 @@ export async function POST(request: NextRequest) {
     // === STEP 0: データ取得 ===
     console.log('[Step 0] Fetching configuration data...');
 
-    const [categoryDoc, patternDoc, writerDoc, styleDoc, imagePatternDoc] = await Promise.all([
+    const [categoryDoc, patternDoc, writerDoc, imagePatternDoc] = await Promise.all([
       adminDb.collection('categories').doc(categoryId).get(),
       adminDb.collection('articlePatterns').doc(patternId).get(),
       adminDb.collection('writers').doc(writerId).get(),
-      adminDb.collection('writingStyles').doc(writingStyleId).get(),
       adminDb.collection('imagePromptPatterns').doc(imagePromptPatternId).get(),
     ]);
 
-    if (!categoryDoc.exists || !patternDoc.exists || !writerDoc.exists || !styleDoc.exists || !imagePatternDoc.exists) {
+    if (!categoryDoc.exists || !patternDoc.exists || !writerDoc.exists || !imagePatternDoc.exists) {
       return NextResponse.json({ error: 'One or more resources not found' }, { status: 404 });
     }
 
     const categoryName = categoryDoc.data()!.name;
     const patternData = patternDoc.data()!;
-    const styleData = styleDoc.data()!;
     const imagePatternData = imagePatternDoc.data()!;
 
     const grokApiKey = process.env.GROK_API_KEY;
@@ -259,65 +257,9 @@ ${patternData.prompt}
 
     console.log(`[Step 3] Article base created (${content.length} chars)`);
 
-    // === STEP 4: ライティング特徴リライト ===
-    console.log('[Step 4] Rewriting with writing style...');
-
-    const rewritePrompt = `以下の記事を、指定されたライティングスタイルでリライトしてください。
-
-【ライティングスタイル】
-${styleData.name}
-
-【スタイルの詳細】
-${styleData.prompt}
-
-【元の記事本文（HTML形式）】
-${content}
-
-【重要な指示】
-1. 記事の内容や情報は変更せず、文章のトーンや表現のみを変更してください
-2. 元のHTML構造（h2, h3, p, table等のタグ）を完全に維持してください
-3. HTMLタグ内のテキストのみをリライトし、タグ自体は変更しないでください
-4. 記事の構成（見出しの階層、段落の順序）は維持してください
-5. 指定されたライティングスタイルに完全に従ってください
-
-リライトした本文（HTML形式）のみを出力してください:`;
-
-    const rewriteResponse = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${grokApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'grok-2-latest',
-        messages: [
-          {
-            role: 'system',
-            content: 'あなたはプロのライターです。指定されたライティングスタイルに従って、記事を自然にリライトしてください。',
-          },
-          {
-            role: 'user',
-            content: rewritePrompt,
-          },
-        ],
-        stream: false,
-        temperature: 0.7,
-        max_tokens: 6000,
-      }),
-    });
-
-    if (!rewriteResponse.ok) {
-      console.error('[Step 4] Rewrite failed, using original content');
-    } else {
-      const rewriteData = await rewriteResponse.json();
-      const rewrittenContent = rewriteData.choices?.[0]?.message?.content || '';
-
-      if (rewrittenContent && rewrittenContent.trim().length > 0) {
-        // GrokがHTML形式で返したコンテンツをそのまま使用（HTML構造を保持）
-        content = rewrittenContent.trim();
-        console.log('[Step 4] Content rewritten with style (HTML structure preserved)');
-      }
-    }
+    // === STEP 4: ライティング特徴リライト（スキップ） ===
+    // リライト処理は記事品質を低下させる可能性があるため、スキップします
+    console.log('[Step 4] Skipping rewrite step, using original content from Grok');
 
     // === STEP 5 & 6: タグ自動割り当て＆新規タグ登録 ===
     console.log('[Step 5-6] Generating and assigning tags...');

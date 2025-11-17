@@ -5,7 +5,6 @@ import FloatingSelect from './FloatingSelect';
 import { Category } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { ArticlePattern } from '@/types/article-pattern';
-import { WritingStyle } from '@/types/writing-style';
 import { ImagePromptPattern } from '@/types/image-prompt-pattern';
 
 interface AdvancedArticleGeneratorModalProps {
@@ -24,7 +23,6 @@ export default function AdvancedArticleGeneratorModal({
   writers,
 }: AdvancedArticleGeneratorModalProps) {
   const [patterns, setPatterns] = useState<ArticlePattern[]>([]);
-  const [writingStyles, setWritingStyles] = useState<WritingStyle[]>([]);
   const [imagePromptPatterns, setImagePromptPatterns] = useState<ImagePromptPattern[]>([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +31,6 @@ export default function AdvancedArticleGeneratorModal({
     categoryId: '',
     patternId: '',
     writerId: '',
-    writingStyleId: '',
     imagePromptPatternId: '',
   });
 
@@ -53,15 +50,6 @@ export default function AdvancedArticleGeneratorModal({
       }
     }
   }, [isOpen, categories, writers]);
-
-  useEffect(() => {
-    if (formData.writerId) {
-      fetchWritingStyles(formData.writerId);
-    } else {
-      setWritingStyles([]);
-      setFormData(prev => ({ ...prev, writingStyleId: '' }));
-    }
-  }, [formData.writerId]);
 
   const fetchPatterns = async () => {
     try {
@@ -87,33 +75,6 @@ export default function AdvancedArticleGeneratorModal({
       }
     } catch (error) {
       console.error('Error fetching patterns:', error);
-    }
-  };
-
-  const fetchWritingStyles = async (writerId: string) => {
-    try {
-      const currentTenantId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentTenantId') 
-        : null;
-
-      const response = await fetch(`/api/admin/writing-styles?writerId=${writerId}`, {
-        headers: {
-          'x-media-id': currentTenantId || '',
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch writing styles');
-
-      const data = await response.json();
-      const fetchedStyles = data.styles || [];
-      setWritingStyles(fetchedStyles);
-
-      // オプションが1つしかない場合、自動的に選択
-      if (fetchedStyles.length === 1) {
-        setFormData(prev => ({ ...prev, writingStyleId: fetchedStyles[0].id }));
-      }
-    } catch (error) {
-      console.error('Error fetching writing styles:', error);
     }
   };
 
@@ -153,7 +114,6 @@ export default function AdvancedArticleGeneratorModal({
     if (!formData.categoryId) missingFields.push('カテゴリー');
     if (!formData.patternId) missingFields.push('構成パターン');
     if (!formData.writerId) missingFields.push('ライター');
-    if (!formData.writingStyleId) missingFields.push('ライティング特徴');
     if (!formData.imagePromptPatternId) missingFields.push('画像プロンプトパターン');
 
     if (missingFields.length > 0) {
@@ -250,27 +210,6 @@ export default function AdvancedArticleGeneratorModal({
                 required
               />
 
-              {formData.writerId && (
-                <>
-                  <FloatingSelect
-                    label="ライティング特徴 *"
-                    value={formData.writingStyleId}
-                    onChange={(value) => setFormData({ ...formData, writingStyleId: value })}
-                    options={writingStyles.map(s => ({ value: s.id, label: s.name }))}
-                    required
-                  />
-                  {writingStyles.length === 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
-                      <p className="text-sm text-yellow-800">
-                        ⚠️ 選択したライターにライティング特徴が登録されていません。
-                        <br />
-                        ライター編集画面でライティング特徴を登録してください。
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-
               <FloatingSelect
                 label="画像プロンプトパターン *"
                 value={formData.imagePromptPatternId}
@@ -291,9 +230,9 @@ export default function AdvancedArticleGeneratorModal({
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <strong>生成フロー:</strong><br />
-                  1. テーマ5つ生成 → 2. 重複チェック → 3. 記事ベース作成 → 4. ライティング特徴でリライト → 
-                  5. タグ自動割り当て → 6. 新規タグ翻訳・登録 → 7. アイキャッチ生成 → 8. ライター選択 → 
-                  9. メタデータ生成 → 10. FAQ生成 → 11. 記事内画像生成・配置 → 12. 非公開として保存
+                  1. テーマ5つ生成 → 2. 重複チェック → 3. 記事ベース作成（5,000文字以上） → 
+                  4. タグ自動割り当て → 5. 新規タグ翻訳・登録 → 6. アイキャッチ生成 → 7. ライター選択 → 
+                  8. メタデータ生成 → 9. FAQ生成 → 10. 記事内画像生成・配置 → 11. 非公開として保存
                 </p>
               </div>
 
