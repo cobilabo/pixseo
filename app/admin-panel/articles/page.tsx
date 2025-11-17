@@ -168,19 +168,25 @@ export default function ArticlesPage() {
               <table className="w-full table-fixed divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '40%' }}>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '30%' }}>
                       タイトル&ディスクリプション
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
                       ライター
                     </th>
-                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '12%' }}>
-                      ステータス
+                    <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '8%' }}>
+                      公開
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
+                      公開日
+                    </th>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
+                      作成日
+                    </th>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
                       更新日
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
                       操作
                     </th>
                   </tr>
@@ -213,17 +219,17 @@ export default function ArticlesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-3">
                         {writer && (
-                          <div className="flex items-center gap-2 whitespace-nowrap">
-                            <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                          <div className="flex items-center gap-1 whitespace-nowrap overflow-hidden">
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                               {writer.icon ? (
                                 <Image
                                   src={writer.icon}
                                   alt={writer.handleName}
                                   fill
                                   className="object-cover"
-                                  sizes="28px"
+                                  sizes="24px"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-gray-300 text-white text-xs font-bold">
@@ -231,13 +237,13 @@ export default function ArticlesPage() {
                                 </div>
                               )}
                             </div>
-                            <span className="text-sm text-gray-900 truncate">{writer.handleName}</span>
+                            <span className="text-xs text-gray-900 truncate">{writer.handleName}</span>
                           </div>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                      <td className="px-2 py-3 text-center whitespace-nowrap">
                         <label className="cursor-pointer inline-flex items-center justify-center">
-                          <div className="relative inline-block w-12 h-7">
+                          <div className="relative inline-block w-10 h-6">
                             <input
                               type="checkbox"
                               checked={article.isPublished}
@@ -249,15 +255,21 @@ export default function ArticlesPage() {
                                 article.isPublished ? 'bg-blue-600' : 'bg-gray-400'
                               }`}
                             >
-                              <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                                article.isPublished ? 'translate-x-5' : 'translate-x-0'
+                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                article.isPublished ? 'translate-x-4' : 'translate-x-0'
                               }`}></div>
                             </div>
                           </div>
                         </label>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(article.updatedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                        {new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                        {new Date(article.createdAt || article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                        {new Date(article.updatedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">

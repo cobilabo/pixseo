@@ -17,7 +17,8 @@ export interface Article {
   content: string;
   excerpt?: string;
   slug: string;
-  publishedAt: Date;
+  createdAt?: Date;          // 作成日時（後方互換性のためオプショナル）
+  publishedAt: Date;         // 公開日時（初回作成時の日時として使用される場合もある）
   updatedAt: Date;
   writerId: string;          // ライターID（必須・カテゴリー/タグと同じ設計）
   categoryIds: string[];

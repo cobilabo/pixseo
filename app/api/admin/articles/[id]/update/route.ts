@@ -18,6 +18,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const articleRef = adminDb.collection('articles').doc(id);
     
+    // 既存の記事データを取得（公開状態の変更を検出するため）
+    const existingDoc = await articleRef.get();
+    const existingData = existingDoc.exists ? existingDoc.data() : null;
+    const wasPublished = existingData?.isPublished || false;
+    const statusChanged = wasPublished !== body.isPublished;
+    
+    console.log('[API] 以前の公開状態:', wasPublished, '→ 新しい公開状態:', body.isPublished);
+    console.log('[API] ステータス変更:', statusChanged);
+    
     // updatedAtを現在時刻に設定
     let updateData: any = {
       ...body,
@@ -51,8 +60,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     await articleRef.update(updateData);
     console.log('[API] Firestore更新完了（日本語版）');
 
-    // 🚀 公開時のみバックグラウンドで翻訳 + Algolia同期
-    if (body.isPublished && (updateData.title || updateData.content)) {
+    // 🚀 公開時のバックグラウンド処理
+    // 条件：公開状態 AND (内容が変更された OR 非公開→公開に切り替わった)
+    const shouldTranslate = body.isPublished && ((updateData.title || updateData.content) || (statusChanged && !wasPublished));
+    
+    if (shouldTranslate) {
       console.log('[API] バックグラウンド処理開始（翻訳 + Algolia）');
       
       // バックグラウンド処理（レスポンスを待たない）
@@ -60,10 +72,18 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         try {
           const translationData: any = {};
 
+          // 翻訳に使用するデータ（既存データと更新データをマージ）
+          const contentToTranslate = updateData.content || existingData?.content || body.content;
+          const titleToTranslate = updateData.title || existingData?.title || body.title;
+          const excerptToTranslate = updateData.excerpt !== undefined ? updateData.excerpt : (existingData?.excerpt || body.excerpt || '');
+          const metaTitleToTranslate = updateData.metaTitle || existingData?.metaTitle || titleToTranslate;
+          const metaDescriptionToTranslate = updateData.metaDescription || existingData?.metaDescription || excerptToTranslate;
+          const faqsToTranslate = updateData.faqs || existingData?.faqs;
+
           // AIサマリー生成（日本語）
-          if (updateData.content) {
+          if (contentToTranslate) {
             try {
-              const aiSummaryJa = await generateAISummary(updateData.content, 'ja');
+              const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
               translationData.aiSummary_ja = aiSummaryJa;
               console.log('[Background] AIサマリー生成完了（ja）');
             } catch (error) {
@@ -79,11 +99,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
               
               // 記事本体を翻訳
               const translated = await translateArticle({
-                title: updateData.title || body.title,
-                content: updateData.content || body.content,
-                excerpt: updateData.excerpt || body.excerpt || '',
-                metaTitle: updateData.metaTitle || body.metaTitle || updateData.title || body.title,
-                metaDescription: updateData.metaDescription || body.metaDescription || updateData.excerpt || body.excerpt || '',
+                title: titleToTranslate,
+                content: contentToTranslate,
+                excerpt: excerptToTranslate,
+                metaTitle: metaTitleToTranslate,
+                metaDescription: metaDescriptionToTranslate,
               }, lang);
 
               translationData[`title_${lang}`] = translated.title;
@@ -97,8 +117,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
               translationData[`aiSummary_${lang}`] = aiSummary;
 
               // FAQsを翻訳
-              if (updateData.faqs && Array.isArray(updateData.faqs) && updateData.faqs.length > 0) {
-                const translatedFaqs = await translateFAQs(updateData.faqs, lang);
+              if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
+                const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
                 translationData[`faqs_${lang}`] = translatedFaqs;
               }
 

@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       return {
         id: doc.id,
         ...data,
+        createdAt: data.createdAt?.toDate(),
         publishedAt: data.publishedAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
       } as Article;
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     let articleData: any = {
       ...cleanData,
+      createdAt: now,
       publishedAt: now,
       updatedAt: now,
       viewCount: 0,
