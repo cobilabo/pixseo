@@ -2,6 +2,7 @@ import { Article } from '@/types/article';
 import { Lang, SUPPORTED_LANGS } from '@/types/lang';
 import { adminClient, getArticlesIndexName } from './client';
 import { localizeArticle } from '@/lib/i18n/localize';
+import { adminDb } from '@/lib/firebase/admin';
 
 // AlgoliaRecord型（Algoliaに保存する形式）
 export interface AlgoliaArticleRecord {
@@ -24,9 +25,7 @@ export interface AlgoliaArticleRecord {
  * 記事を全言語のAlgoliaインデックスに追加/更新
  */
 export async function syncArticleToAlgolia(
-  article: Article,
-  categoryNames: string[] = [],
-  tagNames: string[] = []
+  article: Article
 ): Promise<void> {
   if (!adminClient) {
     console.error('[Algolia] Admin client not initialized');
@@ -42,6 +41,46 @@ export async function syncArticleToAlgolia(
       try {
         // 記事を言語別にローカライズ
         const localizedArticle = localizeArticle(article, lang);
+        
+        // その言語のカテゴリー名を取得
+        const categoryNames: string[] = [];
+        if (article.categoryIds && Array.isArray(article.categoryIds)) {
+          for (const catId of article.categoryIds) {
+            try {
+              const catDoc = await adminDb.collection('categories').doc(catId).get();
+              if (catDoc.exists) {
+                const catData = catDoc.data();
+                // 言語別のフィールドから取得（例: name_en, name_zh）
+                const localizedName = catData?.[`name_${lang}`] || catData?.name || '';
+                if (localizedName) {
+                  categoryNames.push(localizedName);
+                }
+              }
+            } catch (error) {
+              console.error(`[Algolia] Error fetching category ${catId}:`, error);
+            }
+          }
+        }
+
+        // その言語のタグ名を取得
+        const tagNames: string[] = [];
+        if (article.tagIds && Array.isArray(article.tagIds)) {
+          for (const tagId of article.tagIds) {
+            try {
+              const tagDoc = await adminDb.collection('tags').doc(tagId).get();
+              if (tagDoc.exists) {
+                const tagData = tagDoc.data();
+                // 言語別のフィールドから取得（例: name_en, name_zh）
+                const localizedName = tagData?.[`name_${lang}`] || tagData?.name || '';
+                if (localizedName) {
+                  tagNames.push(localizedName);
+                }
+              }
+            } catch (error) {
+              console.error(`[Algolia] Error fetching tag ${tagId}:`, error);
+            }
+          }
+        }
         
         // HTMLタグを除去してテキストのみ抽出（検索用）
         let contentText = '';
@@ -65,8 +104,8 @@ export async function syncArticleToAlgolia(
           excerpt: localizedArticle.excerpt,
           contentText, // HTMLタグを除去したテキスト
           mediaId: article.mediaId,
-          categories: categoryNames,
-          tags: tagNames,
+          categories: categoryNames, // その言語のカテゴリー名
+          tags: tagNames, // その言語のタグ名
           publishedAt: article.publishedAt instanceof Date
             ? article.publishedAt.getTime()
             : new Date(article.publishedAt).getTime(),
@@ -82,7 +121,7 @@ export async function syncArticleToAlgolia(
           body: record,
         });
         
-        console.log(`[Algolia] Synced article to ${lang} index: ${article.id}`);
+        console.log(`[Algolia] Synced article to ${lang} index: ${article.id} (${categoryNames.length} categories, ${tagNames.length} tags)`);
       } catch (error) {
         console.error(`[Algolia] Error syncing article to ${lang} index:`, error);
         // 1つの言語で失敗しても他の言語は続行

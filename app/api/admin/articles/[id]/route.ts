@@ -226,29 +226,7 @@ export async function PUT(
             updatedAt: finalData.updatedAt?.toDate() || new Date(),
           } as Article;
 
-          // カテゴリー名を取得
-          const categoryNames: string[] = [];
-          if (article.categoryIds && Array.isArray(article.categoryIds)) {
-            for (const catId of article.categoryIds) {
-              const catDoc = await adminDb.collection('categories').doc(catId).get();
-              if (catDoc.exists) {
-                categoryNames.push(catDoc.data()?.name || '');
-              }
-            }
-          }
-
-          // タグ名を取得
-          const tagNames: string[] = [];
-          if (article.tagIds && Array.isArray(article.tagIds)) {
-            for (const tagId of article.tagIds) {
-              const tagDoc = await adminDb.collection('tags').doc(tagId).get();
-              if (tagDoc.exists) {
-                tagNames.push(tagDoc.data()?.name || '');
-              }
-            }
-          }
-
-          await syncArticleToAlgolia(article, categoryNames, tagNames);
+          await syncArticleToAlgolia(article);
           console.log(`[API ${id}] Algolia同期完了（全4言語）`);
         }
         
@@ -278,29 +256,7 @@ export async function PUT(
           updatedAt: updatedData.updatedAt?.toDate() || new Date(),
         } as Article;
 
-        // カテゴリー名を取得
-        const categoryNames: string[] = [];
-        if (article.categoryIds && Array.isArray(article.categoryIds)) {
-          for (const catId of article.categoryIds) {
-            const catDoc = await adminDb.collection('categories').doc(catId).get();
-            if (catDoc.exists) {
-              categoryNames.push(catDoc.data()?.name || '');
-            }
-          }
-        }
-
-        // タグ名を取得
-        const tagNames: string[] = [];
-        if (article.tagIds && Array.isArray(article.tagIds)) {
-          for (const tagId of article.tagIds) {
-            const tagDoc = await adminDb.collection('tags').doc(tagId).get();
-            if (tagDoc.exists) {
-              tagNames.push(tagDoc.data()?.name || '');
-            }
-          }
-        }
-
-        await syncArticleToAlgolia(article, categoryNames, tagNames);
+        await syncArticleToAlgolia(article);
         console.log(`[API /admin/articles/${id}] Synced to Algolia`);
       } catch (algoliaError) {
         console.error(`[API /admin/articles/${id}] Algolia sync error:`, algoliaError);
