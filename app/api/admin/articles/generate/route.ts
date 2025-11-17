@@ -102,7 +102,7 @@ ${categoryText ? `${categoryText}\n` : ''}${tagText ? `${tagText}\n` : ''}${topi
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-4-fast', // Grok 4 Fast（推論モデル、最新情報アクセス可能）
+        model: 'grok-4-fast-reasoning', // Grok 4 Fast（推論モデル、最新情報アクセス可能）
         messages: [
           {
             role: 'system',
