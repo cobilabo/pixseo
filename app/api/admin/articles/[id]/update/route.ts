@@ -7,6 +7,7 @@ import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai
 import { SUPPORTED_LANGS } from '@/types/lang';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5分（翻訳処理のため）
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
