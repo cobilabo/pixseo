@@ -90,11 +90,14 @@ export async function POST(request: NextRequest) {
 
     // 🚀 公開時のみバックグラウンドで翻訳 + Algolia同期
     if (articleData.isPublished === true) {
-      console.log('[API] バックグラウンド処理開始（翻訳 + Algolia）');
+      console.log('[API] ===== バックグラウンド処理開始（翻訳 + Algolia） =====');
+      console.log('[API] 記事ID:', docRef.id);
+      console.log('[API] タイトル:', articleData.title);
       
       // バックグラウンド処理（レスポンスを待たない）
       Promise.resolve().then(async () => {
         try {
+          console.log('[Background] ===== 処理開始 =====');
           const translationData: any = {};
           const articleRef = adminDb.collection('articles').doc(docRef.id);
 

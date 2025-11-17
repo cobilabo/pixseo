@@ -61,15 +61,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log('[API] Firestore更新完了（日本語版）');
 
     // 🚀 公開時のバックグラウンド処理
-    // 条件：公開状態 AND (内容が変更された OR 非公開→公開に切り替わった)
-    const shouldTranslate = body.isPublished && ((updateData.title || updateData.content) || (statusChanged && !wasPublished));
-    
-    if (shouldTranslate) {
-      console.log('[API] バックグラウンド処理開始（翻訳 + Algolia）');
+    // 条件：公開状態（常に翻訳を実行）
+    if (body.isPublished === true) {
+      console.log('[API] ===== バックグラウンド処理開始（翻訳 + Algolia） =====');
+      console.log('[API] 記事ID:', id);
+      console.log('[API] タイトル:', updateData.title || existingData?.title);
       
       // バックグラウンド処理（レスポンスを待たない）
       Promise.resolve().then(async () => {
         try {
+          console.log('[Background] ===== 処理開始 =====');
           const translationData: any = {};
 
           // 翻訳に使用するデータ（既存データと更新データをマージ）
