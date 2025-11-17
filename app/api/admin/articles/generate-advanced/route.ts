@@ -362,7 +362,9 @@ ${patternData.prompt}
     // === STEP 7: アイキャッチ画像生成 ===
     console.log('[Step 7] Generating featured image...');
 
-    const imagePrompt = `${imagePatternData.prompt}\n\nContext: This is a featured image for an article titled "${title}". ${plainContent.substring(0, 200)}`;
+    const imagePrompt = `${imagePatternData.prompt}
+
+This is a featured image for an article titled "${title}".`;
     
     // GPT-4oでプロンプトを改善
     const improvedFeaturedImagePrompt = await improveImagePrompt(imagePrompt, openai);
@@ -495,22 +497,9 @@ A: [回答]`;
           const headingMatch = headingMatches[position];
           const headingContext = headingTexts[position];
 
-          // h2見出しの後のコンテキストテキストを抽出（最大500文字）
-          const nextHeadingIndex = headingMatches[position + 1]?.index;
-          const startIndex = (headingMatch.index || 0) + headingMatch[0].length;
-          const endIndex = nextHeadingIndex || content.length;
-          const sectionContent = content
-            .substring(startIndex, endIndex)
-            .replace(/<[^>]*>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .substring(0, 500);
-
           const inlineImagePrompt = `${imagePatternData.prompt}
 
-Context: This image is for an article titled "${title}". 
 Section heading: "${headingContext}"
-Section content: "${sectionContent}"
 
 The image should visually represent the main concept of this section.`;
 
