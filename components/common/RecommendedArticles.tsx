@@ -79,18 +79,21 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
                       <>
                         <span>•</span>
                         <div className="flex gap-1 flex-wrap">
-                          {articleCategories.slice(0, 2).map((cat) => (
-                            <span 
-                              key={cat.id} 
-                              className="px-1.5 py-0.5 rounded text-xs font-medium"
-                              style={{ 
-                                backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
-                                color: 'var(--primary-color, #3b82f6)'
-                              }}
-                            >
-                              {cat.name}
-                            </span>
-                          ))}
+                          {articleCategories.slice(0, 2).map((cat) => {
+                            const categoryName = (cat as any)[`name_${lang}`] || cat.name;
+                            return (
+                              <span 
+                                key={cat.id} 
+                                className="px-1.5 py-0.5 rounded text-xs font-medium"
+                                style={{ 
+                                  backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
+                                  color: 'var(--primary-color, #3b82f6)'
+                                }}
+                              >
+                                {categoryName}
+                              </span>
+                            );
+                          })}
                         </div>
                       </>
                     )}
