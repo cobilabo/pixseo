@@ -483,11 +483,10 @@ A: [回答]`;
     const headingMatches = Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)) as RegExpMatchArray[];
     const headingTexts = headingMatches.map((match: RegExpMatchArray) => match[0].replace(/<[^>]*>/g, '').trim());
 
-    // h2タグが2つ以上ある場合のみ画像を挿入（最大2枚）
-    if (headingMatches.length >= 2) {
-      // 1枚目: 最初のh2タグの直後
-      // 2枚目: 2番目のh2タグの直後
-      const targetPositions = [0, 1].filter(idx => idx < headingMatches.length);
+    // すべてのh2タグに画像を挿入
+    if (headingMatches.length >= 1) {
+      // すべてのh2タグの直後に画像を配置
+      const targetPositions = Array.from({ length: headingMatches.length }, (_, i) => i);
 
       // 後ろから順に挿入（インデックスがずれないように）
       for (let i = targetPositions.length - 1; i >= 0; i--) {
