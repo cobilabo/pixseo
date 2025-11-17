@@ -168,9 +168,11 @@ export async function PUT(
           }
         }
 
-        // 他の言語への翻訳
+        // 他の言語への翻訳（並列処理）
         const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-        for (const lang of otherLangs) {
+        console.log(`[API ${id}] 翻訳開始（並列）: ${otherLangs.join(', ')}`);
+        
+        await Promise.all(otherLangs.map(async (lang) => {
           try {
             console.log(`[API ${id}] 翻訳開始（${lang}）`);
             
@@ -203,7 +205,9 @@ export async function PUT(
           } catch (error) {
             console.error(`[API ${id}] 翻訳エラー（${lang}）:`, error);
           }
-        }
+        }));
+        
+        console.log(`[API ${id}] 全言語の翻訳完了`);
 
         // 翻訳データを保存
         if (Object.keys(translationData).length > 0) {
