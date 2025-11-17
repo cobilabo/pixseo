@@ -517,21 +517,23 @@ This is a featured image for an article titled "${title}".`;
     const faqPrompt = `以下の記事に基づいて、読者が抱くであろう質問とその回答を3〜5個生成してください。
 
 タイトル: ${title}
-本文: ${plainContent.substring(0, 1500)}
+本文: ${plainContent.substring(0, 3000)}
 
-出力形式:
+出力形式（必ず半角コロンを使用してください）:
 Q: [質問]
 A: [回答]
 
 Q: [質問]
-A: [回答]`;
+A: [回答]
+
+重要：必ず「Q:」「A:」の形式（半角Qと半角コロン）で出力してください。`;
 
     const faqResponse = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: 'あなたはFAQ生成の専門家です。読者の疑問を先回りして、分かりやすい回答を作成してください。',
+          content: 'あなたはFAQ生成の専門家です。読者の疑問を先回りして、分かりやすい回答を作成してください。必ず「Q:」「A:」の形式で出力してください。',
         },
         {
           role: 'user',
@@ -539,14 +541,16 @@ A: [回答]`;
         },
       ],
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 1500,
     });
 
     const faqText = faqResponse.choices[0]?.message?.content?.trim() || '';
-    console.log('[Step 10] FAQ raw response:', faqText.substring(0, 200));
+    console.log('[Step 10] ===== FAQ RAW RESPONSE (Full) =====');
+    console.log(faqText);
+    console.log('[Step 10] ===== END FAQ RAW RESPONSE =====');
     
-    // より柔軟な正規表現でマッチング（手動生成と同じロジック）
-    const faqMatches = Array.from(faqText.matchAll(/Q:\s*([^\n]+)\s*\n\s*A:\s*([^\n]+(?:\n(?!Q:)[^\n]+)*)/gi));
+    // より柔軟な正規表現でマッチング（半角・全角両対応）
+    const faqMatches = Array.from(faqText.matchAll(/[QＱ][:\：]\s*([^\n]+)\s*\n\s*[AＡ][:\：]\s*([^\n]+(?:\n(?![QＱ][:\：])[^\n]+)*)/gi));
     
     const faqs_ja: Array<{ question: string; answer: string }> = [];
     for (const match of faqMatches) {
@@ -558,10 +562,16 @@ A: [回答]`;
       }
     }
 
-    console.log(`[Step 10] Generated ${faqs_ja.length} FAQs`);
+    console.log(`[Step 10] ===== FAQ PARSING RESULT =====`);
+    console.log(`[Step 10] Matched ${faqMatches.length} patterns`);
+    console.log(`[Step 10] Generated ${faqs_ja.length} valid FAQs`);
     if (faqs_ja.length > 0) {
-      console.log('[Step 10] First FAQ:', JSON.stringify(faqs_ja[0]));
+      console.log('[Step 10] All FAQs:', JSON.stringify(faqs_ja, null, 2));
+    } else {
+      console.log('[Step 10] ⚠️ WARNING: No FAQs were parsed from the response!');
+      console.log('[Step 10] Please check the raw response format above.');
     }
+    console.log('[Step 10] ===== END FAQ PARSING RESULT =====');
 
     // === STEP 11: 記事内画像生成＆配置 ===
     console.log('[Step 11] Generating inline images...');
