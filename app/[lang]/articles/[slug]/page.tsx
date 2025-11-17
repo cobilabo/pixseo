@@ -391,15 +391,15 @@ export default async function ArticlePage({ params }: PageProps) {
             <CategoryTagBadges categories={categories} tags={tags} lang={lang} />
 
             {/* 目次 */}
-            {Array.isArray(rawArticle.tableOfContents) && rawArticle.tableOfContents.length > 0 && (
-              <TableOfContents items={rawArticle.tableOfContents} faviconUrl={rawSiteInfo.faviconUrl} lang={lang} />
+            {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 && (
+              <TableOfContents items={article.tableOfContents} faviconUrl={rawSiteInfo.faviconUrl} lang={lang} />
             )}
 
             {/* 記事本文 */}
             <article className="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
               <ArticleContent 
                 content={typeof article.content === 'string' ? article.content : ''} 
-                tableOfContents={Array.isArray(rawArticle.tableOfContents) ? rawArticle.tableOfContents : []} 
+                tableOfContents={Array.isArray(article.tableOfContents) ? article.tableOfContents : []} 
               />
             </article>
 

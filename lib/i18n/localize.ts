@@ -50,6 +50,10 @@ export function localizeArticle(article: any, lang: Lang) {
   const faqsKey = `faqs_${lang}`;
   const faqs = article[faqsKey] || [];
   
+  // 目次も言語別に取得
+  const tableOfContentsKey = `tableOfContents_${lang}`;
+  const tableOfContents = article[tableOfContentsKey] || article.tableOfContents || [];
+  
   return {
     id: article.id,
     slug: article.slug,
@@ -74,7 +78,7 @@ export function localizeArticle(article: any, lang: Lang) {
     viewCount: article.viewCount,
     likeCount: article.likeCount,
     mediaId: article.mediaId,
-    tableOfContents: article.tableOfContents,
+    tableOfContents,
     readingTime: article.readingTime,
     googleMapsUrl: article.googleMapsUrl,
     reservationUrl: article.reservationUrl,
