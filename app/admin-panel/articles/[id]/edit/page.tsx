@@ -569,6 +569,16 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 required
               />
 
+              {/* 想定読者（表示のみ） */}
+              {formData.targetAudience && (
+                <FloatingInput
+                  label="想定読者（ペルソナ）"
+                  value={formData.targetAudience}
+                  onChange={() => {}} // 変更不可
+                  disabled
+                />
+              )}
+
               {/* メタディスクリプション */}
               <FloatingInput
                 label="メタディスクリプション"
