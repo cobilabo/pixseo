@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { categoryId, title } = body;
+    const { categoryId, title, excludeHistory } = body;
 
     const openaiApiKey = process.env.OPENAI_API_KEY;
     if (!openaiApiKey) {
@@ -32,10 +32,15 @@ export async function POST(request: NextRequest) {
       const categoryName = categoryDoc.data()!.name;
       const categoryDescription = categoryDoc.data()!.description || '';
 
+      let excludeText = '';
+      if (excludeHistory && Array.isArray(excludeHistory) && excludeHistory.length > 0) {
+        excludeText = `\n\n【重要】以下の想定読者は既に使用されているため、これらとは異なる新しい想定読者を提案してください:\n${excludeHistory.map((h: string, i: number) => `${i + 1}. ${h}`).join('\n')}`;
+      }
+
       prompt = `以下のカテゴリー情報から、最も適切な想定読者（ペルソナ）を提案してください。
 
 カテゴリー名: ${categoryName}
-${categoryDescription ? `カテゴリー説明: ${categoryDescription}` : ''}
+${categoryDescription ? `カテゴリー説明: ${categoryDescription}` : ''}${excludeText}
 
 要件:
 - **1つの具体的な職業や立場のみ**を記述（複数列挙は禁止）
@@ -49,9 +54,14 @@ ${categoryDescription ? `カテゴリー説明: ${categoryDescription}` : ''}
     } 
     // タイトルが提供された場合
     else if (title) {
+      let excludeText = '';
+      if (excludeHistory && Array.isArray(excludeHistory) && excludeHistory.length > 0) {
+        excludeText = `\n\n【重要】以下の想定読者は既に使用されているため、これらとは異なる新しい想定読者を提案してください:\n${excludeHistory.map((h: string, i: number) => `${i + 1}. ${h}`).join('\n')}`;
+      }
+
       prompt = `以下の記事タイトルから、最も適切な想定読者（ペルソナ）を提案してください。
 
-記事タイトル: ${title}
+記事タイトル: ${title}${excludeText}
 
 要件:
 - **1つの具体的な職業や立場のみ**を記述（複数列挙は禁止）

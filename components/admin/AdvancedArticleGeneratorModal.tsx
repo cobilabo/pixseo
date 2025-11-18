@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import FloatingSelect from './FloatingSelect';
 import FloatingInput from './FloatingInput';
+import TargetAudienceInput from './TargetAudienceInput';
 import { Category } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { ArticlePattern } from '@/types/article-pattern';
@@ -28,6 +29,7 @@ export default function AdvancedArticleGeneratorModal({
   const [imagePromptPatterns, setImagePromptPatterns] = useState<ImagePromptPattern[]>([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [audienceHistory, setAudienceHistory] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     categoryId: '',
@@ -42,6 +44,7 @@ export default function AdvancedArticleGeneratorModal({
     if (isOpen) {
       fetchPatterns();
       fetchImagePromptPatterns();
+      fetchAudienceHistory();
       
       // カテゴリーが1つしかない場合、自動的に選択
       if (categories.length === 1) {
@@ -109,6 +112,52 @@ export default function AdvancedArticleGeneratorModal({
     }
   };
 
+  const fetchAudienceHistory = async () => {
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch('/api/admin/target-audience-history', {
+        headers: {
+          'x-media-id': currentTenantId || '',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch audience history');
+
+      const data = await response.json();
+      setAudienceHistory(data.history || []);
+    } catch (error) {
+      console.error('Error fetching audience history:', error);
+    }
+  };
+
+  const handleDeleteAudienceHistory = async (audience: string) => {
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch(`/api/admin/target-audience-history?targetAudience=${encodeURIComponent(audience)}`, {
+        method: 'DELETE',
+        headers: {
+          'x-media-id': currentTenantId || '',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('履歴の削除に失敗しました');
+      }
+
+      const data = await response.json();
+      setAudienceHistory(data.history || []);
+    } catch (error) {
+      console.error('Error deleting audience history:', error);
+      setError('履歴の削除に失敗しました');
+    }
+  };
+
   const handleGenerateTargetAudience = async () => {
     if (!formData.categoryId) {
       setError('カテゴリーを先に選択してください');
@@ -129,7 +178,10 @@ export default function AdvancedArticleGeneratorModal({
           'Content-Type': 'application/json',
           'x-media-id': currentTenantId || '',
         },
-        body: JSON.stringify({ categoryId: formData.categoryId }),
+        body: JSON.stringify({ 
+          categoryId: formData.categoryId,
+          excludeHistory: audienceHistory, // 既存履歴を除外
+        }),
       });
 
       if (!response.ok) {
@@ -138,6 +190,20 @@ export default function AdvancedArticleGeneratorModal({
 
       const data = await response.json();
       setFormData(prev => ({ ...prev, targetAudience: data.targetAudience }));
+
+      // 履歴に追加
+      if (!audienceHistory.includes(data.targetAudience)) {
+        setAudienceHistory(prev => [data.targetAudience, ...prev].slice(0, 20));
+        // サーバーにも保存
+        fetch('/api/admin/target-audience-history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-media-id': currentTenantId || '',
+          },
+          body: JSON.stringify({ targetAudience: data.targetAudience }),
+        }).catch(err => console.error('Failed to save target audience history:', err));
+      }
     } catch (error) {
       console.error('Error generating target audience:', error);
       setError('想定読者の生成に失敗しました');
@@ -275,10 +341,12 @@ export default function AdvancedArticleGeneratorModal({
 
             <div className="flex gap-2">
               <div className="flex-1">
-                <FloatingInput
-                  label="想定読者（ペルソナ）*"
+                <TargetAudienceInput
                   value={formData.targetAudience}
                   onChange={(value) => setFormData({ ...formData, targetAudience: value })}
+                  history={audienceHistory}
+                  onDeleteHistory={handleDeleteAudienceHistory}
+                  label="想定読者（ペルソナ）*"
                   required
                 />
               </div>

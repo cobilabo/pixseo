@@ -188,7 +188,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           'Content-Type': 'application/json',
           'x-media-id': currentTenantId || '',
         },
-        body: JSON.stringify({ title: formData.title }),
+        body: JSON.stringify({ 
+          title: formData.title,
+          excludeHistory: audienceHistory, // 既存履歴を除外
+        }),
       });
 
       if (!response.ok) {
