@@ -368,7 +368,7 @@ export default function AdvancedArticleGeneratorModal({
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
                 <strong>生成フロー:</strong><br />
-                1. テーマ5つ生成 → 2. 重複チェック → 3. 記事ベース作成（5,000文字以上） → 
+                1. テーマ5つ生成 → 2. 重複チェック → 3. 記事ベース作成（3,000〜3,500文字） → 
                 4. タグ自動割り当て → 5. 新規タグ翻訳・登録 → 6. アイキャッチ生成 → 7. ライター選択 → 
                 8. メタデータ生成 → 9. FAQ生成 → 10. 記事内画像生成・配置 → 11. 非公開として保存
               </p>
