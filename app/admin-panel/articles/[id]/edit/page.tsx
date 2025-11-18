@@ -36,6 +36,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [showSlugWarning, setShowSlugWarning] = useState(false);
   const [generatingTags, setGeneratingTags] = useState(false);
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
+  const [generatingAudience, setGeneratingAudience] = useState(false);
+  const [audienceHistory, setAudienceHistory] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -43,6 +45,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     excerpt: '',
     slug: '',
     writerId: '',
+    targetAudience: '',
     categoryIds: [] as string[],
     tagIds: [] as string[],
     relatedArticleIds: [] as string[],
@@ -60,12 +63,17 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       try {
         console.log('[EditArticlePage] Fetching article data...');
         
-        const [articleData, categoriesData, tagsData, writersData, articlesData] = await Promise.all([
+        const [articleData, categoriesData, tagsData, writersData, articlesData, audienceHistoryData] = await Promise.all([
           fetch(`/api/admin/articles/${params.id}`).then(r => r.json()),
           apiGet<Category[]>('/api/admin/categories'),
           apiGet<Tag[]>('/api/admin/tags'),
           apiGet<Writer[]>('/api/admin/writers'),
           apiGet<Article[]>('/api/admin/articles'),
+          fetch('/api/admin/target-audience-history', {
+            headers: {
+              'x-media-id': typeof window !== 'undefined' ? localStorage.getItem('currentTenantId') || '' : '',
+            },
+          }).then(res => res.json()).catch(() => ({ history: [] })),
         ]);
         
         console.log('[EditArticlePage] Received article:', articleData);
@@ -85,6 +93,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           excerpt: articleData.excerpt || '',
           slug: articleData.slug,
           writerId: articleData.writerId || '',
+          targetAudience: articleData.targetAudience || '',
           categoryIds: articleData.categoryIds,
           tagIds: articleData.tagIds,
           relatedArticleIds: articleData.relatedArticleIds || [],
@@ -102,6 +111,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setWriters(writersData);
         // 現在編集中の記事を除外
         setArticles(articlesData.filter((a: Article) => a.id !== params.id));
+        setAudienceHistory(audienceHistoryData.history || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         alert('記事の読み込みに失敗しました');
@@ -157,6 +167,55 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       generateSlugFromTitle(formData.title);
     }
     setShowSlugWarning(false);
+  };
+
+  const generateTargetAudience = async () => {
+    if (!formData.title) {
+      alert('タイトルを先に入力してください');
+      return;
+    }
+
+    setGeneratingAudience(true);
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch('/api/admin/articles/generate-target-audience', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-media-id': currentTenantId || '',
+        },
+        body: JSON.stringify({ title: formData.title }),
+      });
+
+      if (!response.ok) {
+        throw new Error('想定読者の生成に失敗しました');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, targetAudience: data.targetAudience }));
+
+      // 履歴に追加
+      if (!audienceHistory.includes(data.targetAudience)) {
+        setAudienceHistory(prev => [data.targetAudience, ...prev].slice(0, 20));
+        // サーバーにも保存
+        fetch('/api/admin/target-audience-history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-media-id': currentTenantId || '',
+          },
+          body: JSON.stringify({ targetAudience: data.targetAudience }),
+        }).catch(err => console.error('Failed to save target audience history:', err));
+      }
+    } catch (error) {
+      console.error('Error generating target audience:', error);
+      alert('想定読者の生成に失敗しました');
+    } finally {
+      setGeneratingAudience(false);
+    }
   };
 
   const generateTagsFromContent = async () => {
@@ -401,6 +460,43 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   title="タグ自動生成"
                 >
                   {generatingTags ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Image src="/ai.svg" alt="AI" width={20} height={20} className="brightness-0 invert" />
+                  )}
+                </button>
+              </div>
+
+              {/* 想定読者（ペルソナ） - プルダウン + AI自動生成ボタン */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="audience-history-edit"
+                      value={formData.targetAudience}
+                      onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      placeholder="想定読者（ペルソナ）"
+                    />
+                    <label className="absolute left-4 -top-2 bg-white px-1 text-xs text-gray-600">
+                      想定読者（ペルソナ）
+                    </label>
+                    <datalist id="audience-history-edit">
+                      {audienceHistory.map((audience, index) => (
+                        <option key={index} value={audience} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={generateTargetAudience}
+                  disabled={generatingAudience || !formData.title}
+                  className="w-12 h-12 mb-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full hover:from-purple-700 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  title="想定読者を自動生成"
+                >
+                  {generatingAudience ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <Image src="/ai.svg" alt="AI" width={20} height={20} className="brightness-0 invert" />

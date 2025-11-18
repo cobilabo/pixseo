@@ -25,6 +25,7 @@ export interface Article {
   tagIds: string[];
   featuredImage?: string;
   featuredImageAlt?: string; // アイキャッチ画像のalt属性
+  targetAudience?: string; // 想定読者（ペルソナ）
   isPublished: boolean;
   isFeatured?: boolean;
   viewCount: number;
