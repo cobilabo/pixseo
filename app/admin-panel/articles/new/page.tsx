@@ -464,24 +464,17 @@ function NewArticlePageContent() {
               {/* 想定読者（ペルソナ） - プルダウン + AI自動生成ボタン */}
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      list="audience-history"
-                      value={formData.targetAudience}
-                      onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                      placeholder="想定読者（ペルソナ）"
-                    />
-                    <label className="absolute left-4 -top-2 bg-white px-1 text-xs text-gray-600">
-                      想定読者（ペルソナ）
-                    </label>
-                    <datalist id="audience-history">
-                      {audienceHistory.map((audience, index) => (
-                        <option key={index} value={audience} />
-                      ))}
-                    </datalist>
-                  </div>
+                  <FloatingInput
+                    label="想定読者（ペルソナ）"
+                    value={formData.targetAudience}
+                    onChange={(value) => setFormData({ ...formData, targetAudience: value })}
+                    list="audience-history"
+                  />
+                  <datalist id="audience-history">
+                    {audienceHistory.map((audience, index) => (
+                      <option key={index} value={audience} />
+                    ))}
+                  </datalist>
                 </div>
                 <button
                   type="button"

@@ -10,6 +10,7 @@ interface FloatingInputProps {
   rows?: number;
   multiline?: boolean;
   disabled?: boolean;
+  list?: string; // datalist の id
 }
 
 export default function FloatingInput({
@@ -22,6 +23,7 @@ export default function FloatingInput({
   rows = 3,
   multiline = false,
   disabled = false,
+  list,
 }: FloatingInputProps) {
   const hasValue = value.length > 0;
 
@@ -62,6 +64,7 @@ export default function FloatingInput({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        list={list}
         className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 peer ${
           disabled ? 'bg-white text-gray-400 cursor-not-allowed' : 'text-gray-900'
         }`}
