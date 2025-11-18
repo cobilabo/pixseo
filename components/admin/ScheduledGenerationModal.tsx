@@ -478,6 +478,7 @@ export default function ScheduledGenerationModal({
                         writerId: '',
                         writingStyleId: '',
                         imagePromptPatternId: '',
+                        targetAudience: '',
                         daysOfWeek: [],
                         timeOfDay: '09:00',
                         timezone: 'Asia/Tokyo',
