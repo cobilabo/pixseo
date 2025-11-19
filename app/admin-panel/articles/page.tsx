@@ -12,7 +12,6 @@ import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
 import ScheduledGenerationModal from '@/components/admin/ScheduledGenerationModal';
-import AdvancedArticleGeneratorModal from '@/components/admin/AdvancedArticleGeneratorModal';
 import { useRouter } from 'next/navigation';
 
 export default function ArticlesPage() {
@@ -24,7 +23,6 @@ export default function ArticlesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAdvancedGeneratorModalOpen, setIsAdvancedGeneratorModalOpen] = useState(false);
   const [isPatternModalOpen, setIsPatternModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
@@ -365,13 +363,13 @@ export default function ArticlesPage() {
           </button>
 
           {/* AI高度生成ボタン */}
-          <button
-            onClick={() => setIsAdvancedGeneratorModalOpen(true)}
+          <Link
+            href="/articles/generate"
             className="bg-gradient-to-r from-purple-600 to-blue-600 text-white w-14 h-14 rounded-full hover:from-purple-700 hover:to-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
             title="AI高度記事生成"
           >
             <Image src="/ai.svg" alt="AI" width={24} height={24} className="brightness-0 invert" />
-          </button>
+          </Link>
           
           {/* 新規記事作成ボタン */}
           <Link
@@ -400,18 +398,6 @@ export default function ArticlesPage() {
           onClose={() => setIsScheduleModalOpen(false)}
           onSuccess={() => {
             // 成功時の処理（必要に応じて）
-          }}
-          categories={categories}
-          writers={writers}
-        />
-
-        {/* AI高度記事生成モーダル（新規） */}
-        <AdvancedArticleGeneratorModal
-          isOpen={isAdvancedGeneratorModalOpen}
-          onClose={() => setIsAdvancedGeneratorModalOpen(false)}
-          onSuccess={(articleId) => {
-            setIsAdvancedGeneratorModalOpen(false);
-            fetchArticles(); // 記事一覧を更新
           }}
           categories={categories}
           writers={writers}
