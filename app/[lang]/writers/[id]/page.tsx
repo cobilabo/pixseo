@@ -14,6 +14,7 @@ import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
 import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
+import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
@@ -164,48 +165,16 @@ export default async function WriterPage({ params }: PageProps) {
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
-            <div className={`w-full grid ${footerTextLinkSections.length === 1 ? 'grid-cols-2' : 'grid-cols-3'} pb-8`}>
-              <div className="text-left px-8">
-                <div className="flex items-center gap-3 mb-4">
-                  {rawSiteInfo.faviconUrl && <Image src={rawSiteInfo.faviconUrl} alt={`${siteInfo.name} アイコン`} width={32} height={32} className="w-8 h-8 brightness-0 invert" unoptimized={rawSiteInfo.faviconUrl.endsWith('.svg')} />}
-                  {rawSiteInfo.logoUrl ? <Image src={rawSiteInfo.logoUrl} alt={siteInfo.name} width={120} height={32} className="h-8 w-auto brightness-0 invert" unoptimized={rawSiteInfo.logoUrl.endsWith('.svg')} /> : <h3 className="text-2xl font-bold">{siteInfo.name}</h3>}
-                </div>
-                {siteInfo.description && <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{siteInfo.description}</p>}
-              </div>
-              {footerTextLinkSections.map((section: any, index: number) => {
-                const validLinks = section.links?.filter((link: any) => link.text && link.url) || [];
-                if (!section.title && validLinks.length === 0) return null;
-                return (
-                  <div key={index} className="text-right border-l border-gray-600 px-8">
-                    {section.title && <h3 className="text-base font-bold mb-4 uppercase tracking-wider">{section.title}</h3>}
-                    {validLinks.length > 0 && (
-                      <ul className="space-y-2">
-                        {validLinks.map((link: any, linkIndex: number) => {
-                          // 内部リンクの場合は言語パスを追加
-                          const href = link.url.startsWith('http') || link.url.startsWith('https')
-                            ? link.url
-                            : `/${lang}${link.url}`;
-                          
-                          return (
-                            <li key={linkIndex}>
-                              <Link
-                                href={href}
-                                className="text-gray-300 hover:text-white transition-colors text-sm"
-                                target={link.url.startsWith('http') ? '_blank' : undefined}
-                                rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                              >
-                                {link.text}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
+<FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} />
+
+            {/* コピーライト */}
+            <div className="w-full border-t border-gray-700 pt-6">
+              <p className="text-gray-400 text-sm text-center">
+                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+              </p>
             </div>
-            <div className="w-full border-t border-gray-700 pt-6"><p className="text-gray-400 text-sm text-center">© {new Date().getFullYear()} {siteInfo.name}. All rights reserved.</p></div>
+          </div>
+
           </div>
         ) : (
           <div className="max-w-7xl mx-auto px-0 py-12">
