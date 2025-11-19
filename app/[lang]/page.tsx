@@ -168,11 +168,13 @@ export default async function HomePage({ params }: PageProps) {
         lang={lang}
       />
 
-      {/* カテゴリーバー */}
-      <CategoryBar categories={categories} lang={lang} />
+      {/* CategoryBar以降のコンテンツエリア（背景色付き・前面） */}
+      <div className="relative" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
+        {/* カテゴリーバー */}
+        <CategoryBar categories={categories} lang={lang} />
 
-      {/* メインコンテンツ - 2カラムレイアウト */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: rawTheme.backgroundColor }}>
+        {/* メインコンテンツ - 2カラムレイアウト */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
@@ -347,6 +349,7 @@ export default async function HomePage({ params }: PageProps) {
           </div>
         )}
       </footer>
+      </div>
 
       {/* 上に戻るボタン */}
       <ScrollToTopButton primaryColor={rawTheme.primaryColor} />
