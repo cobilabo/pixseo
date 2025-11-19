@@ -133,7 +133,9 @@ export default async function FixedPage({ params }: PageProps) {
         lang={lang}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* メインコンテンツエリア以降（背景色付き・前面） */}
+      <div className="relative" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <article className="bg-white rounded-lg shadow-md p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">{page.title}</h1>
           <div 
@@ -177,6 +179,7 @@ export default async function FixedPage({ params }: PageProps) {
           </div>
         )}
       </footer>
+      </div>
 
       <ScrollToTopButton primaryColor={rawTheme.primaryColor} />
     </div>

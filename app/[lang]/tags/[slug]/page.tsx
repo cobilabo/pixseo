@@ -136,8 +136,12 @@ export default async function TagPage({ params }: PageProps) {
         <FirstView settings={theme.firstView} customTitle={tag.name} customSubtitle="TAG" customMeta={t('meta.articlesCount', lang, { count: localizedArticles.length })} showCustomContent={true} />
       )}
       <MediaHeader siteName={siteInfo.name} siteInfo={rawSiteInfo} menuSettings={theme.menuSettings} menuBackgroundColor={rawTheme.menuBackgroundColor} menuTextColor={rawTheme.menuTextColor} lang={lang} />
+      {/* カテゴリーバー（透明背景・上半分） */}
       <CategoryBar categories={categories} variant="half" lang={lang} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: rawTheme.backgroundColor }}>
+
+      {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
+      <div className="relative -mt-24 pt-32" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1 lg:w-[70%]">
             <section>
@@ -228,6 +232,8 @@ export default async function TagPage({ params }: PageProps) {
           </div>
         )}
       </footer>
+      </div>
+
       <ScrollToTopButton primaryColor={rawTheme.primaryColor} />
     </div>
   );
