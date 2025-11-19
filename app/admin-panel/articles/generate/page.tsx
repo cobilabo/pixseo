@@ -21,6 +21,7 @@ function AdvancedArticleGeneratePageContent() {
   const [writers, setWriters] = useState<Writer[]>([]);
   const [patterns, setPatterns] = useState<ArticlePattern[]>([]);
   const [imagePromptPatterns, setImagePromptPatterns] = useState<ImagePromptPattern[]>([]);
+  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [audienceHistory, setAudienceHistory] = useState<string[]>([]);
@@ -37,45 +38,55 @@ function AdvancedArticleGeneratePageContent() {
   useEffect(() => {
     const fetchData = async () => {
       if (!currentTenant?.id) return;
+      
+      setLoading(true);
       try {
         const [categoriesData, writersData, patternsData, imagePromptPatternsData, audienceHistoryData] = await Promise.all([
-          apiGet<Category[]>(`/api/admin/categories`),
-          apiGet<Writer[]>(`/api/admin/writers`),
-          apiGet<ArticlePattern[]>(`/api/admin/article-patterns`),
-          apiGet<ImagePromptPattern[]>(`/api/admin/image-prompt-patterns`),
+          apiGet<Category[]>(`/api/admin/categories`).catch(() => []),
+          apiGet<Writer[]>(`/api/admin/writers`).catch(() => []),
+          apiGet<ArticlePattern[]>(`/api/admin/article-patterns`).catch(() => []),
+          apiGet<ImagePromptPattern[]>(`/api/admin/image-prompt-patterns`).catch(() => []),
           fetch('/api/admin/target-audience-history', {
             headers: { 'x-media-id': currentTenant.id },
           }).then(res => res.json()).catch(() => ({ history: [] })),
         ]);
 
-        setCategories(categoriesData);
-        setWriters(writersData);
-        setPatterns(patternsData);
-        setImagePromptPatterns(imagePromptPatternsData);
-        setAudienceHistory(audienceHistoryData.history || []);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setWriters(Array.isArray(writersData) ? writersData : []);
+        setPatterns(Array.isArray(patternsData) ? patternsData : []);
+        setImagePromptPatterns(Array.isArray(imagePromptPatternsData) ? imagePromptPatternsData : []);
+        setAudienceHistory(Array.isArray(audienceHistoryData?.history) ? audienceHistoryData.history : []);
 
         // カテゴリーが1つしかない場合、自動的に選択
-        if (categoriesData.length === 1) {
+        if (Array.isArray(categoriesData) && categoriesData.length === 1) {
           setFormData(prev => ({ ...prev, categoryId: categoriesData[0].id }));
         }
 
         // ライターが1つしかない場合、自動的に選択
-        if (writersData.length === 1) {
+        if (Array.isArray(writersData) && writersData.length === 1) {
           setFormData(prev => ({ ...prev, writerId: writersData[0].id }));
         }
 
         // 構成パターンが1つしかない場合、自動的に選択
-        if (patternsData.length === 1) {
+        if (Array.isArray(patternsData) && patternsData.length === 1) {
           setFormData(prev => ({ ...prev, patternId: patternsData[0].id }));
         }
 
         // 画像プロンプトパターンが1つしかない場合、自動的に選択
-        if (imagePromptPatternsData.length === 1) {
+        if (Array.isArray(imagePromptPatternsData) && imagePromptPatternsData.length === 1) {
           setFormData(prev => ({ ...prev, imagePromptPatternId: imagePromptPatternsData[0].id }));
         }
       } catch (err) {
         console.error('Failed to fetch initial data:', err);
         setError('データの読み込みに失敗しました。');
+        // エラーが発生しても空配列を保証
+        setCategories([]);
+        setWriters([]);
+        setPatterns([]);
+        setImagePromptPatterns([]);
+        setAudienceHistory([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -182,6 +193,27 @@ function AdvancedArticleGeneratePageContent() {
   const handleCancel = () => {
     router.push('/admin-panel/articles');
   };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">AI高度記事生成</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              12ステップの自動生成フローで記事を作成します
+            </p>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">データを読み込んでいます...</p>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
