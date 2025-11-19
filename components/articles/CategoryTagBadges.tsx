@@ -14,7 +14,7 @@ export default function CategoryTagBadges({ categories, tags, lang = 'ja' }: Cat
   }
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
       {/* カテゴリーバッジ */}
       {categories.map((category) => (
         <Link

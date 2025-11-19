@@ -62,7 +62,7 @@ export default function Breadcrumbs({ article, category, lang = 'ja' }: Breadcru
 
       {/* 視覚的なパンくずリスト */}
       <nav aria-label="パンくずリスト" className="mb-6">
-        <ol className="flex items-center space-x-2 text-sm text-gray-600">
+        <ol className="flex items-center space-x-2 text-sm text-gray-600 overflow-x-auto whitespace-nowrap scrollbar-hide">
           <li>
             <Link 
               href={`/${lang}`}

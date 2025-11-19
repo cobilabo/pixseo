@@ -8,7 +8,7 @@ interface FirstViewProps {
   customTitle?: string;
   customSubtitle?: string;
   showCustomContent?: boolean;
-  customMeta?: string; // 記事の公開日・更新日・閲覧数などのメタ情報
+  customMeta?: string | { published?: string; updated?: string; views?: string; readingTime?: string; }; // 記事の公開日・更新日・閲覧数などのメタ情報
   writerIcon?: string; // ライターアイコン
 }
 
@@ -64,9 +64,21 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
                 </h1>
               )}
               {customMeta && (
-                <p className="text-sm text-gray-200 drop-shadow-md">
-                  {customMeta}
-                </p>
+                typeof customMeta === 'string' ? (
+                  <p className="text-sm text-gray-200 drop-shadow-md">
+                    {customMeta}
+                  </p>
+                ) : (
+                  <div className="flex flex-col md:flex-row md:gap-2 text-sm text-gray-200 drop-shadow-md text-center md:text-left">
+                    {customMeta.published && <span>{customMeta.published}</span>}
+                    {customMeta.updated && <span className="hidden md:inline">•</span>}
+                    {customMeta.updated && <span>{customMeta.updated}</span>}
+                    {customMeta.views && <span className="hidden md:inline">•</span>}
+                    {customMeta.views && <span>{customMeta.views}</span>}
+                    {customMeta.readingTime && <span className="hidden md:inline">•</span>}
+                    {customMeta.readingTime && <span>{customMeta.readingTime}</span>}
+                  </div>
+                )
               )}
               {customSubtitle && !customMeta && (
                 <p className="text-xs text-gray-200 uppercase tracking-wider drop-shadow-md">
