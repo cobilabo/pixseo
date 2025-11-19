@@ -171,8 +171,8 @@ export default async function HomePage({ params }: PageProps) {
       {/* カテゴリーバー（透明背景・上半分） */}
       <CategoryBar categories={categories} lang={lang} />
 
-      {/* メインコンテンツエリア以降（背景色付き・前面） */}
-      <div className="relative" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
+      {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
+      <div className="relative -mt-24" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
 
         {/* メインコンテンツ - 2カラムレイアウト */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
