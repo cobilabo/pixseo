@@ -10,7 +10,6 @@ import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
 import ScheduledGenerationModal from '@/components/admin/ScheduledGenerationModal';
 import { useRouter } from 'next/navigation';
 
@@ -23,7 +22,6 @@ export default function ArticlesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   useEffect(() => {
@@ -350,17 +348,6 @@ export default function ArticlesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
-          
-          {/* 構成パターン管理ボタン */}
-          <button
-            onClick={() => setIsPatternModalOpen(true)}
-            className="bg-orange-600 text-white w-14 h-14 rounded-full hover:bg-orange-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
-            title="構成パターン管理"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </button>
 
           {/* AI高度生成ボタン */}
           <Link
@@ -382,15 +369,6 @@ export default function ArticlesPage() {
             </svg>
           </Link>
         </div>
-
-        {/* 構成パターン管理モーダル */}
-        <ArticlePatternModal
-          isOpen={isPatternModalOpen}
-          onClose={() => setIsPatternModalOpen(false)}
-          onSuccess={() => {
-            // 成功時の処理（必要に応じて）
-          }}
-        />
 
         {/* 定期実行設定モーダル */}
         <ScheduledGenerationModal

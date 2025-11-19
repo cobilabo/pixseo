@@ -7,6 +7,8 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import TargetAudienceInput from '@/components/admin/TargetAudienceInput';
+import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
+import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
 import { Category } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { ArticlePattern } from '@/types/article-pattern';
@@ -25,6 +27,8 @@ function AdvancedArticleGeneratePageContent() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [audienceHistory, setAudienceHistory] = useState<string[]>([]);
+  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false);
+  const [isImagePromptModalOpen, setIsImagePromptModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     categoryId: '',
@@ -229,13 +233,25 @@ function AdvancedArticleGeneratePageContent() {
               required
             />
 
-            <FloatingSelect
-              label="構成パターン *"
-              value={formData.patternId}
-              onChange={(value) => setFormData({ ...formData, patternId: value })}
-              options={patterns.map(p => ({ value: p.id, label: p.name }))}
-              required
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <FloatingSelect
+                  label="構成パターン *"
+                  value={formData.patternId}
+                  onChange={(value) => setFormData({ ...formData, patternId: value })}
+                  options={patterns.map(p => ({ value: p.id, label: p.name }))}
+                  required
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPatternModalOpen(true)}
+                className="w-12 h-12 mb-0.5 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-all shadow-md flex items-center justify-center"
+                title="構成パターン管理"
+              >
+                <Image src="/prompt.svg" alt="Prompt" width={20} height={20} className="brightness-0 invert" />
+              </button>
+            </div>
             {patterns.length === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
                 <p className="text-sm text-yellow-800">
@@ -254,13 +270,25 @@ function AdvancedArticleGeneratePageContent() {
               required
             />
 
-            <FloatingSelect
-              label="画像プロンプトパターン *"
-              value={formData.imagePromptPatternId}
-              onChange={(value) => setFormData({ ...formData, imagePromptPatternId: value })}
-              options={imagePromptPatterns.map(p => ({ value: p.id, label: p.name }))}
-              required
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <FloatingSelect
+                  label="画像プロンプトパターン *"
+                  value={formData.imagePromptPatternId}
+                  onChange={(value) => setFormData({ ...formData, imagePromptPatternId: value })}
+                  options={imagePromptPatterns.map(p => ({ value: p.id, label: p.name }))}
+                  required
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImagePromptModalOpen(true)}
+                className="w-12 h-12 mb-0.5 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all shadow-md flex items-center justify-center"
+                title="画像プロンプトパターン管理"
+              >
+                <Image src="/prompt.svg" alt="Prompt" width={20} height={20} className="brightness-0 invert" />
+              </button>
+            </div>
             {imagePromptPatterns.length === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 -mt-2">
                 <p className="text-sm text-yellow-800">
@@ -329,6 +357,46 @@ function AdvancedArticleGeneratePageContent() {
               )}
             </button>
           </div>
+
+          {/* 構成パターン管理モーダル */}
+          <ArticlePatternModal
+            isOpen={isPatternModalOpen}
+            onClose={() => setIsPatternModalOpen(false)}
+            onSuccess={() => {
+              setIsPatternModalOpen(false);
+              // パターンを再読み込み
+              if (currentTenant?.id) {
+                fetch('/api/admin/article-patterns', {
+                  headers: { 'x-media-id': currentTenant.id },
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    setPatterns(Array.isArray(data.patterns) ? data.patterns : []);
+                  })
+                  .catch(err => console.error('Failed to reload patterns:', err));
+              }
+            }}
+          />
+
+          {/* 画像プロンプトパターン管理モーダル */}
+          <ImagePromptPatternModal
+            isOpen={isImagePromptModalOpen}
+            onClose={() => setIsImagePromptModalOpen(false)}
+            onSuccess={() => {
+              setIsImagePromptModalOpen(false);
+              // 画像プロンプトパターンを再読み込み
+              if (currentTenant?.id) {
+                fetch('/api/admin/image-prompt-patterns', {
+                  headers: { 'x-media-id': currentTenant.id },
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    setImagePromptPatterns(Array.isArray(data.patterns) ? data.patterns : []);
+                  })
+                  .catch(err => console.error('Failed to reload image prompt patterns:', err));
+              }
+            }}
+          />
         </div>
       )}
     </AdminLayout>
