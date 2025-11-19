@@ -24,19 +24,16 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
   const categoryHeight = variant === 'full' ? 'h-96' : 'h-48';
 
   return (
-    <section className="relative z-20 pt-12 pb-8 rounded-t-3xl bg-transparent">
+    <section className="relative z-20 pt-12 pb-8 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex overflow-x-auto scrollbar-hide">
-          {filteredCategories.map((category, index) => (
-            <Link
-              key={category.id}
-              href={`/${lang}/categories/${category.slug}`}
-              className={`relative flex-1 min-w-[150px] ${categoryHeight} group overflow-hidden ${
-                index === 0 ? 'rounded-tl-3xl rounded-bl-3xl' : ''
-              } ${
-                index === filteredCategories.length - 1 ? 'rounded-tr-3xl rounded-br-3xl' : ''
-              }`}
-            >
+        <div className="rounded-3xl overflow-hidden">
+          <div className="flex overflow-x-auto scrollbar-hide">
+            {filteredCategories.map((category, index) => (
+              <Link
+                key={category.id}
+                href={`/${lang}/categories/${category.slug}`}
+                className={`relative flex-1 min-w-[150px] ${categoryHeight} group overflow-hidden`}
+              >
               {category.imageUrl ? (
                 <>
                   {/* 背景画像 */}
@@ -71,8 +68,9 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
                   {category.name}
                 </span>
               </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </section>
