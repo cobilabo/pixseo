@@ -152,10 +152,10 @@ export default function ArticlePatternModal({
             <button
               type="button"
               onClick={() => setSelectedPatternId('new')}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              className={`mx-4 my-2 w-10 h-10 rounded-full border-2 flex items-center justify-center text-2xl font-bold transition-colors ${
                 selectedPatternId === 'new'
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-gray-400 text-gray-400 hover:border-gray-600 hover:text-gray-600'
               }`}
             >
               +
