@@ -13,6 +13,7 @@ interface FloatingMultiSelectProps {
   onChange: (values: string[]) => void;
   options: Option[];
   badgeColor?: 'green' | 'blue' | 'gray' | 'purple'; // バッジの色（オプション）
+  enableSearch?: boolean; // 検索機能の有効/無効（デフォルト: true）
 }
 
 export default function FloatingMultiSelect({
@@ -21,16 +22,19 @@ export default function FloatingMultiSelect({
   onChange,
   options,
   badgeColor = 'blue',
+  enableSearch = true,
 }: FloatingMultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOptions = options.filter(opt => values.includes(opt.value));
-  const availableOptions = options.filter(opt => 
-    !values.includes(opt.value) && 
-    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const availableOptions = enableSearch 
+    ? options.filter(opt => 
+        !values.includes(opt.value) && 
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : options.filter(opt => !values.includes(opt.value));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -121,17 +125,19 @@ export default function FloatingMultiSelect({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
-          <div className="p-2 border-b border-gray-200">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="検索..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
-          </div>
+        <div className="absolute z-[9999] mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
+          {enableSearch && (
+            <div className="p-2 border-b border-gray-200">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="検索..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+            </div>
+          )}
           
           <div className="py-1">
             {availableOptions.length > 0 ? (
@@ -147,7 +153,7 @@ export default function FloatingMultiSelect({
               ))
             ) : (
               <div className="px-4 py-2 text-sm text-gray-500">
-                {searchTerm ? '検索結果なし' : 'すべて選択済み'}
+                {enableSearch && searchTerm ? '検索結果なし' : 'すべて選択済み'}
               </div>
             )}
             </div>
