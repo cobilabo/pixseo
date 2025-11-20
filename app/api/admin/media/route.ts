@@ -62,12 +62,17 @@ export async function GET(request: NextRequest) {
           usageDetails.push(`ライター (${writerUsage})`);
         }
         
-        // テーマ（フッターブロック、フッターコンテンツ）での使用をチェック
+        // テーマ（FV画像、フッターブロック、フッターコンテンツ）での使用をチェック
         const tenantsSnapshot = await adminDb.collection('mediaTenants').get();
         let themeUsage = 0;
         for (const tenantDoc of tenantsSnapshot.docs) {
           const tenant = tenantDoc.data();
           const theme = tenant.theme || {};
+          
+          // FV画像
+          if (theme.fvImage === mediaUrl) {
+            themeUsage++;
+          }
           
           // フッターブロック
           if (theme.footerBlocks) {
