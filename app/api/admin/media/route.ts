@@ -49,13 +49,17 @@ export async function GET(request: NextRequest) {
           usageDetails.push(`カテゴリー (${categoriesSnapshot.size})`);
         }
         
-        // ライターでの使用をチェック
-        const writersSnapshot = await adminDb.collection('writers')
+        // ライターでの使用をチェック（アイコンと背景画像）
+        const writersIconSnapshot = await adminDb.collection('writers')
           .where('icon', '==', mediaUrl)
           .get();
-        if (writersSnapshot.size > 0) {
-          usageCount += writersSnapshot.size;
-          usageDetails.push(`ライター (${writersSnapshot.size})`);
+        const writersBackgroundSnapshot = await adminDb.collection('writers')
+          .where('backgroundImage', '==', mediaUrl)
+          .get();
+        const writerUsage = writersIconSnapshot.size + writersBackgroundSnapshot.size;
+        if (writerUsage > 0) {
+          usageCount += writerUsage;
+          usageDetails.push(`ライター (${writerUsage})`);
         }
         
         // テーマ（フッターブロック、フッターコンテンツ）での使用をチェック
@@ -86,7 +90,13 @@ export async function GET(request: NextRequest) {
         let siteUsage = 0;
         for (const tenantDoc of tenantsSnapshot.docs) {
           const tenant = tenantDoc.data();
-          if (tenant.logoUrl === mediaUrl || tenant.symbolUrl === mediaUrl || tenant.faviconUrl === mediaUrl || tenant.ogImageUrl === mediaUrl) {
+          // ロゴ3種類 + OGイメージをチェック
+          if (
+            tenant.logoLandscape === mediaUrl ||
+            tenant.logoSquare === mediaUrl ||
+            tenant.logoPortrait === mediaUrl ||
+            tenant.ogImage === mediaUrl
+          ) {
             siteUsage++;
           }
         }

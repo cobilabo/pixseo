@@ -10,7 +10,6 @@ import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import ScheduledGenerationModal from '@/components/admin/ScheduledGenerationModal';
 import { useRouter } from 'next/navigation';
 
 export default function ArticlesPage() {
@@ -22,7 +21,6 @@ export default function ArticlesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   useEffect(() => {
     fetchArticles();
@@ -339,15 +337,15 @@ export default function ArticlesPage() {
         {/* フローティングボタン */}
         <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
           {/* 定期実行設定ボタン */}
-          <button
-            onClick={() => setIsScheduleModalOpen(true)}
+          <Link
+            href="/articles/schedule"
             className="bg-green-600 text-white w-14 h-14 rounded-full hover:bg-green-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
             title="定期実行設定"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          </button>
+          </Link>
 
           {/* AI高度生成ボタン */}
           <Link
@@ -369,17 +367,6 @@ export default function ArticlesPage() {
             </svg>
           </Link>
         </div>
-
-        {/* 定期実行設定モーダル */}
-        <ScheduledGenerationModal
-          isOpen={isScheduleModalOpen}
-          onClose={() => setIsScheduleModalOpen(false)}
-          onSuccess={() => {
-            // 成功時の処理（必要に応じて）
-          }}
-          categories={categories}
-          writers={writers}
-        />
       </AdminLayout>
     </AuthGuard>
   );

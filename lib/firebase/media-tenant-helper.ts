@@ -71,8 +71,6 @@ export interface SiteInfo {
   logoUrl?: string;
   symbolUrl?: string;
   ogImageUrl?: string;
-  mainTitle?: string;
-  mainSubtitle?: string;
   // 多言語フィールド
   name_ja?: string;
   name_en?: string;
@@ -128,8 +126,6 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
       logoUrl: data?.logoLandscape || undefined,
       symbolUrl: data?.logoSquare || undefined,
       ogImageUrl: data?.ogImage || undefined,
-      mainTitle: data?.mainTitle || undefined,
-      mainSubtitle: data?.mainSubtitle || undefined,
       // 多言語フィールド
       name_ja: data?.name_ja || data?.name,
       name_en: data?.name_en || data?.name,

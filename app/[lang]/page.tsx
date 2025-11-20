@@ -57,11 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   
-  // タイトルの優先順位: mainTitle > mainSubtitle > name
-  const pageTitle = siteInfo.mainTitle || siteInfo.mainSubtitle || siteInfo.name;
-  
   return {
-    title: pageTitle,
+    title: siteInfo.name,
     description: siteInfo.description || '',
     robots: {
       index: siteInfo.allowIndexing,

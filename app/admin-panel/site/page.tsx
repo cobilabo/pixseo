@@ -11,8 +11,6 @@ import { useRouter } from 'next/navigation';
 interface SiteSettings {
   siteName: string;
   siteDescription: string;
-  mainTitle: string;
-  mainSubtitle: string;
   logoLandscape: string;
   logoSquare: string;
   logoPortrait: string;
@@ -27,8 +25,6 @@ export default function SitePage() {
   const [formData, setFormData] = useState<SiteSettings>({
     siteName: '',
     siteDescription: '',
-    mainTitle: '',
-    mainSubtitle: '',
     logoLandscape: '',
     logoSquare: '',
     logoPortrait: '',
@@ -57,8 +53,6 @@ export default function SitePage() {
         const newFormData = {
           siteName: data.name || '',
           siteDescription: data.siteDescription || '',
-          mainTitle: data.mainTitle || '',
-          mainSubtitle: data.mainSubtitle || '',
           logoLandscape: data.logoLandscape || '',
           logoSquare: data.logoSquare || '',
           logoPortrait: data.logoPortrait || '',
@@ -102,8 +96,6 @@ export default function SitePage() {
         body: JSON.stringify({
           name: formData.siteName,
           siteDescription: formData.siteDescription,
-          mainTitle: formData.mainTitle,
-          mainSubtitle: formData.mainSubtitle,
           logoLandscape: formData.logoLandscape,
           logoSquare: formData.logoSquare,
           logoPortrait: formData.logoPortrait,
@@ -177,20 +169,6 @@ export default function SitePage() {
                 onChange={(value) => setFormData({ ...formData, siteDescription: value })}
                 multiline
                 rows={3}
-              />
-
-              {/* メインタイトル */}
-              <FloatingInput
-                label="トップページ メインタイトル"
-                value={formData.mainTitle}
-                onChange={(value) => setFormData({ ...formData, mainTitle: value })}
-              />
-
-              {/* サブタイトル */}
-              <FloatingInput
-                label="トップページ サブタイトル"
-                value={formData.mainSubtitle}
-                onChange={(value) => setFormData({ ...formData, mainSubtitle: value })}
               />
             </div>
           </form>
