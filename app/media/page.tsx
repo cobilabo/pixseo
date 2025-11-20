@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: siteInfo.faviconUrl,
     } : undefined,
     openGraph: {
-      title: pageTitle,
+      title: siteInfo.name,
       description: siteInfo.description || '',
       images: siteInfo.ogImageUrl ? [siteInfo.ogImageUrl] : undefined,
     },
