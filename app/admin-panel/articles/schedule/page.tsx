@@ -350,7 +350,7 @@ function ScheduledGenerationPageContent() {
       {loading ? null : (
         <div className="max-w-4xl pb-32 animate-fadeIn">
           {/* タブメニュー */}
-          <div className="bg-white rounded-[1.75rem] overflow-hidden mb-6">
+          <div className="bg-white rounded-[1.75rem] mb-6">
             <div className="border-b border-gray-200">
               <div className="flex">
                 {schedules.map((schedule, index) => (
