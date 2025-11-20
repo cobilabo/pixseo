@@ -6,7 +6,6 @@ import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingSelect from '@/components/admin/FloatingSelect';
-import FloatingMultiSelect from '@/components/admin/FloatingMultiSelect';
 import TargetAudienceInput from '@/components/admin/TargetAudienceInput';
 import ArticlePatternModal from '@/components/admin/ArticlePatternModal';
 import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
@@ -496,13 +495,28 @@ function ScheduledGenerationPageContent() {
                 </button>
               </div>
 
-              <FloatingMultiSelect
-                label="曜日 *"
-                values={currentSchedule.daysOfWeek}
-                onChange={(values) => updateSchedule(activeScheduleIndex, 'daysOfWeek', values)}
-                options={dayOptions}
-                badgeColor="purple"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">曜日 *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {dayOptions.map((day) => (
+                    <label key={day.value} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={currentSchedule.daysOfWeek.includes(day.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            updateSchedule(activeScheduleIndex, 'daysOfWeek', [...currentSchedule.daysOfWeek, day.value]);
+                          } else {
+                            updateSchedule(activeScheduleIndex, 'daysOfWeek', currentSchedule.daysOfWeek.filter(d => d !== day.value));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="text-sm">{day.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               <FloatingSelect
                 label="時刻 *"
