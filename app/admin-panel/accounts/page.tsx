@@ -20,33 +20,48 @@ interface AdminUser {
   lastSignInTime?: string;
 }
 
+interface Client {
+  id: string;
+  clientName: string;
+  email: string;
+  logoUrl?: string;
+}
+
 export default function AccountsPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
   const { user, userRole } = useAuth();
   const [accounts, setAccounts] = useState<AdminUser[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (currentTenant) {
-      fetchAccounts();
+      fetchData();
     }
   }, [currentTenant]);
 
-  const fetchAccounts = async () => {
+  const fetchData = async () => {
     if (!currentTenant) return;
 
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/accounts');
-      if (response.ok) {
-        const data: AdminUser[] = await response.json();
+      
+      // アカウントとクライアントを並列取得
+      const [accountsResponse, clientsResponse] = await Promise.all([
+        fetch('/api/admin/accounts'),
+        fetch('/api/admin/clients'),
+      ]);
+
+      if (accountsResponse.ok && clientsResponse.ok) {
+        const accountsData: AdminUser[] = await accountsResponse.json();
+        const clientsData: Client[] = await clientsResponse.json();
         
         // フィルタリング：
         // 1. super_adminは除外
         // 2. admin@pixseo.cloudは除外
         // 3. 現在のサービスのmemberIdsに含まれるアカウントのみ
-        const filteredAccounts = data.filter((account) => {
+        const filteredAccounts = accountsData.filter((account) => {
           // super_admin除外
           if (account.role === 'super_admin') return false;
           
@@ -58,9 +73,10 @@ export default function AccountsPage() {
         });
         
         setAccounts(filteredAccounts);
+        setClients(clientsData);
       }
     } catch (error) {
-      console.error('Error fetching accounts:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -117,7 +133,7 @@ export default function AccountsPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ロゴ
+                        ロゴ or アイコン
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         メールアドレス
@@ -134,13 +150,18 @@ export default function AccountsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {accounts.map((account) => (
+                    {accounts.map((account) => {
+                      // クライアントのロゴを検索
+                      const client = clients.find(c => c.email === account.email);
+                      const logoUrl = client?.logoUrl || account.logoUrl;
+                      
+                      return (
                       <tr key={account.uid} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          {account.logoUrl ? (
+                          {logoUrl ? (
                             <div className="relative w-10 h-10 rounded-full overflow-hidden">
                               <Image 
-                                src={account.logoUrl} 
+                                src={logoUrl} 
                                 alt={account.displayName || account.email}
                                 fill
                                 className="object-cover"
@@ -188,7 +209,8 @@ export default function AccountsPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               )}
