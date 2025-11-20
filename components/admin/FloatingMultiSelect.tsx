@@ -82,10 +82,16 @@ export default function FloatingMultiSelect({
         className={`relative border rounded-xl transition-all ${
           isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
         }`}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundPosition: 'right 0.75rem center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '1.5em 1.5em',
+        }}
       >
       <div
         onClick={() => setIsOpen(!isOpen)}
-          className="min-h-[3rem] px-4 py-3 cursor-pointer"
+          className="min-h-[3rem] px-4 py-3 pr-10 cursor-pointer"
         >
           {selectedOptions.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -139,20 +145,20 @@ export default function FloatingMultiSelect({
             </div>
           )}
           
-          <div className="py-1">
+          <div className="py-2">
             {availableOptions.length > 0 ? (
               availableOptions.map(option => (
                 <button
                 key={option.value}
                   type="button"
                   onClick={() => handleToggle(option.value)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   {option.label}
                 </button>
               ))
             ) : (
-              <div className="px-4 py-2 text-sm text-gray-500">
+              <div className="px-4 py-3 text-sm text-gray-500">
                 {enableSearch && searchTerm ? '検索結果なし' : 'すべて選択済み'}
               </div>
             )}
