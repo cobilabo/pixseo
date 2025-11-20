@@ -46,15 +46,15 @@ export async function PUT(
       categoryId,
       patternId,
       writerId,
-      writingStyleId,
       imagePromptPatternId,
+      targetAudience,
       daysOfWeek,
       timeOfDay,
       timezone,
       isActive,
     } = body;
 
-    if (!name || !categoryId || !patternId || !writerId || !writingStyleId || !imagePromptPatternId || !daysOfWeek || !timeOfDay || !timezone) {
+    if (!name || !categoryId || !patternId || !writerId || !imagePromptPatternId || !targetAudience || !daysOfWeek || !timeOfDay || !timezone) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
         { status: 400 }
@@ -66,8 +66,8 @@ export async function PUT(
       categoryId,
       patternId,
       writerId,
-      writingStyleId,
       imagePromptPatternId,
+      targetAudience,
       daysOfWeek,
       timeOfDay,
       timezone,
