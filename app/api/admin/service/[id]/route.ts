@@ -48,8 +48,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       settings, 
       isActive,
       siteDescription,
-      mainTitle,
-      mainSubtitle,
       logoLandscape,
       logoSquare,
       logoPortrait,
@@ -103,8 +101,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (isActive !== undefined) updateData.isActive = isActive;
     if (clientId !== undefined) updateData.clientId = clientId || null;
     if (siteDescription !== undefined) updateData.siteDescription = siteDescription;
-    if (mainTitle !== undefined) updateData.mainTitle = mainTitle;
-    if (mainSubtitle !== undefined) updateData.mainSubtitle = mainSubtitle;
     if (logoLandscape !== undefined) updateData.logoLandscape = logoLandscape;
     if (logoSquare !== undefined) updateData.logoSquare = logoSquare;
     if (logoPortrait !== undefined) updateData.logoPortrait = logoPortrait;

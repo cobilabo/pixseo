@@ -38,11 +38,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const siteInfo = await getSiteInfo(mediaId);
   
-  // タイトルの優先順位: mainTitle > mainSubtitle > name
-  const pageTitle = siteInfo.mainTitle || siteInfo.mainSubtitle || siteInfo.name;
-  
   return {
-    title: pageTitle,
+    title: siteInfo.name,
     description: siteInfo.description || '',
     robots: {
       index: siteInfo.allowIndexing,
