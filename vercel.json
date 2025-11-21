@@ -12,6 +12,12 @@
     "NEXT_PUBLIC_FIREBASE_APP_ID": "1:561071971625:web:0e382383fbb444c0066b38",
     "NEXT_PUBLIC_SITE_URL": "https://the-ayumi.jp",
     "NEXT_PUBLIC_MEDIA_BASE_PATH": "/media"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/scheduled-articles",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
 
