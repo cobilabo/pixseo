@@ -25,9 +25,13 @@ export async function GET(request: NextRequest) {
     
     const currentDayOfWeek = jstDate.getUTCDay().toString(); // 0=日曜, 1=月曜, ...
     const currentHour = jstDate.getUTCHours();
-    const currentTime = `${currentHour.toString().padStart(2, '0')}:00`;
+    const currentMinute = jstDate.getUTCMinutes();
+    
+    // 5分単位に丸める（例: 19:23 → 19:25）
+    const roundedMinute = Math.round(currentMinute / 5) * 5;
+    const currentTime = `${currentHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
 
-    console.log(`[Cron] Current JST time: ${currentDayOfWeek} (day), ${currentTime} (hour)`);
+    console.log(`[Cron] Current JST time: Day ${currentDayOfWeek}, Time ${currentTime}`);
 
     // アクティブなスケジュール設定を取得
     const schedulesSnapshot = await adminDb
@@ -43,11 +47,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    console.log(`[Cron] Found ${schedulesSnapshot.size} active schedules`);
+
     // 現在の曜日と時刻に一致するスケジュールをフィルタリング
     const matchingSchedules = schedulesSnapshot.docs.filter(doc => {
       const schedule = doc.data();
       const daysOfWeek = schedule.daysOfWeek || [];
       const timeOfDay = schedule.timeOfDay || '';
+
+      console.log(`[Cron] Checking schedule ${doc.id}:`, {
+        scheduleDays: daysOfWeek,
+        scheduleTime: timeOfDay,
+        currentDay: currentDayOfWeek,
+        currentTime,
+        dayMatch: daysOfWeek.includes(currentDayOfWeek),
+        timeMatch: timeOfDay === currentTime,
+      });
 
       return daysOfWeek.includes(currentDayOfWeek) && timeOfDay === currentTime;
     });
