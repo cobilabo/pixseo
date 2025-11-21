@@ -39,6 +39,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
   const [generatingAudience, setGeneratingAudience] = useState(false);
   const [audienceHistory, setAudienceHistory] = useState<string[]>([]);
+  const [slugError, setSlugError] = useState('');
+  const [checkingSlug, setCheckingSlug] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -354,6 +356,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       return;
     }
 
+    if (slugError) {
+      alert('スラッグが重複しています。別のスラッグを使用してください。');
+      return;
+    }
+
     if (!article) {
       alert('記事データの読み込みに失敗しました');
       return;
@@ -535,9 +542,38 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               <FloatingInput
                 label="スラッグ（URL）"
                 value={formData.slug}
-                onChange={(value) => setFormData({ ...formData, slug: value })}
+                onChange={async (value) => {
+                  setFormData({ ...formData, slug: value });
+                  setSlugError('');
+                  
+                  // 空の場合はチェックしない
+                  if (!value || !currentTenant || !params.id) return;
+                  
+                  // 重複チェック（自分自身を除外）
+                  setCheckingSlug(true);
+                  try {
+                    const response = await fetch(
+                      `/api/admin/articles/check-slug?mediaId=${currentTenant.id}&slug=${encodeURIComponent(value)}&excludeId=${params.id}`
+                    );
+                    const data = await response.json();
+                    
+                    if (data.isDuplicate) {
+                      setSlugError(`このスラッグは既に使用されています（記事ID: ${data.duplicateId}）`);
+                    }
+                  } catch (error) {
+                    console.error('[slug-check] Error:', error);
+                  } finally {
+                    setCheckingSlug(false);
+                  }
+                }}
                 required
               />
+              {checkingSlug && (
+                <p className="text-xs text-gray-500 mt-1">スラッグを確認中...</p>
+              )}
+              {slugError && (
+                <p className="text-xs text-red-600 mt-1">{slugError}</p>
+              )}
                 </div>
                 <button
                   type="button"
