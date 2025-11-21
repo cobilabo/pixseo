@@ -9,6 +9,11 @@ import { cacheManager } from '../cache-manager';
 
 /**
  * ホスト名からmediaIdを取得（キャッシュ付き）
+ * 
+ * サポートする環境:
+ * 1. プレビュー: {slug}.pixseo-preview.cloud
+ * 2. カスタムドメイン: 任意のドメイン
+ * 
  * @returns mediaId | null
  */
 export async function getMediaIdFromHost(): Promise<string | null> {
@@ -22,16 +27,45 @@ export async function getMediaIdFromHost(): Promise<string | null> {
       return mediaIdFromHeader;
     }
 
-    // ホスト名が admin.pixseo.cloud の場合は null
-    if (!host.endsWith('.pixseo.cloud') || host === 'admin.pixseo.cloud') {
+    // 管理画面は除外
+    if (host.startsWith('admin.')) {
       return null;
     }
 
-    // スラッグを抽出
-    const slug = host.replace('.pixseo.cloud', '');
+    // 1. プレビュー環境: {slug}.pixseo-preview.cloud
+    if (host.endsWith('.pixseo-preview.cloud')) {
+      const slug = host.replace('.pixseo-preview.cloud', '');
+      
+      // キャッシュキー
+      const cacheKey = `mediaId:slug:${slug}`;
 
-    // キャッシュキー
-    const cacheKey = `mediaId:${slug}`;
+      // キャッシュから取得（5分間有効）
+      const cachedMediaId = cacheManager.get<string>(cacheKey, 5 * 60 * 1000);
+      if (cachedMediaId) {
+        return cachedMediaId;
+      }
+
+      // Firestoreから取得
+      const tenantsSnapshot = await adminDb
+        .collection('mediaTenants')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+
+      if (tenantsSnapshot.empty) {
+        return null;
+      }
+
+      const mediaId = tenantsSnapshot.docs[0].id;
+
+      // キャッシュに保存
+      cacheManager.set(cacheKey, mediaId);
+
+      return mediaId;
+    }
+
+    // 2. カスタムドメイン
+    const cacheKey = `mediaId:domain:${host}`;
 
     // キャッシュから取得（5分間有効）
     const cachedMediaId = cacheManager.get<string>(cacheKey, 5 * 60 * 1000);
@@ -42,7 +76,7 @@ export async function getMediaIdFromHost(): Promise<string | null> {
     // Firestoreから取得
     const tenantsSnapshot = await adminDb
       .collection('mediaTenants')
-      .where('slug', '==', slug)
+      .where('customDomain', '==', host)
       .limit(1)
       .get();
 
