@@ -16,15 +16,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // admin.pixseo.cloudサブドメインの場合、/admin-panel/にリライト
-  if (hostname.startsWith('admin.') && !pathname.startsWith('/admin-panel')) {
+  // admin.pixseo.cloudサブドメインの場合、/admin/にリライト
+  if (hostname.startsWith('admin.') && !pathname.startsWith('/admin')) {
     const url = request.nextUrl.clone();
-    url.pathname = `/admin-panel${pathname}`;
+    url.pathname = `/admin${pathname}`;
     return NextResponse.rewrite(url);
   }
   
   // 管理画面パスは言語リダイレクトから除外
-  if (pathname.startsWith('/admin-panel') || pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
   
@@ -54,10 +54,9 @@ export const config = {
      * 1. /api routes
      * 2. /_next (Next.js internals)
      * 3. /_static (inside /public)
-     * 4. /admin-panel (admin routes)
-     * 5. /admin (admin routes for admin.pixseo.cloud subdomain)
-     * 6. all root files inside /public (e.g. /favicon.ico)
+     * 4. /admin (admin routes)
+     * 5. all root files inside /public (e.g. /favicon.ico)
      */
-    '/((?!api|_next|_static|admin-panel|admin|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|_static|admin|[\\w-]+\\.\\w+).*)',
   ],
 };
