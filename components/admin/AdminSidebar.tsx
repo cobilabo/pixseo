@@ -259,7 +259,7 @@ const AdminSidebar = memo(function AdminSidebar({
             {/* サイトビューボタン */}
             {currentTenantSlug && (
               <a
-                href={`https://${currentTenantSlug}.pixseo.cloud`}
+                href={`https://${currentTenantSlug}.pixseo-preview.cloud`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-r-lg hover:bg-blue-700 transition-colors flex items-center justify-center border border-l-0 border-blue-600"

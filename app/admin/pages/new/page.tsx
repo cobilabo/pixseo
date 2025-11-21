@@ -340,7 +340,7 @@ export default function NewPagePage() {
               </div>
               <div className={serpPreviewDevice === 'pc' ? 'text-sm mb-2' : 'text-xs mb-1'}>
                 <span className="text-green-700">
-                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo.cloud` : 'example.pixseo.cloud'} › {formData.slug || 'page-slug'}
+                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo-preview.cloud` : 'example.pixseo-preview.cloud'} › ja › {formData.slug || 'page-slug'}
                 </span>
               </div>
               <div className={`text-gray-600 line-clamp-2 ${

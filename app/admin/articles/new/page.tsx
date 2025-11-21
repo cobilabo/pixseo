@@ -687,7 +687,7 @@ function NewArticlePageContent() {
               {/* URL */}
               <div className={serpPreviewDevice === 'pc' ? 'text-sm mb-2' : 'text-xs mb-1'}>
                 <span className="text-green-700">
-                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo.cloud` : 'example.pixseo.cloud'} › articles › {formData.slug || 'article-slug'}
+                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo-preview.cloud` : 'example.pixseo-preview.cloud'} › ja › articles › {formData.slug || 'article-slug'}
                 </span>
               </div>
               {/* メタディスクリプション */}

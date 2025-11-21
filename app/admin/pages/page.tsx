@@ -205,7 +205,7 @@ export default function PagesListPage() {
                             
                             {/* プレビューボタン */}
                             <Link
-                              href={currentTenant ? `https://${currentTenant.slug}.pixseo.cloud/${page.slug}` : '#'}
+                              href={currentTenant ? `https://${currentTenant.slug}.pixseo-preview.cloud/ja/${page.slug}` : '#'}
                               target="_blank"
                               className="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors"
                               title="プレビュー"

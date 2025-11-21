@@ -423,8 +423,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       return;
     }
     
-    // {slug}.pixseo.cloud/articles/{slug}
-    const previewUrl = `https://${currentTenant.slug}.pixseo.cloud/articles/${formData.slug}`;
+    // {slug}.pixseo-preview.cloud/ja/articles/{slug}
+    const previewUrl = `https://${currentTenant.slug}.pixseo-preview.cloud/ja/articles/${formData.slug}`;
     window.open(previewUrl, '_blank');
   };
 
@@ -708,7 +708,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               {/* URL */}
               <div className={serpPreviewDevice === 'pc' ? 'text-sm mb-2' : 'text-xs mb-1'}>
                 <span className="text-green-700">
-                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo.cloud` : 'example.pixseo.cloud'} › articles › {formData.slug || 'article-slug'}
+                  {currentTenant?.slug ? `${currentTenant.slug}.pixseo-preview.cloud` : 'example.pixseo-preview.cloud'} › ja › articles › {formData.slug || 'article-slug'}
                 </span>
               </div>
               {/* メタディスクリプション */}
