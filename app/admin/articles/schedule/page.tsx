@@ -331,7 +331,7 @@ function ScheduledGenerationPageContent() {
 
             <FloatingMultiSelect
               label="曜日 *"
-              value={currentSchedule.daysOfWeek}
+              values={currentSchedule.daysOfWeek}
               onChange={(value) => handleScheduleChange('daysOfWeek', value)}
               options={dayOptions}
               required
