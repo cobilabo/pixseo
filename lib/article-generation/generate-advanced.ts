@@ -683,14 +683,21 @@ A: [回答]
   const headingMatches = Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)) as RegExpMatchArray[];
   const headingTexts = headingMatches.map((match: RegExpMatchArray) => match[0].replace(/<[^>]*>/g, '').trim());
 
+  console.log(`[Step 12] Found ${headingMatches.length} h2 tags`);
+
   if (headingMatches.length >= 1) {
-    const targetPositions = Array.from({ length: headingMatches.length }, (_, i) => i);
+    // 画像生成を最初の4つのh2タグに制限（処理時間短縮のため）
+    const maxImages = Math.min(4, headingMatches.length);
+    const targetPositions = Array.from({ length: maxImages }, (_, i) => i);
+    console.log(`[Step 12] Generating ${maxImages} images`);
 
     for (let i = targetPositions.length - 1; i >= 0; i--) {
       try {
         const position = targetPositions[i];
         const headingMatch = headingMatches[position];
         const headingContext = headingTexts[position];
+        
+        console.log(`[Step 12] Generating image for h2 #${position + 1}: "${headingContext}"`);
 
         const inlineImagePrompt = `${imagePatternData.prompt}
 
@@ -754,17 +761,32 @@ The image should visually represent the main concept of this section.`;
         
         console.log(`[Step 12] Inserted image after h2 tag #${position + 1}`);
       } catch (error) {
-        console.error('[Step 12] Error generating inline image:', error);
+        console.error(`[Step 12] Error generating inline image for h2 #${position + 1}:`, error);
+        console.error('[Step 12] Error details:', error instanceof Error ? error.message : String(error));
+        // エラーが発生しても処理を継続
+        continue;
       }
     }
   }
+
+  console.log('[Step 12] Image generation loop completed');
 
   console.log('[Step 12] Inline images generated');
 
   // === STEP 13: 非公開として記事を保存 ===
   console.log('[Step 13] Saving article as draft...');
+  console.log('[Step 13] Article data:', {
+    title,
+    slug,
+    categoryIds: [categoryId],
+    tagIds: tagIds.length,
+    writerId,
+    faqs: faqs_ja.length,
+    contentLength: content.length,
+  });
 
   const articleId = adminDb.collection('articles').doc().id;
+  console.log('[Step 13] Generated article ID:', articleId);
 
   const articleDataToSave: any = {
     title,
@@ -803,17 +825,23 @@ The image should visually represent the main concept of this section.`;
   };
 
   // AI Summary生成
+  console.log('[Step 13] Generating AI summary...');
   try {
     articleDataToSave.aiSummary = await generateAISummary(plainContent.substring(0, 1000), 'ja');
     articleDataToSave.aiSummary_ja = articleDataToSave.aiSummary;
+    console.log('[Step 13] AI summary generated');
   } catch (error) {
     console.error('[Step 13] AI Summary generation failed:', error);
+    console.error('[Step 13] Continuing without AI summary');
   }
 
+  console.log('[Step 13] Saving to Firestore...');
   await adminDb.collection('articles').doc(articleId).set(articleDataToSave);
 
-  console.log('[Step 13] Article saved as draft');
-  console.log('[Advanced Generate] 13-step generation completed!');
+  console.log('[Step 13] Article saved as draft successfully');
+  console.log('[Advanced Generate] 13-step generation completed successfully!');
+  console.log('[Advanced Generate] Article ID:', articleId);
+  console.log('[Advanced Generate] Title:', title);
 
   return {
     success: true,
