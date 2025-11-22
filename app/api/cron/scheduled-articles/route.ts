@@ -87,15 +87,33 @@ export async function GET(request: NextRequest) {
         console.log(`[Cron] Executing schedule: ${scheduleId} (${schedule.name})`);
 
         try {
-          // 共通関数を直接呼び出し（HTTP不要）
-          const { generateAdvancedArticle } = await import('@/lib/article-generation/generate-advanced');
-          
-          const result = await generateAdvancedArticle({
-            mediaId: schedule.mediaId,
-            categoryId: schedule.categoryId,
-            writerId: schedule.writerId,
-            imagePromptPatternId: schedule.imagePromptPatternId,
+          // 既存のAI記事生成APIを内部的に呼び出す
+          // Vercel内部では同じデプロイメントのAPIを直接呼び出せる
+          const baseUrl = process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+          const generateResponse = await fetch(`${baseUrl}/api/admin/articles/generate-advanced`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-media-id': schedule.mediaId,
+            },
+            body: JSON.stringify({
+              categoryId: schedule.categoryId,
+              patternId: schedule.patternId,
+              writerId: schedule.writerId,
+              imagePromptPatternId: schedule.imagePromptPatternId,
+              targetAudience: schedule.targetAudience,
+            }),
           });
+
+          if (!generateResponse.ok) {
+            const errorText = await generateResponse.text();
+            throw new Error(`Article generation failed: ${errorText}`);
+          }
+
+          const result = await generateResponse.json();
 
           // 最終実行時刻を更新
           await adminDb.collection('scheduledGenerations').doc(scheduleId).update({

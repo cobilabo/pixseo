@@ -13,11 +13,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       categoryId,
+      patternId,
       writerId,
       imagePromptPatternId,
+      targetAudience,
     } = body;
 
-    if (!mediaId || !categoryId || !writerId || !imagePromptPatternId) {
+    if (!mediaId || !categoryId || !patternId || !writerId || !imagePromptPatternId || !targetAudience) {
       return NextResponse.json(
         { error: 'All parameters are required' },
         { status: 400 }
@@ -28,8 +30,10 @@ export async function POST(request: NextRequest) {
     const result = await generateAdvancedArticle({
       mediaId,
       categoryId,
+      patternId,
       writerId,
       imagePromptPatternId,
+      targetAudience,
     });
 
     return NextResponse.json(result);

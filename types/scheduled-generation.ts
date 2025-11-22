@@ -6,8 +6,10 @@ export interface ScheduledGeneration {
   id: string;
   name: string; // 設定名（例: 毎週月曜のAI記事）
   categoryId: string; // カテゴリーID
+  patternId: string; // 構成パターンID
   writerId: string; // ライターID
   imagePromptPatternId: string; // 画像プロンプトパターンID
+  targetAudience: string; // 想定読者（ペルソナ）
   
   // スケジュール設定
   daysOfWeek: string[]; // 曜日（0=日曜, 1=月曜, ..., 6=土曜）
