@@ -93,10 +93,8 @@ export async function GET(request: NextRequest) {
           const result = await generateAdvancedArticle({
             mediaId: schedule.mediaId,
             categoryId: schedule.categoryId,
-            patternId: schedule.patternId,
             writerId: schedule.writerId,
             imagePromptPatternId: schedule.imagePromptPatternId,
-            targetAudience: schedule.targetAudience,
           });
 
           // 最終実行時刻を更新
