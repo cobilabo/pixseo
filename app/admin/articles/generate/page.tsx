@@ -114,14 +114,17 @@ function AdvancedArticleGeneratePageContent() {
           'x-media-id': currentTenant?.id || '',
         },
         body: JSON.stringify(formData),
-      }).then(response => {
+      }).then(async response => {
         if (response.ok) {
           console.log('[Advanced Generate] Article generation completed');
         } else {
-          console.error('[Advanced Generate] Article generation failed');
+          const errorData = await response.json();
+          console.error('[Advanced Generate] Article generation failed:', errorData);
+          alert(`記事生成エラー: ${errorData.details || errorData.error}`);
         }
       }).catch(err => {
         console.error('[Advanced Generate] Error:', err);
+        alert(`記事生成エラー: ${err.message}`);
       });
     } catch (err) {
       console.error('Error starting article generation:', err);

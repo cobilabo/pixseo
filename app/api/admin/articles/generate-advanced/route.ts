@@ -17,7 +17,15 @@ export async function POST(request: NextRequest) {
       imagePromptPatternId,
     } = body;
 
+    console.log('[API /admin/articles/generate-advanced] Request:', {
+      mediaId,
+      categoryId,
+      writerId,
+      imagePromptPatternId,
+    });
+
     if (!mediaId || !categoryId || !writerId || !imagePromptPatternId) {
+      console.error('[API /admin/articles/generate-advanced] Missing parameters');
       return NextResponse.json(
         { error: 'All parameters are required' },
         { status: 400 }
@@ -32,13 +40,23 @@ export async function POST(request: NextRequest) {
       imagePromptPatternId,
     });
 
+    console.log('[API /admin/articles/generate-advanced] Success:', result.articleId);
     return NextResponse.json(result);
   } catch (error) {
     console.error('[API /admin/articles/generate-advanced] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('[API /admin/articles/generate-advanced] Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+    });
+    
     return NextResponse.json(
       { 
         error: 'Failed to generate advanced article', 
-        details: error instanceof Error ? error.message : String(error) 
+        details: errorMessage,
+        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
       },
       { status: 500 }
     );

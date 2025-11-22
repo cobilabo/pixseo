@@ -36,6 +36,7 @@ export async function generateAdvancedArticle(
   } = params;
 
   console.log('[Advanced Generate] Starting 13-step article generation...');
+  console.log('[Advanced Generate] Parameters:', { mediaId, categoryId, writerId, imagePromptPatternId });
 
   if (!mediaId || !categoryId || !writerId || !imagePromptPatternId) {
     throw new Error('All parameters are required');
@@ -60,8 +61,13 @@ export async function generateAdvancedArticle(
   const grokApiKey = process.env.GROK_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
+  console.log('[Step 0] API keys check:', {
+    hasGrokKey: !!grokApiKey,
+    hasOpenaiKey: !!openaiApiKey,
+  });
+
   if (!grokApiKey || !openaiApiKey) {
-    throw new Error('API keys not configured');
+    throw new Error(`API keys not configured - GROK: ${!!grokApiKey}, OpenAI: ${!!openaiApiKey}`);
   }
 
   const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -70,13 +76,31 @@ export async function generateAdvancedArticle(
   console.log('[Step 1] Keyword selection...');
 
   // 同カテゴリーの直近5記事のキーワードを取得
-  const recentArticles = await adminDb
-    .collection('articles')
-    .where('mediaId', '==', mediaId)
-    .where('categoryIds', 'array-contains', categoryId)
-    .orderBy('createdAt', 'desc')
-    .limit(5)
-    .get();
+  let recentArticles;
+  try {
+    recentArticles = await adminDb
+      .collection('articles')
+      .where('mediaId', '==', mediaId)
+      .where('categoryIds', 'array-contains', categoryId)
+      .orderBy('createdAt', 'desc')
+      .limit(5)
+      .get();
+    console.log('[Step 1] Recent articles fetched:', recentArticles.docs.length);
+  } catch (error: any) {
+    console.error('[Step 1] Error fetching recent articles:', error.message);
+    // Firestoreインデックスエラーの場合は、インデックスなしでクエリ
+    if (error.message?.includes('index')) {
+      console.log('[Step 1] Index error detected, fetching without orderBy');
+      recentArticles = await adminDb
+        .collection('articles')
+        .where('mediaId', '==', mediaId)
+        .where('categoryIds', 'array-contains', categoryId)
+        .limit(5)
+        .get();
+    } else {
+      throw error;
+    }
+  }
 
   const recentKeywords = recentArticles.docs
     .map((doc: any) => doc.data().selectedKeyword)
@@ -97,6 +121,8 @@ export async function generateAdvancedArticle(
 
   while (!selectedKeyword && attempts < maxAttempts) {
     attempts++;
+    
+    console.log(`[Step 1] Keyword selection attempt ${attempts}/${maxAttempts}`);
     
     const keywordResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -123,7 +149,9 @@ export async function generateAdvancedArticle(
     });
 
     if (!keywordResponse.ok) {
-      throw new Error('Failed to select keyword');
+      const errorText = await keywordResponse.text();
+      console.error('[Step 1] Grok API error:', keywordResponse.status, errorText);
+      throw new Error(`Failed to select keyword: ${keywordResponse.status} - ${errorText}`);
     }
 
     const keywordData = await keywordResponse.json();
