@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     
     console.log('[API Media] メディア一覧取得開始', { mediaId });
     
-    let query: FirebaseFirestore.Query = adminDb.collection('media');
+    let query: FirebaseFirestore.Query = adminDb.collection('mediaLibrary');
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
