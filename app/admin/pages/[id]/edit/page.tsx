@@ -226,7 +226,7 @@ export default function EditPagePage() {
         <div className="max-w-full px-4 pb-32 animate-fadeIn">
           <form id="page-edit-form" onSubmit={handleSubmit}>
             {/* すべてのフィールドを1つのパネル内に表示 */}
-            <div className="bg-white rounded-xl p-6 space-y-6 max-w-4xl"
+            <div className="bg-white rounded-xl p-6 space-y-6 max-w-4xl">
               {/* タイトル */}
               <FloatingInput
                 label="タイトル"
