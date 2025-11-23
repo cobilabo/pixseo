@@ -11,19 +11,33 @@ export async function GET(request: NextRequest) {
     
     console.log('[API Media] メディア一覧取得開始', { mediaId });
     
-    let query: FirebaseFirestore.Query = adminDb.collection('mediaLibrary');
+    // 両方のコレクションから取得（media と mediaLibrary）
+    let query1: FirebaseFirestore.Query = adminDb.collection('media');
+    let query2: FirebaseFirestore.Query = adminDb.collection('mediaLibrary');
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
-      query = query.where('mediaId', '==', mediaId);
+      query1 = query1.where('mediaId', '==', mediaId);
+      query2 = query2.where('mediaId', '==', mediaId);
     }
     
     // orderByはクライアント側で行う（複合インデックスを避けるため）
-    const snapshot = await query.get();
+    const [snapshot1, snapshot2] = await Promise.all([
+      query1.get(),
+      query2.get(),
+    ]);
+    
+    // 両方のスナップショットをマージ
+    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
+    console.log('[API Media] 取得したドキュメント数:', {
+      media: snapshot1.docs.length,
+      mediaLibrary: snapshot2.docs.length,
+      total: allDocs.length,
+    });
     
     // 各メディアの使用数を計算
     const mediaWithUsage = await Promise.all(
-      snapshot.docs.map(async (doc) => {
+      allDocs.map(async (doc) => {
         const data = doc.data();
         const mediaUrl = data.url;
         

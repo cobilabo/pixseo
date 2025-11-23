@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const docRef = await adminDb.collection('media').add(mediaData);
+    const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
     console.log('[API /admin/images/generate] メディアライブラリに登録:', docRef.id);
 
     return NextResponse.json({
