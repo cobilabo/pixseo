@@ -6,6 +6,7 @@ import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
+import ColorPicker from '@/components/admin/ColorPicker';
 import { createPage } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { Block } from '@/types/block';
@@ -33,6 +34,8 @@ export default function NewPagePage() {
     metaTitle: '',
     metaDescription: '',
     order: 0,
+    backgroundColor: '',
+    textColor: '',
   });
 
   // タイトルが変更されたら自動的にスラッグを生成
@@ -181,7 +184,7 @@ export default function NewPagePage() {
                     onClick={() => setActiveTab('blocks')}
                     className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === 'blocks'
-                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        ? 'text-blue-600 border-b-2 border-blue-600 rounded-tl-[1.75rem]'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                     style={activeTab === 'blocks' ? { backgroundColor: '#f9fafb' } : {}}
@@ -193,7 +196,7 @@ export default function NewPagePage() {
                     onClick={() => setActiveTab('settings')}
                     className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === 'settings'
-                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        ? 'text-blue-600 border-b-2 border-blue-600 rounded-tr-[1.75rem]'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                     style={activeTab === 'settings' ? { backgroundColor: '#f9fafb' } : {}}
@@ -257,6 +260,20 @@ export default function NewPagePage() {
                 onChange={(value) => setFormData({ ...formData, excerpt: value })}
                 multiline
                 rows={3}
+              />
+
+              {/* 背景色 */}
+              <ColorPicker
+                label="背景色"
+                value={formData.backgroundColor}
+                onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
+              />
+
+              {/* テキストカラー */}
+              <ColorPicker
+                label="テキストカラー"
+                value={formData.textColor}
+                onChange={(value) => setFormData({ ...formData, textColor: value })}
               />
 
               {/* メタタイトル */}
