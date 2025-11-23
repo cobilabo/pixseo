@@ -9,7 +9,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     console.log('[API Media Delete] 削除開始:', params.id);
     
     // Firestoreからメタデータ取得
-    const doc = await adminDb.collection('media').doc(params.id).get();
+    const doc = await adminDb.collection('mediaLibrary').doc(params.id).get();
     
     if (!doc.exists) {
       return NextResponse.json({ error: 'Media not found' }, { status: 404 });
@@ -46,7 +46,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     // Firestoreから削除
-    await adminDb.collection('media').doc(params.id).delete();
+    await adminDb.collection('mediaLibrary').doc(params.id).delete();
     
     console.log('[API Media Delete] 削除成功');
     
