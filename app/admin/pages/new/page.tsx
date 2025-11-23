@@ -20,7 +20,6 @@ export default function NewPagePage() {
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   const [generatingSlug, setGeneratingSlug] = useState(false);
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
-  const [pages, setPages] = useState<Page[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]); // ブロックデータ
   const blockBuilderRef = useRef<BlockBuilderRef>(null);
   
@@ -33,24 +32,7 @@ export default function NewPagePage() {
     metaTitle: '',
     metaDescription: '',
     order: 0,
-    parentId: '',
   });
-
-  useEffect(() => {
-    fetchPages();
-  }, []);
-
-  const fetchPages = async () => {
-    try {
-      const data = await apiGet<Page[]>('/api/admin/pages');
-      setPages(data);
-      // 次の表示順を自動設定
-      const maxOrder = data.length > 0 ? Math.max(...data.map(p => p.order)) : -1;
-      setFormData(prev => ({ ...prev, order: maxOrder + 1 }));
-    } catch (error) {
-      console.error('Error fetching pages:', error);
-    }
-  };
 
   // タイトルが変更されたら自動的にスラッグを生成
   useEffect(() => {
@@ -160,7 +142,6 @@ export default function NewPagePage() {
       const pageData: any = {
         ...formData,
         mediaId: currentTenant.id,
-        parentId: formData.parentId || undefined,
         useBlockBuilder: true,
         blocks: currentBlocks,
         // 後方互換性のため、contentも生成して保存
@@ -184,9 +165,6 @@ export default function NewPagePage() {
       generateSlugFromTitle(formData.title);
     }
   };
-
-  // 親ページとして選択可能なページ（現在作成中のページ以外）
-  const parentPageOptions = pages.filter(p => p.id !== formData.parentId);
 
   return (
     <AuthGuard>
@@ -222,27 +200,6 @@ export default function NewPagePage() {
                   {generatingSlug ? '生成中...' : '自動生成'}
                 </button>
               </div>
-
-              {/* 親ページ選択 */}
-              {parentPageOptions.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    親ページ（階層構造用・任意）
-                  </label>
-                  <select
-                    value={formData.parentId}
-                    onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">なし（トップレベル）</option>
-                    {parentPageOptions.map((page) => (
-                      <option key={page.id} value={page.id}>
-                        {page.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               {/* 表示順 */}
               <FloatingInput

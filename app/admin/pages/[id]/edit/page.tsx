@@ -23,7 +23,6 @@ export default function EditPagePage() {
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   const [generatingSlug, setGeneratingSlug] = useState(false);
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
-  const [pages, setPages] = useState<Page[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]); // ブロックデータ
   const blockBuilderRef = useRef<BlockBuilderRef>(null);
   
@@ -36,12 +35,10 @@ export default function EditPagePage() {
     metaTitle: '',
     metaDescription: '',
     order: 0,
-    parentId: '',
   });
 
   useEffect(() => {
     fetchPage();
-    fetchPages();
   }, [pageId]);
 
   const fetchPage = async () => {
@@ -62,7 +59,6 @@ export default function EditPagePage() {
         metaTitle: page.metaTitle || '',
         metaDescription: page.metaDescription || '',
         order: page.order,
-        parentId: page.parentId || '',
       });
       
       // ブロックビルダーデータを読み込み
@@ -73,15 +69,6 @@ export default function EditPagePage() {
       console.error('Error fetching page:', error);
       alert('固定ページの取得に失敗しました');
       setFetchLoading(false);
-    }
-  };
-
-  const fetchPages = async () => {
-    try {
-      const data = await apiGet<Page[]>('/api/admin/pages');
-      setPages(data);
-    } catch (error) {
-      console.error('Error fetching pages:', error);
     }
   };
 
@@ -184,7 +171,6 @@ export default function EditPagePage() {
     try {
       const updateData: any = {
         ...formData,
-        parentId: formData.parentId || undefined,
         useBlockBuilder: true,
         blocks: currentBlocks,
         // 後方互換性のため、contentも生成して保存
@@ -208,9 +194,6 @@ export default function EditPagePage() {
       generateSlugFromTitle(formData.title);
     }
   };
-
-  // 親ページとして選択可能なページ（自分自身以外）
-  const parentPageOptions = pages.filter(p => p.id !== pageId);
 
   if (fetchLoading) {
     return (
@@ -259,26 +242,6 @@ export default function EditPagePage() {
                 </button>
               </div>
 
-              {/* 親ページ選択 */}
-              {parentPageOptions.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    親ページ（階層構造用・任意）
-                  </label>
-                  <select
-                    value={formData.parentId}
-                    onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">なし（トップレベル）</option>
-                    {parentPageOptions.map((page) => (
-                      <option key={page.id} value={page.id}>
-                        {page.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               {/* 表示順 */}
               <FloatingInput

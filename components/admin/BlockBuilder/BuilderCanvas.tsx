@@ -80,6 +80,8 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     transform,
     transition,
     isDragging,
+    over,
+    active,
   } = useSortable({ id: block.id });
 
   const style = {
@@ -98,52 +100,62 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
 
   const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '/text.svg' };
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`
-        relative
-        border-2
-        rounded-lg
-        p-4
-        cursor-pointer
-        transition-all
-        ${isSelected 
-          ? 'border-blue-500 bg-blue-50' 
-          : 'border-gray-200 hover:border-gray-300 bg-white'
-        }
-      `}
-      onClick={onSelect}
-    >
-      {/* ドラッグハンドル */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zM13 3h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
-        </svg>
-      </div>
+  // ドロップインジケーター表示判定
+  const isOverCurrent = over?.id === block.id && active?.id !== block.id;
 
-      {/* ブロック情報 */}
-      <div className="ml-8 flex items-center gap-3">
-        <div className="w-4 h-4 flex-shrink-0">
-          <Image 
-            src={blockInfo.icon} 
-            alt={blockInfo.label} 
-            width={16} 
-            height={16}
-            className="opacity-60"
-            style={{ filter: 'grayscale(30%)' }}
-          />
+  return (
+    <div className="relative">
+      {/* ドロップインジケーター（上） */}
+      {isOverCurrent && (
+        <div className="absolute -top-2 left-0 right-0 h-1 bg-blue-500 rounded-full z-10" />
+      )}
+      
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`
+          relative
+          border-2
+          rounded-lg
+          p-4
+          cursor-pointer
+          transition-all
+          ${isSelected 
+            ? 'border-blue-500 bg-blue-50' 
+            : 'border-gray-200 hover:border-gray-300 bg-white'
+          }
+        `}
+        onClick={onSelect}
+      >
+        {/* ドラッグハンドル */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zM13 3h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
+          </svg>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-gray-900 mb-1">{blockInfo.label}</div>
-          <div className="text-sm text-gray-600">
-            <BlockPreview block={block} />
+
+        {/* ブロック情報 */}
+        <div className="ml-8 flex items-center gap-3">
+          <div className="w-4 h-4 flex-shrink-0">
+            <Image 
+              src={blockInfo.icon} 
+              alt={blockInfo.label} 
+              width={16} 
+              height={16}
+              className="opacity-60"
+              style={{ filter: 'grayscale(30%)' }}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-gray-900 mb-1">{blockInfo.label}</div>
+            <div className="text-sm text-gray-600">
+              <BlockPreview block={block} />
+            </div>
           </div>
         </div>
       </div>

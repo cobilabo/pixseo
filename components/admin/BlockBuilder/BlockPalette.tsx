@@ -94,11 +94,6 @@ export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
         ))}
       </div>
 
-      <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-xs text-blue-800">
-          💡 ブロックを右パネルにドラッグ&ドロップで追加
-        </p>
-      </div>
     </div>
   );
 }
