@@ -20,7 +20,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange, allow
         type="text"
         value={isOff ? '' : value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={allowOff ? "" : "#000000"}
         disabled={isOff && allowOff}
         className={`w-full pl-14 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono peer text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 ${
           allowOff ? 'pr-20' : 'pr-4'
