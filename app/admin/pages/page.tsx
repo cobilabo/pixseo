@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
+import AIPageGeneratorModal from '@/components/admin/AIPageGeneratorModal';
 import { deletePage } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { apiGet } from '@/lib/api-client';
@@ -15,6 +16,7 @@ export default function PagesListPage() {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAIModal, setShowAIModal] = useState(false);
 
   useEffect(() => {
     fetchPages();
@@ -237,16 +239,37 @@ export default function PagesListPage() {
           </div>
         )}
 
-        {/* フローティング新規作成ボタン */}
-        <Link
-          href="/pages/new"
-          className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg z-50"
-          title="新規作成"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </Link>
+        {/* フローティングボタン */}
+        <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
+          {/* AI生成ボタン */}
+          <button
+            onClick={() => setShowAIModal(true)}
+            className="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full hover:from-purple-700 hover:to-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+            title="AIで生成"
+          >
+            <Image src="/ai.svg" alt="AI" width={24} height={24} className="brightness-0 invert" />
+          </button>
+
+          {/* 新規作成ボタン */}
+          <Link
+            href="/pages/new"
+            className="w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
+            title="新規作成"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* AI生成モーダル */}
+        {currentTenant && (
+          <AIPageGeneratorModal
+            isOpen={showAIModal}
+            onClose={() => setShowAIModal(false)}
+            mediaId={currentTenant.id}
+          />
+        )}
       </AdminLayout>
     </AuthGuard>
   );
