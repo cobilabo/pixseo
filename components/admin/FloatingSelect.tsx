@@ -23,6 +23,7 @@ export default function FloatingSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownListRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
   const selectedOption = options.find(opt => opt.value === value);
@@ -33,14 +34,22 @@ export default function FloatingSelect({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      // ドロップダウン本体とリストの両方の外側をクリックした場合のみ閉じる
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        dropdownListRef.current &&
+        !dropdownListRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
   const handleToggle = () => {
     if (!isOpen && dropdownRef.current) {
@@ -98,6 +107,7 @@ export default function FloatingSelect({
       {/* React Portalでbody直下にドロップダウンを表示 */}
       {mounted && isOpen && createPortal(
         <div
+          ref={dropdownListRef}
           style={{
             position: 'absolute',
             top: `${dropdownPosition.top}px`,
