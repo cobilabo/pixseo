@@ -44,7 +44,9 @@ async function getPageBySlug(slug: string, mediaId: string) {
       ...data,
       publishedAt: data.publishedAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
-    };
+      useBlockBuilder: data.useBlockBuilder || false,
+      blocks: data.blocks || [],
+    } as any;
   } catch (error) {
     console.error('[getPageBySlug] Error:', error);
     return null;

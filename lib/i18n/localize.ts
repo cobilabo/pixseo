@@ -165,6 +165,8 @@ export function localizePage(page: any, lang: Lang) {
     updatedAt: page.updatedAt,
     mediaId: page.mediaId,
     parentId: page.parentId,
+    useBlockBuilder: page.useBlockBuilder || false,
+    blocks: page.blocks || [],
   };
 }
 
