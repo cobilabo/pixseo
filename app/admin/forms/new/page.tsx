@@ -103,14 +103,14 @@ export default function NewFormPage() {
               <FloatingInput
                 label="フォーム名 *"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, name: value })}
                 required
               />
 
               <FloatingInput
                 label="説明（任意）"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, description: value })}
                 multiline
                 rows={3}
               />
@@ -164,11 +164,11 @@ export default function NewFormPage() {
                 <FloatingInput
                   label="完了メッセージ"
                   value={formData.afterSubmit.message || ''}
-                  onChange={(e) => setFormData({
+                  onChange={(value) => setFormData({
                     ...formData,
                     afterSubmit: {
                       ...formData.afterSubmit,
-                      message: e.target.value,
+                      message: value,
                     },
                   })}
                   multiline
@@ -178,11 +178,11 @@ export default function NewFormPage() {
                 <FloatingInput
                   label="リダイレクト先URL"
                   value={formData.afterSubmit.redirectUrl || ''}
-                  onChange={(e) => setFormData({
+                  onChange={(value) => setFormData({
                     ...formData,
                     afterSubmit: {
                       ...formData.afterSubmit,
-                      redirectUrl: e.target.value,
+                      redirectUrl: value,
                     },
                   })}
                   placeholder="https://example.com/thanks"
@@ -219,11 +219,11 @@ export default function NewFormPage() {
                     label="通知先メールアドレス"
                     type="email"
                     value={formData.emailNotification.to[0]}
-                    onChange={(e) => setFormData({
+                    onChange={(value) => setFormData({
                       ...formData,
                       emailNotification: {
                         ...formData.emailNotification,
-                        to: [e.target.value],
+                        to: [value],
                       },
                     })}
                     placeholder="admin@example.com"
@@ -232,11 +232,11 @@ export default function NewFormPage() {
                   <FloatingInput
                     label="メール件名"
                     value={formData.emailNotification.subject || ''}
-                    onChange={(e) => setFormData({
+                    onChange={(value) => setFormData({
                       ...formData,
                       emailNotification: {
                         ...formData.emailNotification,
-                        subject: e.target.value,
+                        subject: value,
                       },
                     })}
                     placeholder="新しいフォーム送信がありました"
