@@ -15,7 +15,21 @@ export default function NewFormPage() {
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState<FormField[]>([]);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    isActive: boolean;
+    emailNotification: {
+      enabled: boolean;
+      to: string[];
+      subject?: string;
+    };
+    afterSubmit: {
+      type: 'message' | 'redirect';
+      message?: string;
+      redirectUrl?: string;
+    };
+  }>({
     name: '',
     description: '',
     isActive: true,
@@ -25,7 +39,7 @@ export default function NewFormPage() {
       subject: '',
     },
     afterSubmit: {
-      type: 'message' as 'message' | 'redirect',
+      type: 'message',
       message: 'お問い合わせありがとうございます。',
       redirectUrl: '',
     },
