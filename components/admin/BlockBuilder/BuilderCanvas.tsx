@@ -50,7 +50,7 @@ export default function BuilderCanvas({
   return (
     <div 
       ref={setDropRef}
-      className="space-y-4"
+      className="space-y-2"
     >
       {blocks.map((block) => (
         <SortableBlockItem
@@ -117,11 +117,15 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
         style={style}
         className={`
           relative
+          p-3
+          rounded-lg
+          border
+          border-gray-200
           cursor-pointer
           transition-all
           ${isSelected 
-            ? 'bg-blue-50' 
-            : 'hover:bg-gray-50'
+            ? 'bg-blue-50 border-blue-500' 
+            : 'hover:bg-gray-50 hover:border-gray-300'
           }
         `}
         onClick={onSelect}

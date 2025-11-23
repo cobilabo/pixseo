@@ -155,7 +155,7 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
           <div className="flex h-[calc(100vh-300px)]">
             {/* 左パネル: ブロックパレット（50%） */}
             <div className="w-1/2 relative border-r border-gray-200">
-              <div className="absolute inset-0 overflow-y-auto">
+              <div className="absolute inset-0 overflow-y-auto p-4 pr-6">
                 <BlockPalette onAddBlock={handleAddBlock} />
               </div>
               
@@ -173,7 +173,7 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
             </div>
 
             {/* 右パネル: キャンバス（50%） */}
-            <div className="w-1/2 overflow-y-auto">
+            <div className="w-1/2 overflow-y-auto p-4 pl-6">
               <SortableContext items={localBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
                 <BuilderCanvas
                   blocks={localBlocks}
