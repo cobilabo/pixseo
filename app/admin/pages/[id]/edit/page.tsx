@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
@@ -11,7 +11,7 @@ import { Page } from '@/types/page';
 import { Block } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { apiGet } from '@/lib/api-client';
-import BlockBuilder from '@/components/admin/BlockBuilder';
+import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 
 export default function EditPagePage() {
   const router = useRouter();
@@ -25,6 +25,7 @@ export default function EditPagePage() {
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
   const [pages, setPages] = useState<Page[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]); // ブロックデータ
+  const blockBuilderRef = useRef<BlockBuilderRef>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -166,7 +167,10 @@ export default function EditPagePage() {
       return;
     }
     
-    if (blocks.length === 0) {
+    // BlockBuilderから現在のブロックを取得
+    const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || [];
+    
+    if (currentBlocks.length === 0) {
       alert('ブロックを少なくとも1つ追加してください');
       return;
     }
@@ -182,7 +186,7 @@ export default function EditPagePage() {
         ...formData,
         parentId: formData.parentId || undefined,
         useBlockBuilder: true,
-        blocks,
+        blocks: currentBlocks,
         // 後方互換性のため、contentも生成して保存
         content: '<!-- Block Builder Content -->',
       };
@@ -321,7 +325,7 @@ export default function EditPagePage() {
 
             {/* ブロックビルダー */}
             <div className="mt-6">
-              <BlockBuilder blocks={blocks} onChange={setBlocks} />
+              <BlockBuilder ref={blockBuilderRef} blocks={blocks} onChange={setBlocks} />
             </div>
           </form>
 

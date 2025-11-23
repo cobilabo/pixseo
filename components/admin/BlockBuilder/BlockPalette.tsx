@@ -7,6 +7,7 @@
 
 import { BlockType } from '@/types/block';
 import Image from 'next/image';
+import { useDraggable } from '@dnd-kit/core';
 
 interface BlockPaletteProps {
   onAddBlock: (type: BlockType) => void;
@@ -45,43 +46,58 @@ const blockTypes = [
   },
 ];
 
+function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${blockType.type}`,
+    data: { type: blockType.type },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`w-full text-left p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group cursor-move ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-6 h-6 flex-shrink-0">
+          <Image 
+            src={blockType.icon} 
+            alt={blockType.label} 
+            width={24} 
+            height={24} 
+            className="opacity-60 group-hover:opacity-100"
+            style={{ filter: 'grayscale(30%)' }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-gray-900 group-hover:text-blue-600">
+            {blockType.label}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {blockType.description}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-md h-full">
       <h3 className="text-lg font-bold text-gray-900 mb-4">ブロック</h3>
       <div className="space-y-2">
         {blockTypes.map((blockType) => (
-          <button
-            key={blockType.type}
-            onClick={() => onAddBlock(blockType.type)}
-            className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 flex-shrink-0">
-                <Image 
-                  src={blockType.icon} 
-                  alt={blockType.label} 
-                  width={24} 
-                  height={24} 
-                  className="text-gray-600 group-hover:text-blue-600"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 group-hover:text-blue-600">
-                  {blockType.label}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {blockType.description}
-                </div>
-              </div>
-            </div>
-          </button>
+          <DraggableBlockType key={blockType.type} blockType={blockType} />
         ))}
       </div>
 
       <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-xs text-blue-800">
-          💡 ブロックをクリックして追加できます
+          💡 ブロックを右パネルにドラッグ&ドロップで追加
         </p>
       </div>
     </div>

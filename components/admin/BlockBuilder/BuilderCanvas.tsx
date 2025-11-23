@@ -8,6 +8,7 @@
 import { Block } from '@/types/block';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import Image from 'next/image';
 
 interface BuilderCanvasProps {
   blocks: Block[];
@@ -75,14 +76,14 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
   };
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
-    text: { label: 'テキスト', icon: '📝' },
-    image: { label: '画像', icon: '🖼️' },
-    cta: { label: 'CTA', icon: '🔘' },
-    form: { label: 'フォーム', icon: '📋' },
-    html: { label: 'HTML', icon: '💻' },
+    text: { label: 'テキスト', icon: '/text.svg' },
+    image: { label: '画像', icon: '/image.svg' },
+    cta: { label: 'CTA', icon: '/cta.svg' },
+    form: { label: 'フォーム', icon: '/form.svg' },
+    html: { label: 'HTML', icon: '/html.svg' },
   };
 
-  const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '❓' };
+  const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '/text.svg' };
 
   return (
     <div
@@ -117,7 +118,16 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
       {/* ブロック情報 */}
       <div className="ml-8 mr-8">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl">{blockInfo.icon}</span>
+          <div className="w-5 h-5 flex-shrink-0">
+            <Image 
+              src={blockInfo.icon} 
+              alt={blockInfo.label} 
+              width={20} 
+              height={20}
+              className="opacity-60"
+              style={{ filter: 'grayscale(30%)' }}
+            />
+          </div>
           <span className="font-medium text-gray-900">{blockInfo.label}</span>
         </div>
         <div className="text-sm text-gray-600">

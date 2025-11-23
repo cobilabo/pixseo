@@ -5,7 +5,7 @@
  * ドラッグ&ドロップでブロックを組み立てるUI
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { Block, BlockType } from '@/types/block';
@@ -19,15 +19,24 @@ interface BlockBuilderProps {
   onChange: (blocks: Block[]) => void;
 }
 
-export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
+export interface BlockBuilderRef {
+  getCurrentBlocks: () => Block[];
+}
+
+const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, onChange }, ref) => {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localBlocks, setLocalBlocks] = useState<Block[]>(blocks);
 
-  // propsのblocksが変更されたら同期
+  // propsのblocksが変更されたら同期（初回ロード時）
   useEffect(() => {
     setLocalBlocks(blocks);
-  }, [blocks]);
+  }, []);
+
+  // 外部から現在のblocksを取得できるようにする
+  useImperativeHandle(ref, () => ({
+    getCurrentBlocks: () => localBlocks,
+  }));
 
   const selectedBlock = localBlocks.find(b => b.id === selectedBlockId);
 
@@ -41,7 +50,6 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
     };
     const newBlocks = [...localBlocks, newBlock];
     setLocalBlocks(newBlocks);
-    onChange(newBlocks);
     setSelectedBlockId(newBlock.id);
   };
 
@@ -51,7 +59,6 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
     // orderを再計算
     const reorderedBlocks = newBlocks.map((b, index) => ({ ...b, order: index }));
     setLocalBlocks(reorderedBlocks);
-    onChange(reorderedBlocks);
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
@@ -63,29 +70,62 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
       b.id === id ? { ...b, ...updates } : b
     );
     setLocalBlocks(newBlocks);
-    onChange(newBlocks);
   };
 
   // ドラッグ開始
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const id = event.active.id as string;
+    setActiveId(id);
+    
+    // パレットからのドラッグの場合、typeが含まれる
+    const type = event.active.data.current?.type as BlockType | undefined;
+    if (type) {
+      // 新しいブロックを作成
+      const newBlock: Block = {
+        id: uuidv4(),
+        type,
+        order: localBlocks.length,
+        config: getDefaultConfig(type),
+      };
+      // 一時的にactiveIdをnewBlock.idに設定
+      setActiveId(newBlock.id);
+      // ドラッグ中の仮ブロックとして追加
+      event.active.data.current = { ...event.active.data.current, newBlock };
+    }
   };
 
   // ドラッグ終了
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (over && active.id !== over.id) {
+    // パレットからのドラッグの場合
+    const newBlock = active.data.current?.newBlock as Block | undefined;
+    if (newBlock && over) {
+      const overIndex = localBlocks.findIndex(b => b.id === over.id);
+      if (overIndex >= 0) {
+        // 既存のブロックの位置に挿入
+        const newBlocks = [...localBlocks];
+        newBlocks.splice(overIndex, 0, newBlock);
+        setLocalBlocks(newBlocks.map((b, index) => ({ ...b, order: index })));
+        setSelectedBlockId(newBlock.id);
+      } else {
+        // 末尾に追加
+        setLocalBlocks([...localBlocks, newBlock]);
+        setSelectedBlockId(newBlock.id);
+      }
+    } else if (over && active.id !== over.id) {
+      // 既存ブロックの並び替え
       const oldIndex = localBlocks.findIndex(b => b.id === active.id);
       const newIndex = localBlocks.findIndex(b => b.id === over.id);
       
-      const reorderedBlocks = arrayMove(localBlocks, oldIndex, newIndex).map((b, index) => ({
-        ...b,
-        order: index,
-      }));
-      
-      setLocalBlocks(reorderedBlocks);
-      onChange(reorderedBlocks);
+      if (oldIndex >= 0 && newIndex >= 0) {
+        const reorderedBlocks = arrayMove(localBlocks, oldIndex, newIndex).map((b, index) => ({
+          ...b,
+          order: index,
+        }));
+        
+        setLocalBlocks(reorderedBlocks);
+      }
     }
     
     setActiveId(null);
@@ -135,7 +175,11 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
       </div>
     </div>
   );
-}
+});
+
+BlockBuilder.displayName = 'BlockBuilder';
+
+export default BlockBuilder;
 
 // ブロックタイプごとのデフォルト設定
 function getDefaultConfig(type: BlockType): any {
