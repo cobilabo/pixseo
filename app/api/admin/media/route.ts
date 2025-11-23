@@ -110,6 +110,36 @@ export async function GET(request: NextRequest) {
           usageDetails.push(`サイト (${siteUsage})`);
         }
         
+        // 固定ページのブロックでの使用をチェック
+        const pagesSnapshot = await adminDb.collection('pages')
+          .where('mediaId', '==', data.mediaId)
+          .get();
+        let pageBlockUsage = 0;
+        for (const pageDoc of pagesSnapshot.docs) {
+          const page = pageDoc.data();
+          if (page.blocks && Array.isArray(page.blocks)) {
+            for (const block of page.blocks) {
+              const config = block.config || {};
+              // 画像ブロック
+              if (block.type === 'image' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+              // 画像&テキストブロック
+              if (block.type === 'imageText' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+              // CTAブロック
+              if (block.type === 'cta' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+            }
+          }
+        }
+        if (pageBlockUsage > 0) {
+          usageCount += pageBlockUsage;
+          usageDetails.push(`固定ページ (${pageBlockUsage})`);
+        }
+        
         return {
           id: doc.id,
           ...data,

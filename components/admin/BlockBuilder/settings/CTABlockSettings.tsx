@@ -9,6 +9,7 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import ColorPicker from '@/components/admin/ColorPicker';
+import CustomCheckbox from '@/components/admin/CustomCheckbox';
 
 interface CTABlockSettingsProps {
   block: Block;
@@ -169,42 +170,29 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
 
       {/* ボタン（最大4つ） */}
       {(config.buttons || []).map((button, index) => (
-        <div key={index} className="space-y-2 p-3 border border-gray-200 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700">ボタン {index + 1}</h4>
-            {index > 0 && (
-              <button
-                type="button"
-                onClick={() => removeButton(index)}
-                className="text-red-600 hover:text-red-700 text-xs"
-              >
-                削除
-              </button>
-            )}
-          </div>
-
+        <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-xl">
           <FloatingInput
-            label={`ボタンテキスト ${index + 1}`}
+            label="ボタンテキスト"
             value={button.text}
             onChange={(value) => updateButton(index, { text: value })}
             required
           />
 
           <FloatingInput
-            label={`URL ${index + 1}`}
+            label="URL"
             value={button.url}
             onChange={(value) => updateButton(index, { url: value })}
             required
           />
 
           <ColorPicker
-            label={`ボタンカラー ${index + 1}`}
+            label="ボタンカラー"
             value={button.buttonColor || ''}
             onChange={(value) => updateButton(index, { buttonColor: value })}
           />
 
           <FloatingSelect
-            label={`フォントサイズ ${index + 1}`}
+            label="フォントサイズ"
             value={button.fontSize || 'medium'}
             onChange={(value) => updateButton(index, { fontSize: value as 'small' | 'medium' | 'large' })}
             options={[
@@ -215,7 +203,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
           />
 
           <FloatingSelect
-            label={`フォント太さ ${index + 1}`}
+            label="フォント太さ"
             value={button.fontWeight || 'normal'}
             onChange={(value) => updateButton(index, { fontWeight: value as 'normal' | 'bold' })}
             options={[
@@ -225,29 +213,24 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
           />
 
           <ColorPicker
-            label={`テキストカラー ${index + 1}`}
+            label="テキストカラー"
             value={button.textColor || ''}
             onChange={(value) => updateButton(index, { textColor: value })}
           />
 
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">
-              新しいタブで開く
-            </label>
-            <button
-              type="button"
-              onClick={() => updateButton(index, { openInNewTab: !button.openInNewTab })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                button.openInNewTab ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  button.openInNewTab ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
+          <CustomCheckbox
+            label="新しいタブで開く"
+            checked={button.openInNewTab || false}
+            onChange={(checked) => updateButton(index, { openInNewTab: checked })}
+          />
+
+          <button
+            type="button"
+            onClick={() => removeButton(index)}
+            className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            このボタンを削除
+          </button>
         </div>
       ))}
 
