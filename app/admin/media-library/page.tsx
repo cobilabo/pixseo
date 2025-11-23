@@ -86,8 +86,9 @@ export default function MediaPage() {
       });
 
       if (response.ok) {
+        // ステートから削除して即座にUIを更新
+        setMediaFiles(prev => prev.filter(media => media.id !== id));
         alert('メディアを削除しました');
-        fetchMedia();
       } else {
         throw new Error('削除に失敗しました');
       }
