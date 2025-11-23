@@ -91,8 +91,10 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
   };
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
+    heading: { label: '見出し', icon: '/text.svg' },
     text: { label: 'テキスト', icon: '/text.svg' },
     image: { label: '画像', icon: '/image.svg' },
+    imageText: { label: '画像&テキスト', icon: '/image.svg' },
     cta: { label: 'CTA', icon: '/cta.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
@@ -165,12 +167,18 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
 
 function BlockPreview({ block }: { block: Block }) {
   switch (block.type) {
+    case 'heading':
+      const headingConfig = block.config as any;
+      return <span>{headingConfig.text}</span>;
     case 'text':
       const textConfig = block.config as any;
       return <div className="line-clamp-2" dangerouslySetInnerHTML={{ __html: textConfig.content }} />;
     case 'image':
       const imageConfig = block.config as any;
       return <span>{imageConfig.alt || '画像（alt未設定）'}</span>;
+    case 'imageText':
+      const imageTextConfig = block.config as any;
+      return <span>{imageTextConfig.heading} - {imageTextConfig.imagePosition === 'left' ? '画像左' : '画像右'}</span>;
     case 'cta':
       const ctaConfig = block.config as any;
       return <span>「{ctaConfig.text}」→ {ctaConfig.url || 'URL未設定'}</span>;

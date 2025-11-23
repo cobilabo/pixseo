@@ -205,6 +205,11 @@ export default BlockBuilder;
 // ブロックタイプごとのデフォルト設定
 function getDefaultConfig(type: BlockType): any {
   switch (type) {
+    case 'heading':
+      return {
+        text: '見出しを入力してください',
+        anchorId: '',
+      };
     case 'text':
       return {
         content: '<p>テキストを入力してください</p>',
@@ -218,6 +223,14 @@ function getDefaultConfig(type: BlockType): any {
         alt: '',
         alignment: 'center',
         width: 100,
+      };
+    case 'imageText':
+      return {
+        imageUrl: '',
+        imageAlt: '',
+        imagePosition: 'left',
+        heading: '見出しを入力してください',
+        text: '<p>テキストを入力してください</p>',
       };
     case 'cta':
       return {

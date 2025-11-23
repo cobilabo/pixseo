@@ -6,8 +6,10 @@
  */
 
 import { Block } from '@/types/block';
+import HeadingBlockSettings from './settings/HeadingBlockSettings';
 import TextBlockSettings from './settings/TextBlockSettings';
 import ImageBlockSettings from './settings/ImageBlockSettings';
+import ImageTextBlockSettings from './settings/ImageTextBlockSettings';
 import CTABlockSettings from './settings/CTABlockSettings';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
@@ -21,8 +23,10 @@ interface BlockSettingsProps {
 
 export default function BlockSettings({ block, onUpdate, onClose, onDelete }: BlockSettingsProps) {
   const blockTypeLabels: Record<string, string> = {
+    heading: '見出しブロック',
     text: 'テキストブロック',
     image: '画像ブロック',
+    imageText: '画像&テキストブロック',
     cta: 'CTAブロック',
     form: 'フォームブロック',
     html: 'HTMLブロック',
@@ -48,11 +52,17 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
 
       {/* 設定フォーム */}
       <div className="flex-1 overflow-y-auto p-4">
+        {block.type === 'heading' && (
+          <HeadingBlockSettings block={block} onUpdate={onUpdate} />
+        )}
         {block.type === 'text' && (
           <TextBlockSettings block={block} onUpdate={onUpdate} />
         )}
         {block.type === 'image' && (
           <ImageBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'imageText' && (
+          <ImageTextBlockSettings block={block} onUpdate={onUpdate} />
         )}
         {block.type === 'cta' && (
           <CTABlockSettings block={block} onUpdate={onUpdate} />

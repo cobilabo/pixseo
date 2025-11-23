@@ -8,7 +8,9 @@ export type BlockType =
   | 'image'     // 画像表示
   | 'cta'       // CTA（コールトゥアクション）
   | 'form'      // フォーム埋め込み
-  | 'html';     // カスタムHTML
+  | 'html'      // カスタムHTML
+  | 'heading'   // 見出し（H2）
+  | 'imageText'; // 画像&テキスト（2カラム）
 
 // テキストブロックの設定
 export interface TextBlockConfig {
@@ -49,12 +51,27 @@ export interface HTMLBlockConfig {
   html: string;             // カスタムHTML
 }
 
+// 見出しブロックの設定
+export interface HeadingBlockConfig {
+  text: string;             // 見出しテキスト
+  anchorId?: string;        // ページ内リンク用のID
+}
+
+// 画像&テキストブロックの設定
+export interface ImageTextBlockConfig {
+  imageUrl: string;
+  imageAlt: string;
+  imagePosition: 'left' | 'right';  // 画像の位置
+  heading: string;                  // 見出し
+  text: string;                     // テキスト（HTML形式）
+}
+
 // ブロックの共通インターフェース
 export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig;
+  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig;
   
   // レスポンシブ設定（将来の拡張用）
   showOnMobile?: boolean;

@@ -15,16 +15,28 @@ interface BlockPaletteProps {
 
 const blockTypes = [
   {
+    type: 'heading' as BlockType,
+    label: '見出し',
+    icon: '/text.svg',
+    description: 'H2見出しを追加',
+  },
+  {
     type: 'text' as BlockType,
     label: 'テキスト',
     icon: '/text.svg',
-    description: '見出しや段落を追加',
+    description: '段落テキストを追加',
   },
   {
     type: 'image' as BlockType,
     label: '画像',
     icon: '/image.svg',
     description: '画像を表示',
+  },
+  {
+    type: 'imageText' as BlockType,
+    label: '画像&テキスト',
+    icon: '/image.svg',
+    description: '画像とテキストを2カラム表示',
   },
   {
     type: 'cta' as BlockType,
