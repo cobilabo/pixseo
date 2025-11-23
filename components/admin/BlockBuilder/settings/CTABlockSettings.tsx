@@ -6,6 +6,7 @@
 
 import { Block, CTABlockConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
+import FloatingSelect from '@/components/admin/FloatingSelect';
 
 interface CTABlockSettingsProps {
   block: Block;
@@ -23,7 +24,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
     <div className="space-y-4">
       {/* ボタンテキスト */}
       <FloatingInput
-        label="ボタンテキスト *"
+        label="ボタンテキスト"
         value={config.text}
         onChange={(value) => updateConfig({ text: value })}
         required
@@ -31,73 +32,66 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
 
       {/* URL */}
       <FloatingInput
-        label="リンク先URL *"
+        label="リンク先"
         value={config.url}
         onChange={(value) => updateConfig({ url: value })}
-        placeholder="https://example.com"
         required
       />
 
       {/* スタイル */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          スタイル
-        </label>
-        <select
-          value={config.style || 'primary'}
-          onChange={(e) => updateConfig({ style: e.target.value as any })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="primary">プライマリ（青）</option>
-          <option value="secondary">セカンダリ（グレー）</option>
-          <option value="outline">アウトライン</option>
-        </select>
-      </div>
+      <FloatingSelect
+        label="スタイル"
+        value={config.style || 'primary'}
+        onChange={(value) => updateConfig({ style: value as 'primary' | 'secondary' | 'outline' })}
+        options={[
+          { value: 'primary', label: 'プライマリ（青）' },
+          { value: 'secondary', label: 'セカンダリ（グレー）' },
+          { value: 'outline', label: 'アウトライン' },
+        ]}
+      />
 
       {/* サイズ */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          サイズ
-        </label>
-        <select
-          value={config.size || 'medium'}
-          onChange={(e) => updateConfig({ size: e.target.value as any })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="small">小</option>
-          <option value="medium">中</option>
-          <option value="large">大</option>
-        </select>
-      </div>
+      <FloatingSelect
+        label="サイズ"
+        value={config.size || 'medium'}
+        onChange={(value) => updateConfig({ size: value as 'small' | 'medium' | 'large' })}
+        options={[
+          { value: 'small', label: '小' },
+          { value: 'medium', label: '中' },
+          { value: 'large', label: '大' },
+        ]}
+      />
 
       {/* 配置 */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          配置
-        </label>
-        <select
-          value={config.alignment || 'center'}
-          onChange={(e) => updateConfig({ alignment: e.target.value as any })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="left">左揃え</option>
-          <option value="center">中央揃え</option>
-          <option value="right">右揃え</option>
-        </select>
-      </div>
+      <FloatingSelect
+        label="配置"
+        value={config.alignment || 'center'}
+        onChange={(value) => updateConfig({ alignment: value as 'left' | 'center' | 'right' })}
+        options={[
+          { value: 'left', label: '左揃え' },
+          { value: 'center', label: '中央揃え' },
+          { value: 'right', label: '右揃え' },
+        ]}
+      />
 
       {/* 新しいタブで開く */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="openInNewTab"
-          checked={config.openInNewTab || false}
-          onChange={(e) => updateConfig({ openInNewTab: e.target.checked })}
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <label htmlFor="openInNewTab" className="text-sm text-gray-700">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">
           新しいタブで開く
         </label>
+        <button
+          type="button"
+          onClick={() => updateConfig({ openInNewTab: !config.openInNewTab })}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            config.openInNewTab ? 'bg-blue-600' : 'bg-gray-300'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              config.openInNewTab ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
     </div>
   );

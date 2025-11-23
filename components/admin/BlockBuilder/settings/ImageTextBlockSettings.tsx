@@ -28,8 +28,9 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       <div>
         <FeaturedImageUpload
           label="画像"
-          imageUrl={config.imageUrl}
-          onImageChange={(imageUrl) => updateConfig({ imageUrl })}
+          value={config.imageUrl}
+          onChange={(imageUrl) => updateConfig({ imageUrl })}
+          showAltInput={false}
         />
       </div>
 
