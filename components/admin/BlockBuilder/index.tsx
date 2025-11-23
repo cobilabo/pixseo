@@ -238,13 +238,25 @@ function getDefaultConfig(type: BlockType): any {
         imageAlt: '',
         imagePosition: 'background',
         heading: '見出し',
+        headingFontSize: 'medium',
+        headingFontWeight: 'normal',
+        headingTextColor: '',
         description: 'テキストを入力してください',
-        text: 'ボタンテキスト',
-        url: '',
-        style: 'primary',
-        size: 'medium',
-        alignment: 'center',
-        openInNewTab: false,
+        textFontSize: 'medium',
+        textFontWeight: 'normal',
+        textColor: '',
+        buttons: [
+          {
+            text: 'ボタンテキスト',
+            url: '',
+            buttonColor: '',
+            fontSize: 'medium',
+            fontWeight: 'normal',
+            textColor: '',
+            openInNewTab: false,
+          },
+        ],
+        buttonLayout: 'horizontal',
       };
     case 'form':
       return {
