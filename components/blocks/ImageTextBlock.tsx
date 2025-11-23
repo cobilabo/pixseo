@@ -51,7 +51,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
             className={`
               ${headingFontSizeClasses[config.headingFontSize || 'medium']}
               ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-              text-white mb-4
+              text-white mb-4 whitespace-pre-wrap
             `}
             style={{ color: config.headingTextColor || 'white' }}
           >
@@ -61,7 +61,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
             className={`
               ${textFontSizeClasses[config.textFontSize || 'medium']}
               ${textFontWeightClasses[config.textFontWeight || 'normal']}
-              text-white max-w-2xl
+              text-white max-w-2xl whitespace-pre-wrap
             `}
             style={{ color: config.textColor || 'white' }}
           >
@@ -97,7 +97,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
           className={`
             ${headingFontSizeClasses[config.headingFontSize || 'medium']}
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-            mb-4
+            mb-4 whitespace-pre-wrap
           `}
           style={{ color: config.headingTextColor || undefined }}
         >
@@ -107,6 +107,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
           className={`
             ${textFontSizeClasses[config.textFontSize || 'medium']}
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
+            whitespace-pre-wrap
           `}
           style={{ color: config.textColor || undefined }}
         >

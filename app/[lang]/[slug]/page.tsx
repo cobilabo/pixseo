@@ -141,13 +141,18 @@ export default async function FixedPage({ params }: PageProps) {
         className="relative" 
         style={{ 
           backgroundColor: rawPage.backgroundColor || rawTheme.backgroundColor, 
-          color: rawPage.textColor || undefined,
           zIndex: 10 
         }}
       >
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <article className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">{page.title}</h1>
+        <article 
+          className="bg-white rounded-lg shadow-md p-8"
+          style={{
+            color: rawPage.textColor || undefined,
+          }}
+        >
+          {/* SEO用のh1タグ（視覚的には非表示） */}
+          <h1 className="sr-only">{page.title}</h1>
           
           {/* ブロックビルダー使用時はBlockRendererで表示 */}
           {rawPage.useBlockBuilder && rawPage.blocks ? (

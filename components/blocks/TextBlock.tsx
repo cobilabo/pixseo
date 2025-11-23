@@ -32,12 +32,14 @@ export default function TextBlock({ block }: TextBlockProps) {
     <div
       className={`
         prose prose-lg max-w-none
+        whitespace-pre-wrap
         ${alignmentClasses[config.alignment || 'left']}
         ${fontSizeClasses[config.fontSize || 'medium']}
         ${fontWeightClasses[config.fontWeight || 'normal']}
       `}
       style={{
         color: config.textColor || undefined,
+        whiteSpace: 'pre-wrap',
       }}
       dangerouslySetInnerHTML={{ __html: config.content }}
     />

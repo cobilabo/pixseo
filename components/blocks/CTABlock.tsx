@@ -69,7 +69,7 @@ export default function CTABlock({ block }: CTABlockProps) {
               className={`
                 ${headingFontSizeClasses[config.headingFontSize || 'medium']}
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-                text-white mb-4
+                text-white mb-4 whitespace-pre-wrap
               `}
               style={{ color: config.headingTextColor || 'white' }}
             >
@@ -81,7 +81,7 @@ export default function CTABlock({ block }: CTABlockProps) {
               className={`
                 ${textFontSizeClasses[config.textFontSize || 'medium']}
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
-                text-white mb-6 max-w-2xl
+                text-white mb-6 max-w-2xl whitespace-pre-wrap
               `}
               style={{ color: config.textColor || 'white' }}
             >
@@ -148,7 +148,7 @@ export default function CTABlock({ block }: CTABlockProps) {
               className={`
                 ${headingFontSizeClasses[config.headingFontSize || 'medium']}
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-                mb-4
+                mb-4 whitespace-pre-wrap
               `}
               style={{ color: config.headingTextColor || undefined }}
             >
@@ -160,7 +160,7 @@ export default function CTABlock({ block }: CTABlockProps) {
               className={`
                 ${textFontSizeClasses[config.textFontSize || 'medium']}
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
-                mb-6
+                mb-6 whitespace-pre-wrap
               `}
               style={{ color: config.textColor || undefined }}
             >
@@ -210,7 +210,7 @@ export default function CTABlock({ block }: CTABlockProps) {
           className={`
             ${headingFontSizeClasses[config.headingFontSize || 'medium']}
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-            mb-4
+            mb-4 whitespace-pre-wrap
           `}
           style={{ color: config.headingTextColor || undefined }}
         >
@@ -222,7 +222,7 @@ export default function CTABlock({ block }: CTABlockProps) {
           className={`
             ${textFontSizeClasses[config.textFontSize || 'medium']}
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
-            mb-6 max-w-2xl mx-auto
+            mb-6 max-w-2xl mx-auto whitespace-pre-wrap
           `}
           style={{ color: config.textColor || undefined }}
         >
