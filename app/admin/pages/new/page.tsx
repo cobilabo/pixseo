@@ -130,11 +130,6 @@ export default function NewPagePage() {
     
     // BlockBuilderから現在のブロックを取得
     const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || [];
-    
-    if (currentBlocks.length === 0) {
-      alert('ブロックを少なくとも1つ追加してください');
-      return;
-    }
 
     if (!currentTenant) {
       alert('メディアテナントが選択されていません');
