@@ -45,13 +45,40 @@ export async function GET(request: NextRequest) {
         let usageCount = 0;
         const usageDetails: string[] = [];
         
-        // 記事での使用をチェック
+        // 記事での使用をチェック（アイキャッチ + 記事内画像）
         const articlesSnapshot = await adminDb.collection('articles')
-          .where('featuredImage', '==', mediaUrl)
+          .where('mediaId', '==', data.mediaId)
           .get();
-        if (articlesSnapshot.size > 0) {
-          usageCount += articlesSnapshot.size;
-          usageDetails.push(`記事 (${articlesSnapshot.size})`);
+        
+        let articleUsageCount = 0;
+        for (const articleDoc of articlesSnapshot.docs) {
+          const article = articleDoc.data();
+          
+          // アイキャッチ画像
+          if (article.featuredImage === mediaUrl) {
+            articleUsageCount++;
+          }
+          
+          // 記事内の画像（全言語のコンテンツをチェック）
+          const contentFields = [
+            article.content,
+            article.content_ja,
+            article.content_en,
+            article.content_zh,
+            article.content_ko,
+          ];
+          
+          for (const content of contentFields) {
+            if (content && typeof content === 'string' && content.includes(mediaUrl)) {
+              articleUsageCount++;
+              break; // 同じ記事で複数回カウントしないため
+            }
+          }
+        }
+        
+        if (articleUsageCount > 0) {
+          usageCount += articleUsageCount;
+          usageDetails.push(`記事 (${articleUsageCount})`);
         }
         
         // カテゴリーでの使用をチェック
