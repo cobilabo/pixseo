@@ -23,10 +23,15 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
   return (
     <div className="space-y-4">
       {/* テキストエディター */}
-      <RichTextEditor
-        value={config.content}
-        onChange={(content) => updateConfig({ content })}
-      />
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          テキスト
+        </label>
+        <RichTextEditor
+          value={config.content}
+          onChange={(content) => updateConfig({ content })}
+        />
+      </div>
 
       {/* 配置 */}
       <FloatingSelect

@@ -34,24 +34,8 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
 
   return (
     <div className="h-full flex flex-col">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900">
-          {blockTypeLabels[block.type] || 'ブロック設定'}
-        </h3>
-        <button
-          onClick={onClose}
-          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-          title="閉じる"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
       {/* 設定フォーム */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4" style={{ overflowX: 'visible' }}>
         {block.type === 'heading' && (
           <HeadingBlockSettings block={block} onUpdate={onUpdate} />
         )}
@@ -75,21 +59,37 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
       </div>
 
-      {/* 削除ボタン */}
+      {/* キャンセル・削除ボタン */}
       <div className="p-4 border-t border-gray-200">
-        <button
-          onClick={() => {
-            if (confirm('このブロックを削除してもよろしいですか？')) {
-              onDelete();
-            }
-          }}
-          className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          ブロックを削除
-        </button>
+        <div className="flex gap-2">
+          {/* キャンセルボタン */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 flex items-center justify-center py-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+            title="閉じる"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* 削除ボタン */}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('このブロックを削除してもよろしいですか？')) {
+                onDelete();
+              }
+            }}
+            className="flex-1 flex items-center justify-center py-3 rounded-lg bg-red-100 hover:bg-red-200 transition-colors"
+            title="削除"
+          >
+            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

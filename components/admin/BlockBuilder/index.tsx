@@ -151,11 +151,11 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
     >
       <div className="relative">
         {/* 左右を1つのパネルに統合 */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200">
           <div className="flex h-[calc(100vh-300px)]">
             {/* 左パネル: ブロックパレット（50%） */}
-            <div className="w-1/2 relative border-r border-gray-200">
-              <div className="absolute inset-0 overflow-y-auto p-4">
+            <div className="w-1/2 relative border-r border-gray-200 overflow-visible">
+              <div className="absolute inset-0 overflow-y-auto overflow-x-visible p-4">
                 <BlockPalette onAddBlock={handleAddBlock} />
               </div>
               

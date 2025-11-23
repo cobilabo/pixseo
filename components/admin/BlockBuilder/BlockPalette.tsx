@@ -23,7 +23,7 @@ const blockTypes = [
   {
     type: 'text' as BlockType,
     label: 'テキスト',
-    icon: '/text.svg',
+    icon: '/textfield.svg',
     description: '段落テキストを追加',
   },
   {
@@ -35,7 +35,7 @@ const blockTypes = [
   {
     type: 'imageText' as BlockType,
     label: '画像&テキスト',
-    icon: '/image.svg',
+    icon: '/imagetext.svg',
     description: '画像とテキストを2カラム表示',
   },
   {
@@ -74,6 +74,13 @@ function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) 
       }`}
     >
       <div className="flex items-center gap-3">
+        {/* ドラッグハンドル */}
+        <div className="flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zM13 3h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
+          </svg>
+        </div>
+        
         <div className="w-4 h-4 flex-shrink-0">
           <Image 
             src={blockType.icon} 

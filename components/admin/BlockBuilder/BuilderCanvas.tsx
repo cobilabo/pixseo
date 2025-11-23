@@ -92,9 +92,9 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
     heading: { label: '見出し', icon: '/text.svg' },
-    text: { label: 'テキスト', icon: '/text.svg' },
+    text: { label: 'テキスト', icon: '/textfield.svg' },
     image: { label: '画像', icon: '/image.svg' },
-    imageText: { label: '画像&テキスト', icon: '/image.svg' },
+    imageText: { label: '画像&テキスト', icon: '/imagetext.svg' },
     cta: { label: 'CTA', icon: '/cta.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
@@ -117,14 +117,12 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
         style={style}
         className={`
           relative
-          border-2
-          rounded-lg
           p-4
           cursor-pointer
           transition-all
           ${isSelected 
-            ? 'border-blue-500 bg-blue-50' 
-            : 'border-gray-200 hover:border-gray-300 bg-white'
+            ? 'bg-blue-50' 
+            : 'hover:bg-gray-50'
           }
         `}
         onClick={onSelect}
