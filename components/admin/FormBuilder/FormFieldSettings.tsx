@@ -24,17 +24,17 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
     name: '氏名',
     address: '住所',
     select: 'プルダウン',
-    cascade_select: '連動プルダウン',
+    cascade: '連動プルダウン',
     radio: 'ラジオボタン',
     checkbox: 'チェックボックス',
-    consent: '同意確認',
-    text_display: 'テキスト表示',
-    image_display: '画像表示',
-    html_display: 'HTML表示',
+    agreement: '同意確認',
+    'display-text': 'テキスト表示',
+    'display-image': '画像表示',
+    'display-html': 'HTML表示',
   };
 
   const updateConfig = (updates: any) => {
-    onUpdate({ config: { ...field.config, ...updates } });
+    onUpdate({ config: { ...(field as any).config, ...updates } } as any);
   };
 
   return (
@@ -60,13 +60,13 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
         {/* 共通設定: ラベル */}
         <FloatingInput
           label="ラベル *"
-          value={field.label}
+          value={field.label || ''}
           onChange={(value) => onUpdate({ label: value })}
           required
         />
 
         {/* 共通設定: 必須 */}
-        {!['text_display', 'image_display', 'html_display'].includes(field.type) && (
+        {!['display-text', 'display-image', 'display-html'].includes(field.type) && (
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -85,7 +85,7 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
         {(field.type === 'text' || field.type === 'email' || field.type === 'tel') && (
           <FloatingInput
             label="プレースホルダー"
-            value={field.config?.placeholder || ''}
+            value={(field as any).config?.placeholder || ''}
             onChange={(value) => updateConfig({ placeholder: value })}
           />
         )}
@@ -94,13 +94,13 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
           <>
             <FloatingInput
               label="プレースホルダー"
-              value={field.config?.placeholder || ''}
+              value={(field as any).config?.placeholder || ''}
               onChange={(value) => updateConfig({ placeholder: value })}
             />
             <FloatingInput
               label="行数"
               type="number"
-              value={(field.config?.rows || 4).toString()}
+              value={((field as any).config?.rows || 4).toString()}
               onChange={(value) => updateConfig({ rows: parseInt(value) || 4 })}
             />
           </>
@@ -111,19 +111,19 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
             <FloatingInput
               label="最小値"
               type="number"
-              value={(field.config?.min || 0).toString()}
+              value={((field as any).config?.min || 0).toString()}
               onChange={(value) => updateConfig({ min: parseInt(value) || 0 })}
             />
             <FloatingInput
               label="最大値"
               type="number"
-              value={(field.config?.max || 100).toString()}
+              value={((field as any).config?.max || 100).toString()}
               onChange={(value) => updateConfig({ max: parseInt(value) || 100 })}
             />
             <FloatingInput
               label="ステップ"
               type="number"
-              value={(field.config?.step || 1).toString()}
+              value={((field as any).config?.step || 1).toString()}
               onChange={(value) => updateConfig({ step: parseInt(value) || 1 })}
             />
           </>
@@ -135,7 +135,7 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
               選択肢（1行に1つ）
             </label>
             <textarea
-              value={(field.config?.options || []).join('\n')}
+              value={((field as any).config?.options || []).join('\n')}
               onChange={(e) => updateConfig({ options: e.target.value.split('\n').filter(o => o.trim()) })}
               rows={5}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -143,33 +143,33 @@ export default function FormFieldSettings({ field, onUpdate, onClose }: FormFiel
           </div>
         )}
 
-        {field.type === 'consent' && (
+        {field.type === 'agreement' && (
           <FloatingInput
             label="同意テキスト"
-            value={field.config?.text || ''}
+            value={(field as any).config?.text || ''}
             onChange={(value) => updateConfig({ text: value })}
             multiline
             rows={3}
           />
         )}
 
-        {field.type === 'text_display' && (
+        {field.type === 'display-text' && (
           <FloatingInput
             label="表示テキスト"
-            value={field.config?.content || ''}
+            value={(field as any).config?.content || ''}
             onChange={(value) => updateConfig({ content: value })}
             multiline
             rows={5}
           />
         )}
 
-        {field.type === 'html_display' && (
+        {field.type === 'display-html' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               HTML
             </label>
             <textarea
-              value={field.config?.html || ''}
+              value={(field as any).config?.html || ''}
               onChange={(e) => updateConfig({ html: e.target.value })}
               rows={8}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"

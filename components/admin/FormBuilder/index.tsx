@@ -15,8 +15,8 @@ import FormBuilderCanvas from './FormBuilderCanvas';
 import FormFieldSettings from './FormFieldSettings';
 
 interface FormBuilderProps {
-  fields: FormField[];
-  onChange: (fields: FormField[]) => void;
+  fields: any[];
+  onChange: (fields: any[]) => void;
 }
 
 export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
@@ -27,7 +27,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
   // フィールド追加
   const handleAddField = (type: FormFieldType) => {
-    const newField: FormField = {
+    const newField = {
       id: uuidv4(),
       type,
       label: getDefaultLabel(type),
@@ -139,13 +139,13 @@ function getDefaultLabel(type: FormFieldType): string {
     name: '氏名',
     address: '住所',
     select: 'プルダウン選択',
-    cascade_select: '連動プルダウン',
+    cascade: '連動プルダウン',
     radio: 'ラジオボタン',
     checkbox: 'チェックボックス',
-    consent: '同意確認',
-    text_display: 'テキスト表示',
-    image_display: '画像表示',
-    html_display: 'HTML表示',
+    agreement: '同意確認',
+    'display-text': 'テキスト表示',
+    'display-image': '画像表示',
+    'display-html': 'HTML表示',
   };
   return labels[type] || type;
 }
@@ -175,20 +175,20 @@ function getDefaultConfig(type: FormFieldType): any {
     case 'radio':
     case 'checkbox':
       return { options: ['選択肢1', '選択肢2', '選択肢3'] };
-    case 'cascade_select':
+    case 'cascade':
       return {
         options: {
           '選択肢1': ['サブ選択肢1-1', 'サブ選択肢1-2'],
           '選択肢2': ['サブ選択肢2-1', 'サブ選択肢2-2'],
         },
       };
-    case 'consent':
+    case 'agreement':
       return { text: '利用規約に同意する' };
-    case 'text_display':
+    case 'display-text':
       return { content: 'テキストを入力してください' };
-    case 'image_display':
+    case 'display-image':
       return { imageUrl: '', alt: '' };
-    case 'html_display':
+    case 'display-html':
       return { html: '<div>HTMLを入力してください</div>' };
     default:
       return {};

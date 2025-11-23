@@ -73,13 +73,13 @@ const fieldTypes = [
     description: '複数選択',
   },
   {
-    type: 'consent' as FormFieldType,
+    type: 'agreement' as FormFieldType,
     label: '同意確認',
     icon: '✅',
     description: '利用規約等',
   },
   {
-    type: 'text_display' as FormFieldType,
+    type: 'display-text' as FormFieldType,
     label: 'テキスト表示',
     icon: '💬',
     description: '説明文',

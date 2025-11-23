@@ -83,13 +83,13 @@ function SortableFieldItem({ field, isSelected, onSelect, onDelete }: SortableFi
     name: { label: '氏名', icon: '👤' },
     address: { label: '住所', icon: '🏠' },
     select: { label: 'プルダウン', icon: '📋' },
-    cascade_select: { label: '連動プルダウン', icon: '🔗' },
+    cascade: { label: '連動プルダウン', icon: '🔗' },
     radio: { label: 'ラジオボタン', icon: '🔘' },
     checkbox: { label: 'チェックボックス', icon: '☑️' },
-    consent: { label: '同意確認', icon: '✅' },
-    text_display: { label: 'テキスト表示', icon: '💬' },
-    image_display: { label: '画像表示', icon: '🖼️' },
-    html_display: { label: 'HTML表示', icon: '💻' },
+    agreement: { label: '同意確認', icon: '✅' },
+    'display-text': { label: 'テキスト表示', icon: '💬' },
+    'display-image': { label: '画像表示', icon: '🖼️' },
+    'display-html': { label: 'HTML表示', icon: '💻' },
   };
 
   const fieldInfo = fieldTypeLabels[field.type] || { label: field.type, icon: '❓' };
