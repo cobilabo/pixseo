@@ -18,6 +18,7 @@ export interface TextBlockConfig {
   alignment?: 'left' | 'center' | 'right';
   fontSize?: 'small' | 'medium' | 'large';
   fontWeight?: 'normal' | 'bold';
+  textColor?: string;        // テキストカラー
 }
 
 // 画像ブロックの設定
@@ -36,13 +37,24 @@ export interface CTABlockConfig {
   imageAlt?: string;        // 画像alt
   imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
   heading?: string;         // 見出し
+  headingFontSize?: 'small' | 'medium' | 'large';
+  headingFontWeight?: 'normal' | 'bold';
+  headingTextColor?: string;
   description?: string;     // 説明文
-  text: string;             // ボタンテキスト
-  url: string;              // リンク先URL
-  style?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
-  alignment?: 'left' | 'center' | 'right';
-  openInNewTab?: boolean;
+  textFontSize?: 'small' | 'medium' | 'large';
+  textFontWeight?: 'normal' | 'bold';
+  textColor?: string;
+  // ボタン設定（最大4つ）
+  buttons: Array<{
+    text: string;           // ボタンテキスト
+    url: string;            // リンク先URL
+    buttonColor?: string;   // ボタンカラー
+    fontSize?: 'small' | 'medium' | 'large';
+    fontWeight?: 'normal' | 'bold';
+    textColor?: string;     // ボタンテキストカラー
+    openInNewTab?: boolean;
+  }>;
+  buttonLayout?: 'horizontal' | '2x2' | 'vertical';  // ボタン配置
 }
 
 // フォームブロックの設定
@@ -60,6 +72,10 @@ export interface HTMLBlockConfig {
 export interface HeadingBlockConfig {
   content: string;          // 見出しテキスト
   id?: string;              // ページ内リンク用のID
+  alignment?: 'left' | 'center' | 'right';
+  fontSize?: 'small' | 'medium' | 'large';
+  fontWeight?: 'normal' | 'bold';
+  textColor?: string;       // テキストカラー
 }
 
 // 画像&テキストブロックの設定
@@ -68,7 +84,13 @@ export interface ImageTextBlockConfig {
   imageAlt: string;
   imagePosition: 'left' | 'right' | 'background';  // 画像の位置
   heading: string;                  // 見出し
+  headingFontSize?: 'small' | 'medium' | 'large';
+  headingFontWeight?: 'normal' | 'bold';
+  headingTextColor?: string;
   text: string;                     // テキスト
+  textFontSize?: 'small' | 'medium' | 'large';
+  textFontWeight?: 'normal' | 'bold';
+  textColor?: string;
 }
 
 // ブロックの共通インターフェース

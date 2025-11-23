@@ -44,5 +44,9 @@ export interface Page {
   // ブロックビルダー（新機能）
   blocks?: Block[];          // ブロックの配列
   useBlockBuilder?: boolean; // ブロックビルダーを使用するか（後方互換性のため）
+  
+  // ページスタイル設定
+  backgroundColor?: string;  // ページ背景色
+  textColor?: string;        // ページテキストカラー
 }
 
