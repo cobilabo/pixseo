@@ -36,6 +36,9 @@ export default function TextBlock({ block }: TextBlockProps) {
         ${fontSizeClasses[config.fontSize || 'medium']}
         ${fontWeightClasses[config.fontWeight || 'normal']}
       `}
+      style={{
+        color: config.textColor || undefined,
+      }}
       dangerouslySetInnerHTML={{ __html: config.content }}
     />
   );

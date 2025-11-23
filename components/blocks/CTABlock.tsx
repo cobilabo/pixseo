@@ -3,6 +3,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Block, CTABlockConfig } from '@/types/block';
 
 interface CTABlockProps {
@@ -12,46 +13,252 @@ interface CTABlockProps {
 export default function CTABlock({ block }: CTABlockProps) {
   const config = block.config as CTABlockConfig;
   
-  const alignmentClasses = {
-    left: 'justify-start',
-    center: 'justify-center',
-    right: 'justify-end',
+  const headingFontSizeClasses = {
+    small: 'text-xl',
+    medium: 'text-2xl',
+    large: 'text-3xl',
   };
   
-  const styleClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700',
-    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50',
+  const headingFontWeightClasses = {
+    normal: 'font-normal',
+    bold: 'font-bold',
   };
   
-  const sizeClasses = {
+  const textFontSizeClasses = {
+    small: 'text-sm',
+    medium: 'text-base',
+    large: 'text-lg',
+  };
+  
+  const textFontWeightClasses = {
+    normal: 'font-normal',
+    bold: 'font-bold',
+  };
+
+  const buttonFontSizeClasses = {
     small: 'px-4 py-2 text-sm',
     medium: 'px-6 py-3 text-base',
     large: 'px-8 py-4 text-lg',
   };
 
-  const isExternal = config.url.startsWith('http');
+  const buttonFontWeightClasses = {
+    normal: 'font-normal',
+    bold: 'font-bold',
+  };
 
+  // ボタンレイアウト
+  const buttonLayoutClasses = {
+    horizontal: 'flex flex-wrap gap-4 justify-center',
+    '2x2': 'grid grid-cols-2 gap-4',
+    vertical: 'flex flex-col gap-4',
+  };
+
+  // 画像が背景の場合
+  if (config.imagePosition === 'background' && config.imageUrl) {
+    return (
+      <div className="relative w-full min-h-96 rounded-lg overflow-hidden shadow-md">
+        <Image
+          src={config.imageUrl}
+          alt={config.imageAlt || ''}
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-center px-8 py-12">
+          {config.heading && (
+            <h3
+              className={`
+                ${headingFontSizeClasses[config.headingFontSize || 'medium']}
+                ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+                text-white mb-4
+              `}
+              style={{ color: config.headingTextColor || 'white' }}
+            >
+              {config.heading}
+            </h3>
+          )}
+          {config.description && (
+            <p
+              className={`
+                ${textFontSizeClasses[config.textFontSize || 'medium']}
+                ${textFontWeightClasses[config.textFontWeight || 'normal']}
+                text-white mb-6 max-w-2xl
+              `}
+              style={{ color: config.textColor || 'white' }}
+            >
+              {config.description}
+            </p>
+          )}
+          {config.buttons && config.buttons.length > 0 && (
+            <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
+              {config.buttons.map((button, index) => {
+                const isExternal = button.url.startsWith('http');
+                return (
+                  <Link
+                    key={index}
+                    href={button.url}
+                    target={button.openInNewTab || isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className={`
+                      inline-block
+                      rounded-lg
+                      transition-all
+                      hover:scale-105
+                      shadow-md
+                      ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                      ${buttonFontWeightClasses[button.fontWeight || 'normal']}
+                    `}
+                    style={{
+                      backgroundColor: button.buttonColor || '#3b82f6',
+                      color: button.textColor || '#ffffff',
+                    }}
+                  >
+                    {button.text}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 画像が左または右の場合（2カラムレイアウト）
+  const isImageLeft = config.imagePosition === 'left';
+  
+  if (config.imageUrl && (config.imagePosition === 'left' || config.imagePosition === 'right')) {
+    return (
+      <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`}>
+        {/* 画像部分 */}
+        <div className="w-full md:w-1/2">
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-md">
+            <Image
+              src={config.imageUrl}
+              alt={config.imageAlt || ''}
+              fill
+              className="object-cover"
+            />
+          </div>
+        </div>
+        
+        {/* テキスト＋CTAボタン部分 */}
+        <div className={`w-full md:w-1/2 ${isImageLeft ? 'md:text-left' : 'md:text-left'}`}>
+          {config.heading && (
+            <h3
+              className={`
+                ${headingFontSizeClasses[config.headingFontSize || 'medium']}
+                ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+                mb-4
+              `}
+              style={{ color: config.headingTextColor || undefined }}
+            >
+              {config.heading}
+            </h3>
+          )}
+          {config.description && (
+            <p
+              className={`
+                ${textFontSizeClasses[config.textFontSize || 'medium']}
+                ${textFontWeightClasses[config.textFontWeight || 'normal']}
+                mb-6
+              `}
+              style={{ color: config.textColor || undefined }}
+            >
+              {config.description}
+            </p>
+          )}
+          {config.buttons && config.buttons.length > 0 && (
+            <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
+              {config.buttons.map((button, index) => {
+                const isExternal = button.url.startsWith('http');
+                return (
+                  <Link
+                    key={index}
+                    href={button.url}
+                    target={button.openInNewTab || isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className={`
+                      inline-block
+                      rounded-lg
+                      transition-all
+                      hover:scale-105
+                      shadow-md
+                      ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                      ${buttonFontWeightClasses[button.fontWeight || 'normal']}
+                    `}
+                    style={{
+                      backgroundColor: button.buttonColor || '#3b82f6',
+                      color: button.textColor || '#ffffff',
+                    }}
+                  >
+                    {button.text}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 画像なしの場合（テキスト＋ボタンのみ）
   return (
-    <div className={`flex ${alignmentClasses[config.alignment || 'center']}`}>
-      <Link
-        href={config.url}
-        target={config.openInNewTab || isExternal ? '_blank' : undefined}
-        rel={isExternal ? 'noopener noreferrer' : undefined}
-        className={`
-          inline-block
-          rounded-lg
-          font-semibold
-          transition-all
-          hover:scale-105
-          shadow-md
-          ${styleClasses[config.style || 'primary']}
-          ${sizeClasses[config.size || 'medium']}
-        `}
-      >
-        {config.text}
-      </Link>
+    <div className="text-center py-8">
+      {config.heading && (
+        <h3
+          className={`
+            ${headingFontSizeClasses[config.headingFontSize || 'medium']}
+            ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+            mb-4
+          `}
+          style={{ color: config.headingTextColor || undefined }}
+        >
+          {config.heading}
+        </h3>
+      )}
+      {config.description && (
+        <p
+          className={`
+            ${textFontSizeClasses[config.textFontSize || 'medium']}
+            ${textFontWeightClasses[config.textFontWeight || 'normal']}
+            mb-6 max-w-2xl mx-auto
+          `}
+          style={{ color: config.textColor || undefined }}
+        >
+          {config.description}
+        </p>
+      )}
+      {config.buttons && config.buttons.length > 0 && (
+        <div className={`${buttonLayoutClasses[config.buttonLayout || 'horizontal']} max-w-2xl mx-auto`}>
+          {config.buttons.map((button, index) => {
+            const isExternal = button.url.startsWith('http');
+            return (
+              <Link
+                key={index}
+                href={button.url}
+                target={button.openInNewTab || isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                className={`
+                  inline-block
+                  rounded-lg
+                  transition-all
+                  hover:scale-105
+                  shadow-md
+                  ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                  ${buttonFontWeightClasses[button.fontWeight || 'normal']}
+                `}
+                style={{
+                  backgroundColor: button.buttonColor || '#3b82f6',
+                  color: button.textColor || '#ffffff',
+                }}
+              >
+                {button.text}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-
