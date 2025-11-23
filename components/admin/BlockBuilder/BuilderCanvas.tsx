@@ -183,7 +183,9 @@ function BlockPreview({ block }: { block: Block }) {
       return <span>{imageTextConfig.heading} - {positionLabel}</span>;
     case 'cta':
       const ctaConfig = block.config as any;
-      return <span>「{ctaConfig.text}」{ctaConfig.heading ? ` - ${ctaConfig.heading}` : ''}</span>;
+      const buttonCount = (ctaConfig.buttons || []).length;
+      const buttonText = buttonCount > 0 ? ctaConfig.buttons[0].text : 'ボタン';
+      return <span>{ctaConfig.heading || '見出し'} - ボタン×{buttonCount} - {ctaConfig.buttonLayout || 'horizontal'}</span>;
     case 'form':
       const formConfig = block.config as any;
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;

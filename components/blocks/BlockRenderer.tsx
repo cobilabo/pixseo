@@ -4,8 +4,10 @@
  */
 
 import { Block } from '@/types/block';
+import HeadingBlock from './HeadingBlock';
 import TextBlock from './TextBlock';
 import ImageBlock from './ImageBlock';
+import ImageTextBlock from './ImageTextBlock';
 import CTABlock from './CTABlock';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
@@ -35,10 +37,14 @@ export default function BlockRenderer({ blocks, isMobile = false }: BlockRendere
     <div className="space-y-6">
       {visibleBlocks.map((block) => {
         switch (block.type) {
+          case 'heading':
+            return <HeadingBlock key={block.id} block={block} />;
           case 'text':
             return <TextBlock key={block.id} block={block} />;
           case 'image':
             return <ImageBlock key={block.id} block={block} />;
+          case 'imageText':
+            return <ImageTextBlock key={block.id} block={block} />;
           case 'cta':
             return <CTABlock key={block.id} block={block} />;
           case 'form':
