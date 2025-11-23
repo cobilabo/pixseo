@@ -24,7 +24,7 @@ export default function HeadingBlockSettings({ block, onUpdate }: HeadingBlockSe
       {/* 見出しテキスト */}
       <FloatingInput
         label="見出しテキスト"
-        value={config.content}
+        value={config.content || ''}
         onChange={(content) => updateConfig({ content })}
         required
       />

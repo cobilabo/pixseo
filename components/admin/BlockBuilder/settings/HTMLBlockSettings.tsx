@@ -24,7 +24,7 @@ export default function HTMLBlockSettings({ block, onUpdate }: HTMLBlockSettings
       {/* HTML入力 */}
       <FloatingInput
         label="HTML"
-        value={config.html}
+        value={config.html || ''}
         onChange={(html) => updateConfig({ html })}
         multiline
         rows={12}

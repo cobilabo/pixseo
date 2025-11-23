@@ -26,8 +26,8 @@ export default function ImageBlockSettings({ block, onUpdate }: ImageBlockSettin
       {/* 画像アップロード */}
       <FeaturedImageUpload
         label="画像"
-        value={config.imageUrl}
-        alt={config.alt}
+        value={config.imageUrl || ''}
+        alt={config.alt || ''}
         onChange={(url) => updateConfig({ imageUrl: url })}
         onAltChange={(alt) => updateConfig({ alt })}
       />

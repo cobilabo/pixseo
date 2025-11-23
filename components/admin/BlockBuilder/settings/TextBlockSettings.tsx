@@ -25,7 +25,7 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
       {/* テキスト入力 */}
       <FloatingInput
         label="テキスト"
-        value={config.content}
+        value={config.content || ''}
         onChange={(content) => updateConfig({ content })}
         multiline
         rows={12}

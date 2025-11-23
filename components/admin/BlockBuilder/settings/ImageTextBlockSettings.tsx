@@ -27,7 +27,7 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       <div>
         <FeaturedImageUpload
           label="画像"
-          value={config.imageUrl}
+          value={config.imageUrl || ''}
           onChange={(imageUrl) => updateConfig({ imageUrl })}
           showAltInput={false}
         />
@@ -36,7 +36,7 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       {/* 画像alt */}
       <FloatingInput
         label="画像altテキスト"
-        value={config.imageAlt}
+        value={config.imageAlt || ''}
         onChange={(imageAlt) => updateConfig({ imageAlt })}
         required
       />
@@ -44,7 +44,7 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       {/* 画像位置 */}
       <FloatingSelect
         label="画像位置"
-        value={config.imagePosition}
+        value={config.imagePosition || 'left'}
         onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' | 'background' })}
         options={[
           { value: 'left', label: '左' },
@@ -57,7 +57,7 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       {/* 見出し */}
       <FloatingInput
         label="見出し"
-        value={config.heading}
+        value={config.heading || ''}
         onChange={(heading) => updateConfig({ heading })}
         required
       />
@@ -65,7 +65,7 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       {/* テキスト */}
       <FloatingInput
         label="テキスト"
-        value={config.text}
+        value={config.text || ''}
         onChange={(text) => updateConfig({ text })}
         multiline
         rows={8}
