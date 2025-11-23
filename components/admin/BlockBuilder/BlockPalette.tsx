@@ -61,13 +61,13 @@ function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) 
         isDragging ? 'opacity-50' : ''
       }`}
     >
-      <div className="flex items-start gap-3">
-        <div className="w-6 h-6 flex-shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="w-4 h-4 flex-shrink-0">
           <Image 
             src={blockType.icon} 
             alt={blockType.label} 
-            width={24} 
-            height={24} 
+            width={16} 
+            height={16} 
             className="opacity-60 group-hover:opacity-100"
             style={{ filter: 'grayscale(30%)' }}
           />
@@ -88,7 +88,6 @@ function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) 
 export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-md h-full">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">ブロック</h3>
       <div className="space-y-2">
         {blockTypes.map((blockType) => (
           <DraggableBlockType key={blockType.type} blockType={blockType} />

@@ -77,9 +77,24 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
     const id = event.active.id as string;
     setActiveId(id);
     
-    // パレットからのドラッグの場合、typeが含まれる
-    const type = event.active.data.current?.type as BlockType | undefined;
+    console.log('[DragStart]', { id, data: event.active.data.current });
+  };
+
+  // ドラッグ終了
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    console.log('[DragEnd]', { 
+      activeId: active.id, 
+      overId: over?.id,
+      activeData: active.data.current,
+    });
+    
+    // パレットからのドラッグの場合（typeが存在）
+    const type = active.data.current?.type as BlockType | undefined;
     if (type) {
+      console.log('[DragEnd] Creating new block of type:', type);
+      
       // 新しいブロックを作成
       const newBlock: Block = {
         id: uuidv4(),
@@ -87,34 +102,31 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
         order: localBlocks.length,
         config: getDefaultConfig(type),
       };
-      // 一時的にactiveIdをnewBlock.idに設定
-      setActiveId(newBlock.id);
-      // ドラッグ中の仮ブロックとして追加
-      event.active.data.current = { ...event.active.data.current, newBlock };
-    }
-  };
-
-  // ドラッグ終了
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    // パレットからのドラッグの場合
-    const newBlock = active.data.current?.newBlock as Block | undefined;
-    if (newBlock && over) {
-      const overIndex = localBlocks.findIndex(b => b.id === over.id);
-      if (overIndex >= 0) {
-        // 既存のブロックの位置に挿入
-        const newBlocks = [...localBlocks];
-        newBlocks.splice(overIndex, 0, newBlock);
-        setLocalBlocks(newBlocks.map((b, index) => ({ ...b, order: index })));
-        setSelectedBlockId(newBlock.id);
+      
+      if (over) {
+        // ドロップ先が既存ブロックの場合、その位置に挿入
+        const overIndex = localBlocks.findIndex(b => b.id === over.id);
+        if (overIndex >= 0) {
+          console.log('[DragEnd] Inserting at index:', overIndex);
+          const newBlocks = [...localBlocks];
+          newBlocks.splice(overIndex, 0, newBlock);
+          setLocalBlocks(newBlocks.map((b, index) => ({ ...b, order: index })));
+          setSelectedBlockId(newBlock.id);
+        } else {
+          // 末尾に追加
+          console.log('[DragEnd] Adding to end');
+          setLocalBlocks([...localBlocks, newBlock]);
+          setSelectedBlockId(newBlock.id);
+        }
       } else {
-        // 末尾に追加
+        // over がない場合も末尾に追加
+        console.log('[DragEnd] No over target, adding to end');
         setLocalBlocks([...localBlocks, newBlock]);
         setSelectedBlockId(newBlock.id);
       }
     } else if (over && active.id !== over.id) {
       // 既存ブロックの並び替え
+      console.log('[DragEnd] Reordering blocks');
       const oldIndex = localBlocks.findIndex(b => b.id === active.id);
       const newIndex = localBlocks.findIndex(b => b.id === over.id);
       
@@ -132,30 +144,31 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
   };
 
   return (
-    <div className="relative flex gap-6 h-[calc(100vh-200px)]">
-      {/* 左パネル: ブロックパレット（50%） */}
-      <div className="w-1/2 flex-shrink-0 relative">
-        <BlockPalette onAddBlock={handleAddBlock} />
-        
-        {/* ブロック設定（左パネルに重ねる） */}
-        {selectedBlock && (
-          <div className="absolute inset-0 z-10">
-            <BlockSettings
-              block={selectedBlock}
-              onUpdate={(updates) => handleUpdateBlock(selectedBlock.id, updates)}
-              onClose={() => setSelectedBlockId(null)}
-            />
-          </div>
-        )}
-      </div>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="relative flex gap-6 h-[calc(100vh-200px)]">
+        {/* 左パネル: ブロックパレット（50%） */}
+        <div className="w-1/2 flex-shrink-0 relative">
+          <BlockPalette onAddBlock={handleAddBlock} />
+          
+          {/* ブロック設定（左パネルに重ねる） */}
+          {selectedBlock && (
+            <div className="absolute inset-0 z-10">
+              <BlockSettings
+                block={selectedBlock}
+                onUpdate={(updates) => handleUpdateBlock(selectedBlock.id, updates)}
+                onClose={() => setSelectedBlockId(null)}
+                onDelete={() => handleDeleteBlock(selectedBlock.id)}
+              />
+            </div>
+          )}
+        </div>
 
-      {/* 右パネル: キャンバス（50%） */}
-      <div className="w-1/2 overflow-y-auto">
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
+        {/* 右パネル: キャンバス（50%） */}
+        <div className="w-1/2 overflow-y-auto">
           <SortableContext items={localBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
             <BuilderCanvas
               blocks={localBlocks}
@@ -164,16 +177,17 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
               onDeleteBlock={handleDeleteBlock}
             />
           </SortableContext>
-          <DragOverlay>
-            {activeId ? (
-              <div className="bg-white border-2 border-blue-500 rounded-lg p-4 shadow-lg opacity-50">
-                ドラッグ中...
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        </div>
       </div>
-    </div>
+      
+      <DragOverlay>
+        {activeId ? (
+          <div className="bg-white border-2 border-blue-500 rounded-lg p-4 shadow-lg opacity-50">
+            ドラッグ中...
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 });
 
