@@ -117,7 +117,6 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
         style={style}
         className={`
           relative
-          p-4
           cursor-pointer
           transition-all
           ${isSelected 

@@ -35,7 +35,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
   return (
     <div className="h-full flex flex-col">
       {/* 設定フォーム */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ overflowX: 'visible' }}>
+      <div className="flex-1 overflow-y-auto p-4">
         {block.type === 'heading' && (
           <HeadingBlockSettings block={block} onUpdate={onUpdate} />
         )}

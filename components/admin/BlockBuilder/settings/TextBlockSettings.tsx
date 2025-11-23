@@ -23,14 +23,15 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
   return (
     <div className="space-y-4">
       {/* テキストエディター */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          テキスト
-        </label>
+      <div className="relative">
         <RichTextEditor
           value={config.content}
           onChange={(content) => updateConfig({ content })}
         />
+        {/* FloatingInputと同じスタイルのラベル */}
+        <label className="absolute text-xs -top-2.5 left-2 bg-white px-2 text-gray-700 pointer-events-none z-10">
+          テキスト
+        </label>
       </div>
 
       {/* 配置 */}
