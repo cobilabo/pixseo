@@ -5,7 +5,7 @@
  */
 
 import { Block, TextBlockConfig } from '@/types/block';
-import RichTextEditor from '@/components/admin/RichTextEditor';
+import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 
 interface TextBlockSettingsProps {
@@ -22,17 +22,14 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
 
   return (
     <div className="space-y-4">
-      {/* テキストエディター */}
-      <div className="relative">
-        <RichTextEditor
-          value={config.content}
-          onChange={(content) => updateConfig({ content })}
-        />
-        {/* FloatingInputと同じスタイルのラベル */}
-        <label className="absolute text-xs -top-2.5 left-2 bg-white px-2 text-gray-700 pointer-events-none z-10">
-          テキスト
-        </label>
-      </div>
+      {/* テキスト入力 */}
+      <FloatingInput
+        label="テキスト"
+        value={config.content}
+        onChange={(content) => updateConfig({ content })}
+        multiline
+        rows={12}
+      />
 
       {/* 配置 */}
       <FloatingSelect
