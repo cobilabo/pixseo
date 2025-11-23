@@ -7,6 +7,7 @@
 import { Block, TextBlockConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
+import ColorPicker from '@/components/admin/ColorPicker';
 
 interface TextBlockSettingsProps {
   block: Block;
@@ -64,6 +65,13 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
           { value: 'normal', label: '通常' },
           { value: 'bold', label: '太字' },
         ]}
+      />
+
+      {/* テキストカラー */}
+      <ColorPicker
+        label="テキストカラー"
+        value={config.textColor || ''}
+        onChange={(textColor) => updateConfig({ textColor })}
       />
     </div>
   );

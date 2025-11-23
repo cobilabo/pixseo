@@ -8,6 +8,7 @@ import { Block, ImageTextBlockConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
+import ColorPicker from '@/components/admin/ColorPicker';
 
 interface ImageTextBlockSettingsProps {
   block: Block;
@@ -62,6 +63,36 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
         required
       />
 
+      {/* 見出しフォントサイズ */}
+      <FloatingSelect
+        label="見出しフォントサイズ"
+        value={config.headingFontSize || 'medium'}
+        onChange={(value) => updateConfig({ headingFontSize: value as 'small' | 'medium' | 'large' })}
+        options={[
+          { value: 'small', label: '小' },
+          { value: 'medium', label: '中' },
+          { value: 'large', label: '大' },
+        ]}
+      />
+
+      {/* 見出しフォント太さ */}
+      <FloatingSelect
+        label="見出しフォント太さ"
+        value={config.headingFontWeight || 'normal'}
+        onChange={(value) => updateConfig({ headingFontWeight: value as 'normal' | 'bold' })}
+        options={[
+          { value: 'normal', label: '通常' },
+          { value: 'bold', label: '太字' },
+        ]}
+      />
+
+      {/* 見出しテキストカラー */}
+      <ColorPicker
+        label="見出しテキストカラー"
+        value={config.headingTextColor || ''}
+        onChange={(headingTextColor) => updateConfig({ headingTextColor })}
+      />
+
       {/* テキスト */}
       <FloatingInput
         label="テキスト"
@@ -69,6 +100,36 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
         onChange={(text) => updateConfig({ text })}
         multiline
         rows={8}
+      />
+
+      {/* テキストフォントサイズ */}
+      <FloatingSelect
+        label="テキストフォントサイズ"
+        value={config.textFontSize || 'medium'}
+        onChange={(value) => updateConfig({ textFontSize: value as 'small' | 'medium' | 'large' })}
+        options={[
+          { value: 'small', label: '小' },
+          { value: 'medium', label: '中' },
+          { value: 'large', label: '大' },
+        ]}
+      />
+
+      {/* テキストフォント太さ */}
+      <FloatingSelect
+        label="テキストフォント太さ"
+        value={config.textFontWeight || 'normal'}
+        onChange={(value) => updateConfig({ textFontWeight: value as 'normal' | 'bold' })}
+        options={[
+          { value: 'normal', label: '通常' },
+          { value: 'bold', label: '太字' },
+        ]}
+      />
+
+      {/* テキストカラー */}
+      <ColorPicker
+        label="テキストカラー"
+        value={config.textColor || ''}
+        onChange={(textColor) => updateConfig({ textColor })}
       />
     </div>
   );
