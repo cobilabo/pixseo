@@ -155,6 +155,19 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
+      name: 'フォーム', 
+      href: '/forms',
+      icon: (
+        <Image 
+          src="/article.svg" 
+          alt="フォーム" 
+          width={20}
+          height={20}
+          priority
+        />
+      )
+    },
+    { 
       name: 'テーマ', 
       href: '/theme',
       icon: (
