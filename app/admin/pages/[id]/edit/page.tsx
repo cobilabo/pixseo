@@ -5,9 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
-import RichTextEditor from '@/components/admin/RichTextEditor';
 import FloatingInput from '@/components/admin/FloatingInput';
-import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { updatePage, getPageById } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { Block } from '@/types/block';
@@ -22,13 +20,10 @@ export default function EditPagePage() {
   const { currentTenant } = useMediaTenant();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
-  const [featuredImageAlt, setFeaturedImageAlt] = useState('');
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   const [generatingSlug, setGeneratingSlug] = useState(false);
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
   const [pages, setPages] = useState<Page[]>([]);
-  const [useBlockBuilder, setUseBlockBuilder] = useState(false); // ブロックビルダー使用フラグ
   const [blocks, setBlocks] = useState<Block[]>([]); // ブロックデータ
   
   const [formData, setFormData] = useState({
@@ -69,11 +64,7 @@ export default function EditPagePage() {
         parentId: page.parentId || '',
       });
       
-      setFeaturedImageUrl(page.featuredImage || '');
-      setFeaturedImageAlt(page.featuredImageAlt || '');
-      
       // ブロックビルダーデータを読み込み
-      setUseBlockBuilder(page.useBlockBuilder || false);
       setBlocks(page.blocks || []);
       
       setFetchLoading(false);
@@ -170,19 +161,13 @@ export default function EditPagePage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    // ブロックビルダー使用時は blocks が必須、従来エディター使用時は content が必須
     if (!formData.title || !formData.slug) {
       alert('タイトルとスラッグは必須です');
       return;
     }
     
-    if (useBlockBuilder && blocks.length === 0) {
+    if (blocks.length === 0) {
       alert('ブロックを少なくとも1つ追加してください');
-      return;
-    }
-    
-    if (!useBlockBuilder && !formData.content) {
-      alert('本文は必須です');
       return;
     }
 
@@ -195,18 +180,12 @@ export default function EditPagePage() {
     try {
       const updateData: any = {
         ...formData,
-        featuredImage: featuredImageUrl,
-        featuredImageAlt: featuredImageAlt,
         parentId: formData.parentId || undefined,
-        useBlockBuilder,
-      };
-      
-      // ブロックビルダー使用時は blocks を保存
-      if (useBlockBuilder) {
-        updateData.blocks = blocks;
+        useBlockBuilder: true,
+        blocks,
         // 後方互換性のため、contentも生成して保存
-        updateData.content = '<!-- Block Builder Content -->';
-      }
+        content: '<!-- Block Builder Content -->',
+      };
       
       await updatePage(pageId, updateData);
       
@@ -244,23 +223,10 @@ export default function EditPagePage() {
   return (
     <AuthGuard>
       <AdminLayout>
-        <div className="max-w-4xl pb-32 animate-fadeIn">
+        <div className="max-w-full px-4 pb-32 animate-fadeIn">
           <form id="page-edit-form" onSubmit={handleSubmit}>
-            {/* アイキャッチ画像 */}
-            <div className="mb-6">
-              <div className="bg-white rounded-xl p-6">
-                <FeaturedImageUpload
-                  value={featuredImageUrl}
-                  onChange={setFeaturedImageUrl}
-                  alt={featuredImageAlt}
-                  onAltChange={setFeaturedImageAlt}
-                  showImageGenerator={false}
-                />
-              </div>
-            </div>
-
             {/* すべてのフィールドを1つのパネル内に表示 */}
-            <div className="bg-white rounded-xl p-6 space-y-6">
+            <div className="bg-white rounded-xl p-6 space-y-6 max-w-4xl"
               {/* タイトル */}
               <FloatingInput
                 label="タイトル"
@@ -328,36 +294,6 @@ export default function EditPagePage() {
                 rows={3}
               />
 
-              {/* 編集モード切り替え */}
-              <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={useBlockBuilder}
-                    onChange={(e) => setUseBlockBuilder(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    ブロックビルダーを使用
-                  </span>
-                </label>
-                <span className="text-xs text-gray-500">
-                  {useBlockBuilder ? '🧩 ブロックを組み合わせて構築' : '📝 従来のエディター'}
-                </span>
-              </div>
-
-              {/* 本文 or ブロックビルダー */}
-              <div>
-                {useBlockBuilder ? (
-                  <BlockBuilder blocks={blocks} onChange={setBlocks} />
-                ) : (
-                  <RichTextEditor
-                    value={formData.content}
-                    onChange={(content) => setFormData({ ...formData, content })}
-                  />
-                )}
-              </div>
-
               {/* メタタイトル */}
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -381,6 +317,11 @@ export default function EditPagePage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* ブロックビルダー */}
+            <div className="mt-6">
+              <BlockBuilder blocks={blocks} onChange={setBlocks} />
             </div>
           </form>
 

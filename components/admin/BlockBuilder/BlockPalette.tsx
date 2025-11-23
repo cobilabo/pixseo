@@ -6,6 +6,7 @@
  */
 
 import { BlockType } from '@/types/block';
+import Image from 'next/image';
 
 interface BlockPaletteProps {
   onAddBlock: (type: BlockType) => void;
@@ -15,31 +16,31 @@ const blockTypes = [
   {
     type: 'text' as BlockType,
     label: 'テキスト',
-    icon: '📝',
+    icon: '/text.svg',
     description: '見出しや段落を追加',
   },
   {
     type: 'image' as BlockType,
     label: '画像',
-    icon: '🖼️',
+    icon: '/image.svg',
     description: '画像を表示',
   },
   {
     type: 'cta' as BlockType,
     label: 'CTA',
-    icon: '🔘',
+    icon: '/cta.svg',
     description: 'ボタン/リンクを配置',
   },
   {
     type: 'form' as BlockType,
     label: 'フォーム',
-    icon: '📋',
+    icon: '/form.svg',
     description: 'フォームを埋め込み',
   },
   {
     type: 'html' as BlockType,
     label: 'HTML',
-    icon: '💻',
+    icon: '/html.svg',
     description: 'カスタムHTMLを追加',
   },
 ];
@@ -56,7 +57,15 @@ export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
             className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl">{blockType.icon}</span>
+              <div className="w-6 h-6 flex-shrink-0">
+                <Image 
+                  src={blockType.icon} 
+                  alt={blockType.label} 
+                  width={24} 
+                  height={24} 
+                  className="text-gray-600 group-hover:text-blue-600"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-gray-900 group-hover:text-blue-600">
                   {blockType.label}
