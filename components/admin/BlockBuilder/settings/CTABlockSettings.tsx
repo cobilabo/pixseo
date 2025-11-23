@@ -32,7 +32,15 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
     if ((config.buttons || []).length >= 4) return;
     const newButtons = [
       ...(config.buttons || []),
-      { text: '', url: '', buttonColor: '', fontSize: 'medium', fontWeight: 'normal', textColor: '', openInNewTab: false },
+      { 
+        text: '', 
+        url: '', 
+        buttonColor: '', 
+        fontSize: 'medium' as 'medium', 
+        fontWeight: 'normal' as 'normal', 
+        textColor: '', 
+        openInNewTab: false 
+      },
     ];
     updateConfig({ buttons: newButtons });
   };
