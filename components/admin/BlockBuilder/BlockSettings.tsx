@@ -29,7 +29,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md h-full flex flex-col">
+    <div className="h-full flex flex-col">
       {/* ヘッダー */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 className="text-lg font-bold text-gray-900">

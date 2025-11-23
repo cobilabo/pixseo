@@ -32,7 +32,7 @@ export default function BuilderCanvas({
     return (
       <div 
         ref={setDropRef}
-        className="bg-white rounded-xl p-12 shadow-md text-center min-h-[400px] flex items-center justify-center"
+        className="text-center min-h-[400px] flex items-center justify-center"
       >
         <div>
           <div className="text-gray-400 text-6xl mb-4">📦</div>
@@ -50,7 +50,7 @@ export default function BuilderCanvas({
   return (
     <div 
       ref={setDropRef}
-      className="bg-white rounded-xl p-6 shadow-md space-y-4"
+      className="space-y-4"
     >
       {blocks.map((block) => (
         <SortableBlockItem

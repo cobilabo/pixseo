@@ -25,6 +25,7 @@ export default function EditPagePage() {
   const [generatingMetaTitle, setGeneratingMetaTitle] = useState(false);
   const [blocks, setBlocks] = useState<Block[]>([]); // ブロックデータ
   const blockBuilderRef = useRef<BlockBuilderRef>(null);
+  const [activeTab, setActiveTab] = useState<'blocks' | 'settings'>('blocks');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -212,10 +213,49 @@ export default function EditPagePage() {
       <AdminLayout>
         <div className="px-4 pb-32 animate-fadeIn">
           <form id="page-edit-form" onSubmit={handleSubmit}>
-            {/* すべてのフィールドを1つのパネル内に表示 */}
-            <div className="bg-white rounded-xl p-6 space-y-6">
-              {/* タイトル */}
-              <FloatingInput
+            {/* タブメニュー */}
+            <div className="bg-white rounded-[1.75rem] mb-6">
+              <div className="border-b border-gray-200">
+                <div className="flex">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('blocks')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'blocks'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    style={activeTab === 'blocks' ? { backgroundColor: '#f9fafb' } : {}}
+                  >
+                    ブロック
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('settings')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'settings'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    style={activeTab === 'settings' ? { backgroundColor: '#f9fafb' } : {}}
+                  >
+                    ページ設定
+                  </button>
+                </div>
+              </div>
+
+              {/* ブロックタブ */}
+              {activeTab === 'blocks' && (
+                <div className="p-6">
+                  <BlockBuilder ref={blockBuilderRef} blocks={blocks} onChange={setBlocks} />
+                </div>
+              )}
+
+              {/* ページ設定タブ */}
+              {activeTab === 'settings' && (
+                <div className="p-6 space-y-6">
+                  {/* タイトル */}
+                  <FloatingInput
                 label="タイトル"
                 value={formData.title}
                 onChange={(value) => setFormData({ ...formData, title: value })}
@@ -284,16 +324,9 @@ export default function EditPagePage() {
                   )}
                 </button>
               </div>
-            </div>
 
-            {/* ブロックビルダー */}
-            <div className="mt-6">
-              <BlockBuilder ref={blockBuilderRef} blocks={blocks} onChange={setBlocks} />
-            </div>
-          </form>
-
-          {/* SERP プレビュー */}
-          <div className="bg-white rounded-xl p-6 mt-6">
+                  {/* SERP プレビュー */}
+                  <div className="mt-6 border-t border-gray-200 pt-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,7 +389,11 @@ export default function EditPagePage() {
                 </div>
               </div>
             </div>
-          </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </form>
 
           {/* 公開トグル（固定位置） */}
           <div className="fixed bottom-36 right-8 w-32 z-50">

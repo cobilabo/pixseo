@@ -149,34 +149,41 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="relative flex gap-6 h-[calc(100vh-200px)]">
-        {/* 左パネル: ブロックパレット（50%） */}
-        <div className="w-1/2 flex-shrink-0 relative">
-          <BlockPalette onAddBlock={handleAddBlock} />
-          
-          {/* ブロック設定（左パネルに重ねる） */}
-          {selectedBlock && (
-            <div className="absolute inset-0 z-10">
-              <BlockSettings
-                block={selectedBlock}
-                onUpdate={(updates) => handleUpdateBlock(selectedBlock.id, updates)}
-                onClose={() => setSelectedBlockId(null)}
-                onDelete={() => handleDeleteBlock(selectedBlock.id)}
-              />
+      <div className="relative">
+        {/* 左右を1つのパネルに統合 */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="flex h-[calc(100vh-300px)]">
+            {/* 左パネル: ブロックパレット（50%） */}
+            <div className="w-1/2 relative border-r border-gray-200">
+              <div className="absolute inset-0 overflow-y-auto p-4">
+                <BlockPalette onAddBlock={handleAddBlock} />
+              </div>
+              
+              {/* ブロック設定（左パネルに重ねる） */}
+              {selectedBlock && (
+                <div className="absolute inset-0 z-10 bg-white">
+                  <BlockSettings
+                    block={selectedBlock}
+                    onUpdate={(updates) => handleUpdateBlock(selectedBlock.id, updates)}
+                    onClose={() => setSelectedBlockId(null)}
+                    onDelete={() => handleDeleteBlock(selectedBlock.id)}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* 右パネル: キャンバス（50%） */}
-        <div className="w-1/2 overflow-y-auto">
-          <SortableContext items={localBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
-            <BuilderCanvas
-              blocks={localBlocks}
-              selectedBlockId={selectedBlockId}
-              onSelectBlock={setSelectedBlockId}
-              onDeleteBlock={handleDeleteBlock}
-            />
-          </SortableContext>
+            {/* 右パネル: キャンバス（50%） */}
+            <div className="w-1/2 overflow-y-auto p-4">
+              <SortableContext items={localBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                <BuilderCanvas
+                  blocks={localBlocks}
+                  selectedBlockId={selectedBlockId}
+                  onSelectBlock={setSelectedBlockId}
+                  onDeleteBlock={handleDeleteBlock}
+                />
+              </SortableContext>
+            </div>
+          </div>
         </div>
       </div>
       

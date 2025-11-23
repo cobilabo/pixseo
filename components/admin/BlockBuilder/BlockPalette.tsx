@@ -87,13 +87,10 @@ function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) 
 
 export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md h-full">
-      <div className="space-y-2">
-        {blockTypes.map((blockType) => (
-          <DraggableBlockType key={blockType.type} blockType={blockType} />
-        ))}
-      </div>
-
+    <div className="space-y-2">
+      {blockTypes.map((blockType) => (
+        <DraggableBlockType key={blockType.type} blockType={blockType} />
+      ))}
     </div>
   );
 }
