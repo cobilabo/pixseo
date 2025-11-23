@@ -24,16 +24,16 @@ export default function HeadingBlockSettings({ block, onUpdate }: HeadingBlockSe
       {/* 見出しテキスト */}
       <FloatingInput
         label="見出しテキスト"
-        value={config.text}
-        onChange={(text) => updateConfig({ text })}
+        value={config.content}
+        onChange={(content) => updateConfig({ content })}
         required
       />
 
       {/* アンカーID */}
       <FloatingInput
         label="アンカーID（ページ内リンク用）"
-        value={config.anchorId || ''}
-        onChange={(anchorId) => updateConfig({ anchorId })}
+        value={config.id || ''}
+        onChange={(id) => updateConfig({ id })}
       />
     </div>
   );

@@ -207,12 +207,12 @@ function getDefaultConfig(type: BlockType): any {
   switch (type) {
     case 'heading':
       return {
-        text: '見出しを入力してください',
-        anchorId: '',
+        content: '見出しを入力してください',
+        id: '',
       };
     case 'text':
       return {
-        content: '<p>テキストを入力してください</p>',
+        content: 'テキストを入力してください',
         alignment: 'left',
         fontSize: 'medium',
         fontWeight: 'normal',
@@ -230,10 +230,15 @@ function getDefaultConfig(type: BlockType): any {
         imageAlt: '',
         imagePosition: 'left',
         heading: '見出しを入力してください',
-        text: '<p>テキストを入力してください</p>',
+        text: 'テキストを入力してください',
       };
     case 'cta':
       return {
+        imageUrl: '',
+        imageAlt: '',
+        imagePosition: 'background',
+        heading: '見出し',
+        description: 'テキストを入力してください',
         text: 'ボタンテキスト',
         url: '',
         style: 'primary',

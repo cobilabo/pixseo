@@ -170,19 +170,20 @@ function BlockPreview({ block }: { block: Block }) {
   switch (block.type) {
     case 'heading':
       const headingConfig = block.config as any;
-      return <span>{headingConfig.text}</span>;
+      return <span>{headingConfig.content}</span>;
     case 'text':
       const textConfig = block.config as any;
-      return <div className="line-clamp-2" dangerouslySetInnerHTML={{ __html: textConfig.content }} />;
+      return <div className="line-clamp-2">{textConfig.content}</div>;
     case 'image':
       const imageConfig = block.config as any;
       return <span>{imageConfig.alt || '画像（alt未設定）'}</span>;
     case 'imageText':
       const imageTextConfig = block.config as any;
-      return <span>{imageTextConfig.heading} - {imageTextConfig.imagePosition === 'left' ? '画像左' : '画像右'}</span>;
+      const positionLabel = imageTextConfig.imagePosition === 'background' ? '背景' : (imageTextConfig.imagePosition === 'left' ? '画像左' : '画像右');
+      return <span>{imageTextConfig.heading} - {positionLabel}</span>;
     case 'cta':
       const ctaConfig = block.config as any;
-      return <span>「{ctaConfig.text}」→ {ctaConfig.url || 'URL未設定'}</span>;
+      return <span>「{ctaConfig.text}」{ctaConfig.heading ? ` - ${ctaConfig.heading}` : ''}</span>;
     case 'form':
       const formConfig = block.config as any;
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;

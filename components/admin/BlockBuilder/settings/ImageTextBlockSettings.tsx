@@ -7,7 +7,6 @@
 import { Block, ImageTextBlockConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
-import RichTextEditor from '@/components/admin/RichTextEditor';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 
 interface ImageTextBlockSettingsProps {
@@ -46,10 +45,11 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       <FloatingSelect
         label="画像位置"
         value={config.imagePosition}
-        onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' })}
+        onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' | 'background' })}
         options={[
           { value: 'left', label: '左' },
           { value: 'right', label: '右' },
+          { value: 'background', label: '背景' },
         ]}
         required
       />
@@ -63,15 +63,13 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
       />
 
       {/* テキスト */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          テキスト
-        </label>
-        <RichTextEditor
-          value={config.text}
-          onChange={(text) => updateConfig({ text })}
-        />
-      </div>
+      <FloatingInput
+        label="テキスト"
+        value={config.text}
+        onChange={(text) => updateConfig({ text })}
+        multiline
+        rows={8}
+      />
     </div>
   );
 }

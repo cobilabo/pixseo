@@ -7,6 +7,7 @@
 import { Block, CTABlockConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
+import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 
 interface CTABlockSettingsProps {
   block: Block;
@@ -22,6 +23,49 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
 
   return (
     <div className="space-y-4">
+      {/* 画像 */}
+      <FeaturedImageUpload
+        label="画像"
+        value={config.imageUrl || ''}
+        onChange={(imageUrl) => updateConfig({ imageUrl })}
+        showAltInput={false}
+      />
+
+      {/* 画像alt */}
+      <FloatingInput
+        label="画像 alt"
+        value={config.imageAlt || ''}
+        onChange={(imageAlt) => updateConfig({ imageAlt })}
+      />
+
+      {/* 画像位置 */}
+      <FloatingSelect
+        label="画像位置"
+        value={config.imagePosition || 'background'}
+        onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' | 'background' })}
+        options={[
+          { value: 'left', label: '左' },
+          { value: 'right', label: '右' },
+          { value: 'background', label: '背景' },
+        ]}
+      />
+
+      {/* 見出し */}
+      <FloatingInput
+        label="見出し"
+        value={config.heading || ''}
+        onChange={(heading) => updateConfig({ heading })}
+      />
+
+      {/* 説明文 */}
+      <FloatingInput
+        label="テキスト"
+        value={config.description || ''}
+        onChange={(description) => updateConfig({ description })}
+        multiline
+        rows={6}
+      />
+
       {/* ボタンテキスト */}
       <FloatingInput
         label="ボタンテキスト"
@@ -59,18 +103,6 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
           { value: 'small', label: '小' },
           { value: 'medium', label: '中' },
           { value: 'large', label: '大' },
-        ]}
-      />
-
-      {/* 配置 */}
-      <FloatingSelect
-        label="配置"
-        value={config.alignment || 'center'}
-        onChange={(value) => updateConfig({ alignment: value as 'left' | 'center' | 'right' })}
-        options={[
-          { value: 'left', label: '左揃え' },
-          { value: 'center', label: '中央揃え' },
-          { value: 'right', label: '右揃え' },
         ]}
       />
 

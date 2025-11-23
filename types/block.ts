@@ -32,6 +32,11 @@ export interface ImageBlockConfig {
 
 // CTAブロックの設定
 export interface CTABlockConfig {
+  imageUrl?: string;        // 背景画像URL
+  imageAlt?: string;        // 画像alt
+  imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
+  heading?: string;         // 見出し
+  description?: string;     // 説明文
   text: string;             // ボタンテキスト
   url: string;              // リンク先URL
   style?: 'primary' | 'secondary' | 'outline';
@@ -53,17 +58,17 @@ export interface HTMLBlockConfig {
 
 // 見出しブロックの設定
 export interface HeadingBlockConfig {
-  text: string;             // 見出しテキスト
-  anchorId?: string;        // ページ内リンク用のID
+  content: string;          // 見出しテキスト
+  id?: string;              // ページ内リンク用のID
 }
 
 // 画像&テキストブロックの設定
 export interface ImageTextBlockConfig {
   imageUrl: string;
   imageAlt: string;
-  imagePosition: 'left' | 'right';  // 画像の位置
+  imagePosition: 'left' | 'right' | 'background';  // 画像の位置
   heading: string;                  // 見出し
-  text: string;                     // テキスト（HTML形式）
+  text: string;                     // テキスト
 }
 
 // ブロックの共通インターフェース
