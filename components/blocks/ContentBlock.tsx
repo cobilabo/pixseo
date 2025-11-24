@@ -312,8 +312,11 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
 
   // 画像が背景で、かつ画像を表示する場合
   if (config.showImage && config.imagePosition === 'background' && config.imageUrl) {
+    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    
     return (
-      <div 
+      <SectionTag 
         id={config.sectionId || undefined}
         className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
         style={{ ...fullWidthStyle, ...imageHeightStyle }}
@@ -327,7 +330,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
         {filterStyle && <div style={filterStyle} />}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
           {config.showHeading && config.heading && (
-            <h3
+            <HeadingTag
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
                 ${alignmentClasses[config.headingAlignment || 'center']}
@@ -339,7 +342,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
               }}
             >
               {config.heading}
-            </h3>
+            </HeadingTag>
           )}
           {config.showText && config.description && (
             <p
@@ -363,7 +366,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
             </div>
           )}
         </div>
-      </div>
+      </SectionTag>
     );
   }
 
@@ -371,8 +374,11 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
   const isImageLeft = config.imagePosition === 'left';
   
   if (config.showImage && config.imageUrl && (config.imagePosition === 'left' || config.imagePosition === 'right')) {
+    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    
     return (
-      <div id={config.sectionId || undefined} className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
+      <SectionTag id={config.sectionId || undefined} className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
         {/* 画像部分 */}
         <div className="w-full md:w-1/2">
           <div 
@@ -392,7 +398,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
         {/* テキスト＋ライター＋ボタン部分 */}
         <div className="w-full md:w-1/2">
           {config.showHeading && config.heading && (
-            <h3
+            <HeadingTag
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
                 ${alignmentClasses[config.headingAlignment || 'left']}
@@ -404,7 +410,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
               }}
             >
               {config.heading}
-            </h3>
+            </HeadingTag>
           )}
           {config.showText && config.description && (
             <p
@@ -428,15 +434,18 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
             </div>
           )}
         </div>
-      </div>
+      </SectionTag>
     );
   }
 
   // 画像なしの場合、または画像を表示しない場合（テキスト＋ライター＋ボタンのみ）
+  const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
+  const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+  
   return (
-    <div id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
+    <SectionTag id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
       {config.showHeading && config.heading && (
-        <h3
+        <HeadingTag
           className={`
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
             ${alignmentClasses[config.headingAlignment || 'center']}
@@ -448,7 +457,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
           }}
         >
           {config.heading}
-        </h3>
+        </HeadingTag>
       )}
       {config.showText && config.description && (
         <p
@@ -471,6 +480,6 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
           {config.buttons.map(renderButton)}
         </div>
       )}
-    </div>
+    </SectionTag>
   );
 }
