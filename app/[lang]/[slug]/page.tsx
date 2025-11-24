@@ -168,7 +168,7 @@ export default async function FixedPage({ params }: PageProps) {
           
           {/* ブロックビルダー使用時はBlockRendererで表示 */}
           {rawPage.useBlockBuilder && rawPage.blocks ? (
-            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} />
+            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} />
           ) : (
             <div 
               className="prose prose-lg max-w-none"

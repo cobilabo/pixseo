@@ -13,9 +13,10 @@ interface BlockRendererProps {
   blocks: Block[];
   isMobile?: boolean;
   showPanel?: boolean;
+  lang?: string;
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' }: BlockRendererProps) {
   // 表示するブロックをフィルタリング
   const visibleBlocks = blocks
     .filter(block => {
@@ -55,7 +56,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             blockContent = <SpacerBlock block={block} />;
             break;
           case 'content':
-            blockContent = <ContentBlock block={block} showPanel={showPanel} isMobile={isMobile} />;
+            blockContent = <ContentBlock block={block} showPanel={showPanel} isMobile={isMobile} lang={lang} />;
             break;
           default:
             blockContent = null;

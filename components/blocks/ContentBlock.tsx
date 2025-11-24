@@ -7,12 +7,12 @@ import Image from 'next/image';
 import { Block, ContentBlockConfig, CTAButtonConfig } from '@/types/block';
 import { getFilterStyle } from '@/lib/utils/filter-helpers';
 import { adminDb } from '@/lib/firebase/admin';
-import { headers } from 'next/headers';
 
 interface ContentBlockProps {
   block: Block;
   showPanel?: boolean;
   isMobile?: boolean;
+  lang?: string;
 }
 
 interface Writer {
@@ -37,13 +37,8 @@ async function getWriter(writerId: string): Promise<Writer | null> {
   }
 }
 
-export default async function ContentBlock({ block, showPanel = true, isMobile = false }: ContentBlockProps) {
+export default async function ContentBlock({ block, showPanel = true, isMobile = false, lang = 'ja' }: ContentBlockProps) {
   const config = block.config as ContentBlockConfig;
-  
-  // 現在の言語を取得
-  const headersList = headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const lang = pathname.split('/')[1] || 'ja';
   
   // 言語に応じたコンテンツを取得
   const heading = (config as any)[`heading_${lang}`] || config.heading || '';
