@@ -19,12 +19,20 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
     left: 'mx-0',
     center: 'mx-auto',
     right: 'ml-auto',
+    'center-fit': 'mx-auto',
   };
   
-  const widthStyle = config.width ? { width: `${config.width}%` } : {};
+  // center-fit（高さ基準）の場合は横幅を auto にする
+  const isCenterFit = config.alignment === 'center-fit';
   
-  // パネルOFFの場合は画面幅いっぱいにする
-  const fullWidthStyle = !showPanel ? {
+  const widthStyle = isCenterFit 
+    ? { width: 'auto', maxWidth: '100%' }  // 高さ基準：横幅は auto
+    : config.width 
+      ? { width: `${config.width}%` } 
+      : {};
+  
+  // パネルOFFの場合は画面幅いっぱいにする（ただし center-fit の場合は除く）
+  const fullWidthStyle = (!showPanel && !isCenterFit) ? {
     width: '100vw',
     marginLeft: 'calc(50% - 50vw)',
     marginRight: 'calc(50% - 50vw)',
@@ -35,6 +43,9 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
     height: `${config.imageHeight}px`,
     overflow: 'hidden',
   } : {};
+  
+  // center-fit の場合は object-fit を contain に変更（アスペクト比を維持）
+  const objectFitClass = isCenterFit ? 'object-contain' : 'object-cover';
 
   // フィルタースタイル（グラデーション対応）
   const filterStyle = getFilterStyle(
@@ -57,7 +68,7 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
           alt={config.alt}
           width={1200}
           height={675}
-          className="w-full h-full object-cover"
+          className={`${isCenterFit ? 'h-full' : 'w-full h-full'} ${objectFitClass}`}
         />
         {filterStyle && <div style={filterStyle} />}
       </div>

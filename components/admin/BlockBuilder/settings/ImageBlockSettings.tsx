@@ -44,11 +44,12 @@ export default function ImageBlockSettings({ block, onUpdate }: ImageBlockSettin
       <FloatingSelect
         label="配置"
         value={config.alignment || 'center'}
-        onChange={(value) => updateConfig({ alignment: value as 'left' | 'center' | 'right' })}
+        onChange={(value) => updateConfig({ alignment: value as 'left' | 'center' | 'right' | 'center-fit' })}
         options={[
           { value: 'left', label: '左揃え' },
           { value: 'center', label: '中央揃え' },
           { value: 'right', label: '右揃え' },
+          { value: 'center-fit', label: '中央（高さ基準）' },
         ]}
       />
 

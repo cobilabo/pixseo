@@ -29,7 +29,7 @@ export interface ImageBlockConfig {
   alt: string;
   caption?: string;
   width?: number;           // %指定
-  alignment?: 'left' | 'center' | 'right';
+  alignment?: 'left' | 'center' | 'right' | 'center-fit';  // center-fit: 高さ基準でアスペクト比維持して中央配置
   link?: string;            // クリック時のリンク先
   imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
   filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
