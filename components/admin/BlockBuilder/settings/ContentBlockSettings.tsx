@@ -66,18 +66,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
     <div className="space-y-4">
       {/* 画像セクション */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="showImage"
-            checked={config.showImage || false}
-            onChange={(e) => updateConfig({ showImage: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="showImage" className="text-sm font-medium text-gray-700">
-            画像を表示
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => updateConfig({ showImage: !config.showImage })}
+          className={`w-full py-3 px-4 rounded-full text-sm font-medium transition-colors ${
+            config.showImage
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {config.showImage ? '画像を使用（押下でOFF）' : '画像を使用する'}
+        </button>
 
         {config.showImage && (
           <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
@@ -158,18 +157,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
 
       {/* 見出しセクション */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="showHeading"
-            checked={config.showHeading || false}
-            onChange={(e) => updateConfig({ showHeading: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="showHeading" className="text-sm font-medium text-gray-700">
-            見出しを表示
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => updateConfig({ showHeading: !config.showHeading })}
+          className={`w-full py-3 px-4 rounded-full text-sm font-medium transition-colors ${
+            config.showHeading
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {config.showHeading ? '見出しを使用（押下でOFF）' : '見出しを使用する'}
+        </button>
 
         {config.showHeading && (
           <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
@@ -211,18 +209,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
 
       {/* テキストセクション */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="showText"
-            checked={config.showText || false}
-            onChange={(e) => updateConfig({ showText: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="showText" className="text-sm font-medium text-gray-700">
-            テキストを表示
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => updateConfig({ showText: !config.showText })}
+          className={`w-full py-3 px-4 rounded-full text-sm font-medium transition-colors ${
+            config.showText
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {config.showText ? 'テキストを使用（押下でOFF）' : 'テキストを使用する'}
+        </button>
 
         {config.showText && (
           <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
@@ -266,18 +263,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
 
       {/* ボタンセクション */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="showButtons"
-            checked={config.showButtons || false}
-            onChange={(e) => updateConfig({ showButtons: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="showButtons" className="text-sm font-medium text-gray-700">
-            ボタンを表示
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => updateConfig({ showButtons: !config.showButtons })}
+          className={`w-full py-3 px-4 rounded-full text-sm font-medium transition-colors ${
+            config.showButtons
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {config.showButtons ? 'ボタンを使用（押下でOFF）' : 'ボタンを使用する'}
+        </button>
 
         {config.showButtons && (
           <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
