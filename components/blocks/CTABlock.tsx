@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Block, CTABlockConfig } from '@/types/block';
+import { Block, CTABlockConfig, CTAButtonConfig } from '@/types/block';
 import { getFilterStyle } from '@/lib/utils/filter-helpers';
 
 interface CTABlockProps {
@@ -58,6 +58,62 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
     config.filterOpacity
   );
 
+  // ボタンレンダリング関数
+  const renderButton = (button: CTAButtonConfig, index: number) => {
+    const isExternal = button.url?.startsWith('http');
+    
+    // テキストボタン
+    if (button.type === 'text') {
+      return (
+        <Link
+          key={index}
+          href={button.url || '#'}
+          target={button.openInNewTab || isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          className={`
+            inline-block
+            rounded-lg
+            transition-all
+            hover:scale-105
+            shadow-md
+            px-6 py-3
+            ${buttonFontWeightClasses[button.fontWeight || 'normal']}
+          `}
+          style={{
+            fontSize: `${button.fontSize || 1}rem`,
+            backgroundColor: button.buttonColor || '#3b82f6',
+            color: button.textColor || '#ffffff',
+          }}
+        >
+          {button.text}
+        </Link>
+      );
+    }
+    
+    // 画像ボタン
+    if (button.type === 'image' && button.imageUrl) {
+      return (
+        <Link
+          key={index}
+          href={button.url || '#'}
+          target={button.openInNewTab || isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          className="inline-block transition-all hover:scale-105"
+        >
+          <Image
+            src={button.imageUrl}
+            alt={button.imageAlt || 'ボタン画像'}
+            width={200}
+            height={60}
+            className="object-contain"
+          />
+        </Link>
+      );
+    }
+    
+    return null;
+  };
+
   // 画像が背景の場合
   if (config.imagePosition === 'background' && config.imageUrl) {
     return (
@@ -103,33 +159,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           )}
           {config.buttons && config.buttons.length > 0 && (
             <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
-              {config.buttons.map((button, index) => {
-                const isExternal = button.url.startsWith('http');
-                return (
-                  <Link
-                    key={index}
-                    href={button.url}
-                    target={button.openInNewTab || isExternal ? '_blank' : undefined}
-                    rel={isExternal ? 'noopener noreferrer' : undefined}
-                    className={`
-                      inline-block
-                      rounded-lg
-                      transition-all
-                      hover:scale-105
-                      shadow-md
-                      px-6 py-3
-                      ${buttonFontWeightClasses[button.fontWeight || 'normal']}
-                    `}
-                    style={{
-                      fontSize: `${button.fontSize || 1}rem`,
-                      backgroundColor: button.buttonColor || '#3b82f6',
-                      color: button.textColor || '#ffffff',
-                    }}
-                  >
-                    {button.text}
-                  </Link>
-                );
-              })}
+              {config.buttons.map(renderButton)}
             </div>
           )}
         </div>
@@ -191,33 +221,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           )}
           {config.buttons && config.buttons.length > 0 && (
             <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
-              {config.buttons.map((button, index) => {
-                const isExternal = button.url.startsWith('http');
-                return (
-                  <Link
-                    key={index}
-                    href={button.url}
-                    target={button.openInNewTab || isExternal ? '_blank' : undefined}
-                    rel={isExternal ? 'noopener noreferrer' : undefined}
-                    className={`
-                      inline-block
-                      rounded-lg
-                      transition-all
-                      hover:scale-105
-                      shadow-md
-                      px-6 py-3
-                      ${buttonFontWeightClasses[button.fontWeight || 'normal']}
-                    `}
-                    style={{
-                      fontSize: `${button.fontSize || 1}rem`,
-                      backgroundColor: button.buttonColor || '#3b82f6',
-                      color: button.textColor || '#ffffff',
-                    }}
-                  >
-                    {button.text}
-                  </Link>
-                );
-              })}
+              {config.buttons.map(renderButton)}
             </div>
           )}
         </div>

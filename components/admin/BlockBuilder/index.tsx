@@ -253,6 +253,7 @@ function getDefaultConfig(type: BlockType): any {
         textColor: '',
         buttons: [
           {
+            type: 'text',
             text: 'ボタンテキスト',
             url: '',
             buttonColor: '',

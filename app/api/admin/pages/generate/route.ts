@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
             textColor: '',
             buttons: [
               {
+                type: 'text',
                 text: 'ボタン',
                 url: '#',
                 buttonColor: '',

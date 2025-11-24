@@ -4,7 +4,7 @@
  * CTAブロックの設定
  */
 
-import { Block, CTABlockConfig } from '@/types/block';
+import { Block, CTABlockConfig, CTAButtonConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -34,6 +34,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
     const newButtons = [
       ...(config.buttons || []),
       { 
+        type: 'text' as 'text',
         text: '', 
         url: '', 
         buttonColor: '', 
@@ -231,57 +232,92 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
       {/* ボタン（最大4つ） */}
       {(config.buttons || []).map((button, index) => (
         <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-xl">
-          <FloatingInput
-            label="ボタンテキスト"
-            value={button.text}
-            onChange={(value) => updateButton(index, { text: value })}
-            required
+          {/* ボタンタイプ選択 */}
+          <FloatingSelect
+            label="ボタンタイプ"
+            value={button.type || 'text'}
+            onChange={(value) => updateButton(index, { type: value as 'text' | 'image' })}
+            options={[
+              { value: 'text', label: 'テキストボタン' },
+              { value: 'image', label: '画像ボタン' },
+            ]}
           />
 
+          {/* URL（共通） */}
           <FloatingInput
             label="URL"
-            value={button.url}
+            value={button.url || ''}
             onChange={(value) => updateButton(index, { url: value })}
             required
           />
 
-          <ColorPicker
-            label="ボタンカラー"
-            value={button.buttonColor || ''}
-            onChange={(value) => updateButton(index, { buttonColor: value })}
-          />
+          {/* テキストボタンの設定 */}
+          {button.type === 'text' && (
+            <>
+              <FloatingInput
+                label="ボタンテキスト"
+                value={button.text || ''}
+                onChange={(value) => updateButton(index, { text: value })}
+                required
+              />
 
-          <FloatingInput
-            label="フォントサイズ（rem）"
-            type="number"
-            step="0.1"
-            value={button.fontSize?.toString() || ''}
-            onChange={(value) => {
-              if (!value || value === '') {
-                updateButton(index, { fontSize: 1 });
-              } else {
-                const num = parseFloat(value);
-                updateButton(index, { fontSize: !isNaN(num) && num > 0 ? num : 1 });
-              }
-            }}
-          />
+              <ColorPicker
+                label="ボタンカラー"
+                value={button.buttonColor || ''}
+                onChange={(value) => updateButton(index, { buttonColor: value })}
+              />
 
-          <FloatingSelect
-            label="フォント太さ"
-            value={button.fontWeight || 'normal'}
-            onChange={(value) => updateButton(index, { fontWeight: value as 'normal' | 'bold' })}
-            options={[
-              { value: 'normal', label: '通常' },
-              { value: 'bold', label: '太字' },
-            ]}
-          />
+              <FloatingInput
+                label="フォントサイズ（rem）"
+                type="number"
+                step="0.1"
+                value={button.fontSize?.toString() || ''}
+                onChange={(value) => {
+                  if (!value || value === '') {
+                    updateButton(index, { fontSize: 1 });
+                  } else {
+                    const num = parseFloat(value);
+                    updateButton(index, { fontSize: !isNaN(num) && num > 0 ? num : 1 });
+                  }
+                }}
+              />
 
-          <ColorPicker
-            label="テキストカラー"
-            value={button.textColor || ''}
-            onChange={(value) => updateButton(index, { textColor: value })}
-          />
+              <FloatingSelect
+                label="フォント太さ"
+                value={button.fontWeight || 'normal'}
+                onChange={(value) => updateButton(index, { fontWeight: value as 'normal' | 'bold' })}
+                options={[
+                  { value: 'normal', label: '通常' },
+                  { value: 'bold', label: '太字' },
+                ]}
+              />
 
+              <ColorPicker
+                label="テキストカラー"
+                value={button.textColor || ''}
+                onChange={(value) => updateButton(index, { textColor: value })}
+              />
+            </>
+          )}
+
+          {/* 画像ボタンの設定 */}
+          {button.type === 'image' && (
+            <>
+              <FeaturedImageUpload
+                label="画像"
+                value={button.imageUrl || ''}
+                onImageChange={(imageUrl) => updateButton(index, { imageUrl })}
+              />
+
+              <FloatingInput
+                label="画像alt属性"
+                value={button.imageAlt || ''}
+                onChange={(value) => updateButton(index, { imageAlt: value })}
+              />
+            </>
+          )}
+
+          {/* 新しいタブで開く（共通） */}
           <CustomCheckbox
             label="新しいタブで開く"
             checked={button.openInNewTab || false}

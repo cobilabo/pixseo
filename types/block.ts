@@ -37,6 +37,22 @@ export interface ImageBlockConfig {
   filterOpacity?: number;   // フィルター透明度（0-100）
 }
 
+// CTAボタンの設定
+export interface CTAButtonConfig {
+  type: 'text' | 'image';   // ボタンタイプ
+  url: string;              // リンク先URL
+  openInNewTab?: boolean;   // 新しいタブで開く
+  // テキストボタン用
+  text?: string;            // ボタンテキスト
+  buttonColor?: string;     // ボタンカラー
+  fontSize?: number;        // フォントサイズ（rem）
+  fontWeight?: 'normal' | 'bold';
+  textColor?: string;       // ボタンテキストカラー
+  // 画像ボタン用
+  imageUrl?: string;        // 画像URL
+  imageAlt?: string;        // 画像alt属性
+}
+
 // CTAブロックの設定
 export interface CTABlockConfig {
   imageUrl?: string;        // 背景画像URL
@@ -55,15 +71,7 @@ export interface CTABlockConfig {
   textFontWeight?: 'normal' | 'bold';
   textColor?: string;
   // ボタン設定（最大4つ）
-  buttons: Array<{
-    text: string;           // ボタンテキスト
-    url: string;            // リンク先URL
-    buttonColor?: string;   // ボタンカラー
-    fontSize?: number;      // フォントサイズ（rem）
-    fontWeight?: 'normal' | 'bold';
-    textColor?: string;     // ボタンテキストカラー
-    openInNewTab?: boolean;
-  }>;
+  buttons: Array<CTAButtonConfig>;
   buttonLayout?: 'horizontal' | '2x2' | 'vertical';  // ボタン配置
 }
 
