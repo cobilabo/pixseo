@@ -315,6 +315,34 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
                 value={button.imageAlt || ''}
                 onChange={(value) => updateButton(index, { imageAlt: value })}
               />
+
+              <FloatingInput
+                label="画像幅（px）※空欄可"
+                type="number"
+                value={button.imageWidth?.toString() || ''}
+                onChange={(value) => {
+                  if (!value || value === '') {
+                    updateButton(index, { imageWidth: undefined });
+                  } else {
+                    const num = parseInt(value);
+                    updateButton(index, { imageWidth: !isNaN(num) && num > 0 ? num : undefined });
+                  }
+                }}
+              />
+
+              <FloatingInput
+                label="画像高さ（px）※空欄可"
+                type="number"
+                value={button.imageHeight?.toString() || ''}
+                onChange={(value) => {
+                  if (!value || value === '') {
+                    updateButton(index, { imageHeight: undefined });
+                  } else {
+                    const num = parseInt(value);
+                    updateButton(index, { imageHeight: !isNaN(num) && num > 0 ? num : undefined });
+                  }
+                }}
+              />
             </>
           )}
 

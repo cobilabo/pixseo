@@ -51,6 +51,8 @@ export interface CTAButtonConfig {
   // 画像ボタン用
   imageUrl?: string;        // 画像URL
   imageAlt?: string;        // 画像alt属性
+  imageWidth?: number;      // 画像幅（px）※空欄可
+  imageHeight?: number;     // 画像高さ（px）※空欄可
 }
 
 // CTAブロックの設定

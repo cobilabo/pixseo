@@ -104,6 +104,41 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
         );
       }
       
+      // 画像サイズの決定
+      const imageWidth = button.imageWidth;
+      const imageHeight = button.imageHeight;
+      
+      // サイズ指定のパターン
+      let imageStyle: React.CSSProperties = {};
+      let containerStyle: React.CSSProperties = {};
+      
+      if (imageWidth && imageHeight) {
+        // 両方指定：その範囲内でアスペクト比保持
+        containerStyle = {
+          width: `${imageWidth}px`,
+          height: `${imageHeight}px`,
+          position: 'relative',
+        };
+      } else if (imageWidth && !imageHeight) {
+        // 幅のみ指定：高さは自動
+        imageStyle = {
+          width: `${imageWidth}px`,
+          height: 'auto',
+        };
+      } else if (!imageWidth && imageHeight) {
+        // 高さのみ指定：幅は自動
+        imageStyle = {
+          width: 'auto',
+          height: `${imageHeight}px`,
+        };
+      } else {
+        // 両方未指定：デフォルトサイズ
+        imageStyle = {
+          width: '300px',
+          height: 'auto',
+        };
+      }
+      
       return (
         <Link
           key={index}
@@ -112,13 +147,25 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           rel={isExternal ? 'noopener noreferrer' : undefined}
           className="inline-block transition-all hover:scale-105"
         >
-          <Image
-            src={button.imageUrl}
-            alt={button.imageAlt || 'ボタン画像'}
-            width={200}
-            height={60}
-            className="object-contain"
-          />
+          {imageWidth && imageHeight ? (
+            // 両方指定：fillを使用
+            <div style={containerStyle}>
+              <Image
+                src={button.imageUrl}
+                alt={button.imageAlt || 'ボタン画像'}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ) : (
+            // 片方のみまたは未指定：通常のimg要素を使用
+            <img
+              src={button.imageUrl}
+              alt={button.imageAlt || 'ボタン画像'}
+              style={imageStyle}
+              className="block"
+            />
+          )}
         </Link>
       );
     }
