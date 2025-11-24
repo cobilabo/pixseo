@@ -42,6 +42,7 @@ export default function EditPagePage() {
     textColor: '',
     showPanel: true,
     panelColor: '#ffffff',
+    customCss: '',
   });
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function EditPagePage() {
         textColor: page.textColor || '',
         showPanel: page.showPanel !== false, // デフォルトtrue
         panelColor: page.panelColor || '#ffffff',
+        customCss: page.customCss || '',
       });
       
       // ブロックビルダーデータを読み込み
@@ -336,6 +338,15 @@ export default function EditPagePage() {
                   onChange={(value) => setFormData({ ...formData, panelColor: value })}
                 />
               )}
+
+              {/* カスタムCSS */}
+              <FloatingInput
+                label="カスタムCSS（最優先で読み込まれます）"
+                value={formData.customCss}
+                onChange={(value) => setFormData({ ...formData, customCss: value })}
+                multiline
+                rows={8}
+              />
 
               {/* メタタイトル */}
               <div className="flex gap-2">

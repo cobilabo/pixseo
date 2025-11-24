@@ -39,6 +39,7 @@ export default function NewPagePage() {
     textColor: '',
     showPanel: true,
     panelColor: '#ffffff',
+    customCss: '',
   });
 
   // タイトルが変更されたら自動的にスラッグを生成
@@ -290,6 +291,15 @@ export default function NewPagePage() {
                   onChange={(value) => setFormData({ ...formData, panelColor: value })}
                 />
               )}
+
+              {/* カスタムCSS */}
+              <FloatingInput
+                label="カスタムCSS（最優先で読み込まれます）"
+                value={formData.customCss}
+                onChange={(value) => setFormData({ ...formData, customCss: value })}
+                multiline
+                rows={8}
+              />
 
               {/* メタタイトル */}
               <div className="flex gap-2">

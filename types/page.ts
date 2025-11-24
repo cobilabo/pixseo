@@ -50,5 +50,6 @@ export interface Page {
   textColor?: string;        // ページテキストカラー
   showPanel?: boolean;       // パネル表示（デフォルト: true）
   panelColor?: string;       // パネルカラー（showPanel=trueの時のみ）
+  customCss?: string;        // カスタムCSS（最優先で読み込まれる）
 }
 

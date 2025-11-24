@@ -126,6 +126,9 @@ export default async function FixedPage({ params }: PageProps) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+      {rawPage.customCss && (
+        <style dangerouslySetInnerHTML={{ __html: rawPage.customCss }} />
+      )}
 
       <MediaHeader
         siteName={siteInfo.name}
