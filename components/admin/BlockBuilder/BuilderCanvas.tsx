@@ -177,8 +177,13 @@ function BlockPreview({ block }: { block: Block }) {
       if (contentConfig.showImage) elements.push('画像');
       if (contentConfig.showHeading) elements.push('見出し');
       if (contentConfig.showText) elements.push('テキスト');
+      if (contentConfig.showWriters) elements.push(`ライター×${(contentConfig.writers || []).length}`);
       if (contentConfig.showButtons) elements.push(`ボタン×${(contentConfig.buttons || []).length}`);
-      return <span>{elements.length > 0 ? elements.join(' + ') : '要素を追加してください'}</span>;
+      
+      const sectionId = contentConfig.sectionId || '未設定';
+      const elementsText = elements.length > 0 ? elements.join('＋') : '要素なし';
+      
+      return <span>{sectionId} ({elementsText})</span>;
     case 'heading':
       const headingConfig = block.config as any;
       return <span>{headingConfig.content}</span>;

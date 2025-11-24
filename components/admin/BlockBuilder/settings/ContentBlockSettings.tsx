@@ -30,18 +30,25 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
   useEffect(() => {
     const fetchWriters = async () => {
       try {
-        const currentTenantId = localStorage.getItem('currentTenantId');
+        const currentTenantId = typeof window !== 'undefined' 
+          ? localStorage.getItem('currentTenantId') 
+          : null;
+        
         const response = await fetch('/api/admin/writers', {
           headers: {
             'x-media-id': currentTenantId || '',
           },
         });
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableWriters(data.writers || []);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch writers');
         }
+        
+        const data = await response.json();
+        setAvailableWriters(data);
+        console.log('[ContentBlockSettings] Fetched writers:', data);
       } catch (error) {
-        console.error('Failed to fetch writers:', error);
+        console.error('Error fetching writers:', error);
       }
     };
 
