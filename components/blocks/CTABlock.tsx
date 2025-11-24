@@ -62,8 +62,8 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
   const renderButton = (button: CTAButtonConfig, index: number) => {
     const isExternal = button.url?.startsWith('http');
     
-    // テキストボタン
-    if (button.type === 'text') {
+    // テキストボタン（デフォルト）
+    if (!button.type || button.type === 'text') {
       return (
         <Link
           key={index}

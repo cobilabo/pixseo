@@ -252,7 +252,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
           />
 
           {/* テキストボタンの設定 */}
-          {button.type === 'text' && (
+          {(!button.type || button.type === 'text') && (
             <>
               <FloatingInput
                 label="ボタンテキスト"
@@ -306,7 +306,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
               <FeaturedImageUpload
                 label="画像"
                 value={button.imageUrl || ''}
-                onImageChange={(imageUrl) => updateButton(index, { imageUrl })}
+                onChange={(imageUrl) => updateButton(index, { imageUrl })}
               />
 
               <FloatingInput

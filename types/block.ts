@@ -39,7 +39,7 @@ export interface ImageBlockConfig {
 
 // CTAボタンの設定
 export interface CTAButtonConfig {
-  type: 'text' | 'image';   // ボタンタイプ
+  type?: 'text' | 'image';  // ボタンタイプ（デフォルト: 'text'）
   url: string;              // リンク先URL
   openInNewTab?: boolean;   // 新しいタブで開く
   // テキストボタン用
