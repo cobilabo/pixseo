@@ -98,6 +98,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     cta: { label: 'CTA', icon: '/cta.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
+    writer: { label: 'ライター', icon: '/writer.svg' },
   };
 
   const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '/text.svg' };
@@ -191,6 +192,11 @@ function BlockPreview({ block }: { block: Block }) {
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;
     case 'html':
       return <span>カスタムHTML</span>;
+    case 'writer':
+      const writerConfig = block.config as any;
+      const writerCount = (writerConfig.writers || []).length;
+      const layoutLabel = writerConfig.layout === 'vertical' ? '縦並び' : '横並び';
+      return <span>ライター×{writerCount} - {layoutLabel}</span>;
     default:
       return <span>不明なブロック</span>;
   }

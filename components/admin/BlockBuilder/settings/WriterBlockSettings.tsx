@@ -8,7 +8,6 @@ import { Block, WriterBlockConfig } from '@/types/block';
 import { useState, useEffect } from 'react';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
-import { apiGet } from '@/lib/api-client';
 
 interface WriterBlockSettingsProps {
   block: Block;
@@ -32,8 +31,23 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
 
   const fetchWriters = async () => {
     try {
-      const data = await apiGet<Writer[]>('/api/admin/writers');
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+      
+      const response = await fetch('/api/admin/writers', {
+        headers: {
+          'x-media-id': currentTenantId || '',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch writers');
+      }
+      
+      const data = await response.json();
       setAvailableWriters(data);
+      console.log('[WriterBlockSettings] Fetched writers:', data);
     } catch (error) {
       console.error('Error fetching writers:', error);
     } finally {
