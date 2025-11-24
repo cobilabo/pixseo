@@ -284,33 +284,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
       )}
       {config.buttons && config.buttons.length > 0 && (
         <div className={`${buttonLayoutClasses[config.buttonLayout || 'horizontal']} max-w-2xl mx-auto`}>
-          {config.buttons.map((button, index) => {
-            const isExternal = button.url.startsWith('http');
-            return (
-              <Link
-                key={index}
-                href={button.url}
-                target={button.openInNewTab || isExternal ? '_blank' : undefined}
-                rel={isExternal ? 'noopener noreferrer' : undefined}
-                className={`
-                  inline-block
-                  rounded-lg
-                  transition-all
-                  hover:scale-105
-                  shadow-md
-                  px-6 py-3
-                  ${buttonFontWeightClasses[button.fontWeight || 'normal']}
-                `}
-                style={{
-                  fontSize: `${button.fontSize || 1}rem`,
-                  backgroundColor: button.buttonColor || '#3b82f6',
-                  color: button.textColor || '#ffffff',
-                }}
-              >
-                {button.text}
-              </Link>
-            );
-          })}
+          {config.buttons.map(renderButton)}
         </div>
       )}
     </div>
