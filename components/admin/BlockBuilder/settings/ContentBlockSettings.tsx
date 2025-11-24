@@ -56,7 +56,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
   }, []);
 
   const updateConfig = (updates: Partial<ContentBlockConfig>) => {
-    onUpdate({ config: { ...config, ...updates } });
+    // 新しいconfigを作成
+    const newConfig = { ...config, ...updates };
+    
+    // undefinedの値を削除（Firestoreは undefined を受け付けない）
+    Object.keys(newConfig).forEach(key => {
+      if (newConfig[key as keyof ContentBlockConfig] === undefined) {
+        delete newConfig[key as keyof ContentBlockConfig];
+      }
+    });
+    
+    onUpdate({ config: newConfig });
   };
 
   const updateButton = (index: number, updates: Partial<CTAButtonConfig>) => {
@@ -173,12 +183,22 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
                   type="number"
                   value={config.imageWidth?.toString() || ''}
                   onChange={(value) => {
+                    // 新しいconfigを作成
+                    const newConfig = { ...config };
+                    
                     if (!value || value === '') {
-                      updateConfig({ imageWidth: undefined });
+                      // 空の場合は削除
+                      delete newConfig.imageWidth;
                     } else {
                       const num = parseInt(value);
-                      updateConfig({ imageWidth: !isNaN(num) ? num : undefined, imageHeight: undefined });
+                      if (!isNaN(num)) {
+                        newConfig.imageWidth = num;
+                        // 高さを削除
+                        delete newConfig.imageHeight;
+                      }
                     }
+                    
+                    onUpdate({ config: newConfig });
                   }}
                 />
 
@@ -187,12 +207,22 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
                   type="number"
                   value={config.imageHeight?.toString() || ''}
                   onChange={(value) => {
+                    // 新しいconfigを作成
+                    const newConfig = { ...config };
+                    
                     if (!value || value === '') {
-                      updateConfig({ imageHeight: undefined });
+                      // 空の場合は削除
+                      delete newConfig.imageHeight;
                     } else {
                       const num = parseInt(value);
-                      updateConfig({ imageHeight: !isNaN(num) ? num : undefined, imageWidth: undefined });
+                      if (!isNaN(num)) {
+                        newConfig.imageHeight = num;
+                        // 幅を削除
+                        delete newConfig.imageWidth;
+                      }
                     }
+                    
+                    onUpdate({ config: newConfig });
                   }}
                 />
               </>
