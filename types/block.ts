@@ -16,6 +16,10 @@ export interface CTAButtonConfig {
   openInNewTab?: boolean;   // 新しいタブで開く
   // テキストボタン用
   text?: string;            // ボタンテキスト
+  text_ja?: string;         // ボタンテキスト（日本語）
+  text_en?: string;         // ボタンテキスト（英語）
+  text_zh?: string;         // ボタンテキスト（中国語）
+  text_ko?: string;         // ボタンテキスト（韓国語）
   buttonColor?: string;     // ボタンカラー
   fontSize?: number;        // フォントサイズ（rem）
   fontWeight?: 'normal' | 'bold';
@@ -51,6 +55,10 @@ export interface ContentBlockConfig {
   
   // 見出し設定
   heading?: string;
+  heading_ja?: string;
+  heading_en?: string;
+  heading_zh?: string;
+  heading_ko?: string;
   headingFontSize?: number;
   headingFontWeight?: 'normal' | 'bold';
   headingTextColor?: string;
@@ -58,13 +66,24 @@ export interface ContentBlockConfig {
   
   // テキスト設定
   description?: string;
+  description_ja?: string;
+  description_en?: string;
+  description_zh?: string;
+  description_ko?: string;
   textFontSize?: number;
   textFontWeight?: 'normal' | 'bold';
   textColor?: string;
   textAlignment?: 'left' | 'center' | 'right';  // 配置
   
   // ライター設定
-  writers?: Array<{ writerId: string; jobTitle?: string; }>;
+  writers?: Array<{ 
+    writerId: string; 
+    jobTitle?: string;
+    jobTitle_ja?: string;
+    jobTitle_en?: string;
+    jobTitle_zh?: string;
+    jobTitle_ko?: string;
+  }>;
   writerLayout?: 'horizontal' | 'vertical';
   writerNameColor?: string;
   jobTitleColor?: string;
@@ -72,6 +91,10 @@ export interface ContentBlockConfig {
   buttonBackgroundColor?: string;
   buttonBorderColor?: string;
   buttonText?: string;
+  buttonText_ja?: string;
+  buttonText_en?: string;
+  buttonText_zh?: string;
+  buttonText_ko?: string;
   
   // ボタン設定
   buttons?: Array<CTAButtonConfig>;

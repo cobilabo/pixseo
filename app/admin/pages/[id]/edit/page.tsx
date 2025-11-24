@@ -186,17 +186,18 @@ export default function EditPagePage() {
         content: '<!-- Block Builder Content -->',
       };
 
-      // カスタムCSSが入力されている場合は翻訳
-      if (formData.customCss && formData.customCss.trim()) {
-        try {
-          const currentTenantId = typeof window !== 'undefined' 
-            ? localStorage.getItem('currentTenantId') 
-            : null;
+      // ページとブロックの翻訳
+      try {
+        const currentTenantId = typeof window !== 'undefined' 
+          ? localStorage.getItem('currentTenantId') 
+          : null;
 
-          // 各言語に翻訳（CSS内のコメントなどを翻訳）
-          const targetLangs = ['ja', 'en', 'zh', 'ko'];
-          for (const lang of targetLangs) {
-            const response = await fetch('/api/admin/translate', {
+        const targetLangs = ['ja', 'en', 'zh', 'ko'];
+
+        // ページ設定の翻訳
+        for (const lang of targetLangs) {
+          if (formData.title) {
+            const titleResponse = await fetch('/api/admin/translate', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -205,24 +206,184 @@ export default function EditPagePage() {
               body: JSON.stringify({
                 type: 'text',
                 targetLang: lang,
-                data: { text: formData.customCss },
-                context: 'CSS code (translate only comments, keep selectors and properties as-is)',
+                data: { text: formData.title },
               }),
             });
-
-            if (response.ok) {
-              const { translated } = await response.json();
-              updateData[`customCss_${lang}`] = translated;
+            if (titleResponse.ok) {
+              const { translated } = await titleResponse.json();
+              updateData[`title_${lang}`] = translated;
             }
           }
-        } catch (error) {
-          console.error('CSS translation error:', error);
-          // 翻訳失敗時は元のCSSを使用
-          updateData.customCss_ja = formData.customCss;
-          updateData.customCss_en = formData.customCss;
-          updateData.customCss_zh = formData.customCss;
-          updateData.customCss_ko = formData.customCss;
+
+          if (formData.excerpt) {
+            const excerptResponse = await fetch('/api/admin/translate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-media-id': currentTenantId || '',
+              },
+              body: JSON.stringify({
+                type: 'text',
+                targetLang: lang,
+                data: { text: formData.excerpt },
+              }),
+            });
+            if (excerptResponse.ok) {
+              const { translated } = await excerptResponse.json();
+              updateData[`excerpt_${lang}`] = translated;
+            }
+          }
+
+          if (formData.metaTitle) {
+            const metaTitleResponse = await fetch('/api/admin/translate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-media-id': currentTenantId || '',
+              },
+              body: JSON.stringify({
+                type: 'text',
+                targetLang: lang,
+                data: { text: formData.metaTitle },
+              }),
+            });
+            if (metaTitleResponse.ok) {
+              const { translated } = await metaTitleResponse.json();
+              updateData[`metaTitle_${lang}`] = translated;
+            }
+          }
         }
+
+        // セクションブロックの翻訳
+        updateData.blocks = await Promise.all(
+          currentBlocks.map(async (block: any) => {
+            if (block.type === 'content') {
+              const translatedConfig = { ...block.config };
+
+              for (const lang of targetLangs) {
+                // 見出しの翻訳
+                if (block.config.heading) {
+                  const response = await fetch('/api/admin/translate', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-media-id': currentTenantId || '',
+                    },
+                    body: JSON.stringify({
+                      type: 'text',
+                      targetLang: lang,
+                      data: { text: block.config.heading },
+                    }),
+                  });
+                  if (response.ok) {
+                    const { translated } = await response.json();
+                    translatedConfig[`heading_${lang}`] = translated;
+                  }
+                }
+
+                // テキストの翻訳
+                if (block.config.description) {
+                  const response = await fetch('/api/admin/translate', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-media-id': currentTenantId || '',
+                    },
+                    body: JSON.stringify({
+                      type: 'text',
+                      targetLang: lang,
+                      data: { text: block.config.description },
+                    }),
+                  });
+                  if (response.ok) {
+                    const { translated } = await response.json();
+                    translatedConfig[`description_${lang}`] = translated;
+                  }
+                }
+
+                // ボタンテキストの翻訳
+                if (block.config.buttonText) {
+                  const response = await fetch('/api/admin/translate', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-media-id': currentTenantId || '',
+                    },
+                    body: JSON.stringify({
+                      type: 'text',
+                      targetLang: lang,
+                      data: { text: block.config.buttonText },
+                    }),
+                  });
+                  if (response.ok) {
+                    const { translated } = await response.json();
+                    translatedConfig[`buttonText_${lang}`] = translated;
+                  }
+                }
+
+                // ライター肩書きの翻訳
+                if (block.config.writers && block.config.writers.length > 0) {
+                  translatedConfig.writers = await Promise.all(
+                    block.config.writers.map(async (writer: any) => {
+                      if (writer.jobTitle) {
+                        const response = await fetch('/api/admin/translate', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'x-media-id': currentTenantId || '',
+                          },
+                          body: JSON.stringify({
+                            type: 'text',
+                            targetLang: lang,
+                            data: { text: writer.jobTitle },
+                          }),
+                        });
+                        if (response.ok) {
+                          const { translated } = await response.json();
+                          return { ...writer, [`jobTitle_${lang}`]: translated };
+                        }
+                      }
+                      return writer;
+                    })
+                  );
+                }
+
+                // ボタンの翻訳
+                if (block.config.buttons && block.config.buttons.length > 0) {
+                  translatedConfig.buttons = await Promise.all(
+                    block.config.buttons.map(async (button: any) => {
+                      if (button.text && button.type !== 'image') {
+                        const response = await fetch('/api/admin/translate', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'x-media-id': currentTenantId || '',
+                          },
+                          body: JSON.stringify({
+                            type: 'text',
+                            targetLang: lang,
+                            data: { text: button.text },
+                          }),
+                        });
+                        if (response.ok) {
+                          const { translated } = await response.json();
+                          return { ...button, [`text_${lang}`]: translated };
+                        }
+                      }
+                      return button;
+                    })
+                  );
+                }
+              }
+
+              return { ...block, config: translatedConfig };
+            }
+            return block;
+          })
+        );
+      } catch (error) {
+        console.error('Translation error:', error);
+        // 翻訳失敗時は元のデータで保存
       }
       
       await updatePage(pageId, updateData);

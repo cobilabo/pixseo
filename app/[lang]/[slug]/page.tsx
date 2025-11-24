@@ -123,8 +123,8 @@ export default async function FixedPage({ params }: PageProps) {
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
-  // 言語に応じたカスタムCSSを取得
-  const customCss = rawPage[`customCss_${lang}`] || rawPage.customCss || '';
+  // カスタムCSS
+  const customCss = rawPage.customCss || '';
 
   // モバイル判定（user-agentから）
   const headersList = headers();

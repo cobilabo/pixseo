@@ -40,6 +40,16 @@ async function getWriter(writerId: string): Promise<Writer | null> {
 export default async function ContentBlock({ block, showPanel = true, isMobile = false }: ContentBlockProps) {
   const config = block.config as ContentBlockConfig;
   
+  // 現在の言語を取得
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const lang = pathname.split('/')[1] || 'ja';
+  
+  // 言語に応じたコンテンツを取得
+  const heading = config[`heading_${lang}`] || config.heading || '';
+  const description = config[`description_${lang}`] || config.description || '';
+  const buttonText = config[`buttonText_${lang}`] || config.buttonText || 'VIEW MORE';
+  
   // パネルOFFの場合は画面幅いっぱいにする
   const fullWidthStyle = !showPanel ? {
     width: '100vw',
@@ -90,6 +100,11 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
     config.filterOpacity
   );
 
+  // 現在の言語を取得
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const lang = pathname.split('/')[1] || 'ja';
+
   // ライター情報を取得
   let writers: Array<Writer & { jobTitle?: string }> = [];
   if (config.showWriters && config.writers && config.writers.length > 0) {
@@ -97,23 +112,23 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
       config.writers.map(async (w) => {
         const writer = await getWriter(w.writerId);
         if (!writer) return null;
+        // 言語に応じたjobTitleを取得
+        const jobTitle = w[`jobTitle_${lang}`] || w.jobTitle || '';
         return {
           ...writer,
-          jobTitle: w.jobTitle,
+          jobTitle,
         };
       })
     );
     writers = writersData.filter((w): w is NonNullable<typeof w> => w !== null);
   }
 
-  // 現在の言語を取得
-  const headersList = headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const lang = pathname.split('/')[1] || 'ja';
-
   // ボタンレンダリング関数
   const renderButton = (button: CTAButtonConfig, index: number) => {
     const isExternal = button.url ? button.url.startsWith('http') : false;
+    
+    // 言語に応じたボタンテキストを取得
+    const buttonTextLocalized = button[`text_${lang}`] || button.text || '';
     
     // テキストボタン（デフォルト）
     if (!button.type || button.type === 'text') {
@@ -138,7 +153,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
             color: button.textColor || '#ffffff',
           }}
         >
-          {button.text}
+          {buttonTextLocalized}
         </Link>
       );
     }
@@ -236,7 +251,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
 
     const writerNameColor = config.writerNameColor || '#111827';
     const jobTitleColor = config.jobTitleColor || '#6B7280';
-    const buttonText = config.buttonText || 'VIEW MORE';
+    const writerButtonText = buttonText; // 言語対応済みのbuttonTextを使用
     const buttonTextColor = config.buttonTextColor || '#FFFFFF';
     const buttonBackgroundColor = config.buttonBackgroundColor || '#2563EB';
     const buttonBorderColor = config.buttonBorderColor || '#2563EB';
@@ -297,7 +312,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                 border: `2px solid ${buttonBorderColor}`,
               }}
             >
-              {buttonText}
+              {writerButtonText}
             </Link>
           </div>
         ))}
@@ -307,8 +322,8 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
 
   // 画像がサイズ指定中央配置の場合
   if (config.showImage && config.imagePosition === 'center-size-based' && config.imageUrl) {
-    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
-    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    const SectionTag = (config.showHeading && heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && heading) ? 'h2' : 'div';
     
     // ラッパーのスタイル
     const imageWrapperStyle: React.CSSProperties = { position: 'relative' };
@@ -349,7 +364,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
           
           {/* テキスト＋ライター＋ボタン（画像の上に重なる） */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
-            {config.showHeading && config.heading && (
+            {config.showHeading && heading && (
               <HeadingTag
                 className={`
                   ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
@@ -361,10 +376,10 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                   color: config.headingTextColor || 'white' 
                 }}
               >
-                {config.heading}
+                {heading}
               </HeadingTag>
             )}
-            {config.showText && config.description && (
+            {config.showText && description && (
               <p
                 className={`
                   ${textFontWeightClasses[config.textFontWeight || 'normal']}
@@ -376,7 +391,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                   color: config.textColor || 'white' 
                 }}
               >
-                {config.description}
+                {description}
               </p>
             )}
             {renderWriters()}
@@ -393,8 +408,8 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
 
   // 画像が背景で、かつ画像を表示する場合
   if (config.showImage && config.imagePosition === 'background' && config.imageUrl) {
-    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
-    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    const SectionTag = (config.showHeading && heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && heading) ? 'h2' : 'div';
     
     return (
       <SectionTag 
@@ -410,7 +425,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
         />
         {filterStyle && <div style={filterStyle} />}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
-          {config.showHeading && config.heading && (
+          {config.showHeading && heading && (
             <HeadingTag
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
@@ -422,10 +437,10 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                 color: config.headingTextColor || 'white' 
               }}
             >
-              {config.heading}
+              {heading}
             </HeadingTag>
           )}
-          {config.showText && config.description && (
+          {config.showText && description && (
             <p
               className={`
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
@@ -437,7 +452,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                 color: config.textColor || 'white' 
               }}
             >
-              {config.description}
+              {description}
             </p>
           )}
           {renderWriters()}
@@ -455,8 +470,8 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
   const isImageLeft = config.imagePosition === 'left';
   
   if (config.showImage && config.imageUrl && (config.imagePosition === 'left' || config.imagePosition === 'right')) {
-    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
-    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    const SectionTag = (config.showHeading && heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && heading) ? 'h2' : 'div';
     
     return (
       <SectionTag id={config.sectionId || undefined} className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
@@ -478,7 +493,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
         
         {/* テキスト＋ライター＋ボタン部分 */}
         <div className="w-full md:w-1/2">
-          {config.showHeading && config.heading && (
+          {config.showHeading && heading && (
             <HeadingTag
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
@@ -490,10 +505,10 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                 color: config.headingTextColor || undefined 
               }}
             >
-              {config.heading}
+              {heading}
             </HeadingTag>
           )}
-          {config.showText && config.description && (
+          {config.showText && description && (
             <p
               className={`
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
@@ -505,7 +520,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                 color: config.textColor || undefined 
               }}
             >
-              {config.description}
+              {description}
             </p>
           )}
           {renderWriters()}
