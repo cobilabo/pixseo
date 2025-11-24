@@ -140,15 +140,19 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
       />
 
       {/* 見出しフォントサイズ */}
-      <FloatingSelect
-        label="見出しフォントサイズ"
-        value={config.headingFontSize || 'medium'}
-        onChange={(value) => updateConfig({ headingFontSize: value as 'small' | 'medium' | 'large' })}
-        options={[
-          { value: 'small', label: '小' },
-          { value: 'medium', label: '中' },
-          { value: 'large', label: '大' },
-        ]}
+      <FloatingInput
+        label="見出しフォントサイズ（rem）"
+        type="number"
+        step="0.1"
+        value={config.headingFontSize?.toString() || ''}
+        onChange={(value) => {
+          if (!value || value === '') {
+            updateConfig({ headingFontSize: 1 });
+          } else {
+            const num = parseFloat(value);
+            updateConfig({ headingFontSize: !isNaN(num) && num > 0 ? num : 1 });
+          }
+        }}
       />
 
       {/* 見出しフォント太さ */}
@@ -179,15 +183,19 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
       />
 
       {/* テキストフォントサイズ */}
-      <FloatingSelect
-        label="テキストフォントサイズ"
-        value={config.textFontSize || 'medium'}
-        onChange={(value) => updateConfig({ textFontSize: value as 'small' | 'medium' | 'large' })}
-        options={[
-          { value: 'small', label: '小' },
-          { value: 'medium', label: '中' },
-          { value: 'large', label: '大' },
-        ]}
+      <FloatingInput
+        label="テキストフォントサイズ（rem）"
+        type="number"
+        step="0.1"
+        value={config.textFontSize?.toString() || ''}
+        onChange={(value) => {
+          if (!value || value === '') {
+            updateConfig({ textFontSize: 1 });
+          } else {
+            const num = parseFloat(value);
+            updateConfig({ textFontSize: !isNaN(num) && num > 0 ? num : 1 });
+          }
+        }}
       />
 
       {/* テキストフォント太さ */}
@@ -243,15 +251,19 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
             onChange={(value) => updateButton(index, { buttonColor: value })}
           />
 
-          <FloatingSelect
-            label="フォントサイズ"
-            value={button.fontSize || 'medium'}
-            onChange={(value) => updateButton(index, { fontSize: value as 'small' | 'medium' | 'large' })}
-            options={[
-              { value: 'small', label: '小' },
-              { value: 'medium', label: '中' },
-              { value: 'large', label: '大' },
-            ]}
+          <FloatingInput
+            label="フォントサイズ（rem）"
+            type="number"
+            step="0.1"
+            value={button.fontSize?.toString() || ''}
+            onChange={(value) => {
+              if (!value || value === '') {
+                updateButton(index, { fontSize: 1 });
+              } else {
+                const num = parseFloat(value);
+                updateButton(index, { fontSize: !isNaN(num) && num > 0 ? num : 1 });
+              }
+            }}
           />
 
           <FloatingSelect

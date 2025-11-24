@@ -45,15 +45,19 @@ export default function TextBlockSettings({ block, onUpdate }: TextBlockSettings
       />
 
       {/* フォントサイズ */}
-      <FloatingSelect
-        label="フォントサイズ"
-        value={config.fontSize || 'medium'}
-        onChange={(value) => updateConfig({ fontSize: value as 'small' | 'medium' | 'large' })}
-        options={[
-          { value: 'small', label: '小' },
-          { value: 'medium', label: '中' },
-          { value: 'large', label: '大' },
-        ]}
+      <FloatingInput
+        label="フォントサイズ（rem）"
+        type="number"
+        step="0.1"
+        value={config.fontSize?.toString() || ''}
+        onChange={(value) => {
+          if (!value || value === '') {
+            updateConfig({ fontSize: 1 });
+          } else {
+            const num = parseFloat(value);
+            updateConfig({ fontSize: !isNaN(num) && num > 0 ? num : 1 });
+          }
+        }}
       />
 
       {/* フォント太さ */}
