@@ -46,9 +46,9 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
   const lang = pathname.split('/')[1] || 'ja';
   
   // 言語に応じたコンテンツを取得
-  const heading = config[`heading_${lang}`] || config.heading || '';
-  const description = config[`description_${lang}`] || config.description || '';
-  const buttonText = config[`buttonText_${lang}`] || config.buttonText || 'VIEW MORE';
+  const heading = (config as any)[`heading_${lang}`] || config.heading || '';
+  const description = (config as any)[`description_${lang}`] || config.description || '';
+  const buttonText = (config as any)[`buttonText_${lang}`] || config.buttonText || 'VIEW MORE';
   
   // パネルOFFの場合は画面幅いっぱいにする
   const fullWidthStyle = !showPanel ? {
@@ -108,7 +108,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
         const writer = await getWriter(w.writerId);
         if (!writer) return null;
         // 言語に応じたjobTitleを取得
-        const jobTitle = w[`jobTitle_${lang}`] || w.jobTitle || '';
+        const jobTitle = (w as any)[`jobTitle_${lang}`] || w.jobTitle || '';
         return {
           ...writer,
           jobTitle,
@@ -123,7 +123,7 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
     const isExternal = button.url ? button.url.startsWith('http') : false;
     
     // 言語に応じたボタンテキストを取得
-    const buttonTextLocalized = button[`text_${lang}`] || button.text || '';
+    const buttonTextLocalized = (button as any)[`text_${lang}`] || button.text || '';
     
     // テキストボタン（デフォルト）
     if (!button.type || button.type === 'text') {
