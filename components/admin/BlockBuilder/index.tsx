@@ -272,6 +272,10 @@ function getDefaultConfig(type: BlockType): any {
         layout: 'horizontal',
         writers: [],
       };
+    case 'spacer':
+      return {
+        height: 40,
+      };
     default:
       return {};
   }

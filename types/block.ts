@@ -11,7 +11,8 @@ export type BlockType =
   | 'html'      // カスタムHTML
   | 'heading'   // 見出し（H2）
   | 'imageText' // 画像&テキスト（2カラム）
-  | 'writer';   // ライター表示
+  | 'writer'    // ライター表示
+  | 'spacer';   // 空白
 
 // テキストブロックの設定
 export interface TextBlockConfig {
@@ -122,12 +123,23 @@ export interface WriterBlockConfig {
   buttonBorderColor?: string;     // ボタン枠線の色
 }
 
+// 空白ブロックの設定
+export interface SpacerBlockConfig {
+  height: number;  // 高さ（px）
+}
+
 // ブロックの共通インターフェース
 export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig;
+  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig | SpacerBlockConfig;
+  
+  // 余白設定（共通）
+  spacing?: {
+    paddingTop?: number;    // 上余白（px）
+    paddingBottom?: number; // 下余白（px）
+  };
   
   // レスポンシブ設定（将来の拡張用）
   showOnMobile?: boolean;

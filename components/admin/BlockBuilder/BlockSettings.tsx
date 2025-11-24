@@ -14,6 +14,8 @@ import CTABlockSettings from './settings/CTABlockSettings';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
 import WriterBlockSettings from './settings/WriterBlockSettings';
+import SpacerBlockSettings from './settings/SpacerBlockSettings';
+import SpacingSettings from './settings/SpacingSettings';
 
 interface BlockSettingsProps {
   block: Block;
@@ -32,6 +34,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     form: 'フォームブロック',
     html: 'HTMLブロック',
     writer: 'ライターブロック',
+    spacer: '空白ブロック',
   };
 
   return (
@@ -61,6 +64,14 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'writer' && (
           <WriterBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'spacer' && (
+          <SpacerBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        
+        {/* 共通の余白設定（空白ブロック以外） */}
+        {block.type !== 'spacer' && (
+          <SpacingSettings block={block} onUpdate={onUpdate} />
         )}
       </div>
 

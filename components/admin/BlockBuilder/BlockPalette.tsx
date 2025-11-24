@@ -62,6 +62,12 @@ const blockTypes = [
     icon: '/writer.svg',
     description: 'ライターを正円で表示',
   },
+  {
+    type: 'spacer' as BlockType,
+    label: '空白',
+    icon: '/spacer.svg',
+    description: 'ブロック間に余白を追加',
+  },
 ];
 
 function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) {

@@ -12,6 +12,7 @@ import CTABlock from './CTABlock';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
 import WriterBlock from './WriterBlock';
+import SpacerBlock from './SpacerBlock';
 
 interface BlockRendererProps {
   blocks: Block[];
@@ -38,26 +39,55 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
   return (
     <div className="space-y-6">
       {visibleBlocks.map((block) => {
+        // padding設定を適用
+        const paddingStyle: React.CSSProperties = {};
+        if (block.spacing?.paddingTop !== undefined) {
+          paddingStyle.paddingTop = `${block.spacing.paddingTop}px`;
+        }
+        if (block.spacing?.paddingBottom !== undefined) {
+          paddingStyle.paddingBottom = `${block.spacing.paddingBottom}px`;
+        }
+
+        let blockContent;
         switch (block.type) {
           case 'heading':
-            return <HeadingBlock key={block.id} block={block} />;
+            blockContent = <HeadingBlock block={block} />;
+            break;
           case 'text':
-            return <TextBlock key={block.id} block={block} />;
+            blockContent = <TextBlock block={block} />;
+            break;
           case 'image':
-            return <ImageBlock key={block.id} block={block} showPanel={showPanel} />;
+            blockContent = <ImageBlock block={block} showPanel={showPanel} />;
+            break;
           case 'imageText':
-            return <ImageTextBlock key={block.id} block={block} showPanel={showPanel} />;
+            blockContent = <ImageTextBlock block={block} showPanel={showPanel} />;
+            break;
           case 'cta':
-            return <CTABlock key={block.id} block={block} showPanel={showPanel} />;
+            blockContent = <CTABlock block={block} showPanel={showPanel} />;
+            break;
           case 'form':
-            return <FormBlock key={block.id} block={block} />;
+            blockContent = <FormBlock block={block} />;
+            break;
           case 'html':
-            return <HTMLBlock key={block.id} block={block} />;
+            blockContent = <HTMLBlock block={block} />;
+            break;
           case 'writer':
-            return <WriterBlock key={block.id} block={block} />;
+            blockContent = <WriterBlock block={block} />;
+            break;
+          case 'spacer':
+            blockContent = <SpacerBlock block={block} />;
+            break;
           default:
-            return null;
+            blockContent = null;
         }
+
+        if (!blockContent) return null;
+
+        return (
+          <div key={block.id} style={paddingStyle}>
+            {blockContent}
+          </div>
+        );
       })}
     </div>
   );

@@ -99,6 +99,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     writer: { label: 'ライター', icon: '/writer.svg' },
+    spacer: { label: '空白', icon: '/spacer.svg' },
   };
 
   const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '/text.svg' };
@@ -197,6 +198,9 @@ function BlockPreview({ block }: { block: Block }) {
       const writerCount = (writerConfig.writers || []).length;
       const layoutLabel = writerConfig.layout === 'vertical' ? '縦並び' : '横並び';
       return <span>ライター×{writerCount} - {layoutLabel}</span>;
+    case 'spacer':
+      const spacerConfig = block.config as any;
+      return <span>高さ: {spacerConfig.height || 40}px</span>;
     default:
       return <span>不明なブロック</span>;
   }
