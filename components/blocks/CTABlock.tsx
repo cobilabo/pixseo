@@ -91,7 +91,19 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
     }
     
     // 画像ボタン
-    if (button.type === 'image' && button.imageUrl) {
+    if (button.type === 'image') {
+      // 画像URLが設定されていない場合
+      if (!button.imageUrl) {
+        return (
+          <div
+            key={index}
+            className="inline-block px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 text-sm"
+          >
+            画像を設定してください
+          </div>
+        );
+      }
+      
       return (
         <Link
           key={index}
@@ -100,13 +112,23 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           rel={isExternal ? 'noopener noreferrer' : undefined}
           className="inline-block transition-all hover:scale-105"
         >
-          <Image
-            src={button.imageUrl}
-            alt={button.imageAlt || 'ボタン画像'}
-            width={200}
-            height={60}
-            className="object-contain"
-          />
+          <div className="relative" style={{ width: '200px', height: '60px' }}>
+            <Image
+              src={button.imageUrl}
+              alt={button.imageAlt || 'ボタン画像'}
+              fill
+              className="object-contain"
+              onError={(e) => {
+                console.error('画像の読み込みに失敗:', button.imageUrl);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const errorDiv = target.parentElement;
+                if (errorDiv) {
+                  errorDiv.innerHTML = '<div class="flex items-center justify-center w-full h-full border border-red-300 bg-red-50 text-red-600 text-xs rounded">画像読込失敗</div>';
+                }
+              }}
+            />
+          </div>
         </Link>
       );
     }
