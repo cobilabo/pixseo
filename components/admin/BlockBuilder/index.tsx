@@ -209,12 +209,14 @@ function getDefaultConfig(type: BlockType): any {
       return {
         content: '見出しを入力してください',
         id: '',
+        fontSize: 1,
+        fontWeight: 'bold',
       };
     case 'text':
       return {
         content: 'テキストを入力してください',
         alignment: 'left',
-        fontSize: 'medium',
+        fontSize: 1,
         fontWeight: 'normal',
       };
     case 'image':
@@ -230,7 +232,11 @@ function getDefaultConfig(type: BlockType): any {
         imageAlt: '',
         imagePosition: 'left',
         heading: '見出しを入力してください',
+        headingFontSize: 1,
+        headingFontWeight: 'bold',
         text: 'テキストを入力してください',
+        textFontSize: 1,
+        textFontWeight: 'normal',
       };
     case 'cta':
       return {
@@ -238,11 +244,11 @@ function getDefaultConfig(type: BlockType): any {
         imageAlt: '',
         imagePosition: 'background',
         heading: '見出し',
-        headingFontSize: 'medium',
+        headingFontSize: 1,
         headingFontWeight: 'normal',
         headingTextColor: '',
         description: 'テキストを入力してください',
-        textFontSize: 'medium',
+        textFontSize: 1,
         textFontWeight: 'normal',
         textColor: '',
         buttons: [
@@ -250,7 +256,7 @@ function getDefaultConfig(type: BlockType): any {
             text: 'ボタンテキスト',
             url: '',
             buttonColor: '',
-            fontSize: 'medium',
+            fontSize: 1,
             fontWeight: 'normal',
             textColor: '',
             openInNewTab: false,
