@@ -18,6 +18,7 @@ export default function EditFormPage() {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [fields, setFields] = useState<FormField[]>([]);
+  const [activeTab, setActiveTab] = useState<'fields' | 'settings'>('fields');
   
   const [formData, setFormData] = useState<{
     name: string;
@@ -144,152 +145,188 @@ export default function EditFormPage() {
     <AuthGuard>
       <AdminLayout>
         {fetchLoading ? null : (
-          <div className="pb-32 animate-fadeIn">
+          <div className="px-4 pb-32 animate-fadeIn">
             <form id="form-edit-form" onSubmit={handleSubmit}>
-              {/* 基本情報 */}
-              <div className="bg-white rounded-xl p-6 mb-6 space-y-6">
-                <FloatingInput
-                  label="フォーム名 *"
-                  value={formData.name}
-                  onChange={(value) => setFormData({ ...formData, name: value })}
-                  required
-                />
-
-                <FloatingInput
-                  label="説明（任意）"
-                  value={formData.description}
-                  onChange={(value) => setFormData({ ...formData, description: value })}
-                  multiline
-                  rows={3}
-                />
-
-                {/* ステータス */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="isActive" className="text-sm text-gray-700">
-                    フォームを公開する
-                  </label>
-                </div>
-              </div>
-
-              {/* フォームビルダー */}
-              <div className="bg-white rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">フォームフィールド</h3>
-                <FormBuilder fields={fields} onChange={setFields} />
-              </div>
-
-              {/* 送信後の設定 */}
-              <div className="bg-white rounded-xl p-6 mb-6 space-y-6">
-                <h3 className="text-lg font-bold text-gray-900">送信後の設定</h3>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    送信後の動作
-                  </label>
-                  <select
-                    value={formData.afterSubmit.type}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      afterSubmit: {
-                        ...formData.afterSubmit,
-                        type: e.target.value as 'message' | 'redirect',
-                      },
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="message">メッセージを表示</option>
-                    <option value="redirect">URLにリダイレクト</option>
-                  </select>
+              {/* タブメニュー */}
+              <div className="bg-white rounded-[1.75rem] mb-6">
+                <div className="border-b border-gray-200">
+                  <div className="flex">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('fields')}
+                      className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                        activeTab === 'fields'
+                          ? 'text-blue-600 border-b-2 border-blue-600 rounded-tl-[1.75rem]'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                      style={activeTab === 'fields' ? { backgroundColor: '#f9fafb' } : {}}
+                    >
+                      フィールド
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('settings')}
+                      className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                        activeTab === 'settings'
+                          ? 'text-blue-600 border-b-2 border-blue-600 rounded-tr-[1.75rem]'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                      style={activeTab === 'settings' ? { backgroundColor: '#f9fafb' } : {}}
+                    >
+                      フォーム設定
+                    </button>
+                  </div>
                 </div>
 
-                {formData.afterSubmit.type === 'message' ? (
-                  <FloatingInput
-                    label="完了メッセージ"
-                    value={formData.afterSubmit.message || ''}
-                    onChange={(value) => setFormData({
-                      ...formData,
-                      afterSubmit: {
-                        ...formData.afterSubmit,
-                        message: value,
-                      },
-                    })}
-                    multiline
-                    rows={3}
-                  />
-                ) : (
-                  <FloatingInput
-                    label="リダイレクト先URL"
-                    value={formData.afterSubmit.redirectUrl || ''}
-                    onChange={(value) => setFormData({
-                      ...formData,
-                      afterSubmit: {
-                        ...formData.afterSubmit,
-                        redirectUrl: value,
-                      },
-                    })}
-                    placeholder="https://example.com/thanks"
-                  />
+                {/* フィールドタブ */}
+                {activeTab === 'fields' && (
+                  <div className="p-6">
+                    <FormBuilder fields={fields} onChange={setFields} />
+                  </div>
                 )}
-              </div>
 
-              {/* メール通知設定 */}
-              <div className="bg-white rounded-xl p-6 space-y-6">
-                <h3 className="text-lg font-bold text-gray-900">メール通知設定</h3>
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="emailEnabled"
-                    checked={formData.emailNotification.enabled}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      emailNotification: {
-                        ...formData.emailNotification,
-                        enabled: e.target.checked,
-                      },
-                    })}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="emailEnabled" className="text-sm text-gray-700">
-                    送信時にメール通知を受け取る
-                  </label>
-                </div>
-
-                {formData.emailNotification.enabled && (
-                  <>
+                {/* フォーム設定タブ */}
+                {activeTab === 'settings' && (
+                  <div className="p-6 space-y-6">
+                    {/* 基本情報 */}
                     <FloatingInput
-                      label="通知先メールアドレス"
-                      type="email"
-                      value={formData.emailNotification.to[0]}
-                      onChange={(value) => setFormData({
-                        ...formData,
-                        emailNotification: {
-                          ...formData.emailNotification,
-                          to: [value],
-                        },
-                      })}
-                      placeholder="admin@example.com"
+                      label="フォーム名 *"
+                      value={formData.name}
+                      onChange={(value) => setFormData({ ...formData, name: value })}
+                      required
                     />
 
                     <FloatingInput
-                      label="メール件名"
-                      value={formData.emailNotification.subject || ''}
-                      onChange={(value) => setFormData({
-                        ...formData,
-                        emailNotification: {
-                          ...formData.emailNotification,
-                          subject: value,
-                        },
-                      })}
-                      placeholder="新しいフォーム送信がありました"
+                      label="説明（任意）"
+                      value={formData.description}
+                      onChange={(value) => setFormData({ ...formData, description: value })}
+                      multiline
+                      rows={3}
                     />
-                  </>
+
+                    {/* ステータス */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="isActive"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="isActive" className="text-sm text-gray-700">
+                        フォームを公開する
+                      </label>
+                    </div>
+
+                    {/* 送信後の設定 */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-md font-bold text-gray-900 mb-4">送信後の設定</h4>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        送信後の動作
+                      </label>
+                      <select
+                        value={formData.afterSubmit.type}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          afterSubmit: {
+                            ...formData.afterSubmit,
+                            type: e.target.value as 'message' | 'redirect',
+                          },
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="message">メッセージを表示</option>
+                        <option value="redirect">URLにリダイレクト</option>
+                      </select>
+                    </div>
+
+                    {formData.afterSubmit.type === 'message' ? (
+                      <FloatingInput
+                        label="完了メッセージ"
+                        value={formData.afterSubmit.message || ''}
+                        onChange={(value) => setFormData({
+                          ...formData,
+                          afterSubmit: {
+                            ...formData.afterSubmit,
+                            message: value,
+                          },
+                        })}
+                        multiline
+                        rows={3}
+                      />
+                    ) : (
+                      <FloatingInput
+                        label="リダイレクト先URL"
+                        value={formData.afterSubmit.redirectUrl || ''}
+                        onChange={(value) => setFormData({
+                          ...formData,
+                          afterSubmit: {
+                            ...formData.afterSubmit,
+                            redirectUrl: value,
+                          },
+                        })}
+                        placeholder="https://example.com/thanks"
+                      />
+                    )}
+
+                    {/* メール通知設定 */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-md font-bold text-gray-900 mb-4">メール通知設定</h4>
+                      
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="emailEnabled"
+                          checked={formData.emailNotification.enabled}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            emailNotification: {
+                              ...formData.emailNotification,
+                              enabled: e.target.checked,
+                            },
+                          })}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="emailEnabled" className="text-sm text-gray-700">
+                          送信時にメール通知を受け取る
+                        </label>
+                      </div>
+
+                      {formData.emailNotification.enabled && (
+                        <>
+                          <FloatingInput
+                            label="通知先メールアドレス"
+                            type="email"
+                            value={formData.emailNotification.to[0]}
+                            onChange={(value) => setFormData({
+                              ...formData,
+                              emailNotification: {
+                                ...formData.emailNotification,
+                                to: [value],
+                              },
+                            })}
+                            placeholder="admin@example.com"
+                          />
+
+                          <FloatingInput
+                            label="メール件名"
+                            value={formData.emailNotification.subject || ''}
+                            onChange={(value) => setFormData({
+                              ...formData,
+                              emailNotification: {
+                                ...formData.emailNotification,
+                                subject: value,
+                              },
+                            })}
+                            placeholder="新しいフォーム送信がありました"
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </form>

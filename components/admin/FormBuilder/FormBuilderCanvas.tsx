@@ -9,6 +9,7 @@ import { FormField } from '@/types/block';
 import { useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import Image from 'next/image';
 
 interface FormBuilderCanvasProps {
   fields: FormField[];
@@ -90,24 +91,24 @@ function SortableFieldItem({ field, isSelected, onSelect, onDelete }: SortableFi
   };
 
   const fieldTypeLabels: Record<string, { label: string; icon: string }> = {
-    text: { label: 'テキスト入力', icon: '📝' },
-    textarea: { label: 'テキストエリア', icon: '📄' },
-    email: { label: 'メール', icon: '📧' },
-    tel: { label: '電話番号', icon: '📞' },
-    number: { label: '数値', icon: '🔢' },
-    name: { label: '氏名', icon: '👤' },
-    address: { label: '住所', icon: '🏠' },
-    select: { label: 'プルダウン', icon: '📋' },
-    cascade: { label: '連動プルダウン', icon: '🔗' },
-    radio: { label: 'ラジオボタン', icon: '🔘' },
-    checkbox: { label: 'チェックボックス', icon: '☑️' },
-    agreement: { label: '同意確認', icon: '✅' },
-    'display-text': { label: 'テキスト表示', icon: '💬' },
-    'display-image': { label: '画像表示', icon: '🖼️' },
-    'display-html': { label: 'HTML表示', icon: '💻' },
+    text: { label: 'テキスト入力', icon: '/textfield.svg' },
+    textarea: { label: 'テキストエリア', icon: '/textarea.svg' },
+    email: { label: 'メール', icon: '/mail.svg' },
+    tel: { label: '電話番号', icon: '/phone.svg' },
+    number: { label: '数値', icon: '/number.svg' },
+    name: { label: '氏名', icon: '/name.svg' },
+    address: { label: '住所', icon: '/address.svg' },
+    select: { label: 'プルダウン', icon: '/pulldown.svg' },
+    cascade: { label: 'カスケード', icon: '/cascade.svg' },
+    radio: { label: 'ラジオボタン', icon: '/radio.svg' },
+    checkbox: { label: 'チェックボックス', icon: '/checkbox.svg' },
+    agreement: { label: '同意確認', icon: '/document.svg' },
+    'display-text': { label: 'テキスト表示', icon: '/textarea.svg' },
+    'display-image': { label: '画像表示', icon: '/image.svg' },
+    'display-html': { label: 'HTML表示', icon: '/html.svg' },
   };
 
-  const fieldInfo = fieldTypeLabels[field.type] || { label: field.type, icon: '❓' };
+  const fieldInfo = fieldTypeLabels[field.type] || { label: field.type, icon: '/textfield.svg' };
 
   // ドロップインジケーター表示判定
   const isOverCurrent = over?.id === field.id && active?.id !== field.id;
@@ -151,7 +152,16 @@ function SortableFieldItem({ field, isSelected, onSelect, onDelete }: SortableFi
 
         {/* フィールド情報 */}
         <div className="ml-8 flex items-center gap-3">
-          <span className="text-xl flex-shrink-0">{fieldInfo.icon}</span>
+          <div className="w-4 h-4 flex-shrink-0">
+            <Image 
+              src={fieldInfo.icon} 
+              alt={fieldInfo.label} 
+              width={16} 
+              height={16}
+              className="opacity-60"
+              style={{ filter: 'grayscale(30%)' }}
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium text-gray-900">{field.label}</span>

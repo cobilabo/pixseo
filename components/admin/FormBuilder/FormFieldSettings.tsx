@@ -25,7 +25,7 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
     name: '氏名',
     address: '住所',
     select: 'プルダウン',
-    cascade: '連動プルダウン',
+    cascade: 'カスケード',
     radio: 'ラジオボタン',
     checkbox: 'チェックボックス',
     agreement: '同意確認',
@@ -136,6 +136,31 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
             multiline
             rows={3}
           />
+        )}
+
+        {field.type === 'cascade' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              連動選択肢（JSON形式）
+            </label>
+            <div className="mb-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+              例: {`{"選択肢1": ["サブ1-1", "サブ1-2"], "選択肢2": ["サブ2-1", "サブ2-2"]}`}
+            </div>
+            <textarea
+              value={JSON.stringify((field as any).config?.options || {}, null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  updateConfig({ options: parsed });
+                } catch (error) {
+                  // 無効なJSONの場合は何もしない
+                }
+              }}
+              rows={8}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              placeholder='{"選択肢1": ["サブ1-1", "サブ1-2"]}'
+            />
+          </div>
         )}
 
         {field.type === 'display-text' && (

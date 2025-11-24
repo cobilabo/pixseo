@@ -7,6 +7,7 @@
 
 import { FormFieldType } from '@/types/block';
 import { useDraggable } from '@dnd-kit/core';
+import Image from 'next/image';
 
 interface FormFieldPaletteProps {
   onAddField: (type: FormFieldType) => void;
@@ -16,73 +17,79 @@ const fieldTypes = [
   {
     type: 'text' as FormFieldType,
     label: 'テキスト入力',
-    icon: '📝',
+    icon: '/textfield.svg',
     description: '1行テキスト',
   },
   {
     type: 'textarea' as FormFieldType,
     label: 'テキストエリア',
-    icon: '📄',
+    icon: '/textarea.svg',
     description: '複数行テキスト',
   },
   {
     type: 'email' as FormFieldType,
     label: 'メール',
-    icon: '📧',
+    icon: '/mail.svg',
     description: 'メールアドレス',
   },
   {
     type: 'tel' as FormFieldType,
     label: '電話番号',
-    icon: '📞',
+    icon: '/phone.svg',
     description: '電話番号入力',
   },
   {
     type: 'number' as FormFieldType,
     label: '数値',
-    icon: '🔢',
+    icon: '/number.svg',
     description: '数値入力',
   },
   {
     type: 'name' as FormFieldType,
     label: '氏名',
-    icon: '👤',
+    icon: '/name.svg',
     description: '姓名フィールド',
   },
   {
     type: 'address' as FormFieldType,
     label: '住所',
-    icon: '🏠',
+    icon: '/address.svg',
     description: '郵便番号・住所',
   },
   {
     type: 'select' as FormFieldType,
     label: 'プルダウン',
-    icon: '📋',
+    icon: '/pulldown.svg',
     description: '単一選択',
+  },
+  {
+    type: 'cascade' as FormFieldType,
+    label: 'カスケード',
+    icon: '/cascade.svg',
+    description: '連動プルダウン',
   },
   {
     type: 'radio' as FormFieldType,
     label: 'ラジオボタン',
-    icon: '🔘',
+    icon: '/radio.svg',
     description: '単一選択',
   },
   {
     type: 'checkbox' as FormFieldType,
     label: 'チェックボックス',
-    icon: '☑️',
+    icon: '/checkbox.svg',
     description: '複数選択',
   },
   {
     type: 'agreement' as FormFieldType,
     label: '同意確認',
-    icon: '✅',
+    icon: '/document.svg',
     description: '利用規約等',
   },
   {
     type: 'display-text' as FormFieldType,
     label: 'テキスト表示',
-    icon: '💬',
+    icon: '/textarea.svg',
     description: '説明文',
   },
 ];
@@ -110,7 +117,16 @@ function DraggableFieldType({ fieldType }: { fieldType: typeof fieldTypes[0] }) 
           </svg>
         </div>
         
-        <span className="text-xl flex-shrink-0">{fieldType.icon}</span>
+        <div className="w-4 h-4 flex-shrink-0">
+          <Image 
+            src={fieldType.icon} 
+            alt={fieldType.label} 
+            width={16} 
+            height={16} 
+            className="opacity-60 group-hover:opacity-100"
+            style={{ filter: 'grayscale(30%)' }}
+          />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="font-medium text-gray-900 group-hover:text-blue-600">
             {fieldType.label}
