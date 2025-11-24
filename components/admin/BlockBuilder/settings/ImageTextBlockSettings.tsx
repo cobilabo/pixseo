@@ -61,7 +61,6 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
         type="number"
         value={config.imageHeight?.toString() || ''}
         onChange={(value) => updateConfig({ imageHeight: value ? parseInt(value) : undefined })}
-        placeholder="未指定で100%"
       />
 
       {/* フィルターカラー */}
@@ -80,7 +79,6 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
           const num = parseInt(value);
           updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
         }}
-        placeholder="0"
       />
 
       {/* 見出し */}

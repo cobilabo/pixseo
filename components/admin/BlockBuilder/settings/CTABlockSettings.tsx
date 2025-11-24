@@ -86,7 +86,6 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
         type="number"
         value={config.imageHeight?.toString() || ''}
         onChange={(value) => updateConfig({ imageHeight: value ? parseInt(value) : undefined })}
-        placeholder="未指定で100%"
       />
 
       {/* フィルターカラー */}
@@ -105,7 +104,6 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
           const num = parseInt(value);
           updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
         }}
-        placeholder="0"
       />
 
       {/* 見出し */}
