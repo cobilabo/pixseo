@@ -38,7 +38,7 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
 
   // フィルタースタイル（グラデーション対応）
   const filterStyle = getFilterStyle(
-    config.filterType || 'full', // デフォルトは全面フィルタ（後方互換性）
+    config.filterType,
     config.filterColor,
     config.filterOpacity
   );

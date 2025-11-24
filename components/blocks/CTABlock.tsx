@@ -67,7 +67,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
 
   // フィルタースタイル（グラデーション対応）
   const filterStyle = getFilterStyle(
-    config.filterType || 'full',
+    config.filterType,
     config.filterColor,
     config.filterOpacity
   );

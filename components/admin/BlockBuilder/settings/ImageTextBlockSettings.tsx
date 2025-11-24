@@ -84,23 +84,28 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
         ]}
       />
 
-      {/* フィルターカラー */}
-      <ColorPicker
-        label="フィルターカラー"
-        value={config.filterColor || ''}
-        onChange={(value) => updateConfig({ filterColor: value })}
-      />
+      {/* フィルターカラーとフィルター透明度（フィルタータイプが「なし」以外の場合のみ表示） */}
+      {config.filterType && config.filterType !== 'none' && (
+        <>
+          {/* フィルターカラー */}
+          <ColorPicker
+            label="フィルターカラー"
+            value={config.filterColor || ''}
+            onChange={(value) => updateConfig({ filterColor: value })}
+          />
 
-      {/* フィルター透明度 */}
-      <FloatingInput
-        label="フィルター透明度（0-100）"
-        type="number"
-        value={config.filterOpacity?.toString() || ''}
-        onChange={(value) => {
-          const num = parseInt(value);
-          updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
-        }}
-      />
+          {/* フィルター透明度 */}
+          <FloatingInput
+            label="フィルター透明度（0-100）"
+            type="number"
+            value={config.filterOpacity?.toString() || ''}
+            onChange={(value) => {
+              const num = parseInt(value);
+              updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
+            }}
+          />
+        </>
+      )}
 
       {/* 見出し */}
       <FloatingInput

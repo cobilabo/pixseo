@@ -48,7 +48,7 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
 
   // フィルタースタイル（グラデーション対応）
   const filterStyle = getFilterStyle(
-    config.filterType || 'full',
+    config.filterType,
     config.filterColor,
     config.filterOpacity
   );
