@@ -310,50 +310,50 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
     const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
     
     // 幅または高さを指定してアスペクト比維持
-    const widthStyle: React.CSSProperties = {};
-    const imageHeightStyleForCenter: React.CSSProperties = {};
+    const containerStyle: React.CSSProperties = { margin: '0 auto' };
+    const imageStyle: React.CSSProperties = {};
     
     if (config.imageWidth) {
-      widthStyle.width = `${config.imageWidth}px`;
-      widthStyle.maxWidth = '100%';
-      imageHeightStyleForCenter.height = 'auto';
+      containerStyle.width = `${config.imageWidth}px`;
+      containerStyle.maxWidth = '100%';
+      imageStyle.height = 'auto';
     } else if (config.imageHeight) {
-      widthStyle.width = 'auto';
-      widthStyle.maxWidth = '100%';
-      imageHeightStyleForCenter.height = `${config.imageHeight}px`;
+      containerStyle.width = 'auto';
+      containerStyle.maxWidth = '100%';
+      imageStyle.height = `${config.imageHeight}px`;
     } else {
       // 両方未指定の場合はデフォルト
-      widthStyle.width = '100%';
-      imageHeightStyleForCenter.height = 'auto';
+      containerStyle.width = '100%';
+      imageStyle.height = 'auto';
     }
     
     return (
-      <SectionTag id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
+      <SectionTag 
+        id={config.sectionId || undefined} 
+        className={`relative overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
+        style={{ ...fullWidthStyle, ...containerStyle }}
+      >
         {/* 画像 */}
-        <div className={`mx-auto mb-8 ${showPanel ? 'rounded-lg shadow-md' : ''}`} style={widthStyle}>
-          <div className="relative w-full" style={imageHeightStyleForCenter}>
-            <img
-              src={config.imageUrl}
-              alt={config.imageAlt || ''}
-              className={`w-full h-full ${config.imageWidth ? 'object-cover' : 'object-contain'}`}
-              style={imageHeightStyleForCenter}
-            />
-            {filterStyle && <div style={filterStyle} />}
-          </div>
-        </div>
+        <img
+          src={config.imageUrl}
+          alt={config.imageAlt || ''}
+          className="w-full h-full object-cover"
+          style={imageStyle}
+        />
+        {filterStyle && <div style={filterStyle} />}
         
-        {/* テキスト＋ライター＋ボタン */}
-        <div className="max-w-2xl mx-auto">
+        {/* テキスト＋ライター＋ボタン（画像の上に重なる） */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
           {config.showHeading && config.heading && (
             <HeadingTag
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
                 ${alignmentClasses[config.headingAlignment || 'center']}
-                mb-4 whitespace-pre-wrap
+                text-white mb-4 whitespace-pre-wrap w-full
               `}
               style={{ 
                 fontSize: `${headingFontSize}rem`,
-                color: config.headingTextColor || undefined 
+                color: config.headingTextColor || 'white' 
               }}
             >
               {config.heading}
@@ -364,11 +364,11 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
               className={`
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
                 ${alignmentClasses[config.textAlignment || 'center']}
-                mb-6 whitespace-pre-wrap
+                text-white mb-6 max-w-2xl whitespace-pre-wrap w-full
               `}
               style={{ 
                 fontSize: `${textFontSize}rem`,
-                color: config.textColor || undefined 
+                color: config.textColor || 'white' 
               }}
             >
               {config.description}
