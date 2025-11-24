@@ -124,6 +124,47 @@ export default function NewPagePage() {
     }
   };
 
+  // 日本語が含まれているかをチェック
+  const containsJapanese = (text: string): boolean => {
+    // ひらがな、カタカナ、漢字が含まれているかをチェック
+    return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+  };
+
+  // テキストを翻訳（日本語以外の場合はそのまま返す）
+  const translateOrKeep = async (
+    text: string,
+    targetLang: string,
+    currentTenantId: string | null
+  ): Promise<string> => {
+    // 日本語が含まれていない場合は翻訳せず、そのまま返す
+    if (!containsJapanese(text)) {
+      return text;
+    }
+
+    // 日本語が含まれている場合は翻訳
+    try {
+      const response = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-media-id': currentTenantId || '',
+        },
+        body: JSON.stringify({
+          type: 'text',
+          targetLang: targetLang,
+          data: { text },
+        }),
+      });
+      if (response.ok) {
+        const { translated } = await response.json();
+        return translated;
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+    }
+    return text;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -163,60 +204,27 @@ export default function NewPagePage() {
         // ページ設定の翻訳
         for (const lang of targetLangs) {
           if (formData.title) {
-            const titleResponse = await fetch('/api/admin/translate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-media-id': currentTenantId || '',
-              },
-              body: JSON.stringify({
-                type: 'text',
-                targetLang: lang,
-                data: { text: formData.title },
-              }),
-            });
-            if (titleResponse.ok) {
-              const { translated } = await titleResponse.json();
-              pageData[`title_${lang}`] = translated;
-            }
+            pageData[`title_${lang}`] = await translateOrKeep(
+              formData.title,
+              lang,
+              currentTenantId
+            );
           }
 
           if (formData.excerpt) {
-            const excerptResponse = await fetch('/api/admin/translate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-media-id': currentTenantId || '',
-              },
-              body: JSON.stringify({
-                type: 'text',
-                targetLang: lang,
-                data: { text: formData.excerpt },
-              }),
-            });
-            if (excerptResponse.ok) {
-              const { translated } = await excerptResponse.json();
-              pageData[`excerpt_${lang}`] = translated;
-            }
+            pageData[`excerpt_${lang}`] = await translateOrKeep(
+              formData.excerpt,
+              lang,
+              currentTenantId
+            );
           }
 
           if (formData.metaTitle) {
-            const metaTitleResponse = await fetch('/api/admin/translate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-media-id': currentTenantId || '',
-              },
-              body: JSON.stringify({
-                type: 'text',
-                targetLang: lang,
-                data: { text: formData.metaTitle },
-              }),
-            });
-            if (metaTitleResponse.ok) {
-              const { translated } = await metaTitleResponse.json();
-              pageData[`metaTitle_${lang}`] = translated;
-            }
+            pageData[`metaTitle_${lang}`] = await translateOrKeep(
+              formData.metaTitle,
+              lang,
+              currentTenantId
+            );
           }
         }
 
@@ -229,62 +237,29 @@ export default function NewPagePage() {
               for (const lang of targetLangs) {
                 // 見出しの翻訳
                 if (block.config.heading) {
-                  const response = await fetch('/api/admin/translate', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'x-media-id': currentTenantId || '',
-                    },
-                    body: JSON.stringify({
-                      type: 'text',
-                      targetLang: lang,
-                      data: { text: block.config.heading },
-                    }),
-                  });
-                  if (response.ok) {
-                    const { translated } = await response.json();
-                    translatedConfig[`heading_${lang}`] = translated;
-                  }
+                  translatedConfig[`heading_${lang}`] = await translateOrKeep(
+                    block.config.heading,
+                    lang,
+                    currentTenantId
+                  );
                 }
 
                 // テキストの翻訳
                 if (block.config.description) {
-                  const response = await fetch('/api/admin/translate', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'x-media-id': currentTenantId || '',
-                    },
-                    body: JSON.stringify({
-                      type: 'text',
-                      targetLang: lang,
-                      data: { text: block.config.description },
-                    }),
-                  });
-                  if (response.ok) {
-                    const { translated } = await response.json();
-                    translatedConfig[`description_${lang}`] = translated;
-                  }
+                  translatedConfig[`description_${lang}`] = await translateOrKeep(
+                    block.config.description,
+                    lang,
+                    currentTenantId
+                  );
                 }
 
                 // ボタンテキストの翻訳
                 if (block.config.buttonText) {
-                  const response = await fetch('/api/admin/translate', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'x-media-id': currentTenantId || '',
-                    },
-                    body: JSON.stringify({
-                      type: 'text',
-                      targetLang: lang,
-                      data: { text: block.config.buttonText },
-                    }),
-                  });
-                  if (response.ok) {
-                    const { translated } = await response.json();
-                    translatedConfig[`buttonText_${lang}`] = translated;
-                  }
+                  translatedConfig[`buttonText_${lang}`] = await translateOrKeep(
+                    block.config.buttonText,
+                    lang,
+                    currentTenantId
+                  );
                 }
 
                 // ライター肩書きの翻訳
@@ -292,22 +267,12 @@ export default function NewPagePage() {
                   translatedConfig.writers = await Promise.all(
                     block.config.writers.map(async (writer: any) => {
                       if (writer.jobTitle) {
-                        const response = await fetch('/api/admin/translate', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'x-media-id': currentTenantId || '',
-                          },
-                          body: JSON.stringify({
-                            type: 'text',
-                            targetLang: lang,
-                            data: { text: writer.jobTitle },
-                          }),
-                        });
-                        if (response.ok) {
-                          const { translated } = await response.json();
-                          return { ...writer, [`jobTitle_${lang}`]: translated };
-                        }
+                        const translated = await translateOrKeep(
+                          writer.jobTitle,
+                          lang,
+                          currentTenantId
+                        );
+                        return { ...writer, [`jobTitle_${lang}`]: translated };
                       }
                       return writer;
                     })
@@ -319,22 +284,12 @@ export default function NewPagePage() {
                   translatedConfig.buttons = await Promise.all(
                     block.config.buttons.map(async (button: any) => {
                       if (button.text && button.type !== 'image') {
-                        const response = await fetch('/api/admin/translate', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'x-media-id': currentTenantId || '',
-                          },
-                          body: JSON.stringify({
-                            type: 'text',
-                            targetLang: lang,
-                            data: { text: button.text },
-                          }),
-                        });
-                        if (response.ok) {
-                          const { translated } = await response.json();
-                          return { ...button, [`text_${lang}`]: translated };
-                        }
+                        const translated = await translateOrKeep(
+                          button.text,
+                          lang,
+                          currentTenantId
+                        );
+                        return { ...button, [`text_${lang}`]: translated };
                       }
                       return button;
                     })
