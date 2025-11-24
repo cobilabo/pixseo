@@ -42,19 +42,35 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
     bold: 'font-bold',
   };
 
+  // 画像の高さスタイル
+  const imageHeightStyle = config.imageHeight ? { height: `${config.imageHeight}px` } : { height: '24rem' };
+
+  // フィルタースタイル
+  const filterStyle = config.filterColor && config.filterOpacity ? {
+    position: 'absolute' as const,
+    inset: 0,
+    backgroundColor: config.filterColor,
+    opacity: config.filterOpacity / 100,
+    pointerEvents: 'none' as const,
+    zIndex: 1,
+  } : undefined;
+
   // 画像が背景の場合
   if (config.imagePosition === 'background') {
     return (
-      <div className="relative w-full h-96 rounded-lg overflow-hidden shadow-md" style={fullWidthStyle}>
+      <div className="relative w-full rounded-lg overflow-hidden shadow-md" style={{ ...fullWidthStyle, ...imageHeightStyle }}>
         {config.imageUrl && (
-          <Image
-            src={config.imageUrl}
-            alt={config.imageAlt || ''}
-            fill
-            className="object-cover"
-          />
+          <>
+            <Image
+              src={config.imageUrl}
+              alt={config.imageAlt || ''}
+              fill
+              className="object-cover"
+            />
+            {filterStyle && <div style={filterStyle} />}
+          </>
         )}
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-center px-8">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ zIndex: 2 }}>
           <h3
             className={`
               ${headingFontSizeClasses[config.headingFontSize || 'medium']}
@@ -88,13 +104,17 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
       {/* 画像部分 */}
       <div className="w-full md:w-1/2">
         {config.imageUrl && (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-md">
+          <div 
+            className="relative w-full rounded-lg overflow-hidden shadow-md" 
+            style={config.imageHeight ? { height: `${config.imageHeight}px` } : { aspectRatio: '16/9' }}
+          >
             <Image
               src={config.imageUrl}
               alt={config.imageAlt || ''}
               fill
               className="object-cover"
             />
+            {filterStyle && <div style={filterStyle} />}
           </div>
         )}
       </div>

@@ -61,17 +61,31 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
     vertical: 'flex flex-col gap-4',
   };
 
+  // 画像の高さスタイル
+  const imageHeightStyle = config.imageHeight ? { height: `${config.imageHeight}px` } : { minHeight: '24rem' };
+
+  // フィルタースタイル
+  const filterStyle = config.filterColor && config.filterOpacity ? {
+    position: 'absolute' as const,
+    inset: 0,
+    backgroundColor: config.filterColor,
+    opacity: config.filterOpacity / 100,
+    pointerEvents: 'none' as const,
+    zIndex: 1,
+  } : undefined;
+
   // 画像が背景の場合
   if (config.imagePosition === 'background' && config.imageUrl) {
     return (
-      <div className="relative w-full min-h-96 rounded-lg overflow-hidden shadow-md" style={fullWidthStyle}>
+      <div className="relative w-full rounded-lg overflow-hidden shadow-md" style={{ ...fullWidthStyle, ...imageHeightStyle }}>
         <Image
           src={config.imageUrl}
           alt={config.imageAlt || ''}
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-center px-8 py-12">
+        {filterStyle && <div style={filterStyle} />}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
           {config.heading && (
             <h3
               className={`
@@ -139,13 +153,17 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
       <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
         {/* 画像部分 */}
         <div className="w-full md:w-1/2">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-md">
+          <div 
+            className="relative w-full rounded-lg overflow-hidden shadow-md" 
+            style={config.imageHeight ? { height: `${config.imageHeight}px` } : { aspectRatio: '16/9' }}
+          >
             <Image
               src={config.imageUrl}
               alt={config.imageAlt || ''}
               fill
               className="object-cover"
             />
+            {filterStyle && <div style={filterStyle} />}
           </div>
         </div>
         

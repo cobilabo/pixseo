@@ -29,6 +29,9 @@ export interface ImageBlockConfig {
   width?: number;           // %指定
   alignment?: 'left' | 'center' | 'right';
   link?: string;            // クリック時のリンク先
+  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
+  filterColor?: string;     // フィルターカラー（例: #000000）
+  filterOpacity?: number;   // フィルター透明度（0-100）
 }
 
 // CTAブロックの設定
@@ -36,6 +39,9 @@ export interface CTABlockConfig {
   imageUrl?: string;        // 背景画像URL
   imageAlt?: string;        // 画像alt
   imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
+  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
+  filterColor?: string;     // フィルターカラー（例: #000000）
+  filterOpacity?: number;   // フィルター透明度（0-100）
   heading?: string;         // 見出し
   headingFontSize?: 'small' | 'medium' | 'large';
   headingFontWeight?: 'normal' | 'bold';
@@ -83,6 +89,9 @@ export interface ImageTextBlockConfig {
   imageUrl: string;
   imageAlt: string;
   imagePosition: 'left' | 'right' | 'background';  // 画像の位置
+  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
+  filterColor?: string;     // フィルターカラー（例: #000000）
+  filterOpacity?: number;   // フィルター透明度（0-100）
   heading: string;                  // 見出し
   headingFontSize?: 'small' | 'medium' | 'large';
   headingFontWeight?: 'normal' | 'bold';

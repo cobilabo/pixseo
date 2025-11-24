@@ -29,18 +29,37 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
     marginRight: 'calc(50% - 50vw)',
   } : {};
 
+  // 画像の高さスタイル
+  const imageHeightStyle = config.imageHeight ? {
+    height: `${config.imageHeight}px`,
+    overflow: 'hidden',
+  } : {};
+
+  // フィルタースタイル
+  const filterStyle = config.filterColor && config.filterOpacity ? {
+    position: 'absolute' as const,
+    inset: 0,
+    backgroundColor: config.filterColor,
+    opacity: config.filterOpacity / 100,
+    pointerEvents: 'none' as const,
+    zIndex: 1,
+  } : undefined;
+
   const imageElement = (
     <div
       className={`relative ${showPanel ? alignmentClasses[config.alignment || 'center'] : ''}`}
       style={{ ...widthStyle, ...fullWidthStyle }}
     >
-      <Image
-        src={config.imageUrl}
-        alt={config.alt}
-        width={1200}
-        height={675}
-        className="rounded-lg shadow-md w-full h-auto"
-      />
+      <div className="relative overflow-hidden rounded-lg shadow-md" style={imageHeightStyle}>
+        <Image
+          src={config.imageUrl}
+          alt={config.alt}
+          width={1200}
+          height={675}
+          className="w-full h-full object-cover"
+        />
+        {filterStyle && <div style={filterStyle} />}
+      </div>
       {config.caption && (
         <p className="text-sm text-gray-600 text-center mt-2">{config.caption}</p>
       )}

@@ -80,6 +80,34 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
         ]}
       />
 
+      {/* 画像の高さ */}
+      <FloatingInput
+        label="画像の高さ（px）"
+        type="number"
+        value={config.imageHeight?.toString() || ''}
+        onChange={(value) => updateConfig({ imageHeight: value ? parseInt(value) : undefined })}
+        placeholder="未指定で100%"
+      />
+
+      {/* フィルターカラー */}
+      <ColorPicker
+        label="フィルターカラー"
+        value={config.filterColor || ''}
+        onChange={(value) => updateConfig({ filterColor: value })}
+      />
+
+      {/* フィルター透明度 */}
+      <FloatingInput
+        label="フィルター透明度（0-100）"
+        type="number"
+        value={config.filterOpacity?.toString() || ''}
+        onChange={(value) => {
+          const num = parseInt(value);
+          updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
+        }}
+        placeholder="0"
+      />
+
       {/* 見出し */}
       <FloatingInput
         label="見出し"

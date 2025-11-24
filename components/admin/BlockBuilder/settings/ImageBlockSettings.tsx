@@ -8,6 +8,7 @@ import { Block, ImageBlockConfig } from '@/types/block';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
+import ColorPicker from '@/components/admin/ColorPicker';
 
 interface ImageBlockSettingsProps {
   block: Block;
@@ -49,6 +50,34 @@ export default function ImageBlockSettings({ block, onUpdate }: ImageBlockSettin
           { value: 'center', label: '中央揃え' },
           { value: 'right', label: '右揃え' },
         ]}
+      />
+
+      {/* 画像の高さ */}
+      <FloatingInput
+        label="画像の高さ（px）"
+        type="number"
+        value={config.imageHeight?.toString() || ''}
+        onChange={(value) => updateConfig({ imageHeight: value ? parseInt(value) : undefined })}
+        placeholder="未指定で100%"
+      />
+
+      {/* フィルターカラー */}
+      <ColorPicker
+        label="フィルターカラー"
+        value={config.filterColor || ''}
+        onChange={(value) => updateConfig({ filterColor: value })}
+      />
+
+      {/* フィルター透明度 */}
+      <FloatingInput
+        label="フィルター透明度（0-100）"
+        type="number"
+        value={config.filterOpacity?.toString() || ''}
+        onChange={(value) => {
+          const num = parseInt(value);
+          updateConfig({ filterOpacity: value && !isNaN(num) ? Math.min(100, Math.max(0, num)) : undefined });
+        }}
+        placeholder="0"
       />
     </div>
   );
