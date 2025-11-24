@@ -663,13 +663,11 @@ export const getArticlesByWriterServer = async (
       return cached;
     }
     
-    // Firestoreから取得
+    // Firestoreから取得（orderByを削除して複合インデックス不要に）
     const articlesRef = adminDb.collection('articles');
     let query = articlesRef
       .where('writerId', '==', writerId)
-      .where('isPublished', '==', true)
-      .orderBy('publishedAt', 'desc')
-      .limit(limitCount);
+      .where('isPublished', '==', true);
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
@@ -678,7 +676,7 @@ export const getArticlesByWriterServer = async (
     
     const snapshot = await query.get();
     
-    const articles = snapshot.docs.map((doc) => {
+    let articles = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -691,12 +689,22 @@ export const getArticlesByWriterServer = async (
       } as Article;
     });
     
+    // 取得後にソート（新しい順）
+    articles.sort((a, b) => {
+      const aTime = a.publishedAt.getTime();
+      const bTime = b.publishedAt.getTime();
+      return bTime - aTime;
+    });
+    
+    // limit適用
+    articles = articles.slice(0, limitCount);
+    
     // キャッシュに保存
     cacheManager.set(cacheKey, articles);
     
     return articles;
   } catch (error) {
-    console.error('Error fetching articles by writer:', error);
+    console.error('[getArticlesByWriterServer] Error:', error);
     return [];
   }
 };

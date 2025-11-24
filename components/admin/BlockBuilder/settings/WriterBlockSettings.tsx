@@ -8,6 +8,7 @@ import { Block, WriterBlockConfig } from '@/types/block';
 import { useState, useEffect } from 'react';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
+import ColorPicker from '@/components/admin/ColorPicker';
 
 interface WriterBlockSettingsProps {
   block: Block;
@@ -22,7 +23,7 @@ interface Writer {
   backgroundImage?: string;
   backgroundImageAlt?: string;
   bio?: string;
-  mediaId: string;
+  mediaId?: string;
 }
 
 export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSettingsProps) {
@@ -104,6 +105,40 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
         ]}
         required
       />
+
+      {/* 共通スタイル設定 */}
+      <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <h4 className="text-sm font-bold text-gray-900 mb-2">共通スタイル設定</h4>
+        
+        {/* 肩書きテキストの色 */}
+        <ColorPicker
+          label="肩書きテキストの色"
+          value={config.jobTitleColor || '#6B7280'}
+          onChange={(value) => updateConfig({ jobTitleColor: value })}
+        />
+
+        {/* ボタンテキスト */}
+        <FloatingInput
+          label="ボタンテキスト"
+          value={config.buttonText || ''}
+          onChange={(value) => updateConfig({ buttonText: value })}
+          placeholder="VIEW MORE"
+        />
+
+        {/* ボタン背景の色 */}
+        <ColorPicker
+          label="ボタン背景の色"
+          value={config.buttonBackgroundColor || '#2563EB'}
+          onChange={(value) => updateConfig({ buttonBackgroundColor: value })}
+        />
+
+        {/* 枠線の色 */}
+        <ColorPicker
+          label="枠線の色"
+          value={config.borderColor || '#E5E7EB'}
+          onChange={(value) => updateConfig({ borderColor: value })}
+        />
+      </div>
 
       {/* ライター一覧 */}
       {(config.writers || []).map((writer, index) => (

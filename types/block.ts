@@ -110,6 +110,11 @@ export interface WriterBlockConfig {
     writerId: string;  // ライターID
     jobTitle: string;  // 肩書き
   }>;
+  // 共通スタイル設定
+  jobTitleColor?: string;         // 肩書きテキストの色
+  buttonText?: string;            // ボタンテキスト（デフォルト: VIEW MORE）
+  buttonBackgroundColor?: string; // ボタン背景の色
+  borderColor?: string;           // 枠線の色
 }
 
 // ブロックの共通インターフェース
