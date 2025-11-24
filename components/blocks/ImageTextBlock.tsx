@@ -117,7 +117,7 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
       </div>
       
       {/* テキスト部分 */}
-      <div className={`w-full md:w-1/2 ${isImageLeft ? 'md:text-left' : 'md:text-left'}`}>
+      <div className={`w-full md:w-1/2 ${isImageLeft ? 'md:text-left' : 'md:text-right'}`}>
         <h3
           className={`
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
