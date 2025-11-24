@@ -8,10 +8,18 @@ import { Block, CTABlockConfig } from '@/types/block';
 
 interface CTABlockProps {
   block: Block;
+  showPanel?: boolean;
 }
 
-export default function CTABlock({ block }: CTABlockProps) {
+export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
   const config = block.config as CTABlockConfig;
+  
+  // パネルOFFの場合は画面幅いっぱいにする
+  const fullWidthStyle = !showPanel ? {
+    width: '100vw',
+    marginLeft: 'calc(50% - 50vw)',
+    marginRight: 'calc(50% - 50vw)',
+  } : {};
   
   const headingFontSizeClasses = {
     small: 'text-xl',
@@ -56,7 +64,7 @@ export default function CTABlock({ block }: CTABlockProps) {
   // 画像が背景の場合
   if (config.imagePosition === 'background' && config.imageUrl) {
     return (
-      <div className="relative w-full min-h-96 rounded-lg overflow-hidden shadow-md">
+      <div className="relative w-full min-h-96 rounded-lg overflow-hidden shadow-md" style={fullWidthStyle}>
         <Image
           src={config.imageUrl}
           alt={config.imageAlt || ''}
@@ -128,7 +136,7 @@ export default function CTABlock({ block }: CTABlockProps) {
   
   if (config.imageUrl && (config.imagePosition === 'left' || config.imagePosition === 'right')) {
     return (
-      <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`}>
+      <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
         {/* 画像部分 */}
         <div className="w-full md:w-1/2">
           <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-md">
@@ -204,7 +212,7 @@ export default function CTABlock({ block }: CTABlockProps) {
 
   // 画像なしの場合（テキスト＋ボタンのみ）
   return (
-    <div className="text-center py-8">
+    <div className="text-center py-8" style={fullWidthStyle}>
       {config.heading && (
         <h3
           className={`

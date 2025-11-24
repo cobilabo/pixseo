@@ -7,10 +7,18 @@ import { Block, ImageTextBlockConfig } from '@/types/block';
 
 interface ImageTextBlockProps {
   block: Block;
+  showPanel?: boolean;
 }
 
-export default function ImageTextBlock({ block }: ImageTextBlockProps) {
+export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlockProps) {
   const config = block.config as ImageTextBlockConfig;
+  
+  // パネルOFFの場合は画面幅いっぱいにする
+  const fullWidthStyle = !showPanel ? {
+    width: '100vw',
+    marginLeft: 'calc(50% - 50vw)',
+    marginRight: 'calc(50% - 50vw)',
+  } : {};
   
   const headingFontSizeClasses = {
     small: 'text-xl',
@@ -37,7 +45,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
   // 画像が背景の場合
   if (config.imagePosition === 'background') {
     return (
-      <div className="relative w-full h-96 rounded-lg overflow-hidden shadow-md">
+      <div className="relative w-full h-96 rounded-lg overflow-hidden shadow-md" style={fullWidthStyle}>
         {config.imageUrl && (
           <Image
             src={config.imageUrl}
@@ -76,7 +84,7 @@ export default function ImageTextBlock({ block }: ImageTextBlockProps) {
   const isImageLeft = config.imagePosition === 'left';
   
   return (
-    <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`}>
+    <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
       {/* 画像部分 */}
       <div className="w-full md:w-1/2">
         {config.imageUrl && (

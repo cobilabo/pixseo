@@ -144,11 +144,13 @@ export default async function FixedPage({ params }: PageProps) {
           zIndex: 10 
         }}
       >
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : ''}`}>
         <article 
-          className="bg-white rounded-lg shadow-md p-8"
+          className={rawPage.showPanel !== false ? 'bg-white rounded-lg shadow-md p-8' : ''}
           style={{
+            backgroundColor: rawPage.showPanel !== false ? (rawPage.panelColor || '#ffffff') : 'transparent',
             color: rawPage.textColor || undefined,
+            padding: rawPage.showPanel !== false ? undefined : '0',
           }}
         >
           {/* SEO用のh1タグ（視覚的には非表示） */}
@@ -156,7 +158,7 @@ export default async function FixedPage({ params }: PageProps) {
           
           {/* ブロックビルダー使用時はBlockRendererで表示 */}
           {rawPage.useBlockBuilder && rawPage.blocks ? (
-            <BlockRenderer blocks={rawPage.blocks} />
+            <BlockRenderer blocks={rawPage.blocks} showPanel={rawPage.showPanel !== false} />
           ) : (
             <div 
               className="prose prose-lg max-w-none"

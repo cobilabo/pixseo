@@ -7,6 +7,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import ColorPicker from '@/components/admin/ColorPicker';
+import CustomCheckbox from '@/components/admin/CustomCheckbox';
 import { updatePage, getPageById } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { Block } from '@/types/block';
@@ -39,6 +40,8 @@ export default function EditPagePage() {
     order: 0,
     backgroundColor: '',
     textColor: '',
+    showPanel: true,
+    panelColor: '#ffffff',
   });
 
   useEffect(() => {
@@ -65,6 +68,8 @@ export default function EditPagePage() {
         order: page.order,
         backgroundColor: page.backgroundColor || '',
         textColor: page.textColor || '',
+        showPanel: page.showPanel !== false, // デフォルトtrue
+        panelColor: page.panelColor || '#ffffff',
       });
       
       // ブロックビルダーデータを読み込み
@@ -314,6 +319,22 @@ export default function EditPagePage() {
                 value={formData.textColor}
                 onChange={(value) => setFormData({ ...formData, textColor: value })}
               />
+
+              {/* パネル表示 */}
+              <CustomCheckbox
+                label="パネル表示"
+                checked={formData.showPanel}
+                onChange={(checked) => setFormData({ ...formData, showPanel: checked })}
+              />
+
+              {/* パネルカラー（パネル表示ONの時のみ） */}
+              {formData.showPanel && (
+                <ColorPicker
+                  label="パネルカラー"
+                  value={formData.panelColor}
+                  onChange={(value) => setFormData({ ...formData, panelColor: value })}
+                />
+              )}
 
               {/* メタタイトル */}
               <div className="flex gap-2">

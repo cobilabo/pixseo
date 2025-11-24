@@ -15,9 +15,10 @@ import HTMLBlock from './HTMLBlock';
 interface BlockRendererProps {
   blocks: Block[];
   isMobile?: boolean;
+  showPanel?: boolean;
 }
 
-export default function BlockRenderer({ blocks, isMobile = false }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true }: BlockRendererProps) {
   // 表示するブロックをフィルタリング
   const visibleBlocks = blocks
     .filter(block => {
@@ -34,7 +35,7 @@ export default function BlockRenderer({ blocks, isMobile = false }: BlockRendere
     });
 
   return (
-    <div className="space-y-6">
+    <div className={showPanel ? 'space-y-6' : ''}>
       {visibleBlocks.map((block) => {
         switch (block.type) {
           case 'heading':
@@ -42,11 +43,11 @@ export default function BlockRenderer({ blocks, isMobile = false }: BlockRendere
           case 'text':
             return <TextBlock key={block.id} block={block} />;
           case 'image':
-            return <ImageBlock key={block.id} block={block} />;
+            return <ImageBlock key={block.id} block={block} showPanel={showPanel} />;
           case 'imageText':
-            return <ImageTextBlock key={block.id} block={block} />;
+            return <ImageTextBlock key={block.id} block={block} showPanel={showPanel} />;
           case 'cta':
-            return <CTABlock key={block.id} block={block} />;
+            return <CTABlock key={block.id} block={block} showPanel={showPanel} />;
           case 'form':
             return <FormBlock key={block.id} block={block} />;
           case 'html':

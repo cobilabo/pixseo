@@ -8,9 +8,10 @@ import { Block, ImageBlockConfig } from '@/types/block';
 
 interface ImageBlockProps {
   block: Block;
+  showPanel?: boolean;
 }
 
-export default function ImageBlock({ block }: ImageBlockProps) {
+export default function ImageBlock({ block, showPanel = true }: ImageBlockProps) {
   const config = block.config as ImageBlockConfig;
   
   const alignmentClasses = {
@@ -20,11 +21,18 @@ export default function ImageBlock({ block }: ImageBlockProps) {
   };
   
   const widthStyle = config.width ? { width: `${config.width}%` } : {};
+  
+  // パネルOFFの場合は画面幅いっぱいにする
+  const fullWidthStyle = !showPanel ? {
+    width: '100vw',
+    marginLeft: 'calc(50% - 50vw)',
+    marginRight: 'calc(50% - 50vw)',
+  } : {};
 
   const imageElement = (
     <div
-      className={`relative ${alignmentClasses[config.alignment || 'center']}`}
-      style={widthStyle}
+      className={`relative ${showPanel ? alignmentClasses[config.alignment || 'center'] : ''}`}
+      style={{ ...widthStyle, ...fullWidthStyle }}
     >
       <Image
         src={config.imageUrl}

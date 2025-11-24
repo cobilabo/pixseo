@@ -48,5 +48,7 @@ export interface Page {
   // ページスタイル設定
   backgroundColor?: string;  // ページ背景色
   textColor?: string;        // ページテキストカラー
+  showPanel?: boolean;       // パネル表示（デフォルト: true）
+  panelColor?: string;       // パネルカラー（showPanel=trueの時のみ）
 }
 
