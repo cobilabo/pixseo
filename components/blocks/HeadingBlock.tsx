@@ -17,12 +17,6 @@ export default function HeadingBlock({ block }: HeadingBlockProps) {
     right: 'text-right',
   };
   
-  const fontSizeClasses = {
-    small: 'text-xl',
-    medium: 'text-2xl',
-    large: 'text-3xl',
-  };
-  
   const fontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
@@ -30,17 +24,20 @@ export default function HeadingBlock({ block }: HeadingBlockProps) {
 
   // IDがある場合はページ内リンク用のID属性を追加
   const headingId = config.id || undefined;
+  
+  // フォントサイズをremで指定（デフォルト: 1rem）
+  const fontSize = config.fontSize || 1;
 
   return (
     <h2
       id={headingId}
       className={`
         ${alignmentClasses[config.alignment || 'left']}
-        ${fontSizeClasses[config.fontSize || 'medium']}
         ${fontWeightClasses[config.fontWeight || 'bold']}
         mb-4
       `}
       style={{
+        fontSize: `${fontSize}rem`,
         color: config.textColor || undefined,
       }}
     >

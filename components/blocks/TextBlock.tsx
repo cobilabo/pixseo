@@ -17,16 +17,13 @@ export default function TextBlock({ block }: TextBlockProps) {
     right: 'text-right',
   };
   
-  const fontSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg',
-  };
-  
   const fontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
   };
+
+  // フォントサイズをremで指定（デフォルト: 1rem）
+  const fontSize = config.fontSize || 1;
 
   return (
     <div
@@ -34,10 +31,10 @@ export default function TextBlock({ block }: TextBlockProps) {
         prose prose-lg max-w-none
         whitespace-pre-wrap
         ${alignmentClasses[config.alignment || 'left']}
-        ${fontSizeClasses[config.fontSize || 'medium']}
         ${fontWeightClasses[config.fontWeight || 'normal']}
       `}
       style={{
+        fontSize: `${fontSize}rem`,
         color: config.textColor || undefined,
         whiteSpace: 'pre-wrap',
       }}
