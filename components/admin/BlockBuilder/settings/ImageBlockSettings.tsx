@@ -71,13 +71,14 @@ export default function ImageBlockSettings({ block, onUpdate }: ImageBlockSettin
       <FloatingSelect
         label="フィルタータイプ"
         value={config.filterType || 'none'}
-        onChange={(value) => updateConfig({ filterType: value as 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' })}
+        onChange={(value) => updateConfig({ filterType: value as 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction' })}
         options={[
           { value: 'none', label: 'なし' },
           { value: 'full', label: '全面フィルタ' },
           { value: 'top', label: '上部グラデーションフィルタ' },
           { value: 'bottom', label: '下部グラデーションフィルタ' },
           { value: 'top-bottom', label: '上下グラデーションフィルタ' },
+          { value: 'all-direction', label: '全方位グラデーションフィルタ' },
         ]}
       />
 

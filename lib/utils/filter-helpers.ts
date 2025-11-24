@@ -26,7 +26,7 @@ function hexToRgba(hex: string, alpha: number): string {
  * フィルタースタイルを生成
  */
 export function getFilterStyle(
-  filterType: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | undefined,
+  filterType: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction' | undefined,
   filterColor: string | undefined,
   filterOpacity: number | undefined
 ): React.CSSProperties | null {
@@ -91,6 +91,16 @@ export function getFilterStyle(
       return {
         ...baseStyle,
         background: `linear-gradient(to bottom, ${rgbaFull} 0%, ${rgbaWithOpacity} 30%, ${rgbaWithOpacity} 70%, ${rgbaFull} 100%)`,
+      };
+      
+    case 'all-direction':
+      // 全方位グラデーションフィルタ
+      // 中心から外側に向かってグラデーション
+      // 中心（0%）: 設定透明度
+      // 外側（100%）: 完全な色
+      return {
+        ...baseStyle,
+        background: `radial-gradient(ellipse at center, ${rgbaWithOpacity} 0%, ${rgbaWithOpacity} 30%, ${rgbaFull} 100%)`,
       };
       
     default:

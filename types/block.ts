@@ -32,7 +32,7 @@ export interface ImageBlockConfig {
   alignment?: 'left' | 'center' | 'right';
   link?: string;            // クリック時のリンク先
   imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom';  // フィルタータイプ
+  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
   filterColor?: string;     // フィルターカラー（例: #000000）
   filterOpacity?: number;   // フィルター透明度（0-100）
 }
@@ -59,7 +59,7 @@ export interface CTABlockConfig {
   imageAlt?: string;        // 画像alt
   imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
   imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom';  // フィルタータイプ
+  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
   filterColor?: string;     // フィルターカラー（例: #000000）
   filterOpacity?: number;   // フィルター透明度（0-100）
   heading?: string;         // 見出し
@@ -102,7 +102,7 @@ export interface ImageTextBlockConfig {
   imageAlt: string;
   imagePosition: 'left' | 'right' | 'background';  // 画像の位置
   imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom';  // フィルタータイプ
+  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
   filterColor?: string;     // フィルターカラー（例: #000000）
   filterOpacity?: number;   // フィルター透明度（0-100）
   heading: string;                  // 見出し
