@@ -231,7 +231,6 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
       {config.heading && (
         <h3
           className={`
-            ${headingFontSizeClasses[config.headingFontSize || 'medium']}
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
             mb-4 whitespace-pre-wrap
           `}
@@ -246,7 +245,6 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
       {config.description && (
         <p
           className={`
-            ${textFontSizeClasses[config.textFontSize || 'medium']}
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
             mb-6 max-w-2xl mx-auto whitespace-pre-wrap
           `}
@@ -274,10 +272,11 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
                   transition-all
                   hover:scale-105
                   shadow-md
-                  ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                  px-6 py-3
                   ${buttonFontWeightClasses[button.fontWeight || 'normal']}
                 `}
                 style={{
+                  fontSize: `${button.fontSize || 1}rem`,
                   backgroundColor: button.buttonColor || '#3b82f6',
                   color: button.textColor || '#ffffff',
                 }}

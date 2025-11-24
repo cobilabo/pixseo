@@ -37,7 +37,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
         text: '', 
         url: '', 
         buttonColor: '', 
-        fontSize: 'medium' as 'medium', 
+        fontSize: 1, 
         fontWeight: 'normal' as 'normal', 
         textColor: '', 
         openInNewTab: false 

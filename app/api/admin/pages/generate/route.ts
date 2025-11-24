@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
           config: {
             content: htmlContent,
             alignment: 'left',
-            fontSize: 'medium',
+            fontSize: 1,
             fontWeight: 'normal',
           },
         });
@@ -172,11 +172,11 @@ export async function POST(request: NextRequest) {
             imageAlt: '',
             imagePosition: 'background',
             heading: blockSpec.content || '見出し',
-            headingFontSize: 'medium',
+            headingFontSize: 1,
             headingFontWeight: 'normal',
             headingTextColor: '',
             description: '',
-            textFontSize: 'medium',
+            textFontSize: 1,
             textFontWeight: 'normal',
             textColor: '',
             buttons: [
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
                 text: 'ボタン',
                 url: '#',
                 buttonColor: '',
-                fontSize: 'medium',
+                fontSize: 1,
                 fontWeight: 'normal',
                 textColor: '',
                 openInNewTab: false,
