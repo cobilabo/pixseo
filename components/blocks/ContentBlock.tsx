@@ -12,6 +12,7 @@ import { headers } from 'next/headers';
 interface ContentBlockProps {
   block: Block;
   showPanel?: boolean;
+  isMobile?: boolean;
 }
 
 interface Writer {
@@ -36,7 +37,7 @@ async function getWriter(writerId: string): Promise<Writer | null> {
   }
 }
 
-export default async function ContentBlock({ block, showPanel = true }: ContentBlockProps) {
+export default async function ContentBlock({ block, showPanel = true, isMobile = false }: ContentBlockProps) {
   const config = block.config as ContentBlockConfig;
   
   // パネルOFFの場合は画面幅いっぱいにする
@@ -46,11 +47,11 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
     marginRight: 'calc(50% - 50vw)',
   } : {};
   
-  // 配置クラス
+  // 配置クラス（SP時は強制的に中央配置）
   const alignmentClasses = {
-    left: 'text-left',
+    left: isMobile ? 'text-center' : 'text-left',
     center: 'text-center',
-    right: 'text-right',
+    right: isMobile ? 'text-center' : 'text-right',
   };
   
   const headingFontWeightClasses = {

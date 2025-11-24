@@ -123,11 +123,19 @@ export default async function FixedPage({ params }: PageProps) {
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
+  // 言語に応じたカスタムCSSを取得
+  const customCss = rawPage[`customCss_${lang}`] || rawPage.customCss || '';
+
+  // モバイル判定（user-agentから）
+  const headersList = headers();
+  const userAgent = headersList.get('user-agent') || '';
+  const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
-      {rawPage.customCss && (
-        <style dangerouslySetInnerHTML={{ __html: rawPage.customCss }} />
+      {customCss && (
+        <style dangerouslySetInnerHTML={{ __html: customCss }} />
       )}
 
       <MediaHeader
@@ -160,7 +168,7 @@ export default async function FixedPage({ params }: PageProps) {
           
           {/* ブロックビルダー使用時はBlockRendererで表示 */}
           {rawPage.useBlockBuilder && rawPage.blocks ? (
-            <BlockRenderer blocks={rawPage.blocks} showPanel={rawPage.showPanel !== false} />
+            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} />
           ) : (
             <div 
               className="prose prose-lg max-w-none"

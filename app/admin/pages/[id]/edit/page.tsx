@@ -185,6 +185,45 @@ export default function EditPagePage() {
         // 後方互換性のため、contentも生成して保存
         content: '<!-- Block Builder Content -->',
       };
+
+      // カスタムCSSが入力されている場合は翻訳
+      if (formData.customCss && formData.customCss.trim()) {
+        try {
+          const currentTenantId = typeof window !== 'undefined' 
+            ? localStorage.getItem('currentTenantId') 
+            : null;
+
+          // 各言語に翻訳（CSS内のコメントなどを翻訳）
+          const targetLangs = ['ja', 'en', 'zh', 'ko'];
+          for (const lang of targetLangs) {
+            const response = await fetch('/api/admin/translate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-media-id': currentTenantId || '',
+              },
+              body: JSON.stringify({
+                type: 'text',
+                targetLang: lang,
+                data: { text: formData.customCss },
+                context: 'CSS code (translate only comments, keep selectors and properties as-is)',
+              }),
+            });
+
+            if (response.ok) {
+              const { translated } = await response.json();
+              updateData[`customCss_${lang}`] = translated;
+            }
+          }
+        } catch (error) {
+          console.error('CSS translation error:', error);
+          // 翻訳失敗時は元のCSSを使用
+          updateData.customCss_ja = formData.customCss;
+          updateData.customCss_en = formData.customCss;
+          updateData.customCss_zh = formData.customCss;
+          updateData.customCss_ko = formData.customCss;
+        }
+      }
       
       await updatePage(pageId, updateData);
       

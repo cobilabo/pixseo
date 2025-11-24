@@ -51,5 +51,9 @@ export interface Page {
   showPanel?: boolean;       // パネル表示（デフォルト: true）
   panelColor?: string;       // パネルカラー（showPanel=trueの時のみ）
   customCss?: string;        // カスタムCSS（最優先で読み込まれる）
+  customCss_ja?: string;     // カスタムCSS（日本語）
+  customCss_en?: string;     // カスタムCSS（英語）
+  customCss_zh?: string;     // カスタムCSS（中国語）
+  customCss_ko?: string;     // カスタムCSS（韓国語）
 }
 

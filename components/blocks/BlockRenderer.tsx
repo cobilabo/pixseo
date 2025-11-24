@@ -55,7 +55,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             blockContent = <SpacerBlock block={block} />;
             break;
           case 'content':
-            blockContent = <ContentBlock block={block} showPanel={showPanel} />;
+            blockContent = <ContentBlock block={block} showPanel={showPanel} isMobile={isMobile} />;
             break;
           default:
             blockContent = null;
