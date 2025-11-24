@@ -11,6 +11,7 @@ interface FloatingInputProps {
   multiline?: boolean;
   disabled?: boolean;
   list?: string; // datalist の id
+  step?: string; // number型の入力で小数点を許可する場合など
 }
 
 export default function FloatingInput({
@@ -24,6 +25,7 @@ export default function FloatingInput({
   multiline = false,
   disabled = false,
   list,
+  step,
 }: FloatingInputProps) {
   const hasValue = value.length > 0;
 
@@ -65,6 +67,7 @@ export default function FloatingInput({
         required={required}
         disabled={disabled}
         list={list}
+        step={step}
         className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 peer ${
           disabled ? 'bg-white text-gray-400 cursor-not-allowed' : 'text-gray-900'
         }`}
