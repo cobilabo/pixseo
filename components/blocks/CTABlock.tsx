@@ -60,7 +60,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
 
   // ボタンレンダリング関数
   const renderButton = (button: CTAButtonConfig, index: number) => {
-    const isExternal = button.url?.startsWith('http');
+    const isExternal = button.url ? button.url.startsWith('http') : false;
     
     // テキストボタン（デフォルト）
     if (!button.type || button.type === 'text') {
@@ -112,23 +112,13 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           rel={isExternal ? 'noopener noreferrer' : undefined}
           className="inline-block transition-all hover:scale-105"
         >
-          <div className="relative" style={{ width: '200px', height: '60px' }}>
-            <Image
-              src={button.imageUrl}
-              alt={button.imageAlt || 'ボタン画像'}
-              fill
-              className="object-contain"
-              onError={(e) => {
-                console.error('画像の読み込みに失敗:', button.imageUrl);
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const errorDiv = target.parentElement;
-                if (errorDiv) {
-                  errorDiv.innerHTML = '<div class="flex items-center justify-center w-full h-full border border-red-300 bg-red-50 text-red-600 text-xs rounded">画像読込失敗</div>';
-                }
-              }}
-            />
-          </div>
+          <Image
+            src={button.imageUrl}
+            alt={button.imageAlt || 'ボタン画像'}
+            width={200}
+            height={60}
+            className="object-contain"
+          />
         </Link>
       );
     }
