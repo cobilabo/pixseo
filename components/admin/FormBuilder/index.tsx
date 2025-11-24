@@ -67,6 +67,40 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
+    // パレットからのドラッグの場合（typeが存在）
+    const type = active.data.current?.type as FormFieldType | undefined;
+    if (type) {
+      // 新しいフィールドを作成
+      const newField = {
+        id: uuidv4(),
+        type,
+        label: getDefaultLabel(type),
+        required: false,
+        order: fields.length,
+        config: getDefaultConfig(type),
+      };
+      
+      if (over && over.id !== 'canvas-drop-area') {
+        // 既存フィールドの位置に挿入
+        const overIndex = fields.findIndex(f => f.id === over.id);
+        const newFields = [...fields];
+        newFields.splice(overIndex, 0, newField);
+        
+        // orderを再計算
+        const reorderedFields = newFields.map((f, index) => ({ ...f, order: index }));
+        onChange(reorderedFields);
+        setSelectedFieldId(newField.id);
+      } else {
+        // 最後に追加
+        onChange([...fields, newField]);
+        setSelectedFieldId(newField.id);
+      }
+      
+      setActiveId(null);
+      return;
+    }
+    
+    // 既存フィールドの並び替え
     if (over && active.id !== over.id) {
       const oldIndex = fields.findIndex(f => f.id === active.id);
       const newIndex = fields.findIndex(f => f.id === over.id);
@@ -83,48 +117,57 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
   };
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-200px)]">
-      {/* 左サイドバー: フィールドパレット */}
-      <div className="w-64 flex-shrink-0">
-        <FormFieldPalette onAddField={handleAddField} />
-      </div>
-
-      {/* 中央: キャンバス */}
-      <div className="flex-1 overflow-y-auto">
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-            <FormBuilderCanvas
-              fields={fields}
-              selectedFieldId={selectedFieldId}
-              onSelectField={setSelectedFieldId}
-              onDeleteField={handleDeleteField}
-            />
-          </SortableContext>
-          <DragOverlay>
-            {activeId ? (
-              <div className="bg-white border-2 border-blue-500 rounded-lg p-4 shadow-lg opacity-50">
-                ドラッグ中...
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="relative">
+        {/* 左右を1つのパネルに統合 */}
+        <div className="bg-white">
+          <div className="flex h-[calc(100vh-300px)]">
+            {/* 左パネル: フィールドパレット（50%） */}
+            <div className="w-1/2 relative border-r border-gray-200">
+              <div className="absolute inset-0 overflow-y-auto pr-6">
+                <FormFieldPalette onAddField={handleAddField} />
               </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+              
+              {/* フィールド設定（左パネルに重ねる） */}
+              {selectedField && (
+                <div className="absolute inset-0 z-10 bg-white">
+                  <FormFieldSettings
+                    field={selectedField}
+                    onUpdate={(updates) => handleUpdateField(selectedField.id, updates)}
+                    onClose={() => setSelectedFieldId(null)}
+                    onDelete={() => handleDeleteField(selectedField.id)}
+                  />
+                </div>
+              )}
+            </div>
 
-      {/* 右サイドバー: フィールド設定 */}
-      {selectedField && (
-        <div className="w-80 flex-shrink-0">
-          <FormFieldSettings
-            field={selectedField}
-            onUpdate={(updates) => handleUpdateField(selectedField.id, updates)}
-            onClose={() => setSelectedFieldId(null)}
-          />
+            {/* 右パネル: キャンバス（50%） */}
+            <div className="w-1/2 overflow-y-auto pl-6">
+              <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                <FormBuilderCanvas
+                  fields={fields}
+                  selectedFieldId={selectedFieldId}
+                  onSelectField={setSelectedFieldId}
+                  onDeleteField={handleDeleteField}
+                />
+              </SortableContext>
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+      
+      <DragOverlay>
+        {activeId ? (
+          <div className="bg-white border-2 border-blue-500 rounded-lg p-4 shadow-lg opacity-50">
+            ドラッグ中...
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
 

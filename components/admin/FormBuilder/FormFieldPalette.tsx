@@ -6,6 +6,7 @@
  */
 
 import { FormFieldType } from '@/types/block';
+import { useDraggable } from '@dnd-kit/core';
 
 interface FormFieldPaletteProps {
   onAddField: (type: FormFieldType) => void;
@@ -86,37 +87,49 @@ const fieldTypes = [
   },
 ];
 
+function DraggableFieldType({ fieldType }: { fieldType: typeof fieldTypes[0] }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${fieldType.type}`,
+    data: { type: fieldType.type },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`w-full text-left p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group cursor-move ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {/* ドラッグハンドル */}
+        <div className="flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zM13 3h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
+          </svg>
+        </div>
+        
+        <span className="text-xl flex-shrink-0">{fieldType.icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-gray-900 group-hover:text-blue-600">
+            {fieldType.label}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {fieldType.description}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FormFieldPalette({ onAddField }: FormFieldPaletteProps) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md h-full overflow-y-auto">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">フィールド</h3>
-      <div className="space-y-2">
-        {fieldTypes.map((fieldType) => (
-          <button
-            key={fieldType.type}
-            onClick={() => onAddField(fieldType.type)}
-            className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{fieldType.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 group-hover:text-blue-600 text-sm">
-                  {fieldType.label}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {fieldType.description}
-                </div>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-xs text-blue-800">
-          💡 フィールドをクリックして追加できます
-        </p>
-      </div>
+    <div className="space-y-2">
+      {fieldTypes.map((fieldType) => (
+        <DraggableFieldType key={fieldType.type} fieldType={fieldType} />
+      ))}
     </div>
   );
 }
