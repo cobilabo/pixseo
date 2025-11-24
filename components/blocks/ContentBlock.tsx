@@ -20,19 +20,13 @@ interface Writer {
   icon?: string;
 }
 
-async function getWriterByHandleName(handleName: string): Promise<Writer | null> {
+async function getWriter(writerId: string): Promise<Writer | null> {
   try {
-    const snapshot = await adminDb.collection('writers')
-      .where('handleName', '==', handleName)
-      .limit(1)
-      .get();
-    
-    if (snapshot.empty) return null;
-    
-    const doc = snapshot.docs[0];
+    const doc = await adminDb.collection('writers').doc(writerId).get();
+    if (!doc.exists) return null;
     const data = doc.data();
-    return {
-      id: doc.id,
+    return { 
+      id: doc.id, 
       handleName: data?.handleName || '',
       icon: data?.icon,
     } as Writer;
@@ -100,7 +94,7 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
   if (config.showWriters && config.writers && config.writers.length > 0) {
     const writersData = await Promise.all(
       config.writers.map(async (w) => {
-        const writer = await getWriterByHandleName(w.handleName);
+        const writer = await getWriter(w.writerId);
         if (!writer) return null;
         return {
           ...writer,

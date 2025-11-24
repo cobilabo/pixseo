@@ -205,66 +205,6 @@ export default BlockBuilder;
 // ブロックタイプごとのデフォルト設定
 function getDefaultConfig(type: BlockType): any {
   switch (type) {
-    case 'heading':
-      return {
-        content: '見出しを入力してください',
-        id: '',
-        fontSize: 1,
-        fontWeight: 'bold',
-      };
-    case 'text':
-      return {
-        content: 'テキストを入力してください',
-        alignment: 'left',
-        fontSize: 1,
-        fontWeight: 'normal',
-      };
-    case 'image':
-      return {
-        imageUrl: '',
-        alt: '',
-        alignment: 'center',
-        width: 100,
-      };
-    case 'imageText':
-      return {
-        imageUrl: '',
-        imageAlt: '',
-        imagePosition: 'left',
-        heading: '見出しを入力してください',
-        headingFontSize: 1,
-        headingFontWeight: 'bold',
-        text: 'テキストを入力してください',
-        textFontSize: 1,
-        textFontWeight: 'normal',
-      };
-    case 'cta':
-      return {
-        imageUrl: '',
-        imageAlt: '',
-        imagePosition: 'background',
-        heading: '見出し',
-        headingFontSize: 1,
-        headingFontWeight: 'normal',
-        headingTextColor: '',
-        description: 'テキストを入力してください',
-        textFontSize: 1,
-        textFontWeight: 'normal',
-        textColor: '',
-        buttons: [
-          {
-            type: 'text',
-            text: 'ボタンテキスト',
-            url: '',
-            buttonColor: '',
-            fontSize: 1,
-            fontWeight: 'normal',
-            textColor: '',
-            openInNewTab: false,
-          },
-        ],
-        buttonLayout: 'horizontal',
-      };
     case 'form':
       return {
         formId: '',
@@ -273,11 +213,6 @@ function getDefaultConfig(type: BlockType): any {
     case 'html':
       return {
         html: '<div>HTMLを入力してください</div>',
-      };
-    case 'writer':
-      return {
-        layout: 'horizontal',
-        writers: [],
       };
     case 'spacer':
       return {

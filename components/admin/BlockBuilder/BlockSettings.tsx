@@ -6,14 +6,8 @@
  */
 
 import { Block } from '@/types/block';
-import HeadingBlockSettings from './settings/HeadingBlockSettings';
-import TextBlockSettings from './settings/TextBlockSettings';
-import ImageBlockSettings from './settings/ImageBlockSettings';
-import ImageTextBlockSettings from './settings/ImageTextBlockSettings';
-import CTABlockSettings from './settings/CTABlockSettings';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
-import WriterBlockSettings from './settings/WriterBlockSettings';
 import SpacerBlockSettings from './settings/SpacerBlockSettings';
 import SpacingSettings from './settings/SpacingSettings';
 import ContentBlockSettings from './settings/ContentBlockSettings';
@@ -28,14 +22,8 @@ interface BlockSettingsProps {
 export default function BlockSettings({ block, onUpdate, onClose, onDelete }: BlockSettingsProps) {
   const blockTypeLabels: Record<string, string> = {
     content: 'セクションブロック',
-    heading: '見出しブロック（非推奨）',
-    text: 'テキストブロック（非推奨）',
-    image: '画像ブロック（非推奨）',
-    imageText: '画像&テキストブロック（非推奨）',
-    cta: 'CTAブロック（非推奨）',
     form: 'フォームブロック',
     html: 'HTMLブロック',
-    writer: 'ライターブロック',
     spacer: '空白ブロック',
   };
 
@@ -43,29 +31,11 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     <div className="h-full flex flex-col">
       {/* 設定フォーム */}
       <div className="flex-1 overflow-y-auto pr-6 pt-2">
-        {block.type === 'heading' && (
-          <HeadingBlockSettings block={block} onUpdate={onUpdate} />
-        )}
-        {block.type === 'text' && (
-          <TextBlockSettings block={block} onUpdate={onUpdate} />
-        )}
-        {block.type === 'image' && (
-          <ImageBlockSettings block={block} onUpdate={onUpdate} />
-        )}
-        {block.type === 'imageText' && (
-          <ImageTextBlockSettings block={block} onUpdate={onUpdate} />
-        )}
-        {block.type === 'cta' && (
-          <CTABlockSettings block={block} onUpdate={onUpdate} />
-        )}
         {block.type === 'form' && (
           <FormBlockSettings block={block} onUpdate={onUpdate} />
         )}
         {block.type === 'html' && (
           <HTMLBlockSettings block={block} onUpdate={onUpdate} />
-        )}
-        {block.type === 'writer' && (
-          <WriterBlockSettings block={block} onUpdate={onUpdate} />
         )}
         {block.type === 'spacer' && (
           <SpacerBlockSettings block={block} onUpdate={onUpdate} />

@@ -4,14 +4,8 @@
  */
 
 import { Block } from '@/types/block';
-import HeadingBlock from './HeadingBlock';
-import TextBlock from './TextBlock';
-import ImageBlock from './ImageBlock';
-import ImageTextBlock from './ImageTextBlock';
-import CTABlock from './CTABlock';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
-import WriterBlock from './WriterBlock';
 import SpacerBlock from './SpacerBlock';
 import ContentBlock from './ContentBlock';
 
@@ -51,29 +45,11 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
 
         let blockContent;
         switch (block.type) {
-          case 'heading':
-            blockContent = <HeadingBlock block={block} />;
-            break;
-          case 'text':
-            blockContent = <TextBlock block={block} />;
-            break;
-          case 'image':
-            blockContent = <ImageBlock block={block} showPanel={showPanel} />;
-            break;
-          case 'imageText':
-            blockContent = <ImageTextBlock block={block} showPanel={showPanel} />;
-            break;
-          case 'cta':
-            blockContent = <CTABlock block={block} showPanel={showPanel} />;
-            break;
           case 'form':
             blockContent = <FormBlock block={block} />;
             break;
           case 'html':
             blockContent = <HTMLBlock block={block} />;
-            break;
-          case 'writer':
-            blockContent = <WriterBlock block={block} />;
             break;
           case 'spacer':
             blockContent = <SpacerBlock block={block} />;

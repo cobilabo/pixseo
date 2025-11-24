@@ -428,17 +428,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
             {/* ライター追加 */}
             <div className="space-y-2">
               {(config.writers || []).map((writer, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-4">
+                <div key={index} className="p-4 border border-gray-300 rounded-lg space-y-4">
                   <FloatingSelect
                     label="ライター"
-                    value={writer.handleName || ''}
+                    value={writer.writerId || ''}
                     onChange={(value) => {
                       const newWriters = [...(config.writers || [])];
-                      newWriters[index] = { ...newWriters[index], handleName: value };
+                      newWriters[index] = { ...newWriters[index], writerId: value };
                       updateConfig({ writers: newWriters });
                     }}
                     options={availableWriters.map(w => ({
-                      value: w.handleName,
+                      value: w.id,
                       label: w.handleName,
                     }))}
                   />
@@ -473,7 +473,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
               <button
                 type="button"
                 onClick={() => {
-                  const newWriters = [...(config.writers || []), { handleName: '', jobTitle: '' }];
+                  const newWriters = [...(config.writers || []), { writerId: '', jobTitle: '' }];
                   updateConfig({ writers: newWriters });
                 }}
                 className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"

@@ -92,14 +92,8 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
     content: { label: 'セクションブロック', icon: '/dashboard.svg' },
-    heading: { label: '見出し（非推奨）', icon: '/text.svg' },
-    text: { label: 'テキスト（非推奨）', icon: '/textfield.svg' },
-    image: { label: '画像（非推奨）', icon: '/image.svg' },
-    imageText: { label: '画像&テキスト（非推奨）', icon: '/imagetext.svg' },
-    cta: { label: 'CTA（非推奨）', icon: '/cta.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
-    writer: { label: 'ライター', icon: '/writer.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
   };
 
@@ -184,34 +178,11 @@ function BlockPreview({ block }: { block: Block }) {
       const elementsText = elements.length > 0 ? elements.join('＋') : '要素なし';
       
       return <span>{sectionId} ({elementsText})</span>;
-    case 'heading':
-      const headingConfig = block.config as any;
-      return <span>{headingConfig.content}</span>;
-    case 'text':
-      const textConfig = block.config as any;
-      return <div className="line-clamp-2">{textConfig.content}</div>;
-    case 'image':
-      const imageConfig = block.config as any;
-      return <span>{imageConfig.alt || '画像（alt未設定）'}</span>;
-    case 'imageText':
-      const imageTextConfig = block.config as any;
-      const positionLabel = imageTextConfig.imagePosition === 'background' ? '背景' : (imageTextConfig.imagePosition === 'left' ? '画像左' : '画像右');
-      return <span>{imageTextConfig.heading} - {positionLabel}</span>;
-    case 'cta':
-      const ctaConfig = block.config as any;
-      const buttonCount = (ctaConfig.buttons || []).length;
-      const buttonText = buttonCount > 0 ? ctaConfig.buttons[0].text : 'ボタン';
-      return <span>{ctaConfig.heading || '見出し'} - ボタン×{buttonCount} - {ctaConfig.buttonLayout || 'horizontal'}</span>;
     case 'form':
       const formConfig = block.config as any;
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;
     case 'html':
       return <span>カスタムHTML</span>;
-    case 'writer':
-      const writerConfig = block.config as any;
-      const writerCount = (writerConfig.writers || []).length;
-      const layoutLabel = writerConfig.layout === 'vertical' ? '縦並び' : '横並び';
-      return <span>ライター×{writerCount} - {layoutLabel}</span>;
     case 'spacer':
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;

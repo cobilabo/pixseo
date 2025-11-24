@@ -4,39 +4,10 @@
 
 // ブロックの基本タイプ
 export type BlockType = 
-  | 'text'      // テキスト表示（非推奨 - contentを使用）
-  | 'image'     // 画像表示（非推奨 - contentを使用）
-  | 'cta'       // CTA（非推奨 - contentを使用）
   | 'form'      // フォーム埋め込み
   | 'html'      // カスタムHTML
-  | 'heading'   // 見出し（非推奨 - contentを使用）
-  | 'imageText' // 画像&テキスト（非推奨 - contentを使用）
-  | 'writer'    // ライター表示
   | 'spacer'    // 空白
-  | 'content';  // コンテンツブロック（統合ブロック）
-
-// テキストブロックの設定
-export interface TextBlockConfig {
-  content: string;           // HTML形式のテキスト
-  alignment?: 'left' | 'center' | 'right';
-  fontSize?: number;         // フォントサイズ（rem）
-  fontWeight?: 'normal' | 'bold';
-  textColor?: string;        // テキストカラー
-}
-
-// 画像ブロックの設定
-export interface ImageBlockConfig {
-  imageUrl: string;
-  alt: string;
-  caption?: string;
-  width?: number;           // %指定
-  alignment?: 'left' | 'center' | 'right' | 'center-fit';  // center-fit: 高さ基準でアスペクト比維持して中央配置
-  link?: string;            // クリック時のリンク先
-  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
-  filterColor?: string;     // フィルターカラー（例: #000000）
-  filterOpacity?: number;   // フィルター透明度（0-100）
-}
+  | 'content';  // セクションブロック（統合ブロック）
 
 // CTAボタンの設定
 export interface CTAButtonConfig {
@@ -56,29 +27,7 @@ export interface CTAButtonConfig {
   imageHeight?: number;     // 画像高さ（px）※空欄可
 }
 
-// CTAブロックの設定（非推奨 - ContentBlockConfigを使用）
-export interface CTABlockConfig {
-  imageUrl?: string;        // 背景画像URL
-  imageAlt?: string;        // 画像alt
-  imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
-  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
-  filterColor?: string;     // フィルターカラー（例: #000000）
-  filterOpacity?: number;   // フィルター透明度（0-100）
-  heading?: string;         // 見出し
-  headingFontSize?: number; // 見出しフォントサイズ（rem）
-  headingFontWeight?: 'normal' | 'bold';
-  headingTextColor?: string;
-  description?: string;     // 説明文
-  textFontSize?: number;    // テキストフォントサイズ（rem）
-  textFontWeight?: 'normal' | 'bold';
-  textColor?: string;
-  // ボタン設定（最大4つ）
-  buttons: Array<CTAButtonConfig>;
-  buttonLayout?: 'horizontal' | '2x2' | 'vertical';  // ボタン配置
-}
-
-// コンテンツブロックの設定（統合ブロック）
+// セクションブロックの設定（統合ブロック）
 export interface ContentBlockConfig {
   // セクションID（ページ内リンク用）
   sectionId?: string;
@@ -115,7 +64,7 @@ export interface ContentBlockConfig {
   textAlignment?: 'left' | 'center' | 'right';  // 配置
   
   // ライター設定
-  writers?: Array<{ handleName: string; jobTitle?: string; }>;
+  writers?: Array<{ writerId: string; jobTitle?: string; }>;
   writerLayout?: 'horizontal' | 'vertical';
   writerNameColor?: string;
   jobTitleColor?: string;
@@ -140,51 +89,6 @@ export interface HTMLBlockConfig {
   html: string;             // カスタムHTML
 }
 
-// 見出しブロックの設定
-export interface HeadingBlockConfig {
-  content: string;          // 見出しテキスト
-  id?: string;              // ページ内リンク用のID
-  alignment?: 'left' | 'center' | 'right';
-  fontSize?: number;        // フォントサイズ（rem）
-  fontWeight?: 'normal' | 'bold';
-  textColor?: string;       // テキストカラー
-}
-
-// 画像&テキストブロックの設定
-export interface ImageTextBlockConfig {
-  imageUrl: string;
-  imageAlt: string;
-  imagePosition: 'left' | 'right' | 'background';  // 画像の位置
-  imageHeight?: number;     // 画像の高さ（px）、未指定なら100%（auto）
-  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';  // フィルタータイプ
-  filterColor?: string;     // フィルターカラー（例: #000000）
-  filterOpacity?: number;   // フィルター透明度（0-100）
-  heading: string;                  // 見出し
-  headingFontSize?: number;         // 見出しフォントサイズ（rem）
-  headingFontWeight?: 'normal' | 'bold';
-  headingTextColor?: string;
-  text: string;                     // テキスト
-  textFontSize?: number;            // テキストフォントサイズ（rem）
-  textFontWeight?: 'normal' | 'bold';
-  textColor?: string;
-}
-
-// ライターブロックの設定
-export interface WriterBlockConfig {
-  layout: 'vertical' | 'horizontal';  // 縦並び or 横並び
-  writers: Array<{
-    writerId: string;  // ライターID
-    jobTitle: string;  // 肩書き
-  }>;
-  // 共通スタイル設定
-  writerNameColor?: string;       // ライター名の色
-  jobTitleColor?: string;         // 肩書きテキストの色
-  buttonText?: string;            // ボタンテキスト（デフォルト: VIEW MORE）
-  buttonTextColor?: string;       // ボタンテキストの色
-  buttonBackgroundColor?: string; // ボタン背景の色
-  buttonBorderColor?: string;     // ボタン枠線の色
-}
-
 // 空白ブロックの設定
 export interface SpacerBlockConfig {
   height: number;  // 高さ（px）
@@ -195,7 +99,7 @@ export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig | SpacerBlockConfig | ContentBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig;
   
   // 余白設定（共通）
   spacing?: {
