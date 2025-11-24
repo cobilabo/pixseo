@@ -11,6 +11,7 @@ import ImageTextBlock from './ImageTextBlock';
 import CTABlock from './CTABlock';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
+import WriterBlock from './WriterBlock';
 
 interface BlockRendererProps {
   blocks: Block[];
@@ -52,6 +53,8 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             return <FormBlock key={block.id} block={block} />;
           case 'html':
             return <HTMLBlock key={block.id} block={block} />;
+          case 'writer':
+            return <WriterBlock key={block.id} block={block} />;
           default:
             return null;
         }

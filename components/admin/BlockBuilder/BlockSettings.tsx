@@ -13,6 +13,7 @@ import ImageTextBlockSettings from './settings/ImageTextBlockSettings';
 import CTABlockSettings from './settings/CTABlockSettings';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
+import WriterBlockSettings from './settings/WriterBlockSettings';
 
 interface BlockSettingsProps {
   block: Block;
@@ -30,6 +31,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     cta: 'CTAブロック',
     form: 'フォームブロック',
     html: 'HTMLブロック',
+    writer: 'ライターブロック',
   };
 
   return (
@@ -56,6 +58,9 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'html' && (
           <HTMLBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'writer' && (
+          <WriterBlockSettings block={block} onUpdate={onUpdate} />
         )}
       </div>
 

@@ -267,6 +267,11 @@ function getDefaultConfig(type: BlockType): any {
       return {
         html: '<div>HTMLを入力してください</div>',
       };
+    case 'writer':
+      return {
+        layout: 'horizontal',
+        writers: [],
+      };
     default:
       return {};
   }

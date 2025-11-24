@@ -10,7 +10,8 @@ export type BlockType =
   | 'form'      // フォーム埋め込み
   | 'html'      // カスタムHTML
   | 'heading'   // 見出し（H2）
-  | 'imageText'; // 画像&テキスト（2カラム）
+  | 'imageText' // 画像&テキスト（2カラム）
+  | 'writer';   // ライター表示
 
 // テキストブロックの設定
 export interface TextBlockConfig {
@@ -102,12 +103,21 @@ export interface ImageTextBlockConfig {
   textColor?: string;
 }
 
+// ライターブロックの設定
+export interface WriterBlockConfig {
+  layout: 'vertical' | 'horizontal';  // 縦並び or 横並び
+  writers: Array<{
+    writerId: string;  // ライターID
+    jobTitle: string;  // 肩書き
+  }>;
+}
+
 // ブロックの共通インターフェース
 export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig;
+  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig;
   
   // レスポンシブ設定（将来の拡張用）
   showOnMobile?: boolean;

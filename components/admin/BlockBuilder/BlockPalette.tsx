@@ -56,6 +56,12 @@ const blockTypes = [
     icon: '/html.svg',
     description: 'カスタムHTMLを追加',
   },
+  {
+    type: 'writer' as BlockType,
+    label: 'ライター',
+    icon: '/writer.svg',
+    description: 'ライターを正円で表示',
+  },
 ];
 
 function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) {
