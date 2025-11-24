@@ -16,8 +16,13 @@ interface WriterBlockSettingsProps {
 
 interface Writer {
   id: string;
-  name: string;
+  handleName: string;
   icon?: string;
+  iconAlt?: string;
+  backgroundImage?: string;
+  backgroundImageAlt?: string;
+  bio?: string;
+  mediaId: string;
 }
 
 export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSettingsProps) {
@@ -108,7 +113,7 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
             label="ライター"
             value={writer.writerId || ''}
             onChange={(value) => updateWriter(index, { writerId: value })}
-            options={availableWriters.map(w => ({ value: w.id, label: w.name }))}
+            options={availableWriters.map(w => ({ value: w.id, label: w.handleName }))}
             required
           />
 
