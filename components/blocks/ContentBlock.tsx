@@ -45,6 +45,19 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
   const description = (config as any)[`description_${lang}`] || config.description || '';
   const buttonText = (config as any)[`buttonText_${lang}`] || config.buttonText || 'VIEW MORE';
   
+  // デバッグログ
+  if (config.heading) {
+    console.log('ContentBlock Debug:', {
+      lang,
+      heading_original: config.heading,
+      heading_localized: (config as any)[`heading_${lang}`],
+      heading_final: heading,
+      description_original: config.description,
+      description_localized: (config as any)[`description_${lang}`],
+      description_final: description,
+    });
+  }
+  
   // パネルOFFの場合は画面幅いっぱいにする
   const fullWidthStyle = !showPanel ? {
     width: '100vw',

@@ -22,25 +22,19 @@ const blockTypes = [
   },
   {
     type: 'form' as BlockType,
-    label: 'フォーム',
+    label: 'フォームブロック',
     icon: '/form.svg',
     description: 'フォームを埋め込み',
   },
   {
     type: 'html' as BlockType,
-    label: 'HTML',
+    label: 'HTMLブロック',
     icon: '/html.svg',
     description: 'カスタムHTMLを追加',
   },
   {
-    type: 'writer' as BlockType,
-    label: 'ライター',
-    icon: '/writer.svg',
-    description: 'ライターを正円で表示',
-  },
-  {
     type: 'spacer' as BlockType,
-    label: '空白',
+    label: '空白ブロック',
     icon: '/spacer.svg',
     description: 'ブロック間に余白を追加',
   },
