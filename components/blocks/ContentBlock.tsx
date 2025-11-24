@@ -309,77 +309,83 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
     const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
     const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
     
-    // 幅または高さを指定してアスペクト比維持
-    const containerStyle: React.CSSProperties = { margin: '0 auto' };
-    const imageStyle: React.CSSProperties = {};
+    // コンテナとラッパーのスタイル
+    const containerStyle: React.CSSProperties = { margin: '0 auto', position: 'relative' };
+    const imageWrapperStyle: React.CSSProperties = { position: 'relative' };
     
     if (config.imageWidth) {
+      // 幅を指定：高さは自動でアスペクト比維持
       containerStyle.width = `${config.imageWidth}px`;
       containerStyle.maxWidth = '100%';
-      imageStyle.height = 'auto';
     } else if (config.imageHeight) {
-      containerStyle.width = 'auto';
-      containerStyle.maxWidth = '100%';
-      imageStyle.height = `${config.imageHeight}px`;
+      // 高さを指定：幅は自動でアスペクト比維持
+      imageWrapperStyle.height = `${config.imageHeight}px`;
+      imageWrapperStyle.display = 'flex';
+      imageWrapperStyle.alignItems = 'center';
+      imageWrapperStyle.justifyContent = 'center';
     } else {
       // 両方未指定の場合はデフォルト
       containerStyle.width = '100%';
-      imageStyle.height = 'auto';
     }
     
     return (
       <SectionTag 
         id={config.sectionId || undefined} 
-        className={`relative overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
+        className={`${showPanel ? 'rounded-lg shadow-md' : ''}`}
         style={{ ...fullWidthStyle, ...containerStyle }}
       >
-        {/* 画像 */}
-        <img
-          src={config.imageUrl}
-          alt={config.imageAlt || ''}
-          className="w-full h-full object-cover"
-          style={imageStyle}
-        />
-        {filterStyle && <div style={filterStyle} />}
-        
-        {/* テキスト＋ライター＋ボタン（画像の上に重なる） */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
-          {config.showHeading && config.heading && (
-            <HeadingTag
-              className={`
-                ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-                ${alignmentClasses[config.headingAlignment || 'center']}
-                text-white mb-4 whitespace-pre-wrap w-full
-              `}
-              style={{ 
-                fontSize: `${headingFontSize}rem`,
-                color: config.headingTextColor || 'white' 
-              }}
-            >
-              {config.heading}
-            </HeadingTag>
-          )}
-          {config.showText && config.description && (
-            <p
-              className={`
-                ${textFontWeightClasses[config.textFontWeight || 'normal']}
-                ${alignmentClasses[config.textAlignment || 'center']}
-                text-white mb-6 max-w-2xl whitespace-pre-wrap w-full
-              `}
-              style={{ 
-                fontSize: `${textFontSize}rem`,
-                color: config.textColor || 'white' 
-              }}
-            >
-              {config.description}
-            </p>
-          )}
-          {renderWriters()}
-          {config.showButtons && config.buttons && config.buttons.length > 0 && (
-            <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
-              {config.buttons.map(renderButton)}
-            </div>
-          )}
+        <div 
+          className="relative overflow-hidden"
+          style={imageWrapperStyle}
+        >
+          {/* 画像 */}
+          <img
+            src={config.imageUrl}
+            alt={config.imageAlt || ''}
+            className="w-full h-full object-contain"
+            style={config.imageHeight ? { height: `${config.imageHeight}px` } : { height: 'auto' }}
+          />
+          {filterStyle && <div style={filterStyle} />}
+          
+          {/* テキスト＋ライター＋ボタン（画像の上に重なる） */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 py-12" style={{ zIndex: 2 }}>
+            {config.showHeading && config.heading && (
+              <HeadingTag
+                className={`
+                  ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+                  ${alignmentClasses[config.headingAlignment || 'center']}
+                  text-white mb-4 whitespace-pre-wrap w-full
+                `}
+                style={{ 
+                  fontSize: `${headingFontSize}rem`,
+                  color: config.headingTextColor || 'white' 
+                }}
+              >
+                {config.heading}
+              </HeadingTag>
+            )}
+            {config.showText && config.description && (
+              <p
+                className={`
+                  ${textFontWeightClasses[config.textFontWeight || 'normal']}
+                  ${alignmentClasses[config.textAlignment || 'center']}
+                  text-white mb-6 max-w-2xl whitespace-pre-wrap w-full
+                `}
+                style={{ 
+                  fontSize: `${textFontSize}rem`,
+                  color: config.textColor || 'white' 
+                }}
+              >
+                {config.description}
+              </p>
+            )}
+            {renderWriters()}
+            {config.showButtons && config.buttons && config.buttons.length > 0 && (
+              <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
+                {config.buttons.map(renderButton)}
+              </div>
+            )}
+          </div>
         </div>
       </SectionTag>
     );
