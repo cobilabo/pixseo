@@ -16,6 +16,7 @@ import HTMLBlockSettings from './settings/HTMLBlockSettings';
 import WriterBlockSettings from './settings/WriterBlockSettings';
 import SpacerBlockSettings from './settings/SpacerBlockSettings';
 import SpacingSettings from './settings/SpacingSettings';
+import ContentBlockSettings from './settings/ContentBlockSettings';
 
 interface BlockSettingsProps {
   block: Block;
@@ -26,11 +27,12 @@ interface BlockSettingsProps {
 
 export default function BlockSettings({ block, onUpdate, onClose, onDelete }: BlockSettingsProps) {
   const blockTypeLabels: Record<string, string> = {
-    heading: '見出しブロック',
-    text: 'テキストブロック',
-    image: '画像ブロック',
-    imageText: '画像&テキストブロック',
-    cta: 'CTAブロック',
+    content: 'コンテンツブロック',
+    heading: '見出しブロック（非推奨）',
+    text: 'テキストブロック（非推奨）',
+    image: '画像ブロック（非推奨）',
+    imageText: '画像&テキストブロック（非推奨）',
+    cta: 'CTAブロック（非推奨）',
     form: 'フォームブロック',
     html: 'HTMLブロック',
     writer: 'ライターブロック',
@@ -67,6 +69,9 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'spacer' && (
           <SpacerBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'content' && (
+          <ContentBlockSettings block={block} onUpdate={onUpdate} />
         )}
         
         {/* 共通の余白設定（空白ブロック以外） */}

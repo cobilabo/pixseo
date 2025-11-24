@@ -91,11 +91,12 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
   };
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
-    heading: { label: '見出し', icon: '/text.svg' },
-    text: { label: 'テキスト', icon: '/textfield.svg' },
-    image: { label: '画像', icon: '/image.svg' },
-    imageText: { label: '画像&テキスト', icon: '/imagetext.svg' },
-    cta: { label: 'CTA', icon: '/cta.svg' },
+    content: { label: 'コンテンツ', icon: '/cta.svg' },
+    heading: { label: '見出し（非推奨）', icon: '/text.svg' },
+    text: { label: 'テキスト（非推奨）', icon: '/textfield.svg' },
+    image: { label: '画像（非推奨）', icon: '/image.svg' },
+    imageText: { label: '画像&テキスト（非推奨）', icon: '/imagetext.svg' },
+    cta: { label: 'CTA（非推奨）', icon: '/cta.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     writer: { label: 'ライター', icon: '/writer.svg' },
@@ -170,6 +171,14 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
 
 function BlockPreview({ block }: { block: Block }) {
   switch (block.type) {
+    case 'content':
+      const contentConfig = block.config as any;
+      const elements = [];
+      if (contentConfig.showImage) elements.push('画像');
+      if (contentConfig.showHeading) elements.push('見出し');
+      if (contentConfig.showText) elements.push('テキスト');
+      if (contentConfig.showButtons) elements.push(`ボタン×${(contentConfig.buttons || []).length}`);
+      return <span>{elements.length > 0 ? elements.join(' + ') : '要素を追加してください'}</span>;
     case 'heading':
       const headingConfig = block.config as any;
       return <span>{headingConfig.content}</span>;

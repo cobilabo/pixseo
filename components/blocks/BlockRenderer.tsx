@@ -13,6 +13,7 @@ import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
 import WriterBlock from './WriterBlock';
 import SpacerBlock from './SpacerBlock';
+import ContentBlock from './ContentBlock';
 
 interface BlockRendererProps {
   blocks: Block[];
@@ -76,6 +77,9 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             break;
           case 'spacer':
             blockContent = <SpacerBlock block={block} />;
+            break;
+          case 'content':
+            blockContent = <ContentBlock block={block} showPanel={showPanel} />;
             break;
           default:
             blockContent = null;

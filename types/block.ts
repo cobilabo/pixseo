@@ -4,15 +4,16 @@
 
 // ブロックの基本タイプ
 export type BlockType = 
-  | 'text'      // テキスト表示
-  | 'image'     // 画像表示
-  | 'cta'       // CTA（コールトゥアクション）
+  | 'text'      // テキスト表示（非推奨 - contentを使用）
+  | 'image'     // 画像表示（非推奨 - contentを使用）
+  | 'cta'       // CTA（非推奨 - contentを使用）
   | 'form'      // フォーム埋め込み
   | 'html'      // カスタムHTML
-  | 'heading'   // 見出し（H2）
-  | 'imageText' // 画像&テキスト（2カラム）
+  | 'heading'   // 見出し（非推奨 - contentを使用）
+  | 'imageText' // 画像&テキスト（非推奨 - contentを使用）
   | 'writer'    // ライター表示
-  | 'spacer';   // 空白
+  | 'spacer'    // 空白
+  | 'content';  // コンテンツブロック（統合ブロック）
 
 // テキストブロックの設定
 export interface TextBlockConfig {
@@ -55,7 +56,7 @@ export interface CTAButtonConfig {
   imageHeight?: number;     // 画像高さ（px）※空欄可
 }
 
-// CTAブロックの設定
+// CTAブロックの設定（非推奨 - ContentBlockConfigを使用）
 export interface CTABlockConfig {
   imageUrl?: string;        // 背景画像URL
   imageAlt?: string;        // 画像alt
@@ -75,6 +76,40 @@ export interface CTABlockConfig {
   // ボタン設定（最大4つ）
   buttons: Array<CTAButtonConfig>;
   buttonLayout?: 'horizontal' | '2x2' | 'vertical';  // ボタン配置
+}
+
+// コンテンツブロックの設定（統合ブロック）
+export interface ContentBlockConfig {
+  // 各要素の表示/非表示フラグ（デフォルト: false）
+  showImage?: boolean;      // 画像を表示
+  showHeading?: boolean;    // 見出しを表示
+  showText?: boolean;       // テキストを表示
+  showButtons?: boolean;    // ボタンを表示
+  
+  // 画像設定
+  imageUrl?: string;        // 画像URL
+  imageAlt?: string;        // 画像alt
+  imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
+  imageHeight?: number;     // 画像の高さ（px）
+  filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';
+  filterColor?: string;
+  filterOpacity?: number;
+  
+  // 見出し設定
+  heading?: string;
+  headingFontSize?: number;
+  headingFontWeight?: 'normal' | 'bold';
+  headingTextColor?: string;
+  
+  // テキスト設定
+  description?: string;
+  textFontSize?: number;
+  textFontWeight?: 'normal' | 'bold';
+  textColor?: string;
+  
+  // ボタン設定
+  buttons?: Array<CTAButtonConfig>;
+  buttonLayout?: 'horizontal' | '2x2' | 'vertical';
 }
 
 // フォームブロックの設定
@@ -143,7 +178,7 @@ export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig | SpacerBlockConfig;
+  config: TextBlockConfig | ImageBlockConfig | CTABlockConfig | FormBlockConfig | HTMLBlockConfig | HeadingBlockConfig | ImageTextBlockConfig | WriterBlockConfig | SpacerBlockConfig | ContentBlockConfig;
   
   // 余白設定（共通）
   spacing?: {

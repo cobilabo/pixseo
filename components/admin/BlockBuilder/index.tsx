@@ -283,6 +283,28 @@ function getDefaultConfig(type: BlockType): any {
       return {
         height: 40,
       };
+    case 'content':
+      return {
+        // デフォルトはすべてOFF
+        showImage: false,
+        showHeading: false,
+        showText: false,
+        showButtons: false,
+        // デフォルト値
+        imageUrl: '',
+        imageAlt: '',
+        imagePosition: 'background',
+        heading: '見出し',
+        headingFontSize: 1,
+        headingFontWeight: 'normal',
+        headingTextColor: '',
+        description: 'テキストを入力してください',
+        textFontSize: 1,
+        textFontWeight: 'normal',
+        textColor: '',
+        buttons: [],
+        buttonLayout: 'horizontal',
+      };
     default:
       return {};
   }
