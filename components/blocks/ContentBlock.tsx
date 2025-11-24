@@ -1,18 +1,48 @@
 /**
- * コンテンツブロックコンポーネント（統合ブロック）
+ * セクションブロックコンポーネント（統合ブロック）
  */
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { Block, ContentBlockConfig, CTAButtonConfig } from '@/types/block';
 import { getFilterStyle } from '@/lib/utils/filter-helpers';
+import { adminDb } from '@/lib/firebase/admin';
+import { headers } from 'next/headers';
 
 interface ContentBlockProps {
   block: Block;
   showPanel?: boolean;
 }
 
-export default function ContentBlock({ block, showPanel = true }: ContentBlockProps) {
+interface Writer {
+  id: string;
+  handleName: string;
+  icon?: string;
+}
+
+async function getWriterByHandleName(handleName: string): Promise<Writer | null> {
+  try {
+    const snapshot = await adminDb.collection('writers')
+      .where('handleName', '==', handleName)
+      .limit(1)
+      .get();
+    
+    if (snapshot.empty) return null;
+    
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+    return {
+      id: doc.id,
+      handleName: data?.handleName || '',
+      icon: data?.icon,
+    } as Writer;
+  } catch (error) {
+    console.error('Error fetching writer:', error);
+    return null;
+  }
+}
+
+export default async function ContentBlock({ block, showPanel = true }: ContentBlockProps) {
   const config = block.config as ContentBlockConfig;
   
   // パネルOFFの場合は画面幅いっぱいにする
@@ -21,6 +51,13 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
     marginLeft: 'calc(50% - 50vw)',
     marginRight: 'calc(50% - 50vw)',
   } : {};
+  
+  // 配置クラス
+  const alignmentClasses = {
+    left: 'text-left',
+    center: 'text-center',
+    right: 'text-right',
+  };
   
   const headingFontWeightClasses = {
     normal: 'font-normal',
@@ -57,6 +94,27 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
     config.filterColor,
     config.filterOpacity
   );
+
+  // ライター情報を取得
+  let writers: Array<Writer & { jobTitle?: string }> = [];
+  if (config.showWriters && config.writers && config.writers.length > 0) {
+    const writersData = await Promise.all(
+      config.writers.map(async (w) => {
+        const writer = await getWriterByHandleName(w.handleName);
+        if (!writer) return null;
+        return {
+          ...writer,
+          jobTitle: w.jobTitle,
+        };
+      })
+    );
+    writers = writersData.filter((w): w is NonNullable<typeof w> => w !== null);
+  }
+
+  // 現在の言語を取得
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const lang = pathname.split('/')[1] || 'ja';
 
   // ボタンレンダリング関数
   const renderButton = (button: CTAButtonConfig, index: number) => {
@@ -173,10 +231,90 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
     return null;
   };
 
+  // ライターレンダリング関数
+  const renderWriters = () => {
+    if (!config.showWriters || writers.length === 0) return null;
+
+    const layoutClass = config.writerLayout === 'vertical' 
+      ? 'flex flex-col items-center gap-8'
+      : 'flex flex-wrap justify-center gap-8';
+
+    const writerNameColor = config.writerNameColor || '#111827';
+    const jobTitleColor = config.jobTitleColor || '#6B7280';
+    const buttonText = config.buttonText || 'VIEW MORE';
+    const buttonTextColor = config.buttonTextColor || '#FFFFFF';
+    const buttonBackgroundColor = config.buttonBackgroundColor || '#2563EB';
+    const buttonBorderColor = config.buttonBorderColor || '#2563EB';
+
+    return (
+      <div className={`${layoutClass} my-8`}>
+        {writers.map((writer) => (
+          <div 
+            key={writer.id} 
+            className="flex flex-col items-center text-center"
+            style={{ 
+              width: config.writerLayout === 'vertical' ? '100%' : 'auto',
+            }}
+          >
+            {/* ライターアイコン（正円） */}
+            <div className="relative w-32 h-32 mb-4">
+              {writer.icon ? (
+                <Image
+                  src={writer.icon}
+                  alt={writer.handleName}
+                  fill
+                  className="object-cover rounded-full border-4 border-gray-200"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-300">
+                  <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+            
+            {/* ライター名 */}
+            <h3 
+              className="text-xl font-bold mb-2"
+              style={{ color: writerNameColor }}
+            >
+              {writer.handleName}
+            </h3>
+            
+            {/* 肩書き */}
+            {writer.jobTitle && (
+              <p 
+                className="text-sm mb-4"
+                style={{ color: jobTitleColor }}
+              >
+                {writer.jobTitle}
+              </p>
+            )}
+            
+            {/* VIEW MORE ボタン */}
+            <Link 
+              href={`/${lang}/writers/${writer.id}`}
+              className="px-6 py-2 rounded-full font-medium text-sm transition-opacity hover:opacity-80"
+              style={{ 
+                color: buttonTextColor,
+                backgroundColor: buttonBackgroundColor,
+                border: `2px solid ${buttonBorderColor}`,
+              }}
+            >
+              {buttonText}
+            </Link>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // 画像が背景で、かつ画像を表示する場合
   if (config.showImage && config.imagePosition === 'background' && config.imageUrl) {
     return (
       <div 
+        id={config.sectionId || undefined}
         className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
         style={{ ...fullWidthStyle, ...imageHeightStyle }}
       >
@@ -192,7 +330,8 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
             <h3
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
-                text-white mb-4 whitespace-pre-wrap
+                ${alignmentClasses[config.headingAlignment || 'center']}
+                text-white mb-4 whitespace-pre-wrap w-full
               `}
               style={{ 
                 fontSize: `${headingFontSize}rem`,
@@ -206,7 +345,8 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
             <p
               className={`
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
-                text-white mb-6 max-w-2xl whitespace-pre-wrap
+                ${alignmentClasses[config.textAlignment || 'center']}
+                text-white mb-6 max-w-2xl whitespace-pre-wrap w-full
               `}
               style={{ 
                 fontSize: `${textFontSize}rem`,
@@ -216,6 +356,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
               {config.description}
             </p>
           )}
+          {renderWriters()}
           {config.showButtons && config.buttons && config.buttons.length > 0 && (
             <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
               {config.buttons.map(renderButton)}
@@ -231,7 +372,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
   
   if (config.showImage && config.imageUrl && (config.imagePosition === 'left' || config.imagePosition === 'right')) {
     return (
-      <div className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
+      <div id={config.sectionId || undefined} className={`flex flex-col md:flex-row gap-6 items-center ${isImageLeft ? '' : 'md:flex-row-reverse'}`} style={fullWidthStyle}>
         {/* 画像部分 */}
         <div className="w-full md:w-1/2">
           <div 
@@ -248,12 +389,13 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
           </div>
         </div>
         
-        {/* テキスト＋CTAボタン部分 */}
-        <div className={`w-full md:w-1/2 ${isImageLeft ? 'md:text-left' : 'md:text-left'}`}>
+        {/* テキスト＋ライター＋ボタン部分 */}
+        <div className="w-full md:w-1/2">
           {config.showHeading && config.heading && (
             <h3
               className={`
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+                ${alignmentClasses[config.headingAlignment || 'left']}
                 mb-4 whitespace-pre-wrap
               `}
               style={{ 
@@ -268,6 +410,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
             <p
               className={`
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
+                ${alignmentClasses[config.textAlignment || 'left']}
                 mb-6 whitespace-pre-wrap
               `}
               style={{ 
@@ -278,6 +421,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
               {config.description}
             </p>
           )}
+          {renderWriters()}
           {config.showButtons && config.buttons && config.buttons.length > 0 && (
             <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
               {config.buttons.map(renderButton)}
@@ -288,13 +432,14 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
     );
   }
 
-  // 画像なしの場合、または画像を表示しない場合（テキスト＋ボタンのみ）
+  // 画像なしの場合、または画像を表示しない場合（テキスト＋ライター＋ボタンのみ）
   return (
-    <div className="text-center py-8" style={fullWidthStyle}>
+    <div id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
       {config.showHeading && config.heading && (
         <h3
           className={`
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+            ${alignmentClasses[config.headingAlignment || 'center']}
             mb-4 whitespace-pre-wrap
           `}
           style={{ 
@@ -309,6 +454,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
         <p
           className={`
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
+            ${alignmentClasses[config.textAlignment || 'center']}
             mb-6 max-w-2xl mx-auto whitespace-pre-wrap
           `}
           style={{ 
@@ -319,6 +465,7 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
           {config.description}
         </p>
       )}
+      {renderWriters()}
       {config.showButtons && config.buttons && config.buttons.length > 0 && (
         <div className={`${buttonLayoutClasses[config.buttonLayout || 'horizontal']} max-w-2xl mx-auto`}>
           {config.buttons.map(renderButton)}
@@ -327,4 +474,3 @@ export default function ContentBlock({ block, showPanel = true }: ContentBlockPr
     </div>
   );
 }
-

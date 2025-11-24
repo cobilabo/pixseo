@@ -27,7 +27,7 @@ interface BlockSettingsProps {
 
 export default function BlockSettings({ block, onUpdate, onClose, onDelete }: BlockSettingsProps) {
   const blockTypeLabels: Record<string, string> = {
-    content: 'コンテンツブロック',
+    content: 'セクションブロック',
     heading: '見出しブロック（非推奨）',
     text: 'テキストブロック（非推奨）',
     image: '画像ブロック（非推奨）',
@@ -81,7 +81,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
       </div>
 
       {/* キャンセル・削除ボタン */}
-      <div className="pr-6 py-4 border-t border-gray-200">
+      <div className="pr-6 border-t border-gray-200">
         <div className="flex gap-2">
           {/* キャンセルボタン */}
           <button

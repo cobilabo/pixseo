@@ -285,23 +285,35 @@ function getDefaultConfig(type: BlockType): any {
       };
     case 'content':
       return {
+        // セクションID
+        sectionId: '',
         // デフォルトはすべてOFF
         showImage: false,
         showHeading: false,
         showText: false,
+        showWriters: false,
         showButtons: false,
-        // デフォルト値
+        // 画像設定
         imageUrl: '',
         imageAlt: '',
         imagePosition: 'background',
+        // 見出し設定
         heading: '見出し',
         headingFontSize: 1,
         headingFontWeight: 'normal',
         headingTextColor: '',
+        headingAlignment: 'center',
+        // テキスト設定
         description: 'テキストを入力してください',
         textFontSize: 1,
         textFontWeight: 'normal',
         textColor: '',
+        textAlignment: 'center',
+        // ライター設定
+        writers: [],
+        writerLayout: 'horizontal',
+        buttonText: 'VIEW MORE',
+        // ボタン設定
         buttons: [],
         buttonLayout: 'horizontal',
       };

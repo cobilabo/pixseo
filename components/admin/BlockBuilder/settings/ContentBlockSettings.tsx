@@ -64,6 +64,13 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
 
   return (
     <div className="space-y-4">
+      {/* セクションID */}
+      <FloatingInput
+        label="セクションID（ページ内リンク用）"
+        value={config.sectionId || ''}
+        onChange={(value) => updateConfig({ sectionId: value })}
+      />
+
       {/* 画像セクション */}
       <div className="space-y-4">
         <button
@@ -79,7 +86,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showImage && (
-          <div className="ml-6 space-y-4">
+          <div className="space-y-4">
             <FeaturedImageUpload
               label="画像"
               value={config.imageUrl || ''}
@@ -170,7 +177,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showHeading && (
-          <div className="ml-6 space-y-4">
+          <div className="space-y-4">
             <FloatingInput
               label="見出し"
               value={config.heading || ''}
@@ -203,6 +210,17 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
               value={config.headingTextColor || ''}
               onChange={(value) => updateConfig({ headingTextColor: value })}
             />
+
+            <FloatingSelect
+              label="配置"
+              value={config.headingAlignment || 'left'}
+              onChange={(value) => updateConfig({ headingAlignment: value as 'left' | 'center' | 'right' })}
+              options={[
+                { value: 'left', label: '左詰め' },
+                { value: 'center', label: '中央' },
+                { value: 'right', label: '右詰め' },
+              ]}
+            />
           </div>
         )}
       </div>
@@ -222,7 +240,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showText && (
-          <div className="ml-6 space-y-4">
+          <div className="space-y-4">
             <FloatingInput
               label="テキスト"
               value={config.description || ''}
@@ -257,6 +275,135 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
               value={config.textColor || ''}
               onChange={(value) => updateConfig({ textColor: value })}
             />
+
+            <FloatingSelect
+              label="配置"
+              value={config.textAlignment || 'left'}
+              onChange={(value) => updateConfig({ textAlignment: value as 'left' | 'center' | 'right' })}
+              options={[
+                { value: 'left', label: '左詰め' },
+                { value: 'center', label: '中央' },
+                { value: 'right', label: '右詰め' },
+              ]}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ライターセクション */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => updateConfig({ showWriters: !config.showWriters })}
+          className={`w-full py-3 px-4 rounded-full text-sm font-medium transition-colors ${
+            config.showWriters
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {config.showWriters ? 'ライターを使用（押下でOFF）' : 'ライターを使用する'}
+        </button>
+
+        {config.showWriters && (
+          <div className="space-y-4">
+            <FloatingSelect
+              label="レイアウト"
+              value={config.writerLayout || 'horizontal'}
+              onChange={(value) => updateConfig({ writerLayout: value as 'horizontal' | 'vertical' })}
+              options={[
+                { value: 'horizontal', label: '横並び' },
+                { value: 'vertical', label: '縦並び' },
+              ]}
+            />
+
+            <ColorPicker
+              label="ライター名の色"
+              value={config.writerNameColor || ''}
+              onChange={(value) => updateConfig({ writerNameColor: value })}
+            />
+
+            <ColorPicker
+              label="肩書きの色"
+              value={config.jobTitleColor || ''}
+              onChange={(value) => updateConfig({ jobTitleColor: value })}
+            />
+
+            <FloatingInput
+              label="ボタンテキスト"
+              value={config.buttonText || 'VIEW MORE'}
+              onChange={(value) => updateConfig({ buttonText: value })}
+            />
+
+            <ColorPicker
+              label="ボタンテキストカラー"
+              value={config.buttonTextColor || ''}
+              onChange={(value) => updateConfig({ buttonTextColor: value })}
+            />
+
+            <ColorPicker
+              label="ボタン背景色"
+              value={config.buttonBackgroundColor || ''}
+              onChange={(value) => updateConfig({ buttonBackgroundColor: value })}
+            />
+
+            <ColorPicker
+              label="ボタン枠線色"
+              value={config.buttonBorderColor || ''}
+              onChange={(value) => updateConfig({ buttonBorderColor: value })}
+            />
+
+            {/* ライター追加 */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-700">ライター</h4>
+              {(config.writers || []).map((writer, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-medium text-gray-900">ライター {index + 1}</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newWriters = (config.writers || []).filter((_, i) => i !== index);
+                        updateConfig({ writers: newWriters });
+                      }}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                    >
+                      削除
+                    </button>
+                  </div>
+
+                  <FloatingInput
+                    label="ライターハンドル名"
+                    value={writer.handleName || ''}
+                    onChange={(value) => {
+                      const newWriters = [...(config.writers || [])];
+                      newWriters[index] = { ...newWriters[index], handleName: value };
+                      updateConfig({ writers: newWriters });
+                    }}
+                  />
+
+                  <FloatingInput
+                    label="肩書き"
+                    value={writer.jobTitle || ''}
+                    onChange={(value) => {
+                      const newWriters = [...(config.writers || [])];
+                      newWriters[index] = { ...newWriters[index], jobTitle: value };
+                      updateConfig({ writers: newWriters });
+                    }}
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  const newWriters = [...(config.writers || []), { handleName: '', jobTitle: '' }];
+                  updateConfig({ writers: newWriters });
+                }}
+                className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                + ライターを追加
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -276,7 +423,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showButtons && (
-          <div className="ml-6 space-y-4">
+          <div className="space-y-4">
             <FloatingSelect
               label="ボタンレイアウト"
               value={config.buttonLayout || 'horizontal'}

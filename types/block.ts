@@ -80,10 +80,14 @@ export interface CTABlockConfig {
 
 // コンテンツブロックの設定（統合ブロック）
 export interface ContentBlockConfig {
+  // セクションID（ページ内リンク用）
+  sectionId?: string;
+  
   // 各要素の表示/非表示フラグ（デフォルト: false）
   showImage?: boolean;      // 画像を表示
   showHeading?: boolean;    // 見出しを表示
   showText?: boolean;       // テキストを表示
+  showWriters?: boolean;    // ライターを表示
   showButtons?: boolean;    // ボタンを表示
   
   // 画像設定
@@ -100,12 +104,24 @@ export interface ContentBlockConfig {
   headingFontSize?: number;
   headingFontWeight?: 'normal' | 'bold';
   headingTextColor?: string;
+  headingAlignment?: 'left' | 'center' | 'right';  // 配置
   
   // テキスト設定
   description?: string;
   textFontSize?: number;
   textFontWeight?: 'normal' | 'bold';
   textColor?: string;
+  textAlignment?: 'left' | 'center' | 'right';  // 配置
+  
+  // ライター設定
+  writers?: Array<{ handleName: string; jobTitle?: string; }>;
+  writerLayout?: 'horizontal' | 'vertical';
+  writerNameColor?: string;
+  jobTitleColor?: string;
+  buttonTextColor?: string;
+  buttonBackgroundColor?: string;
+  buttonBorderColor?: string;
+  buttonText?: string;
   
   // ボタン設定
   buttons?: Array<CTAButtonConfig>;

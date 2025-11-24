@@ -16,9 +16,9 @@ interface BlockPaletteProps {
 const blockTypes = [
   {
     type: 'content' as BlockType,
-    label: 'コンテンツブロック',
+    label: 'セクションブロック',
     icon: '/dashboard.svg',
-    description: '画像・見出し・テキスト・ボタンを組み合わせ',
+    description: '画像・見出し・テキスト・ライター・ボタンを組み合わせ',
   },
   {
     type: 'form' as BlockType,
