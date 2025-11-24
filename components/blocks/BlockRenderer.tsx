@@ -35,7 +35,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
     });
 
   return (
-    <div className={showPanel ? 'space-y-6' : ''}>
+    <div className="space-y-6">
       {visibleBlocks.map((block) => {
         switch (block.type) {
           case 'heading':

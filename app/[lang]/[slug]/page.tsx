@@ -144,13 +144,12 @@ export default async function FixedPage({ params }: PageProps) {
           zIndex: 10 
         }}
       >
-        <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : ''}`}>
+        <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : 'px-4 py-6'}`}>
         <article 
           className={rawPage.showPanel !== false ? 'bg-white rounded-lg shadow-md p-8' : ''}
           style={{
             backgroundColor: rawPage.showPanel !== false ? (rawPage.panelColor || '#ffffff') : 'transparent',
             color: rawPage.textColor || undefined,
-            padding: rawPage.showPanel !== false ? undefined : '0',
           }}
         >
           {/* SEO用のh1タグ（視覚的には非表示） */}
