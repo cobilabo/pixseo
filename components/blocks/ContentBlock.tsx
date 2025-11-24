@@ -525,12 +525,12 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
   }
 
   // 画像なしの場合、または画像を表示しない場合（テキスト＋ライター＋ボタンのみ）
-  const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
-  const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+  const SectionTag = (config.showHeading && heading) ? 'section' : 'div';
+  const HeadingTag = (config.showHeading && heading) ? 'h2' : 'div';
   
   return (
     <SectionTag id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
-      {config.showHeading && config.heading && (
+      {config.showHeading && heading && (
         <HeadingTag
           className={`
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
@@ -542,10 +542,10 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
             color: config.headingTextColor || undefined 
           }}
         >
-          {config.heading}
+          {heading}
         </HeadingTag>
       )}
-      {config.showText && config.description && (
+      {config.showText && description && (
         <p
           className={`
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
