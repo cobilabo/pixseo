@@ -95,12 +95,14 @@ export function getFilterStyle(
       
     case 'all-direction':
       // 全方位グラデーションフィルタ
-      // 中心から外側に向かってグラデーション
-      // 中心（0%）: 設定透明度
-      // 外側（100%）: 完全な色
+      // 上下と左右のグラデーションを重ねがけして円形に近づける
+      // 各辺から30%の位置まで完全な色、中心に向かって設定透明度へ
       return {
         ...baseStyle,
-        background: `radial-gradient(ellipse at center, ${rgbaWithOpacity} 0%, ${rgbaWithOpacity} 30%, ${rgbaFull} 100%)`,
+        background: `
+          linear-gradient(to right, ${rgbaFull} 0%, ${rgbaWithOpacity} 30%, ${rgbaWithOpacity} 70%, ${rgbaFull} 100%),
+          linear-gradient(to bottom, ${rgbaFull} 0%, ${rgbaWithOpacity} 30%, ${rgbaWithOpacity} 70%, ${rgbaFull} 100%)
+        `.replace(/\s+/g, ' ').trim(),
       };
       
     default:
