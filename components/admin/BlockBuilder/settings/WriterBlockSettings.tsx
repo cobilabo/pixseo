@@ -106,6 +106,13 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
         required
       />
 
+      {/* ライター名の色 */}
+      <ColorPicker
+        label="ライター名の色"
+        value={config.writerNameColor || '#111827'}
+        onChange={(value) => updateConfig({ writerNameColor: value })}
+      />
+
       {/* 肩書きテキストの色 */}
       <ColorPicker
         label="肩書きテキストの色"
@@ -120,6 +127,13 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
         onChange={(value) => updateConfig({ buttonText: value })}
       />
 
+      {/* ボタンテキストの色 */}
+      <ColorPicker
+        label="ボタンテキストの色"
+        value={config.buttonTextColor || '#FFFFFF'}
+        onChange={(value) => updateConfig({ buttonTextColor: value })}
+      />
+
       {/* ボタン背景の色 */}
       <ColorPicker
         label="ボタン背景の色"
@@ -127,11 +141,11 @@ export default function WriterBlockSettings({ block, onUpdate }: WriterBlockSett
         onChange={(value) => updateConfig({ buttonBackgroundColor: value })}
       />
 
-      {/* 枠線の色 */}
+      {/* ボタン枠線の色 */}
       <ColorPicker
-        label="枠線の色"
-        value={config.borderColor || '#E5E7EB'}
-        onChange={(value) => updateConfig({ borderColor: value })}
+        label="ボタン枠線の色"
+        value={config.buttonBorderColor || '#2563EB'}
+        onChange={(value) => updateConfig({ buttonBorderColor: value })}
       />
 
       {/* ライター一覧 */}

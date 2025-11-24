@@ -67,20 +67,21 @@ export default async function WriterBlock({ block }: WriterBlockProps) {
     : 'flex flex-wrap justify-center gap-8';
 
   // スタイル設定
+  const writerNameColor = config.writerNameColor || '#111827';
   const jobTitleColor = config.jobTitleColor || '#6B7280';
   const buttonText = config.buttonText || 'VIEW MORE';
+  const buttonTextColor = config.buttonTextColor || '#FFFFFF';
   const buttonBackgroundColor = config.buttonBackgroundColor || '#2563EB';
-  const borderColor = config.borderColor || '#E5E7EB';
+  const buttonBorderColor = config.buttonBorderColor || '#2563EB';
 
   return (
     <div className={layoutClass}>
       {writers.map((writer) => (
         <div 
           key={writer.id} 
-          className="flex flex-col items-center text-center p-6 rounded-lg transition-all hover:shadow-lg"
+          className="flex flex-col items-center text-center"
           style={{ 
             width: config.layout === 'vertical' ? '100%' : 'auto',
-            border: `2px solid ${borderColor}`,
           }}
         >
           {/* ライターアイコン（正円） */}
@@ -90,14 +91,10 @@ export default async function WriterBlock({ block }: WriterBlockProps) {
                 src={writer.icon}
                 alt={writer.handleName}
                 fill
-                className="object-cover rounded-full"
-                style={{ border: `4px solid ${borderColor}` }}
+                className="object-cover rounded-full border-4 border-gray-200"
               />
             ) : (
-              <div 
-                className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center"
-                style={{ border: `4px solid ${borderColor}` }}
-              >
+              <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-300">
                 <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
@@ -106,7 +103,10 @@ export default async function WriterBlock({ block }: WriterBlockProps) {
           </div>
           
           {/* ライター名 */}
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <h3 
+            className="text-xl font-bold mb-2"
+            style={{ color: writerNameColor }}
+          >
             {writer.handleName}
           </h3>
           
@@ -118,11 +118,15 @@ export default async function WriterBlock({ block }: WriterBlockProps) {
             {writer.jobTitle}
           </p>
           
-          {/* VIEW MORE ボタン */}
+          {/* VIEW MORE ボタン（完全な角丸の枠線） */}
           <Link 
             href={`/${lang}/writers/${writer.id}`}
-            className="px-6 py-2 rounded-lg text-white font-medium text-sm transition-opacity hover:opacity-80"
-            style={{ backgroundColor: buttonBackgroundColor }}
+            className="px-6 py-2 rounded-full font-medium text-sm transition-opacity hover:opacity-80"
+            style={{ 
+              color: buttonTextColor,
+              backgroundColor: buttonBackgroundColor,
+              border: `2px solid ${buttonBorderColor}`,
+            }}
           >
             {buttonText}
           </Link>

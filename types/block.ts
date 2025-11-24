@@ -111,10 +111,12 @@ export interface WriterBlockConfig {
     jobTitle: string;  // 肩書き
   }>;
   // 共通スタイル設定
+  writerNameColor?: string;       // ライター名の色
   jobTitleColor?: string;         // 肩書きテキストの色
   buttonText?: string;            // ボタンテキスト（デフォルト: VIEW MORE）
+  buttonTextColor?: string;       // ボタンテキストの色
   buttonBackgroundColor?: string; // ボタン背景の色
-  borderColor?: string;           // 枠線の色
+  buttonBorderColor?: string;     // ボタン枠線の色
 }
 
 // ブロックの共通インターフェース
