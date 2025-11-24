@@ -79,7 +79,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showImage && (
-          <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
+          <div className="ml-6 space-y-4">
             <FeaturedImageUpload
               label="画像"
               value={config.imageUrl || ''}
@@ -170,7 +170,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showHeading && (
-          <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
+          <div className="ml-6 space-y-4">
             <FloatingInput
               label="見出し"
               value={config.heading || ''}
@@ -222,7 +222,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showText && (
-          <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
+          <div className="ml-6 space-y-4">
             <FloatingInput
               label="テキスト"
               value={config.description || ''}
@@ -276,7 +276,7 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
         </button>
 
         {config.showButtons && (
-          <div className="ml-6 space-y-4 pl-4 border-l-2 border-gray-200">
+          <div className="ml-6 space-y-4">
             <FloatingSelect
               label="ボタンレイアウト"
               value={config.buttonLayout || 'horizontal'}

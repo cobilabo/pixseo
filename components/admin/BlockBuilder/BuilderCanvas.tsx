@@ -91,7 +91,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
   };
 
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
-    content: { label: 'コンテンツ', icon: '/cta.svg' },
+    content: { label: 'コンテンツブロック', icon: '/dashboard.svg' },
     heading: { label: '見出し（非推奨）', icon: '/text.svg' },
     text: { label: 'テキスト（非推奨）', icon: '/textfield.svg' },
     image: { label: '画像（非推奨）', icon: '/image.svg' },
