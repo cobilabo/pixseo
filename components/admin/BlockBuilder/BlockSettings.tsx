@@ -42,7 +42,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
   return (
     <div className="h-full flex flex-col">
       {/* 設定フォーム */}
-      <div className="flex-1 overflow-y-auto pr-6">
+      <div className="flex-1 overflow-y-auto pr-6 pt-2">
         {block.type === 'heading' && (
           <HeadingBlockSettings block={block} onUpdate={onUpdate} />
         )}
@@ -81,7 +81,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
       </div>
 
       {/* キャンセル・削除ボタン */}
-      <div className="pr-6 border-t border-gray-200">
+      <div className="pr-6 pt-4 border-t border-gray-200">
         <div className="flex gap-2">
           {/* キャンセルボタン */}
           <button

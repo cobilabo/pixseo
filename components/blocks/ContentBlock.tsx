@@ -310,6 +310,87 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
     );
   };
 
+  // 画像がサイズ指定中央配置の場合
+  if (config.showImage && config.imagePosition === 'center-size-based' && config.imageUrl) {
+    const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
+    const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
+    
+    // 幅または高さを指定してアスペクト比維持
+    const widthStyle: React.CSSProperties = {};
+    const imageHeightStyleForCenter: React.CSSProperties = {};
+    
+    if (config.imageWidth) {
+      widthStyle.width = `${config.imageWidth}px`;
+      widthStyle.maxWidth = '100%';
+      imageHeightStyleForCenter.height = 'auto';
+    } else if (config.imageHeight) {
+      widthStyle.width = 'auto';
+      widthStyle.maxWidth = '100%';
+      imageHeightStyleForCenter.height = `${config.imageHeight}px`;
+    } else {
+      // 両方未指定の場合はデフォルト
+      widthStyle.width = '100%';
+      imageHeightStyleForCenter.height = 'auto';
+    }
+    
+    return (
+      <SectionTag id={config.sectionId || undefined} className="py-8" style={fullWidthStyle}>
+        {/* 画像 */}
+        <div className={`mx-auto mb-8 ${showPanel ? 'rounded-lg shadow-md' : ''}`} style={widthStyle}>
+          <div className="relative w-full" style={imageHeightStyleForCenter}>
+            <img
+              src={config.imageUrl}
+              alt={config.imageAlt || ''}
+              className={`w-full h-full ${config.imageWidth ? 'object-cover' : 'object-contain'}`}
+              style={imageHeightStyleForCenter}
+            />
+            {filterStyle && <div style={filterStyle} />}
+          </div>
+        </div>
+        
+        {/* テキスト＋ライター＋ボタン */}
+        <div className="max-w-2xl mx-auto">
+          {config.showHeading && config.heading && (
+            <HeadingTag
+              className={`
+                ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
+                ${alignmentClasses[config.headingAlignment || 'center']}
+                mb-4 whitespace-pre-wrap
+              `}
+              style={{ 
+                fontSize: `${headingFontSize}rem`,
+                color: config.headingTextColor || undefined 
+              }}
+            >
+              {config.heading}
+            </HeadingTag>
+          )}
+          {config.showText && config.description && (
+            <p
+              className={`
+                ${textFontWeightClasses[config.textFontWeight || 'normal']}
+                ${alignmentClasses[config.textAlignment || 'center']}
+                mb-6 whitespace-pre-wrap
+              `}
+              style={{ 
+                fontSize: `${textFontSize}rem`,
+                color: config.textColor || undefined 
+              }}
+            >
+              {config.description}
+            </p>
+          )}
+          {renderWriters()}
+          {config.showButtons && config.buttons && config.buttons.length > 0 && (
+            <div className={buttonLayoutClasses[config.buttonLayout || 'horizontal']}>
+              {config.buttons.map(renderButton)}
+            </div>
+          )}
+        </div>
+      </SectionTag>
+    );
+  }
+
   // 画像が背景で、かつ画像を表示する場合
   if (config.showImage && config.imagePosition === 'background' && config.imageUrl) {
     const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';

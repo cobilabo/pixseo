@@ -4,12 +4,18 @@
  * コンテンツブロックの設定
  */
 
+import { useState, useEffect } from 'react';
 import { Block, ContentBlockConfig, CTAButtonConfig } from '@/types/block';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import ColorPicker from '@/components/admin/ColorPicker';
 import CustomCheckbox from '@/components/admin/CustomCheckbox';
+
+interface Writer {
+  id: string;
+  handleName: string;
+}
 
 interface ContentBlockSettingsProps {
   block: Block;
@@ -18,6 +24,29 @@ interface ContentBlockSettingsProps {
 
 export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSettingsProps) {
   const config = block.config as ContentBlockConfig;
+  const [availableWriters, setAvailableWriters] = useState<Writer[]>([]);
+
+  // ライター一覧を取得
+  useEffect(() => {
+    const fetchWriters = async () => {
+      try {
+        const currentTenantId = localStorage.getItem('currentTenantId');
+        const response = await fetch('/api/admin/writers', {
+          headers: {
+            'x-media-id': currentTenantId || '',
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableWriters(data.writers || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch writers:', error);
+      }
+    };
+
+    fetchWriters();
+  }, []);
 
   const updateConfig = (updates: Partial<ContentBlockConfig>) => {
     onUpdate({ config: { ...config, ...updates } });
@@ -103,27 +132,64 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
             <FloatingSelect
               label="画像位置"
               value={config.imagePosition || 'background'}
-              onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' | 'background' })}
+              onChange={(value) => updateConfig({ imagePosition: value as 'left' | 'right' | 'background' | 'center-size-based' })}
               options={[
                 { value: 'left', label: '左' },
                 { value: 'right', label: '右' },
                 { value: 'background', label: '背景' },
+                { value: 'center-size-based', label: 'サイズを指定して中央配置' },
               ]}
             />
 
-            <FloatingInput
-              label="画像の高さ（px）※ 空欄でアスペクト比 100％"
-              type="number"
-              value={config.imageHeight?.toString() || ''}
-              onChange={(value) => {
-                if (!value || value === '') {
-                  updateConfig({ imageHeight: undefined });
-                } else {
-                  const num = parseInt(value);
-                  updateConfig({ imageHeight: !isNaN(num) ? num : undefined });
-                }
-              }}
-            />
+            {/* 左・右・背景の場合は高さを設定 */}
+            {config.imagePosition !== 'center-size-based' && (
+              <FloatingInput
+                label="画像の高さ（px）※ 空欄でアスペクト比 100％"
+                type="number"
+                value={config.imageHeight?.toString() || ''}
+                onChange={(value) => {
+                  if (!value || value === '') {
+                    updateConfig({ imageHeight: undefined });
+                  } else {
+                    const num = parseInt(value);
+                    updateConfig({ imageHeight: !isNaN(num) ? num : undefined });
+                  }
+                }}
+              />
+            )}
+
+            {/* サイズを指定して中央配置の場合 */}
+            {config.imagePosition === 'center-size-based' && (
+              <>
+                <FloatingInput
+                  label="画像の幅（px）※ 高さと排他"
+                  type="number"
+                  value={config.imageWidth?.toString() || ''}
+                  onChange={(value) => {
+                    if (!value || value === '') {
+                      updateConfig({ imageWidth: undefined });
+                    } else {
+                      const num = parseInt(value);
+                      updateConfig({ imageWidth: !isNaN(num) ? num : undefined, imageHeight: undefined });
+                    }
+                  }}
+                />
+
+                <FloatingInput
+                  label="画像の高さ（px）※ 幅と排他"
+                  type="number"
+                  value={config.imageHeight?.toString() || ''}
+                  onChange={(value) => {
+                    if (!value || value === '') {
+                      updateConfig({ imageHeight: undefined });
+                    } else {
+                      const num = parseInt(value);
+                      updateConfig({ imageHeight: !isNaN(num) ? num : undefined, imageWidth: undefined });
+                    }
+                  }}
+                />
+              </>
+            )}
 
             <FloatingSelect
               label="フィルタータイプ"
@@ -354,31 +420,20 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
 
             {/* ライター追加 */}
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">ライター</h4>
               {(config.writers || []).map((writer, index) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="font-medium text-gray-900">ライター {index + 1}</h5>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newWriters = (config.writers || []).filter((_, i) => i !== index);
-                        updateConfig({ writers: newWriters });
-                      }}
-                      className="text-red-600 hover:text-red-700 text-sm"
-                    >
-                      削除
-                    </button>
-                  </div>
-
-                  <FloatingInput
-                    label="ライターハンドル名"
+                  <FloatingSelect
+                    label="ライター"
                     value={writer.handleName || ''}
                     onChange={(value) => {
                       const newWriters = [...(config.writers || [])];
                       newWriters[index] = { ...newWriters[index], handleName: value };
                       updateConfig({ writers: newWriters });
                     }}
+                    options={availableWriters.map(w => ({
+                      value: w.handleName,
+                      label: w.handleName,
+                    }))}
                   />
 
                   <FloatingInput
@@ -390,6 +445,21 @@ export default function ContentBlockSettings({ block, onUpdate }: ContentBlockSe
                       updateConfig({ writers: newWriters });
                     }}
                   />
+
+                  {/* 削除ボタン */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newWriters = (config.writers || []).filter((_, i) => i !== index);
+                      updateConfig({ writers: newWriters });
+                    }}
+                    className="w-full flex items-center justify-center py-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+                    title="削除"
+                  >
+                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               ))}
 

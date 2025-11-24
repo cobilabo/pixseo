@@ -93,8 +93,9 @@ export interface ContentBlockConfig {
   // 画像設定
   imageUrl?: string;        // 画像URL
   imageAlt?: string;        // 画像alt
-  imagePosition?: 'left' | 'right' | 'background';  // 画像の位置
+  imagePosition?: 'left' | 'right' | 'background' | 'center-size-based';  // 画像の位置
   imageHeight?: number;     // 画像の高さ（px）
+  imageWidth?: number;      // 画像の幅（px）※ center-size-based用
   filterType?: 'none' | 'full' | 'top' | 'bottom' | 'top-bottom' | 'all-direction';
   filterColor?: string;
   filterOpacity?: number;
