@@ -144,7 +144,7 @@ export default async function FixedPage({ params }: PageProps) {
           zIndex: 10 
         }}
       >
-        <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : 'px-4 py-6'}`}>
+        <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : ''}`}>
         <article 
           className={rawPage.showPanel !== false ? 'bg-white rounded-lg shadow-md p-8' : ''}
           style={{

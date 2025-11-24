@@ -48,7 +48,10 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
       className={`relative ${showPanel ? alignmentClasses[config.alignment || 'center'] : ''}`}
       style={{ ...widthStyle, ...fullWidthStyle }}
     >
-      <div className="relative overflow-hidden rounded-lg shadow-md" style={imageHeightStyle}>
+      <div 
+        className={`relative overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
+        style={imageHeightStyle}
+      >
         <Image
           src={config.imageUrl}
           alt={config.alt}

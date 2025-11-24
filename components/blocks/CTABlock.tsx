@@ -75,7 +75,10 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
   // 画像が背景の場合
   if (config.imagePosition === 'background' && config.imageUrl) {
     return (
-      <div className="relative w-full rounded-lg overflow-hidden shadow-md" style={{ ...fullWidthStyle, ...imageHeightStyle }}>
+      <div 
+        className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
+        style={{ ...fullWidthStyle, ...imageHeightStyle }}
+      >
         <Image
           src={config.imageUrl}
           alt={config.imageAlt || ''}
@@ -152,7 +155,7 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
         {/* 画像部分 */}
         <div className="w-full md:w-1/2">
           <div 
-            className="relative w-full rounded-lg overflow-hidden shadow-md" 
+            className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
             style={config.imageHeight ? { height: `${config.imageHeight}px` } : { aspectRatio: '16/9' }}
           >
             <Image

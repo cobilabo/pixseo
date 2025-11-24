@@ -56,7 +56,10 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
   // 画像が背景の場合
   if (config.imagePosition === 'background') {
     return (
-      <div className="relative w-full rounded-lg overflow-hidden shadow-md" style={{ ...fullWidthStyle, ...imageHeightStyle }}>
+      <div 
+        className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
+        style={{ ...fullWidthStyle, ...imageHeightStyle }}
+      >
         {config.imageUrl && (
           <>
             <Image
@@ -103,7 +106,7 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
       <div className="w-full md:w-1/2">
         {config.imageUrl && (
           <div 
-            className="relative w-full rounded-lg overflow-hidden shadow-md" 
+            className={`relative w-full overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
             style={config.imageHeight ? { height: `${config.imageHeight}px` } : { aspectRatio: '16/9' }}
           >
             <Image
