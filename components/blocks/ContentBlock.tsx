@@ -100,11 +100,6 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
     config.filterOpacity
   );
 
-  // 現在の言語を取得
-  const headersList = headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const lang = pathname.split('/')[1] || 'ja';
-
   // ライター情報を取得
   let writers: Array<Writer & { jobTitle?: string }> = [];
   if (config.showWriters && config.writers && config.writers.length > 0) {
