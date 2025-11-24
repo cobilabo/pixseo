@@ -22,21 +22,9 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
     marginRight: 'calc(50% - 50vw)',
   } : {};
   
-  const headingFontSizeClasses = {
-    small: 'text-xl',
-    medium: 'text-2xl',
-    large: 'text-3xl',
-  };
-  
   const headingFontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
-  };
-  
-  const textFontSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg',
   };
   
   const textFontWeightClasses = {
@@ -44,16 +32,14 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
     bold: 'font-bold',
   };
 
-  const buttonFontSizeClasses = {
-    small: 'px-4 py-2 text-sm',
-    medium: 'px-6 py-3 text-base',
-    large: 'px-8 py-4 text-lg',
-  };
-
   const buttonFontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
   };
+
+  // フォントサイズをremで指定（デフォルト: 1rem）
+  const headingFontSize = config.headingFontSize || 1;
+  const textFontSize = config.textFontSize || 1;
 
   // ボタンレイアウト
   const buttonLayoutClasses = {
@@ -90,11 +76,13 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           {config.heading && (
             <h3
               className={`
-                ${headingFontSizeClasses[config.headingFontSize || 'medium']}
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
                 text-white mb-4 whitespace-pre-wrap
               `}
-              style={{ color: config.headingTextColor || 'white' }}
+              style={{ 
+                fontSize: `${headingFontSize}rem`,
+                color: config.headingTextColor || 'white' 
+              }}
             >
               {config.heading}
             </h3>
@@ -102,11 +90,13 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           {config.description && (
             <p
               className={`
-                ${textFontSizeClasses[config.textFontSize || 'medium']}
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
                 text-white mb-6 max-w-2xl whitespace-pre-wrap
               `}
-              style={{ color: config.textColor || 'white' }}
+              style={{ 
+                fontSize: `${textFontSize}rem`,
+                color: config.textColor || 'white' 
+              }}
             >
               {config.description}
             </p>
@@ -127,10 +117,11 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
                       transition-all
                       hover:scale-105
                       shadow-md
-                      ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                      px-6 py-3
                       ${buttonFontWeightClasses[button.fontWeight || 'normal']}
                     `}
                     style={{
+                      fontSize: `${button.fontSize || 1}rem`,
                       backgroundColor: button.buttonColor || '#3b82f6',
                       color: button.textColor || '#ffffff',
                     }}
@@ -173,11 +164,13 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           {config.heading && (
             <h3
               className={`
-                ${headingFontSizeClasses[config.headingFontSize || 'medium']}
                 ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
                 mb-4 whitespace-pre-wrap
               `}
-              style={{ color: config.headingTextColor || undefined }}
+              style={{ 
+            fontSize: `${headingFontSize}rem`,
+            color: config.headingTextColor || undefined 
+          }}
             >
               {config.heading}
             </h3>
@@ -185,11 +178,13 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
           {config.description && (
             <p
               className={`
-                ${textFontSizeClasses[config.textFontSize || 'medium']}
                 ${textFontWeightClasses[config.textFontWeight || 'normal']}
                 mb-6 whitespace-pre-wrap
               `}
-              style={{ color: config.textColor || undefined }}
+              style={{ 
+            fontSize: `${textFontSize}rem`,
+            color: config.textColor || undefined 
+          }}
             >
               {config.description}
             </p>
@@ -210,10 +205,11 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
                       transition-all
                       hover:scale-105
                       shadow-md
-                      ${buttonFontSizeClasses[button.fontSize || 'medium']}
+                      px-6 py-3
                       ${buttonFontWeightClasses[button.fontWeight || 'normal']}
                     `}
                     style={{
+                      fontSize: `${button.fontSize || 1}rem`,
                       backgroundColor: button.buttonColor || '#3b82f6',
                       color: button.textColor || '#ffffff',
                     }}
@@ -239,7 +235,10 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
             mb-4 whitespace-pre-wrap
           `}
-          style={{ color: config.headingTextColor || undefined }}
+          style={{ 
+            fontSize: `${headingFontSize}rem`,
+            color: config.headingTextColor || undefined 
+          }}
         >
           {config.heading}
         </h3>
@@ -251,7 +250,10 @@ export default function CTABlock({ block, showPanel = true }: CTABlockProps) {
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
             mb-6 max-w-2xl mx-auto whitespace-pre-wrap
           `}
-          style={{ color: config.textColor || undefined }}
+          style={{ 
+            fontSize: `${textFontSize}rem`,
+            color: config.textColor || undefined 
+          }}
         >
           {config.description}
         </p>

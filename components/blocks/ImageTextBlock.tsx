@@ -21,27 +21,19 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
     marginRight: 'calc(50% - 50vw)',
   } : {};
   
-  const headingFontSizeClasses = {
-    small: 'text-xl',
-    medium: 'text-2xl',
-    large: 'text-3xl',
-  };
-  
   const headingFontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
-  };
-  
-  const textFontSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg',
   };
   
   const textFontWeightClasses = {
     normal: 'font-normal',
     bold: 'font-bold',
   };
+
+  // フォントサイズをremで指定（デフォルト: 1rem）
+  const headingFontSize = config.headingFontSize || 1;
+  const textFontSize = config.textFontSize || 1;
 
   // 画像の高さスタイル
   const imageHeightStyle = config.imageHeight ? { height: `${config.imageHeight}px` } : { height: '24rem' };
@@ -74,21 +66,25 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ zIndex: 2 }}>
           <h3
             className={`
-              ${headingFontSizeClasses[config.headingFontSize || 'medium']}
               ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
               text-white mb-4 whitespace-pre-wrap
             `}
-            style={{ color: config.headingTextColor || 'white' }}
+            style={{ 
+              fontSize: `${headingFontSize}rem`,
+              color: config.headingTextColor || 'white' 
+            }}
           >
             {config.heading}
           </h3>
           <p
             className={`
-              ${textFontSizeClasses[config.textFontSize || 'medium']}
               ${textFontWeightClasses[config.textFontWeight || 'normal']}
               text-white max-w-2xl whitespace-pre-wrap
             `}
-            style={{ color: config.textColor || 'white' }}
+            style={{ 
+              fontSize: `${textFontSize}rem`,
+              color: config.textColor || 'white' 
+            }}
           >
             {config.text}
           </p>
@@ -124,21 +120,25 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
       <div className={`w-full md:w-1/2 ${isImageLeft ? 'md:text-left' : 'md:text-left'}`}>
         <h3
           className={`
-            ${headingFontSizeClasses[config.headingFontSize || 'medium']}
             ${headingFontWeightClasses[config.headingFontWeight || 'bold']}
             mb-4 whitespace-pre-wrap
           `}
-          style={{ color: config.headingTextColor || undefined }}
+          style={{ 
+            fontSize: `${headingFontSize}rem`,
+            color: config.headingTextColor || undefined 
+          }}
         >
           {config.heading}
         </h3>
         <p
           className={`
-            ${textFontSizeClasses[config.textFontSize || 'medium']}
             ${textFontWeightClasses[config.textFontWeight || 'normal']}
             whitespace-pre-wrap
           `}
-          style={{ color: config.textColor || undefined }}
+          style={{ 
+            fontSize: `${textFontSize}rem`,
+            color: config.textColor || undefined 
+          }}
         >
           {config.text}
         </p>
