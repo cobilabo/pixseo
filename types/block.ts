@@ -18,7 +18,7 @@ export type BlockType =
 export interface TextBlockConfig {
   content: string;           // HTML形式のテキスト
   alignment?: 'left' | 'center' | 'right';
-  fontSize?: 'small' | 'medium' | 'large';
+  fontSize?: number;         // フォントサイズ（rem）
   fontWeight?: 'normal' | 'bold';
   textColor?: string;        // テキストカラー
 }
@@ -47,11 +47,11 @@ export interface CTABlockConfig {
   filterColor?: string;     // フィルターカラー（例: #000000）
   filterOpacity?: number;   // フィルター透明度（0-100）
   heading?: string;         // 見出し
-  headingFontSize?: 'small' | 'medium' | 'large';
+  headingFontSize?: number; // 見出しフォントサイズ（rem）
   headingFontWeight?: 'normal' | 'bold';
   headingTextColor?: string;
   description?: string;     // 説明文
-  textFontSize?: 'small' | 'medium' | 'large';
+  textFontSize?: number;    // テキストフォントサイズ（rem）
   textFontWeight?: 'normal' | 'bold';
   textColor?: string;
   // ボタン設定（最大4つ）
@@ -59,7 +59,7 @@ export interface CTABlockConfig {
     text: string;           // ボタンテキスト
     url: string;            // リンク先URL
     buttonColor?: string;   // ボタンカラー
-    fontSize?: 'small' | 'medium' | 'large';
+    fontSize?: number;      // フォントサイズ（rem）
     fontWeight?: 'normal' | 'bold';
     textColor?: string;     // ボタンテキストカラー
     openInNewTab?: boolean;
@@ -83,7 +83,7 @@ export interface HeadingBlockConfig {
   content: string;          // 見出しテキスト
   id?: string;              // ページ内リンク用のID
   alignment?: 'left' | 'center' | 'right';
-  fontSize?: 'small' | 'medium' | 'large';
+  fontSize?: number;        // フォントサイズ（rem）
   fontWeight?: 'normal' | 'bold';
   textColor?: string;       // テキストカラー
 }
@@ -98,11 +98,11 @@ export interface ImageTextBlockConfig {
   filterColor?: string;     // フィルターカラー（例: #000000）
   filterOpacity?: number;   // フィルター透明度（0-100）
   heading: string;                  // 見出し
-  headingFontSize?: 'small' | 'medium' | 'large';
+  headingFontSize?: number;         // 見出しフォントサイズ（rem）
   headingFontWeight?: 'normal' | 'bold';
   headingTextColor?: string;
   text: string;                     // テキスト
-  textFontSize?: 'small' | 'medium' | 'large';
+  textFontSize?: number;            // テキストフォントサイズ（rem）
   textFontWeight?: 'normal' | 'bold';
   textColor?: string;
 }
