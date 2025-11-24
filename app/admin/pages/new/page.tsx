@@ -132,7 +132,8 @@ export default function NewPagePage() {
     }
     
     // BlockBuilderから現在のブロックを取得
-    const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || [];
+    // ページ設定タブから保存する場合、refがnullになるのでblocksステートを使用
+    const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || blocks;
 
     if (!currentTenant) {
       alert('メディアテナントが選択されていません');
