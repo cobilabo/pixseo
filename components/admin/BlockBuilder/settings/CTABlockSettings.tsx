@@ -25,7 +25,19 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
 
   const updateButton = (index: number, updates: Partial<CTABlockConfig['buttons'][0]>) => {
     const newButtons = [...(config.buttons || [])];
-    newButtons[index] = { ...newButtons[index], ...updates };
+    const currentButton = newButtons[index];
+    
+    // undefinedの値は削除し、それ以外は更新
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === undefined) {
+        // undefinedの場合はフィールドを削除
+        delete (currentButton as any)[key];
+      } else {
+        // それ以外は更新
+        (currentButton as any)[key] = value;
+      }
+    });
+    
     updateConfig({ buttons: newButtons });
   };
 
@@ -64,7 +76,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
 
       {/* 画像alt */}
       <FloatingInput
-        label="画像 alt"
+        label="画像alt属性"
         value={config.imageAlt || ''}
         onChange={(imageAlt) => updateConfig({ imageAlt })}
       />
@@ -308,6 +320,7 @@ export default function CTABlockSettings({ block, onUpdate }: CTABlockSettingsPr
                 label="画像"
                 value={button.imageUrl || ''}
                 onChange={(imageUrl) => updateButton(index, { imageUrl })}
+                showAltInput={false}
               />
 
               <FloatingInput
