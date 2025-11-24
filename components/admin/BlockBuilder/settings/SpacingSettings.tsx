@@ -26,8 +26,6 @@ export default function SpacingSettings({ block, onUpdate }: SpacingSettingsProp
 
   return (
     <div className="space-y-4 pt-4 border-t border-gray-200">
-      <h4 className="text-sm font-medium text-gray-700">余白設定</h4>
-      
       {/* 上余白 */}
       <FloatingInput
         label="上余白（px）"
