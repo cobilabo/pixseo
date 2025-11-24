@@ -309,14 +309,13 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
     const SectionTag = (config.showHeading && config.heading) ? 'section' : 'div';
     const HeadingTag = (config.showHeading && config.heading) ? 'h2' : 'div';
     
-    // コンテナとラッパーのスタイル
-    const containerStyle: React.CSSProperties = { margin: '0 auto', position: 'relative' };
+    // ラッパーのスタイル
     const imageWrapperStyle: React.CSSProperties = { position: 'relative' };
     
     if (config.imageWidth) {
       // 幅を指定：高さは自動でアスペクト比維持
-      containerStyle.width = `${config.imageWidth}px`;
-      containerStyle.maxWidth = '100%';
+      imageWrapperStyle.width = `${config.imageWidth}px`;
+      imageWrapperStyle.maxWidth = '100%';
     } else if (config.imageHeight) {
       // 高さを指定：幅は自動でアスペクト比維持
       imageWrapperStyle.height = `${config.imageHeight}px`;
@@ -325,17 +324,17 @@ export default async function ContentBlock({ block, showPanel = true }: ContentB
       imageWrapperStyle.justifyContent = 'center';
     } else {
       // 両方未指定の場合はデフォルト
-      containerStyle.width = '100%';
+      imageWrapperStyle.width = '100%';
     }
     
     return (
       <SectionTag 
         id={config.sectionId || undefined} 
-        className={`${showPanel ? 'rounded-lg shadow-md' : ''}`}
-        style={{ ...fullWidthStyle, ...containerStyle }}
+        className="flex justify-center"
+        style={fullWidthStyle}
       >
         <div 
-          className="relative overflow-hidden"
+          className={`relative overflow-hidden ${showPanel ? 'rounded-lg shadow-md' : ''}`}
           style={imageWrapperStyle}
         >
           {/* 画像 */}
