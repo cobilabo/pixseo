@@ -57,10 +57,17 @@ export default function ImageTextBlockSettings({ block, onUpdate }: ImageTextBlo
 
       {/* 画像の高さ */}
       <FloatingInput
-        label="画像の高さ（px）"
+        label="画像の高さ（px）※ 空欄でアスペクト比 100％"
         type="number"
         value={config.imageHeight?.toString() || ''}
-        onChange={(value) => updateConfig({ imageHeight: value ? parseInt(value) : undefined })}
+        onChange={(value) => {
+          if (!value || value === '') {
+            updateConfig({ imageHeight: undefined });
+          } else {
+            const num = parseInt(value);
+            updateConfig({ imageHeight: !isNaN(num) ? num : undefined });
+          }
+        }}
       />
 
       {/* フィルターカラー */}
