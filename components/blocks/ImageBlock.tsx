@@ -5,6 +5,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Block, ImageBlockConfig } from '@/types/block';
+import { getFilterStyle } from '@/lib/utils/filter-helpers';
 
 interface ImageBlockProps {
   block: Block;
@@ -35,15 +36,12 @@ export default function ImageBlock({ block, showPanel = true }: ImageBlockProps)
     overflow: 'hidden',
   } : {};
 
-  // フィルタースタイル
-  const filterStyle = config.filterColor && config.filterOpacity ? {
-    position: 'absolute' as const,
-    inset: 0,
-    backgroundColor: config.filterColor,
-    opacity: config.filterOpacity / 100,
-    pointerEvents: 'none' as const,
-    zIndex: 1,
-  } : undefined;
+  // フィルタースタイル（グラデーション対応）
+  const filterStyle = getFilterStyle(
+    config.filterType || 'full', // デフォルトは全面フィルタ（後方互換性）
+    config.filterColor,
+    config.filterOpacity
+  );
 
   const imageElement = (
     <div

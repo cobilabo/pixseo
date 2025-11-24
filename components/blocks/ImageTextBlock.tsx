@@ -4,6 +4,7 @@
 
 import Image from 'next/image';
 import { Block, ImageTextBlockConfig } from '@/types/block';
+import { getFilterStyle } from '@/lib/utils/filter-helpers';
 
 interface ImageTextBlockProps {
   block: Block;
@@ -45,15 +46,12 @@ export default function ImageTextBlock({ block, showPanel = true }: ImageTextBlo
   // 画像の高さスタイル
   const imageHeightStyle = config.imageHeight ? { height: `${config.imageHeight}px` } : { height: '24rem' };
 
-  // フィルタースタイル
-  const filterStyle = config.filterColor && config.filterOpacity ? {
-    position: 'absolute' as const,
-    inset: 0,
-    backgroundColor: config.filterColor,
-    opacity: config.filterOpacity / 100,
-    pointerEvents: 'none' as const,
-    zIndex: 1,
-  } : undefined;
+  // フィルタースタイル（グラデーション対応）
+  const filterStyle = getFilterStyle(
+    config.filterType || 'full',
+    config.filterColor,
+    config.filterOpacity
+  );
 
   // 画像が背景の場合
   if (config.imagePosition === 'background') {
