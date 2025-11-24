@@ -136,13 +136,19 @@ export async function POST(request: NextRequest) {
 
         blocks.push({
           id: `block-${i}`,
-          type: 'text',
+          type: 'content',
           order: i,
           config: {
-            content: htmlContent,
-            alignment: 'left',
-            fontSize: 1,
-            fontWeight: 'normal',
+            sectionId: '',
+            showImage: false,
+            showHeading: false,
+            showText: true,
+            showWriters: false,
+            showButtons: false,
+            description: htmlContent,
+            textFontSize: 1,
+            textFontWeight: 'normal',
+            textAlignment: 'left',
           },
         });
 
@@ -150,24 +156,34 @@ export async function POST(request: NextRequest) {
         // 画像ブロック（プレースホルダー）
         blocks.push({
           id: `block-${i}`,
-          type: 'image',
+          type: 'content',
           order: i,
           config: {
+            sectionId: '',
+            showImage: true,
+            showHeading: false,
+            showText: false,
+            showWriters: false,
+            showButtons: false,
             imageUrl: '',
-            alt: blockSpec.content || '画像',
-            caption: blockSpec.content,
-            width: 100,
-            alignment: 'center',
+            imageAlt: blockSpec.content || '画像',
+            imagePosition: 'center-size-based',
           },
         });
 
       } else if (blockSpec.type === 'cta') {
-        // CTAブロック
+        // CTAブロック → セクションブロックに変換
         blocks.push({
           id: `block-${i}`,
-          type: 'cta',
+          type: 'content',
           order: i,
           config: {
+            sectionId: '',
+            showImage: true,
+            showHeading: true,
+            showText: false,
+            showWriters: false,
+            showButtons: true,
             imageUrl: '',
             imageAlt: '',
             imagePosition: 'background',
@@ -175,10 +191,7 @@ export async function POST(request: NextRequest) {
             headingFontSize: 1,
             headingFontWeight: 'normal',
             headingTextColor: '',
-            description: '',
-            textFontSize: 1,
-            textFontWeight: 'normal',
-            textColor: '',
+            headingAlignment: 'center',
             buttons: [
               {
                 type: 'text',
