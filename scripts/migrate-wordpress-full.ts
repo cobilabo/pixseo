@@ -570,23 +570,19 @@ async function migrateArticle(
   }
   
   // ライターを取得/作成
-  let authorId = 'wordpress-migration';
-  let authorName = 'Unknown';
+  let writerId = '';
   const wpUser = userMap.get(post.author);
   if (wpUser) {
     if (dryRun) {
-      authorId = `[WRITER:${wpUser.name}]`;
-      authorName = wpUser.name;
+      writerId = `[WRITER:${wpUser.name}]`;
     } else {
       // キャッシュをチェック
       if (writerCache.has(post.author)) {
         const cached = writerCache.get(post.author)!;
-        authorId = cached.writerId;
-        authorName = cached.writerName;
+        writerId = cached.writerId;
       } else {
         const writerResult = await getOrCreateWriter(wpUser, mediaId);
-        authorId = writerResult.writerId;
-        authorName = writerResult.writerName;
+        writerId = writerResult.writerId;
         writerCache.set(post.author, writerResult);
       }
     }
@@ -629,8 +625,7 @@ async function migrateArticle(
     slug: post.slug,
     publishedAt: admin.firestore.Timestamp.fromDate(new Date(post.date)),
     updatedAt: admin.firestore.Timestamp.now(),
-    authorId,
-    authorName,
+    writerId,
     categoryIds,
     tagIds,
     featuredImage,
