@@ -102,6 +102,13 @@ interface WPMedia {
 interface WPUser {
   id: number;
   name: string;
+  slug: string;
+  description?: string;
+  avatar_urls?: {
+    '24'?: string;
+    '48'?: string;
+    '96'?: string;
+  };
 }
 
 /**
@@ -472,13 +479,58 @@ async function getOrCreateTag(name: string, mediaId: string): Promise<string> {
 }
 
 /**
+ * ライターを作成または取得
+ */
+async function getOrCreateWriter(
+  wpUser: WPUser,
+  mediaId: string
+): Promise<{ writerId: string; writerName: string }> {
+  const writersRef = db.collection('writers');
+  
+  // 名前でライターを検索
+  const querySnapshot = await writersRef
+    .where('handleName', '==', wpUser.name)
+    .where('mediaId', '==', mediaId)
+    .get();
+  
+  if (!querySnapshot.empty) {
+    const doc = querySnapshot.docs[0];
+    return { writerId: doc.id, writerName: wpUser.name };
+  }
+  
+  // 新規ライターを作成
+  const writerData: Record<string, unknown> = {
+    handleName: wpUser.name,
+    handleName_ja: wpUser.name,
+    bio: wpUser.description || '',
+    bio_ja: wpUser.description || '',
+    mediaId,
+    createdAt: admin.firestore.Timestamp.now(),
+    updatedAt: admin.firestore.Timestamp.now(),
+  };
+  
+  // アバター画像がある場合は設定（外部URL）
+  if (wpUser.avatar_urls?.['96']) {
+    writerData.icon = wpUser.avatar_urls['96'];
+  }
+  
+  const docRef = await writersRef.add(writerData);
+  console.log(`    ✅ Created writer: ${wpUser.name} (${docRef.id})`);
+  
+  return { writerId: docRef.id, writerName: wpUser.name };
+}
+
+// ライターキャッシュ（同じユーザーの重複登録を防ぐ）
+const writerCache = new Map<number, { writerId: string; writerName: string }>();
+
+/**
  * 記事を移行
  */
 async function migrateArticle(
   post: WPPost,
   categoryMap: Map<number, string>,
   tagMap: Map<number, string>,
-  userMap: Map<number, string>,
+  userMap: Map<number, WPUser>,
   mediaMap: Map<number, string>,
   mediaId: string,
   dryRun: boolean
@@ -514,6 +566,29 @@ async function migrateArticle(
     if (tagName) {
       const firestoreTagId = dryRun ? `[TAG:${tagName}]` : await getOrCreateTag(tagName, mediaId);
       tagIds.push(firestoreTagId);
+    }
+  }
+  
+  // ライターを取得/作成
+  let authorId = 'wordpress-migration';
+  let authorName = 'Unknown';
+  const wpUser = userMap.get(post.author);
+  if (wpUser) {
+    if (dryRun) {
+      authorId = `[WRITER:${wpUser.name}]`;
+      authorName = wpUser.name;
+    } else {
+      // キャッシュをチェック
+      if (writerCache.has(post.author)) {
+        const cached = writerCache.get(post.author)!;
+        authorId = cached.writerId;
+        authorName = cached.writerName;
+      } else {
+        const writerResult = await getOrCreateWriter(wpUser, mediaId);
+        authorId = writerResult.writerId;
+        authorName = writerResult.writerName;
+        writerCache.set(post.author, writerResult);
+      }
     }
   }
   
@@ -554,8 +629,8 @@ async function migrateArticle(
     slug: post.slug,
     publishedAt: admin.firestore.Timestamp.fromDate(new Date(post.date)),
     updatedAt: admin.firestore.Timestamp.now(),
-    authorId: 'wordpress-migration',
-    authorName: userMap.get(post.author) || 'Unknown',
+    authorId,
+    authorName,
     categoryIds,
     tagIds,
     featuredImage,
@@ -626,8 +701,11 @@ async function main() {
     // ユーザー（著者）を取得
     console.log('👤 Fetching users...');
     const users = await fetchAllPages<WPUser>('users');
-    const userMap = new Map(users.map(user => [user.id, user.name]));
+    const userMap = new Map<number, WPUser>(users.map(user => [user.id, user]));
     console.log(`  Found ${users.length} users\n`);
+    
+    // ライターキャッシュをクリア
+    writerCache.clear();
     
     // 記事を取得
     console.log('📝 Fetching posts...');
