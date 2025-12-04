@@ -21,6 +21,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import https from 'https';
 import http from 'http';
+import sharp from 'sharp';
 
 // WordPress設定
 const WORDPRESS_URL = 'https://the-ayumi.jp';
@@ -196,51 +197,108 @@ async function downloadImage(imageUrl: string): Promise<Buffer | null> {
 }
 
 /**
- * Firebase Storageに画像をアップロード
+ * 公開URLを取得
+ */
+async function getSignedUrl(file: admin.storage.File): Promise<string> {
+  const [url] = await file.getSignedUrl({
+    action: 'read',
+    expires: '03-09-2491',
+  });
+  return url;
+}
+
+/**
+ * Firebase Storageに画像をアップロード（管理画面と同じ仕様）
+ * - メイン画像: 最大幅2000px、WebP(品質80%)
+ * - サムネイル: 300x300、fit:cover、WebP(品質70%)
+ * - mediaLibraryコレクションにメタデータを保存
  */
 async function uploadToStorage(
   buffer: Buffer,
   originalUrl: string,
-  mediaId: string
-): Promise<string | null> {
+  mediaId: string,
+  dryRun: boolean = false
+): Promise<{ mainUrl: string; thumbnailUrl: string } | null> {
   try {
     const bucket = storage.bucket();
+    const timestamp = Date.now();
     
     // URLからファイル名を抽出
     const urlPath = new URL(originalUrl).pathname;
-    const fileName = path.basename(urlPath);
-    const extension = path.extname(fileName).toLowerCase();
+    const originalFileName = decodeURIComponent(path.basename(urlPath));
+    const sanitizedName = originalFileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    // Content-Typeを決定
-    const contentTypes: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.svg': 'image/svg+xml',
-    };
-    const contentType = contentTypes[extension] || 'application/octet-stream';
+    // 画像情報を取得
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+    const originalWidth = metadata.width || 0;
+    const originalHeight = metadata.height || 0;
     
-    // 保存パス: media/{mediaId}/wp-migrate/{filename}
-    const storagePath = `media/${mediaId}/wp-migrate/${Date.now()}-${fileName}`;
-    const file = bucket.file(storagePath);
+    // 最大幅2000pxにリサイズ（アスペクト比維持）
+    const maxWidth = 2000;
+    const resizedImage = originalWidth > maxWidth
+      ? image.resize(maxWidth, null, { withoutEnlargement: true })
+      : image;
     
-    await file.save(buffer, {
-      metadata: {
-        contentType,
-        metadata: {
-          originalUrl,
-          migratedAt: new Date().toISOString(),
-        },
-      },
+    // WebP形式に変換（品質80%）
+    const optimizedBuffer = await resizedImage
+      .webp({ quality: 80 })
+      .toBuffer();
+    
+    const finalSize = optimizedBuffer.length;
+    
+    // 最適化後のサイズを取得
+    const optimizedMetadata = await sharp(optimizedBuffer).metadata();
+    const finalWidth = optimizedMetadata.width || originalWidth;
+    const finalHeight = optimizedMetadata.height || originalHeight;
+    
+    console.log(`      Optimized: ${buffer.length} → ${finalSize} (${((1 - finalSize / buffer.length) * 100).toFixed(1)}% reduction)`);
+    
+    // メイン画像をアップロード
+    const mainPath = `media/images/${timestamp}_${sanitizedName.replace(/\.[^.]+$/, '.webp')}`;
+    const mainFile = bucket.file(mainPath);
+    await mainFile.save(optimizedBuffer, {
+      metadata: { contentType: 'image/webp' },
     });
+    const mainUrl = await getSignedUrl(mainFile);
     
-    // 公開URLを取得
-    await file.makePublic();
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+    // サムネイル生成（300x300）
+    const thumbnailBuffer = await sharp(buffer)
+      .resize(300, 300, { fit: 'cover' })
+      .webp({ quality: 70 })
+      .toBuffer();
     
-    return publicUrl;
+    const thumbnailPath = `media/thumbnails/${timestamp}_${sanitizedName.replace(/\.[^.]+$/, '.webp')}`;
+    const thumbnailFile = bucket.file(thumbnailPath);
+    await thumbnailFile.save(thumbnailBuffer, {
+      metadata: { contentType: 'image/webp' },
+    });
+    const thumbnailUrl = await getSignedUrl(thumbnailFile);
+    
+    // Firestoreの mediaLibrary コレクションにメタデータを保存
+    if (!dryRun) {
+      const mediaData = {
+        mediaId,
+        name: `${timestamp}_${sanitizedName.replace(/\.[^.]+$/, '.webp')}`,
+        originalName: originalFileName,
+        url: mainUrl,
+        thumbnailUrl,
+        type: 'image' as const,
+        mimeType: 'image/webp',
+        size: finalSize,
+        width: finalWidth,
+        height: finalHeight,
+        alt: originalFileName.replace(/\.[^.]+$/, ''),
+        usageContext: 'wp-migration',
+        wpOriginalUrl: originalUrl,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      
+      await db.collection('mediaLibrary').add(mediaData);
+    }
+    
+    return { mainUrl, thumbnailUrl };
   } catch (error) {
     console.error(`    Upload error: ${error}`);
     return null;
@@ -254,7 +312,7 @@ async function replaceImageUrls(
   content: string,
   mediaId: string,
   dryRun: boolean
-): Promise<{ content: string; imageMap: Map<string, string> }> {
+): Promise<{ content: string; imageMap: Map<string, string>; imageCount: number }> {
   const imageMap = new Map<string, string>();
   
   // WordPress画像URLのパターン
@@ -278,15 +336,15 @@ async function replaceImageUrls(
     const buffer = await downloadImage(originalUrl);
     
     if (buffer) {
-      const newUrl = await uploadToStorage(buffer, originalUrl, mediaId);
-      if (newUrl) {
-        imageMap.set(originalUrl, newUrl);
-        console.log(`    Uploaded: ${newUrl}`);
+      const result = await uploadToStorage(buffer, originalUrl, mediaId, dryRun);
+      if (result) {
+        imageMap.set(originalUrl, result.mainUrl);
+        console.log(`      ✅ Uploaded with thumbnail`);
       }
     }
     
     // レート制限対策
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
   }
   
   // 画像URLを置換
@@ -295,7 +353,7 @@ async function replaceImageUrls(
     newContent = newContent.split(oldUrl).join(newUrl);
   }
   
-  return { content: newContent, imageMap };
+  return { content: newContent, imageMap, imageCount: imageMap.size };
 }
 
 /**
@@ -460,7 +518,7 @@ async function migrateArticle(
   }
   
   // コンテンツ内の画像URLを置換
-  const { content: processedContent, imageMap } = await replaceImageUrls(
+  const { content: processedContent, imageCount } = await replaceImageUrls(
     post.content.rendered,
     mediaId,
     dryRun
@@ -471,12 +529,20 @@ async function migrateArticle(
   
   // アイキャッチ画像
   let featuredImage = mediaMap.get(post.featured_media) || '';
-  if (featuredImage && !dryRun) {
-    const buffer = await downloadImage(featuredImage);
-    if (buffer) {
-      const newUrl = await uploadToStorage(buffer, featuredImage, mediaId);
-      if (newUrl) {
-        featuredImage = newUrl;
+  let featuredImageAlt = '';
+  if (featuredImage) {
+    if (dryRun) {
+      featuredImage = `[FEATURED:${path.basename(featuredImage)}]`;
+    } else {
+      console.log(`    Processing featured image...`);
+      const buffer = await downloadImage(featuredImage);
+      if (buffer) {
+        const result = await uploadToStorage(buffer, featuredImage, mediaId, dryRun);
+        if (result) {
+          featuredImageAlt = path.basename(featuredImage).replace(/\.[^.]+$/, '');
+          featuredImage = result.mainUrl;
+          console.log(`      ✅ Featured image uploaded with thumbnail`);
+        }
       }
     }
   }
@@ -493,6 +559,7 @@ async function migrateArticle(
     categoryIds,
     tagIds,
     featuredImage,
+    featuredImageAlt,
     isPublished: post.status === 'publish',
     viewCount: 0,
     likeCount: 0,
@@ -507,7 +574,7 @@ async function migrateArticle(
     console.log(`      Slug: ${articleData.slug}`);
     console.log(`      Categories: ${categoryIds.length}`);
     console.log(`      Tags: ${tagIds.length}`);
-    console.log(`      Images replaced: ${imageMap.size}`);
+    console.log(`      Images replaced: ${imageCount}`);
   } else {
     await articlesRef.add(articleData);
     console.log(`    ✅ Migrated: ${articleData.title}`);
