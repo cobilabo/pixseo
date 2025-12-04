@@ -38,11 +38,12 @@ const db = admin.firestore();
 const storage = admin.storage();
 
 // コマンドライン引数の解析
-function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number } {
+function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number; includePages: boolean } {
   const args = process.argv.slice(2);
   let mediaId = '';
   let dryRun = false;
   let limit: number | undefined;
+  let includePages = false;
 
   for (const arg of args) {
     if (arg.startsWith('--mediaId=')) {
@@ -51,16 +52,18 @@ function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number } {
       dryRun = true;
     } else if (arg.startsWith('--limit=')) {
       limit = parseInt(arg.split('=')[1], 10);
+    } else if (arg === '--includePages') {
+      includePages = true;
     }
   }
 
   if (!mediaId) {
     console.error('Error: --mediaId is required');
-    console.log('Usage: npx ts-node scripts/migrate-wordpress-full.ts --mediaId=YOUR_MEDIA_ID');
+    console.log('Usage: npx tsx scripts/migrate-wordpress-full.ts --mediaId=YOUR_MEDIA_ID [--dryRun] [--limit=N] [--includePages]');
     process.exit(1);
   }
 
-  return { mediaId, dryRun, limit };
+  return { mediaId, dryRun, limit, includePages };
 }
 
 // WordPress REST API インターフェース
@@ -76,6 +79,23 @@ interface WPPost {
   featured_media: number;
   date: string;
   status: string;
+  yoast_head_json?: {
+    og_title?: string;
+    og_description?: string;
+  };
+}
+
+interface WPPage {
+  id: number;
+  title: { rendered: string };
+  content: { rendered: string };
+  excerpt: { rendered: string };
+  slug: string;
+  parent: number;
+  featured_media: number;
+  date: string;
+  status: string;
+  menu_order: number;
   yoast_head_json?: {
     og_title?: string;
     og_description?: string;
@@ -652,10 +672,133 @@ async function migrateArticle(
 }
 
 /**
+ * 固定ページを移行
+ */
+async function migratePage(
+  wpPage: WPPage,
+  mediaMap: Map<number, string>,
+  pageSlugToIdMap: Map<string, string>,
+  mediaId: string,
+  dryRun: boolean
+): Promise<string | null> {
+  console.log(`\n  Processing page: ${wpPage.title.rendered}`);
+  
+  // 既存ページチェック
+  const pagesRef = db.collection('pages');
+  const existingPages = await pagesRef
+    .where('slug', '==', wpPage.slug)
+    .where('mediaId', '==', mediaId)
+    .get();
+  
+  if (!existingPages.empty) {
+    console.log(`    Skipped (already exists): ${wpPage.slug}`);
+    pageSlugToIdMap.set(wpPage.slug, existingPages.docs[0].id);
+    return existingPages.docs[0].id;
+  }
+  
+  // コンテンツ内の画像URLを置換
+  const { content: processedContent, imageCount } = await replaceImageUrls(
+    wpPage.content.rendered,
+    mediaId,
+    dryRun
+  );
+  
+  // 内部リンクを置換
+  const finalContent = replaceInternalLinks(processedContent);
+  
+  // アイキャッチ画像
+  let featuredImage = mediaMap.get(wpPage.featured_media) || '';
+  let featuredImageAlt = '';
+  if (featuredImage) {
+    if (dryRun) {
+      featuredImage = `[FEATURED:${path.basename(featuredImage)}]`;
+    } else {
+      console.log(`    Processing featured image...`);
+      const buffer = await downloadImage(featuredImage);
+      if (buffer) {
+        const result = await uploadToStorage(buffer, featuredImage, mediaId, dryRun);
+        if (result) {
+          featuredImageAlt = path.basename(featuredImage).replace(/\.[^.]+$/, '');
+          featuredImage = result.mainUrl;
+          console.log(`      ✅ Featured image uploaded with thumbnail`);
+        }
+      }
+    }
+  }
+  
+  const pageData = {
+    title: stripHtml(wpPage.title.rendered),
+    content: finalContent,
+    excerpt: stripHtml(wpPage.excerpt.rendered),
+    slug: wpPage.slug,
+    publishedAt: admin.firestore.Timestamp.fromDate(new Date(wpPage.date)),
+    updatedAt: admin.firestore.Timestamp.now(),
+    featuredImage,
+    featuredImageAlt,
+    isPublished: wpPage.status === 'publish',
+    order: wpPage.menu_order || 0,
+    mediaId,
+    metaTitle: wpPage.yoast_head_json?.og_title || stripHtml(wpPage.title.rendered),
+    metaDescription: wpPage.yoast_head_json?.og_description || stripHtml(wpPage.excerpt.rendered),
+    useBlockBuilder: false, // HTML形式で移行
+  };
+  
+  if (dryRun) {
+    console.log(`    [DRY RUN] Would create page:`);
+    console.log(`      Title: ${pageData.title}`);
+    console.log(`      Slug: ${pageData.slug}`);
+    console.log(`      Images replaced: ${imageCount}`);
+    return null;
+  } else {
+    const docRef = await pagesRef.add(pageData);
+    pageSlugToIdMap.set(wpPage.slug, docRef.id);
+    console.log(`    ✅ Migrated page: ${pageData.title}`);
+    return docRef.id;
+  }
+}
+
+/**
+ * 固定ページの親子関係を更新
+ */
+async function updatePageParentRelations(
+  wpPages: WPPage[],
+  pageSlugToIdMap: Map<string, string>,
+  mediaId: string,
+  dryRun: boolean
+): Promise<void> {
+  console.log('\n📁 Updating page parent relations...');
+  
+  // WPのIDからslugへのマップを作成
+  const wpIdToSlugMap = new Map<number, string>();
+  wpPages.forEach(page => wpIdToSlugMap.set(page.id, page.slug));
+  
+  for (const wpPage of wpPages) {
+    if (wpPage.parent > 0) {
+      const parentSlug = wpIdToSlugMap.get(wpPage.parent);
+      const childSlug = wpPage.slug;
+      
+      if (parentSlug) {
+        const parentId = pageSlugToIdMap.get(parentSlug);
+        const childId = pageSlugToIdMap.get(childSlug);
+        
+        if (parentId && childId && !dryRun) {
+          await db.collection('pages').doc(childId).update({
+            parentId: parentId,
+          });
+          console.log(`  Updated parent: ${childSlug} → ${parentSlug}`);
+        } else if (dryRun) {
+          console.log(`  [DRY RUN] Would set parent: ${childSlug} → ${parentSlug}`);
+        }
+      }
+    }
+  }
+}
+
+/**
  * メイン処理
  */
 async function main() {
-  const { mediaId, dryRun, limit } = parseArgs();
+  const { mediaId, dryRun, limit, includePages } = parseArgs();
   
   console.log('='.repeat(60));
   console.log('WordPress完全移行スクリプト');
@@ -663,6 +806,7 @@ async function main() {
   console.log(`\nTarget mediaId: ${mediaId}`);
   console.log(`Dry run: ${dryRun}`);
   if (limit) console.log(`Limit: ${limit} articles`);
+  console.log(`Include pages: ${includePages}`);
   console.log('');
   
   // mediaIdの存在確認
@@ -707,12 +851,22 @@ async function main() {
     const posts = await fetchAllPages<WPPost>('posts', limit);
     console.log(`  Found ${posts.length} posts\n`);
     
-    // アイキャッチ画像URLを取得
+    // 固定ページを取得（オプション）
+    let wpPages: WPPage[] = [];
+    if (includePages) {
+      console.log('📄 Fetching pages...');
+      wpPages = await fetchAllPages<WPPage>('pages');
+      console.log(`  Found ${wpPages.length} pages\n`);
+    }
+    
+    // アイキャッチ画像URLを取得（記事＋固定ページ）
     console.log('🖼️  Fetching featured images...');
-    const mediaIds = [...new Set(posts.map(post => post.featured_media).filter(id => id > 0))];
+    const postMediaIds = posts.map(post => post.featured_media).filter(id => id > 0);
+    const pageMediaIds = wpPages.map(page => page.featured_media).filter(id => id > 0);
+    const allMediaIds = [...new Set([...postMediaIds, ...pageMediaIds])];
     const mediaMap = new Map<number, string>();
     
-    for (const mid of mediaIds) {
+    for (const mid of allMediaIds) {
       try {
         const mediaData = await fetchFromWordPress<WPMedia>(`media/${mid}`, 1, 1);
         if (mediaData.length > 0) {
@@ -725,27 +879,49 @@ async function main() {
     console.log(`  Found ${mediaMap.size} featured images\n`);
     
     // 記事を移行
-    console.log('🚀 Starting migration...');
-    let successCount = 0;
-    let skipCount = 0;
-    let errorCount = 0;
+    console.log('🚀 Starting article migration...');
+    let articleSuccessCount = 0;
+    let articleErrorCount = 0;
     
     for (const post of posts) {
       try {
         await migrateArticle(post, categoryMap, tagMap, userMap, mediaMap, mediaId, dryRun);
-        successCount++;
+        articleSuccessCount++;
       } catch (error) {
         console.error(`  ❌ Error migrating "${post.title.rendered}":`, error);
-        errorCount++;
+        articleErrorCount++;
       }
+    }
+    
+    // 固定ページを移行（オプション）
+    let pageSuccessCount = 0;
+    let pageErrorCount = 0;
+    
+    if (includePages && wpPages.length > 0) {
+      console.log('\n🚀 Starting page migration...');
+      const pageSlugToIdMap = new Map<string, string>();
+      
+      for (const wpPage of wpPages) {
+        try {
+          await migratePage(wpPage, mediaMap, pageSlugToIdMap, mediaId, dryRun);
+          pageSuccessCount++;
+        } catch (error) {
+          console.error(`  ❌ Error migrating page "${wpPage.title.rendered}":`, error);
+          pageErrorCount++;
+        }
+      }
+      
+      // 親子関係を更新
+      await updatePageParentRelations(wpPages, pageSlugToIdMap, mediaId, dryRun);
     }
     
     console.log('\n' + '='.repeat(60));
     console.log('Migration completed!');
     console.log('='.repeat(60));
-    console.log(`✅ Success: ${successCount}`);
-    console.log(`⏭️  Skipped: ${skipCount}`);
-    console.log(`❌ Errors: ${errorCount}`);
+    console.log(`📝 Articles: ✅ ${articleSuccessCount} | ❌ ${articleErrorCount}`);
+    if (includePages) {
+      console.log(`📄 Pages: ✅ ${pageSuccessCount} | ❌ ${pageErrorCount}`);
+    }
     
     if (dryRun) {
       console.log('\n⚠️  This was a DRY RUN. No data was actually saved.');
