@@ -383,6 +383,16 @@ async function replaceImageUrls(
   return { content: newContent, imageMap, imageCount: imageMap.size };
 }
 
+// 固定ページのスラッグセット（動的に設定される）
+let pageSlugSet = new Set<string>();
+
+/**
+ * 固定ページのスラッグセットを設定
+ */
+function setPageSlugs(slugs: string[]): void {
+  pageSlugSet = new Set(slugs);
+}
+
 /**
  * 内部リンクを新しいURL形式に変換
  */
@@ -401,21 +411,38 @@ function replaceInternalLinks(content: string): string {
     '/categories/$1'
   );
   
-  // 著者リンク（削除または置換）
+  // タグリンク: https://the-ayumi.jp/tag/slug/ → /tags/slug
+  newContent = newContent.replace(
+    /https?:\/\/the-ayumi\.jp\/tag\/([^/"<>\s]+)\/?/g,
+    '/tags/$1'
+  );
+  
+  // 著者リンク: https://the-ayumi.jp/author/slug/ → /writers/slug
   newContent = newContent.replace(
     /https?:\/\/the-ayumi\.jp\/author\/([^/"<>\s]+)\/?/g,
     '/writers/$1'
   );
   
-  // 固定ページリンク
-  newContent = newContent.replace(
-    /https?:\/\/the-ayumi\.jp\/contact\/?/g,
-    '/contact'
-  );
+  // 固定ページリンク（動的）: https://the-ayumi.jp/slug/ → /slug
+  // 既知の固定ページスラッグに対して変換
+  for (const slug of pageSlugSet) {
+    const pattern = new RegExp(`https?:\\/\\/the-ayumi\\.jp\\/${slug}\\/?(?=["'<>\\s]|#|$)`, 'gi');
+    newContent = newContent.replace(pattern, `/${slug}`);
+  }
   
+  // 一般的な固定ページパターン（日付なし、単一スラッグ）
+  // ※記事・カテゴリー・タグ・著者以外のルートレベルURL
+  // 注意: これは最後に適用し、慎重に処理
   newContent = newContent.replace(
-    /https?:\/\/the-ayumi\.jp\/media\/?/g,
-    '/'
+    /https?:\/\/the-ayumi\.jp\/([a-z0-9-]+)\/?(?=["'<>\s]|#|$)/gi,
+    (match, slug) => {
+      // 既に変換済みのパターンはスキップ
+      if (['category', 'tag', 'author', 'wp-content', 'wp-admin', 'wp-includes', 'feed'].includes(slug)) {
+        return match;
+      }
+      // 固定ページとして変換
+      return `/${slug}`;
+    }
   );
   
   // サイトトップへのリンク
@@ -851,13 +878,15 @@ async function main() {
     const posts = await fetchAllPages<WPPost>('posts', limit);
     console.log(`  Found ${posts.length} posts\n`);
     
-    // 固定ページを取得（オプション）
-    let wpPages: WPPage[] = [];
-    if (includePages) {
-      console.log('📄 Fetching pages...');
-      wpPages = await fetchAllPages<WPPage>('pages');
-      console.log(`  Found ${wpPages.length} pages\n`);
-    }
+    // 固定ページを取得（内部リンク変換に使用 + オプションで移行）
+    console.log('📄 Fetching pages...');
+    const wpPages = await fetchAllPages<WPPage>('pages');
+    console.log(`  Found ${wpPages.length} pages\n`);
+    
+    // 固定ページのスラッグを設定（内部リンク変換用）
+    const pageSlugs = wpPages.map(page => page.slug);
+    setPageSlugs(pageSlugs);
+    console.log(`  Set ${pageSlugs.length} page slugs for internal link conversion\n`);
     
     // アイキャッチ画像URLを取得（記事＋固定ページ）
     console.log('🖼️  Fetching featured images...');
@@ -897,7 +926,7 @@ async function main() {
     let pageSuccessCount = 0;
     let pageErrorCount = 0;
     
-    if (includePages && wpPages.length > 0) {
+    if (includePages) {
       console.log('\n🚀 Starting page migration...');
       const pageSlugToIdMap = new Map<string, string>();
       
