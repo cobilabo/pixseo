@@ -488,6 +488,18 @@ function stripHtml(html: string): string {
 }
 
 /**
+ * コンテンツから最初の画像URLを抽出
+ */
+function extractFirstImageUrl(content: string): string | null {
+  // imgタグのsrc属性を抽出
+  const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch && imgMatch[1]) {
+    return imgMatch[1];
+  }
+  return null;
+}
+
+/**
  * カテゴリーを作成または取得
  */
 /**
@@ -836,6 +848,16 @@ async function migrateArticle(
   // アイキャッチ画像
   let featuredImage = mediaMap.get(post.featured_media) || '';
   let featuredImageAlt = '';
+  
+  // アイキャッチがない場合は記事内の最初の画像を使用
+  if (!featuredImage) {
+    const firstImageUrl = extractFirstImageUrl(post.content.rendered);
+    if (firstImageUrl) {
+      featuredImage = firstImageUrl;
+      console.log(`    No featured image set, using first image from content`);
+    }
+  }
+  
   if (featuredImage) {
     if (dryRun) {
       featuredImage = `[FEATURED:${path.basename(featuredImage)}]`;
