@@ -16,6 +16,7 @@
  * --limit      : 移行する記事数を制限
  */
 
+import * as dotenv from 'dotenv';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -23,9 +24,19 @@ import https from 'https';
 import http from 'http';
 import sharp from 'sharp';
 
+// 環境変数を読み込み
+dotenv.config({ path: path.join(__dirname, '../.env.local') });
+
 // WordPress設定
 const WORDPRESS_URL = 'https://the-ayumi.jp';
 const NEW_SITE_URL = 'https://furatto.pixseo.cloud'; // 新サイトのURL
+
+// WordPress認証情報（環境変数から取得）
+const WP_USERNAME = process.env.WP_USERNAME || '';
+const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD || '';
+const WP_AUTH_HEADER = WP_USERNAME && WP_APP_PASSWORD 
+  ? `Basic ${Buffer.from(`${WP_USERNAME}:${WP_APP_PASSWORD}`).toString('base64')}`
+  : '';
 
 // Firebase Admin SDK の初期化
 if (!admin.apps.length) {
@@ -140,12 +151,19 @@ interface WPUser {
 /**
  * WordPress REST APIからデータを取得（リスト形式）
  */
-async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100): Promise<T[]> {
-  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}`;
+async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false): Promise<T[]> {
+  // 認証がある場合は全ステータスを取得可能
+  const statusParam = (includeAllStatus && WP_AUTH_HEADER) ? '&status=publish,draft,private,pending' : '';
+  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}`;
   console.log(`  Fetching: ${url}`);
   
   try {
-    const response = await fetch(url);
+    const headers: Record<string, string> = {};
+    if (WP_AUTH_HEADER) {
+      headers['Authorization'] = WP_AUTH_HEADER;
+    }
+    
+    const response = await fetch(url, { headers });
     if (!response.ok) {
       if (response.status === 400 && page > 1) {
         return [];
@@ -167,7 +185,12 @@ async function fetchSingleFromWordPress<T>(endpoint: string): Promise<T | null> 
   const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}`;
   
   try {
-    const response = await fetch(url);
+    const headers: Record<string, string> = {};
+    if (WP_AUTH_HEADER) {
+      headers['Authorization'] = WP_AUTH_HEADER;
+    }
+    
+    const response = await fetch(url, { headers });
     if (!response.ok) {
       return null;
     }
@@ -181,12 +204,12 @@ async function fetchSingleFromWordPress<T>(endpoint: string): Promise<T | null> 
 /**
  * 全ページのデータを取得
  */
-async function fetchAllPages<T>(endpoint: string, limit?: number): Promise<T[]> {
+async function fetchAllPages<T>(endpoint: string, limit?: number, includeAllStatus: boolean = false): Promise<T[]> {
   const allData: T[] = [];
   let page = 1;
   
   while (true) {
-    const data = await fetchFromWordPress<T>(endpoint, page);
+    const data = await fetchFromWordPress<T>(endpoint, page, 100, includeAllStatus);
     
     if (data.length === 0) {
       break;
@@ -1052,6 +1075,7 @@ async function main() {
   console.log(`Dry run: ${dryRun}`);
   if (limit) console.log(`Limit: ${limit} articles`);
   console.log(`Include pages: ${includePages}`);
+  console.log(`WP Auth: ${WP_AUTH_HEADER ? '✅ Authenticated (can fetch draft/private)' : '❌ Not authenticated (public posts only)'}`);
   console.log('');
   
   // mediaIdの存在確認
@@ -1091,9 +1115,12 @@ async function main() {
     // ライターキャッシュをクリア
     writerCache.clear();
     
-    // 記事を取得
+    // 記事を取得（認証があれば下書き・非公開も含む）
     console.log('📝 Fetching posts...');
-    const posts = await fetchAllPages<WPPost>('posts', limit);
+    if (WP_AUTH_HEADER) {
+      console.log('  🔐 Authenticated: Including draft/private posts');
+    }
+    const posts = await fetchAllPages<WPPost>('posts', limit, !!WP_AUTH_HEADER);
     console.log(`  Found ${posts.length} posts\n`);
     
     // 固定ページを取得（内部リンク変換に使用 + オプションで移行）
