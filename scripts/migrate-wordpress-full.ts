@@ -491,12 +491,116 @@ function stripHtml(html: string): string {
  * カテゴリーを作成または取得
  */
 /**
+ * 日本語から英語への変換マップ（よく使われるカテゴリー/タグ名）
+ */
+const japaneseToEnglishMap: Record<string, string> = {
+  // カテゴリー
+  'お知らせ': 'notification',
+  'ニュース': 'news',
+  '旅行': 'travel',
+  '観光': 'sightseeing',
+  '旅行/観光': 'travel-sightseeing',
+  'グルメ': 'gourmet',
+  '食事': 'dining',
+  'イベント': 'event',
+  'インタビュー': 'interview',
+  'コラム': 'column',
+  'レビュー': 'review',
+  '製品': 'product',
+  'サービス': 'service',
+  '健康': 'health',
+  '医療': 'medical',
+  '福祉': 'welfare',
+  '介護': 'care',
+  '就労': 'employment',
+  '仕事': 'work',
+  '生活': 'lifestyle',
+  '暮らし': 'living',
+  'ファッション': 'fashion',
+  '美容': 'beauty',
+  'テクノロジー': 'technology',
+  'アプリ': 'app',
+  'ツール': 'tool',
+  '便利グッズ': 'useful-goods',
+  '交通': 'transportation',
+  '移動': 'mobility',
+  'バリアフリー': 'barrier-free',
+  'ユニバーサルデザイン': 'universal-design',
+  '車椅子': 'wheelchair',
+  '障害': 'disability',
+  '障がい': 'disability',
+  'アクセシビリティ': 'accessibility',
+  // タグ
+  'アクティビティ': 'activity',
+  'テーマパーク': 'theme-park',
+  'ホテル': 'hotel',
+  '宿泊': 'accommodation',
+  '飲食店': 'restaurant',
+  'カフェ': 'cafe',
+  'ショッピング': 'shopping',
+  '買い物': 'shopping',
+  '公共施設': 'public-facility',
+  '公園': 'park',
+  '美術館': 'museum',
+  '映画館': 'cinema',
+  'スポーツ': 'sports',
+  'エンタメ': 'entertainment',
+  '娯楽': 'entertainment',
+  '教育': 'education',
+  '学校': 'school',
+  '病院': 'hospital',
+  '駅': 'station',
+  '空港': 'airport',
+  '電車': 'train',
+  'バス': 'bus',
+  'タクシー': 'taxi',
+  'レンタカー': 'rental-car',
+  '補助具': 'assistive-device',
+  '補聴器': 'hearing-aid',
+  '点字': 'braille',
+  '手話': 'sign-language',
+  '情報': 'information',
+  'ガイド': 'guide',
+  'マップ': 'map',
+  '地図': 'map',
+  'おすすめ': 'recommended',
+  '人気': 'popular',
+  '最新': 'latest',
+  '特集': 'feature',
+  'まとめ': 'summary',
+  '解説': 'explanation',
+  '入門': 'beginner',
+  '基礎': 'basics',
+  '応用': 'advanced',
+  '体験': 'experience',
+  '実践': 'practice',
+};
+
+/**
  * スラッグを英数字とハイフンのみに変換
  */
-function sanitizeSlug(slug: string): string {
+function sanitizeSlug(slug: string, name?: string): string {
   // 既に英数字とハイフンのみなら変換不要
   if (/^[a-z0-9-]+$/.test(slug)) {
     return slug;
+  }
+  
+  // 名前から日本語→英語の変換を試みる
+  if (name && japaneseToEnglishMap[name]) {
+    return japaneseToEnglishMap[name];
+  }
+  
+  // URLデコードを試みる（%XX形式の場合）
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug.replace(/-/g, '%'));
+  } catch {
+    // デコード失敗時はそのまま
+  }
+  
+  // デコード後の名前で変換を試みる
+  if (japaneseToEnglishMap[decoded]) {
+    return japaneseToEnglishMap[decoded];
   }
   
   // 日本語や特殊文字を含む場合、英数字とハイフン以外を削除
@@ -505,16 +609,20 @@ function sanitizeSlug(slug: string): string {
     .replace(/-+/g, '-')          // 連続するハイフンを1つに
     .replace(/^-|-$/g, '');       // 先頭と末尾のハイフンを削除
   
-  // 空になった場合はランダム文字列を生成
-  if (!sanitized) {
-    sanitized = `item-${Date.now().toString(36)}`;
+  // 空または短すぎる場合は名前ベースのIDを生成
+  if (!sanitized || sanitized.length < 3) {
+    // 名前のハッシュから短いIDを生成
+    const hash = name ? 
+      Buffer.from(name).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase() :
+      Date.now().toString(36);
+    sanitized = `item-${hash}`;
   }
   
   return sanitized;
 }
 
 async function getOrCreateCategory(name: string, wpSlug: string, mediaId: string): Promise<string> {
-  const slug = sanitizeSlug(wpSlug);
+  const slug = sanitizeSlug(wpSlug, name);
   
   const categoriesRef = db.collection('categories');
   
@@ -561,7 +669,7 @@ async function getOrCreateCategory(name: string, wpSlug: string, mediaId: string
  * タグを作成または取得
  */
 async function getOrCreateTag(name: string, wpSlug: string, mediaId: string): Promise<string> {
-  const slug = sanitizeSlug(wpSlug);
+  const slug = sanitizeSlug(wpSlug, name);
   
   const tagsRef = db.collection('tags');
   
