@@ -152,8 +152,8 @@ interface WPUser {
  * WordPress REST APIからデータを取得（リスト形式）
  */
 async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false): Promise<T[]> {
-  // 認証がある場合は全ステータスを取得可能
-  const statusParam = (includeAllStatus && WP_AUTH_HEADER) ? '&status=publish,draft,private,pending' : '';
+  // 認証がある場合は全ステータスを取得可能（trashは除く）
+  const statusParam = (includeAllStatus && WP_AUTH_HEADER) ? '&status=publish,draft,private,pending,future' : '';
   const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}`;
   console.log(`  Fetching: ${url}`);
   
