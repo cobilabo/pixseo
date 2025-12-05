@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
 import { apiGet, apiPostFormData } from '@/lib/api-client';
 import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
+
+const ITEMS_PER_LOAD = 50;
 
 interface MediaFile {
   id: string;
@@ -30,6 +32,7 @@ export default function MediaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'image' | 'video'>('all');
   const [isImagePromptModalOpen, setIsImagePromptModalOpen] = useState(false);
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_LOAD);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -103,11 +106,32 @@ export default function MediaPage() {
     alert('URLをコピーしました');
   };
 
-  const filteredMedia = mediaFiles.filter((media) => {
-    const matchesSearch = media.originalName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === 'all' || media.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  // フィルタリング
+  const filteredMedia = useMemo(() => {
+    return mediaFiles.filter((media) => {
+      const matchesSearch = media.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = filterType === 'all' || media.type === filterType;
+      return matchesSearch && matchesType;
+    });
+  }, [mediaFiles, searchQuery, filterType]);
+
+  // 表示するメディア（displayCount件まで）
+  const displayedMedia = useMemo(() => {
+    return filteredMedia.slice(0, displayCount);
+  }, [filteredMedia, displayCount]);
+
+  // さらに読み込めるかどうか
+  const hasMore = displayCount < filteredMedia.length;
+
+  // 次を読み込み
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + ITEMS_PER_LOAD);
+  };
+
+  // 検索・フィルター変更時は表示件数をリセット
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_LOAD);
+  }, [searchQuery, filterType]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -151,8 +175,13 @@ export default function MediaPage() {
             </div>
           ) : (
             <div className="bg-white rounded-xl p-6">
+              {/* 件数表示 */}
+              <div className="mb-4 text-sm text-gray-600">
+                全{filteredMedia.length}件中 {displayedMedia.length}件を表示
+              </div>
+              
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filteredMedia.map((media) => (
+                {displayedMedia.map((media) => (
                   <div
                     key={media.id}
                     className="group relative bg-gray-50 rounded-lg overflow-hidden hover:shadow-custom transition-shadow"
@@ -248,6 +277,18 @@ export default function MediaPage() {
                   </div>
                 ))}
               </div>
+              
+              {/* 次を読み込みボタン */}
+              {hasMore && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleLoadMore}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    次を読み込み（残り{filteredMedia.length - displayCount}件）
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

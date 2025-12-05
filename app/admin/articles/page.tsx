@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
@@ -12,6 +12,12 @@ import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useRouter } from 'next/navigation';
 
+// ソート可能なカラム
+type SortColumn = 'title' | 'writer' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
+type SortDirection = 'asc' | 'desc';
+
+const ITEMS_PER_PAGE = 20;
+
 export default function ArticlesPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
@@ -21,6 +27,13 @@ export default function ArticlesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // ページネーション
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // ソート
+  const [sortColumn, setSortColumn] = useState<SortColumn>('updatedAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchArticles();
@@ -149,13 +162,91 @@ export default function ArticlesPage() {
     });
   };
 
-  const filteredArticles = articles.filter((article) => {
+  // ソート切り替え
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+    setCurrentPage(1); // ソート変更時は1ページ目に戻る
+  };
+
+  // ソートアイコン
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) {
+      return (
+        <svg className="w-3 h-3 ml-1 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortDirection === 'asc' ? (
+      <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
+
+  // フィルタリング + ソート + ページネーション
+  const { paginatedArticles, totalPages, totalCount } = useMemo(() => {
+    // 1. フィルタリング
     const lowercaseSearch = searchTerm.toLowerCase();
-    return (
+    let filtered = articles.filter((article) => 
       article.title.toLowerCase().includes(lowercaseSearch) ||
       article.content.toLowerCase().includes(lowercaseSearch)
     );
-  });
+
+    // 2. ソート
+    filtered = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortColumn) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title, 'ja');
+          break;
+        case 'writer':
+          const writerA = writers.find(w => w.id === a.writerId)?.handleName || '';
+          const writerB = writers.find(w => w.id === b.writerId)?.handleName || '';
+          comparison = writerA.localeCompare(writerB, 'ja');
+          break;
+        case 'isPublished':
+          comparison = (a.isPublished ? 1 : 0) - (b.isPublished ? 1 : 0);
+          break;
+        case 'publishedAt':
+          comparison = new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
+          break;
+        case 'createdAt':
+          const createdA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.publishedAt).getTime();
+          const createdB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.publishedAt).getTime();
+          comparison = createdA - createdB;
+          break;
+        case 'updatedAt':
+          comparison = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    // 3. ページネーション
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedArticles = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return { paginatedArticles, totalPages, totalCount };
+  }, [articles, searchTerm, sortColumn, sortDirection, currentPage, writers]);
+
+  // 検索時は1ページ目に戻る
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <AuthGuard>
@@ -175,31 +266,80 @@ export default function ArticlesPage() {
 
           {/* 記事一覧 */}
           <div className="bg-white rounded-xl overflow-hidden">
-            {filteredArticles.length === 0 ? (
+            {totalCount === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 {searchTerm ? '検索結果がありません' : '記事がまだありません'}
               </div>
             ) : (
+              <>
+              {/* 件数表示 */}
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  全{totalCount}件中 {(currentPage - 1) * ITEMS_PER_PAGE + 1}〜{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)}件を表示
+                </span>
+              </div>
               <table className="w-full table-fixed divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '30%' }}>
-                      タイトル&ディスクリプション
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '30%' }}
+                      onClick={() => handleSort('title')}
+                    >
+                      <div className="flex items-center">
+                        タイトル&ディスクリプション
+                        <SortIcon column="title" />
+                      </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
-                      ライター
+                    <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '10%' }}
+                      onClick={() => handleSort('writer')}
+                    >
+                      <div className="flex items-center">
+                        ライター
+                        <SortIcon column="writer" />
+                      </div>
                     </th>
-                    <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '8%' }}>
-                      公開
+                    <th 
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '8%' }}
+                      onClick={() => handleSort('isPublished')}
+                    >
+                      <div className="flex items-center justify-center">
+                        公開
+                        <SortIcon column="isPublished" />
+                      </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
-                      公開日
+                    <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '13%' }}
+                      onClick={() => handleSort('publishedAt')}
+                    >
+                      <div className="flex items-center">
+                        公開日
+                        <SortIcon column="publishedAt" />
+                      </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
-                      作成日
+                    <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '13%' }}
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      <div className="flex items-center">
+                        作成日
+                        <SortIcon column="createdAt" />
+                      </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
-                      更新日
+                    <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '13%' }}
+                      onClick={() => handleSort('updatedAt')}
+                    >
+                      <div className="flex items-center">
+                        更新日
+                        <SortIcon column="updatedAt" />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
                       操作
@@ -207,7 +347,7 @@ export default function ArticlesPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredArticles.map((article) => {
+                  {paginatedArticles.map((article) => {
                     const writer = writers.find(w => w.id === article.writerId);
                     return (
                     <tr key={article.id} className="hover:bg-gray-50">
@@ -329,6 +469,74 @@ export default function ArticlesPage() {
                   })}
                 </tbody>
               </table>
+
+              {/* ページネーション */}
+              {totalPages > 1 && (
+                <div className="px-4 py-4 bg-gray-50 border-t border-gray-200 flex justify-center items-center gap-2">
+                  {/* 最初へ */}
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    «
+                  </button>
+                  
+                  {/* 前へ */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ‹
+                  </button>
+
+                  {/* ページ番号 */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      // 現在ページの前後2ページ + 最初と最後のページを表示
+                      return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 2;
+                    })
+                    .map((page, index, array) => {
+                      // 省略記号の表示
+                      const showEllipsis = index > 0 && page - array[index - 1] > 1;
+                      return (
+                        <span key={page} className="flex items-center">
+                          {showEllipsis && <span className="px-2 text-gray-400">…</span>}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1.5 text-sm rounded-lg border ${
+                              currentPage === page
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'border-gray-300 bg-white hover:bg-gray-100'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </span>
+                      );
+                    })}
+
+                  {/* 次へ */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ›
+                  </button>
+                  
+                  {/* 最後へ */}
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>
