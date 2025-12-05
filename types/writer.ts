@@ -1,5 +1,6 @@
 export interface Writer {
   id: string;
+  slug?: string; // スラッグ（URL用、英字）
   icon?: string; // アイコン画像（オプショナル）
   iconAlt?: string; // アイコン画像のalt属性
   backgroundImage?: string; // 背景画像（オプショナル）

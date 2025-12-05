@@ -95,7 +95,9 @@ interface WPPost {
   tags: number[];
   featured_media: number;
   date: string;
+  modified: string;  // 最終更新日
   status: string;
+  views?: number;    // 閲覧数（プラグインによる）
   yoast_head_json?: {
     og_title?: string;
     og_description?: string;
@@ -111,6 +113,7 @@ interface WPPage {
   parent: number;
   featured_media: number;
   date: string;
+  modified: string;  // 最終更新日
   status: string;
   menu_order: number;
   yoast_head_json?: {
@@ -151,10 +154,12 @@ interface WPUser {
 /**
  * WordPress REST APIからデータを取得（リスト形式）
  */
-async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false): Promise<T[]> {
+async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false, useEditContext: boolean = false): Promise<T[]> {
   // 認証がある場合は全ステータスを取得可能（trashは除く）
   const statusParam = (includeAllStatus && WP_AUTH_HEADER) ? '&status=publish,draft,private,pending,future' : '';
-  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}`;
+  // 認証がある場合はeditコンテキストでプロフィール情報も取得可能
+  const contextParam = (useEditContext && WP_AUTH_HEADER) ? '&context=edit' : '';
+  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}${contextParam}`;
   console.log(`  Fetching: ${url}`);
   
   try {
@@ -181,35 +186,49 @@ async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage
 /**
  * WordPress REST APIから単一リソースを取得
  */
-async function fetchSingleFromWordPress<T>(endpoint: string): Promise<T | null> {
+async function fetchSingleFromWordPress<T>(endpoint: string, retries: number = 3): Promise<T | null> {
   const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}`;
   
-  try {
-    const headers: Record<string, string> = {};
-    if (WP_AUTH_HEADER) {
-      headers['Authorization'] = WP_AUTH_HEADER;
-    }
-    
-    const response = await fetch(url, { headers });
-    if (!response.ok) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const headers: Record<string, string> = {};
+      if (WP_AUTH_HEADER) {
+        headers['Authorization'] = WP_AUTH_HEADER;
+      }
+      
+      const response = await fetch(url, { headers });
+      if (!response.ok) {
+        if (response.status === 503 && attempt < retries) {
+          // サーバー過負荷時はリトライ（1秒待機）
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        console.warn(`    ⚠️ Failed to fetch ${endpoint}: HTTP ${response.status}`);
+        return null;
+      }
+      
+      return await response.json() as T;
+    } catch (error) {
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      console.warn(`    ⚠️ Failed to fetch ${endpoint}: ${error}`);
       return null;
     }
-    
-    return await response.json() as T;
-  } catch (error) {
-    return null;
   }
+  return null;
 }
 
 /**
  * 全ページのデータを取得
  */
-async function fetchAllPages<T>(endpoint: string, limit?: number, includeAllStatus: boolean = false): Promise<T[]> {
+async function fetchAllPages<T>(endpoint: string, limit?: number, includeAllStatus: boolean = false, useEditContext: boolean = false): Promise<T[]> {
   const allData: T[] = [];
   let page = 1;
   
   while (true) {
-    const data = await fetchFromWordPress<T>(endpoint, page, 100, includeAllStatus);
+    const data = await fetchFromWordPress<T>(endpoint, page, 100, includeAllStatus, useEditContext);
     
     if (data.length === 0) {
       break;
@@ -511,6 +530,28 @@ function stripHtml(html: string): string {
 }
 
 /**
+ * HTMLコンテンツの改行を正規化
+ * - タグ間の改行・空白を完全に削除（管理画面のpre-wrap対策）
+ * - 空の段落タグを削除
+ */
+function normalizeHtmlContent(html: string): string {
+  let content = html;
+  
+  // 空の段落タグを削除（空白のみ含むものも）
+  content = content.replace(/<p>\s*<\/p>/gi, '');
+  content = content.replace(/<p>&nbsp;<\/p>/gi, '');
+  
+  // タグ間の改行・空白をすべて削除（>と<の間）
+  // これにより管理画面のpre-wrapでも余計な改行が表示されない
+  content = content.replace(/>\s+</g, '><');
+  
+  // 先頭と末尾の空白を削除
+  content = content.trim();
+  
+  return content;
+}
+
+/**
  * コンテンツから最初の画像URLを抽出
  */
 function extractFirstImageUrl(content: string): string | null {
@@ -767,6 +808,7 @@ async function getOrCreateWriter(
   
   // 新規ライターを作成
   const writerData: Record<string, unknown> = {
+    slug: wpUser.slug,  // WPのユーザー名（英字スラッグ）
     handleName: wpUser.name,
     handleName_ja: wpUser.name,
     bio: wpUser.description || '',
@@ -866,7 +908,10 @@ async function migrateArticle(
   );
   
   // 内部リンクを置換
-  const finalContent = replaceInternalLinks(processedContent);
+  const linkedContent = replaceInternalLinks(processedContent);
+  
+  // コンテンツの改行を正規化
+  const finalContent = normalizeHtmlContent(linkedContent);
   
   // アイキャッチ画像
   let featuredImage = mediaMap.get(post.featured_media) || '';
@@ -898,20 +943,25 @@ async function migrateArticle(
     }
   }
   
+  // 公開日と更新日を計算（更新日が公開日より古い場合は公開日を使用）
+  const publishedDate = new Date(post.date);
+  const modifiedDate = new Date(post.modified);
+  const finalUpdatedAt = modifiedDate < publishedDate ? publishedDate : modifiedDate;
+
   const articleData = {
     title: stripHtml(post.title.rendered),
     content: finalContent,
     excerpt: stripHtml(post.excerpt.rendered),
     slug: post.slug,
-    publishedAt: admin.firestore.Timestamp.fromDate(new Date(post.date)),
-    updatedAt: admin.firestore.Timestamp.now(),
+    publishedAt: admin.firestore.Timestamp.fromDate(publishedDate),
+    updatedAt: admin.firestore.Timestamp.fromDate(finalUpdatedAt),
     writerId,
     categoryIds,
     tagIds,
     featuredImage,
     featuredImageAlt,
     isPublished: post.status === 'publish',
-    viewCount: 0,
+    viewCount: post.views || 0,  // WPの閲覧数を引き継ぐ
     likeCount: 0,
     mediaId,
     metaTitle: post.yoast_head_json?.og_title || stripHtml(post.title.rendered),
@@ -920,6 +970,8 @@ async function migrateArticle(
     wpMigrated: true,
     wpMigratedAt: admin.firestore.Timestamp.now(),
     wpOriginalId: post.id,
+    // リダイレクト用：旧URLパス（日付ベースのパーマリンク）
+    wpPermalink: `/${publishedDate.getFullYear()}/${String(publishedDate.getMonth() + 1).padStart(2, '0')}/${String(publishedDate.getDate()).padStart(2, '0')}/${post.slug}/`,
   };
   
   if (dryRun) {
@@ -968,7 +1020,10 @@ async function migratePage(
   );
   
   // 内部リンクを置換
-  const finalContent = replaceInternalLinks(processedContent);
+  const linkedContent = replaceInternalLinks(processedContent);
+  
+  // コンテンツの改行を正規化
+  const finalContent = normalizeHtmlContent(linkedContent);
   
   // アイキャッチ画像
   let featuredImage = mediaMap.get(wpPage.featured_media) || '';
@@ -990,13 +1045,18 @@ async function migratePage(
     }
   }
   
+  // 公開日と更新日を計算（更新日が公開日より古い場合は公開日を使用）
+  const publishedDate = new Date(wpPage.date);
+  const modifiedDate = new Date(wpPage.modified);
+  const finalUpdatedAt = modifiedDate < publishedDate ? publishedDate : modifiedDate;
+
   const pageData = {
     title: stripHtml(wpPage.title.rendered),
     content: finalContent,
     excerpt: stripHtml(wpPage.excerpt.rendered),
     slug: wpPage.slug,
-    publishedAt: admin.firestore.Timestamp.fromDate(new Date(wpPage.date)),
-    updatedAt: admin.firestore.Timestamp.now(),
+    publishedAt: admin.firestore.Timestamp.fromDate(publishedDate),
+    updatedAt: admin.firestore.Timestamp.fromDate(finalUpdatedAt),
     featuredImage,
     featuredImageAlt,
     isPublished: wpPage.status === 'publish',
@@ -1106,9 +1166,13 @@ async function main() {
     const tagMap = new Map(tags.map(tag => [tag.id, { name: tag.name, slug: tag.slug }]));
     console.log(`  Found ${tags.length} tags\n`);
     
-    // ユーザー（著者）を取得
+    // ユーザー（著者）を取得（プロフィール情報も含む）
     console.log('👤 Fetching users...');
-    const users = await fetchAllPages<WPUser>('users');
+    if (WP_AUTH_HEADER) {
+      console.log('  🔐 Authenticated: Including profile descriptions');
+    }
+    // useEditContext=trueでプロフィール（description）を取得
+    const users = await fetchAllPages<WPUser>('users', undefined, false, true);
     const userMap = new Map<number, WPUser>(users.map(user => [user.id, user]));
     console.log(`  Found ${users.length} users\n`);
     
@@ -1140,8 +1204,8 @@ async function main() {
     const allMediaIds = [...new Set([...postMediaIds, ...pageMediaIds])];
     const mediaMap = new Map<number, string>();
     
-    // 並列でアイキャッチ画像を取得（バッチサイズ10）
-    const BATCH_SIZE = 10;
+    // 並列でアイキャッチ画像を取得（バッチサイズ5、サーバー負荷軽減）
+    const BATCH_SIZE = 5;
     for (let i = 0; i < allMediaIds.length; i += BATCH_SIZE) {
       const batch = allMediaIds.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
@@ -1161,8 +1225,11 @@ async function main() {
         }
       }
       
-      if ((i + BATCH_SIZE) % 50 === 0 || i + BATCH_SIZE >= allMediaIds.length) {
-        console.log(`  Fetched ${Math.min(i + BATCH_SIZE, allMediaIds.length)}/${allMediaIds.length} featured images...`);
+      console.log(`  Fetched ${Math.min(i + BATCH_SIZE, allMediaIds.length)}/${allMediaIds.length} featured images...`);
+      
+      // サーバー負荷軽減のため500ms待機
+      if (i + BATCH_SIZE < allMediaIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
     console.log(`  Found ${mediaMap.size} featured images\n`);
