@@ -13,6 +13,7 @@
     "fetch-wordpress": "ts-node scripts/fetch-wordpress.ts",
     "migrate": "ts-node scripts/migrate-wordpress.ts",
     "migrate:wp-full": "tsx scripts/migrate-wordpress-full.ts",
+    "rollback:wp-migration": "tsx scripts/rollback-wordpress-migration.ts",
     "migrate:add-media-id": "tsx scripts/migrate-add-media-id.ts",
     "migrate:tenants": "tsx scripts/migrate-tenants.ts",
     "check:articles": "tsx scripts/check-articles.ts",

@@ -29,8 +29,14 @@ const NEW_SITE_URL = 'https://furatto.pixseo.cloud'; // 新サイトのURL
 
 // Firebase Admin SDK の初期化
 if (!admin.apps.length) {
+  // サービスアカウントファイルを直接読み込む
+  const serviceAccountPath = path.join(__dirname, '..', 'pixseo-1eeef-firebase-adminsdk-fbsvc-7b2fe59f30.json');
+  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+  
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+    credential: admin.credential.cert(serviceAccount),
+    projectId: 'pixseo-1eeef',
+    storageBucket: 'pixseo-1eeef.firebasestorage.app',
   });
 }
 
@@ -132,7 +138,7 @@ interface WPUser {
 }
 
 /**
- * WordPress REST APIからデータを取得
+ * WordPress REST APIからデータを取得（リスト形式）
  */
 async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100): Promise<T[]> {
   const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}`;
@@ -151,6 +157,24 @@ async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage
   } catch (error) {
     console.error(`  Error fetching ${endpoint}:`, error);
     return [];
+  }
+}
+
+/**
+ * WordPress REST APIから単一リソースを取得
+ */
+async function fetchSingleFromWordPress<T>(endpoint: string): Promise<T | null> {
+  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    
+    return await response.json() as T;
+  } catch (error) {
+    return null;
   }
 }
 
@@ -320,6 +344,8 @@ async function uploadToStorage(
         wpOriginalUrl: originalUrl,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        wpMigrated: true,
+        wpMigratedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       
       await db.collection('mediaLibrary').add(mediaData);
@@ -488,6 +514,8 @@ async function getOrCreateCategory(name: string, mediaId: string): Promise<strin
     mediaId,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
+    wpMigrated: true,
+    wpMigratedAt: admin.firestore.Timestamp.now(),
   });
   
   console.log(`    Created category: ${name} (${docRef.id})`);
@@ -519,6 +547,8 @@ async function getOrCreateTag(name: string, mediaId: string): Promise<string> {
     mediaId,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
+    wpMigrated: true,
+    wpMigratedAt: admin.firestore.Timestamp.now(),
   });
   
   console.log(`    Created tag: ${name} (${docRef.id})`);
@@ -554,6 +584,9 @@ async function getOrCreateWriter(
     mediaId,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
+    wpMigrated: true,
+    wpMigratedAt: admin.firestore.Timestamp.now(),
+    wpOriginalId: wpUser.id,
   };
   
   // アバター画像がある場合は設定（外部URL）
@@ -683,6 +716,10 @@ async function migrateArticle(
     mediaId,
     metaTitle: post.yoast_head_json?.og_title || stripHtml(post.title.rendered),
     metaDescription: post.yoast_head_json?.og_description || stripHtml(post.excerpt.rendered),
+    // 移行識別マーカー（ロールバック用）
+    wpMigrated: true,
+    wpMigratedAt: admin.firestore.Timestamp.now(),
+    wpOriginalId: post.id,
   };
   
   if (dryRun) {
@@ -768,6 +805,10 @@ async function migratePage(
     metaTitle: wpPage.yoast_head_json?.og_title || stripHtml(wpPage.title.rendered),
     metaDescription: wpPage.yoast_head_json?.og_description || stripHtml(wpPage.excerpt.rendered),
     useBlockBuilder: false, // HTML形式で移行
+    // 移行識別マーカー（ロールバック用）
+    wpMigrated: true,
+    wpMigratedAt: admin.firestore.Timestamp.now(),
+    wpOriginalId: wpPage.id,
   };
   
   if (dryRun) {
@@ -895,14 +936,29 @@ async function main() {
     const allMediaIds = [...new Set([...postMediaIds, ...pageMediaIds])];
     const mediaMap = new Map<number, string>();
     
-    for (const mid of allMediaIds) {
-      try {
-        const mediaData = await fetchFromWordPress<WPMedia>(`media/${mid}`, 1, 1);
-        if (mediaData.length > 0) {
-          mediaMap.set(mid, mediaData[0].source_url);
+    // 並列でアイキャッチ画像を取得（バッチサイズ10）
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < allMediaIds.length; i += BATCH_SIZE) {
+      const batch = allMediaIds.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map(async (mid) => {
+          try {
+            const mediaData = await fetchSingleFromWordPress<WPMedia>(`media/${mid}`);
+            return { mid, url: mediaData?.source_url || null };
+          } catch {
+            return { mid, url: null };
+          }
+        })
+      );
+      
+      for (const { mid, url } of results) {
+        if (url) {
+          mediaMap.set(mid, url);
         }
-      } catch (error) {
-        console.error(`  Error fetching media ${mid}:`, error);
+      }
+      
+      if ((i + BATCH_SIZE) % 50 === 0 || i + BATCH_SIZE >= allMediaIds.length) {
+        console.log(`  Fetched ${Math.min(i + BATCH_SIZE, allMediaIds.length)}/${allMediaIds.length} featured images...`);
       }
     }
     console.log(`  Found ${mediaMap.size} featured images\n`);
