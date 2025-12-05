@@ -257,22 +257,6 @@ export default function MediaPage() {
                           </span>
                         )}
                       </div>
-                      {/* 使用数表示 */}
-                      {media.usageCount !== undefined && (
-                        <div className="mt-2 pt-2 border-t border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-gray-700">使用数:</span>
-                            <span className={`text-xs font-bold ${media.usageCount > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                              {media.usageCount}
-                            </span>
-                          </div>
-                          {media.usageDetails && media.usageDetails.length > 0 && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              {media.usageDetails.join(', ')}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
