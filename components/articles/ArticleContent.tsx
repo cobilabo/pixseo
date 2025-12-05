@@ -74,8 +74,9 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
 
       // 画像を最適化（Next.js Image）
       if (domNode.name === 'img' && domNode.attribs?.src) {
-        const { src, alt = '', ...rest } = domNode.attribs;
+        const { src, alt = '' } = domNode.attribs;
         
+        // srcsetなどの不要な属性は除外し、srcとaltのみを使用
         // 外部URLの場合はそのまま表示（next.config.jsで許可が必要）
         return (
           <span className="block my-6">
@@ -86,7 +87,6 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
               height={450}
               className="rounded-lg w-full h-auto"
               loading="lazy"
-              {...rest}
             />
           </span>
         );
