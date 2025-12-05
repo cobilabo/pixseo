@@ -490,19 +490,54 @@ function stripHtml(html: string): string {
 /**
  * カテゴリーを作成または取得
  */
-async function getOrCreateCategory(name: string, mediaId: string): Promise<string> {
-  const slug = name.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF-]+/g, '');
+/**
+ * スラッグを英数字とハイフンのみに変換
+ */
+function sanitizeSlug(slug: string): string {
+  // 既に英数字とハイフンのみなら変換不要
+  if (/^[a-z0-9-]+$/.test(slug)) {
+    return slug;
+  }
+  
+  // 日本語や特殊文字を含む場合、英数字とハイフン以外を削除
+  let sanitized = slug.toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')  // 英数字とハイフン以外をハイフンに
+    .replace(/-+/g, '-')          // 連続するハイフンを1つに
+    .replace(/^-|-$/g, '');       // 先頭と末尾のハイフンを削除
+  
+  // 空になった場合はランダム文字列を生成
+  if (!sanitized) {
+    sanitized = `item-${Date.now().toString(36)}`;
+  }
+  
+  return sanitized;
+}
+
+async function getOrCreateCategory(name: string, wpSlug: string, mediaId: string): Promise<string> {
+  const slug = sanitizeSlug(wpSlug);
   
   const categoriesRef = db.collection('categories');
-  const querySnapshot = await categoriesRef
+  
+  // 名前で既存データをチェック（優先）
+  const nameQuerySnapshot = await categoriesRef
+    .where('name', '==', name)
+    .where('mediaId', '==', mediaId)
+    .get();
+  
+  if (!nameQuerySnapshot.empty) {
+    console.log(`    Using existing category (by name): ${name}`);
+    return nameQuerySnapshot.docs[0].id;
+  }
+  
+  // スラッグでも既存データをチェック
+  const slugQuerySnapshot = await categoriesRef
     .where('slug', '==', slug)
     .where('mediaId', '==', mediaId)
     .get();
   
-  if (!querySnapshot.empty) {
-    return querySnapshot.docs[0].id;
+  if (!slugQuerySnapshot.empty) {
+    console.log(`    Using existing category (by slug): ${slug}`);
+    return slugQuerySnapshot.docs[0].id;
   }
   
   const docRef = await categoriesRef.add({
@@ -518,26 +553,38 @@ async function getOrCreateCategory(name: string, mediaId: string): Promise<strin
     wpMigratedAt: admin.firestore.Timestamp.now(),
   });
   
-  console.log(`    Created category: ${name} (${docRef.id})`);
+  console.log(`    Created category: ${name} (slug: ${slug}, id: ${docRef.id})`);
   return docRef.id;
 }
 
 /**
  * タグを作成または取得
  */
-async function getOrCreateTag(name: string, mediaId: string): Promise<string> {
-  const slug = name.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF-]+/g, '');
+async function getOrCreateTag(name: string, wpSlug: string, mediaId: string): Promise<string> {
+  const slug = sanitizeSlug(wpSlug);
   
   const tagsRef = db.collection('tags');
-  const querySnapshot = await tagsRef
+  
+  // 名前で既存データをチェック（優先）
+  const nameQuerySnapshot = await tagsRef
+    .where('name', '==', name)
+    .where('mediaId', '==', mediaId)
+    .get();
+  
+  if (!nameQuerySnapshot.empty) {
+    console.log(`    Using existing tag (by name): ${name}`);
+    return nameQuerySnapshot.docs[0].id;
+  }
+  
+  // スラッグでも既存データをチェック
+  const slugQuerySnapshot = await tagsRef
     .where('slug', '==', slug)
     .where('mediaId', '==', mediaId)
     .get();
   
-  if (!querySnapshot.empty) {
-    return querySnapshot.docs[0].id;
+  if (!slugQuerySnapshot.empty) {
+    console.log(`    Using existing tag (by slug): ${slug}`);
+    return slugQuerySnapshot.docs[0].id;
   }
   
   const docRef = await tagsRef.add({
@@ -551,7 +598,7 @@ async function getOrCreateTag(name: string, mediaId: string): Promise<string> {
     wpMigratedAt: admin.firestore.Timestamp.now(),
   });
   
-  console.log(`    Created tag: ${name} (${docRef.id})`);
+  console.log(`    Created tag: ${name} (slug: ${slug}, id: ${docRef.id})`);
   return docRef.id;
 }
 
@@ -632,9 +679,9 @@ async function migrateArticle(
   // カテゴリーIDを取得/作成
   const categoryIds: string[] = [];
   for (const catId of post.categories) {
-    const catName = categoryMap.get(catId);
-    if (catName) {
-      const firestoreCatId = dryRun ? `[CAT:${catName}]` : await getOrCreateCategory(catName, mediaId);
+    const catInfo = categoryMap.get(catId);
+    if (catInfo) {
+      const firestoreCatId = dryRun ? `[CAT:${catInfo.name}]` : await getOrCreateCategory(catInfo.name, catInfo.slug, mediaId);
       categoryIds.push(firestoreCatId);
     }
   }
@@ -642,9 +689,9 @@ async function migrateArticle(
   // タグIDを取得/作成
   const tagIds: string[] = [];
   for (const tagId of post.tags) {
-    const tagName = tagMap.get(tagId);
-    if (tagName) {
-      const firestoreTagId = dryRun ? `[TAG:${tagName}]` : await getOrCreateTag(tagName, mediaId);
+    const tagInfo = tagMap.get(tagId);
+    if (tagInfo) {
+      const firestoreTagId = dryRun ? `[TAG:${tagInfo.name}]` : await getOrCreateTag(tagInfo.name, tagInfo.slug, mediaId);
       tagIds.push(firestoreTagId);
     }
   }
@@ -896,13 +943,13 @@ async function main() {
     // カテゴリーを取得
     console.log('📁 Fetching categories...');
     const categories = await fetchAllPages<WPCategory>('categories');
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat.name]));
+    const categoryMap = new Map(categories.map(cat => [cat.id, { name: cat.name, slug: cat.slug }]));
     console.log(`  Found ${categories.length} categories\n`);
     
     // タグを取得
     console.log('🏷️  Fetching tags...');
     const tags = await fetchAllPages<WPTag>('tags');
-    const tagMap = new Map(tags.map(tag => [tag.id, tag.name]));
+    const tagMap = new Map(tags.map(tag => [tag.id, { name: tag.name, slug: tag.slug }]));
     console.log(`  Found ${tags.length} tags\n`);
     
     // ユーザー（著者）を取得
