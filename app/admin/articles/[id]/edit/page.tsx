@@ -42,9 +42,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [slugError, setSlugError] = useState('');
   const [checkingSlug, setCheckingSlug] = useState(false);
   
-  // 日付をYYYY-MM-DD形式に変換
-  const formatDateToInput = (date: Date | string) => {
+  // 日付をYYYY-MM-DD形式に変換（nullの場合は空文字を返す）
+  const formatDateToInput = (date: Date | string | null | undefined): string => {
+    if (!date) return ''; // nullまたはundefinedの場合は空文字
     const d = new Date(date);
+    if (isNaN(d.getTime())) return ''; // Invalid Dateの場合も空文字
     return d.toISOString().split('T')[0];
   };
 
@@ -96,9 +98,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         console.log('[EditArticlePage] Received article:', articleData);
         console.log('[EditArticlePage] featuredImageAlt from DB:', articleData.featuredImageAlt);
         
-        // 日付をDateオブジェクトに変換
-        articleData.publishedAt = new Date(articleData.publishedAt);
-        articleData.updatedAt = new Date(articleData.updatedAt);
+        // 日付をDateオブジェクトに変換（nullの場合はnullのまま）
+        articleData.publishedAt = articleData.publishedAt ? new Date(articleData.publishedAt) : null;
+        articleData.updatedAt = articleData.updatedAt ? new Date(articleData.updatedAt) : new Date();
 
         setArticle(articleData);
         setFeaturedImageUrl(articleData.featuredImage || '');
