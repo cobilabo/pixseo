@@ -220,11 +220,13 @@ export default function ArticlesPage() {
           comparison = (a.isPublished ? 1 : 0) - (b.isPublished ? 1 : 0);
           break;
         case 'publishedAt':
-          comparison = new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
+          const pubA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const pubB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          comparison = pubA - pubB;
           break;
         case 'createdAt':
-          const createdA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.publishedAt).getTime();
-          const createdB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.publishedAt).getTime();
+          const createdA = a.createdAt ? new Date(a.createdAt).getTime() : (a.publishedAt ? new Date(a.publishedAt).getTime() : 0);
+          const createdB = b.createdAt ? new Date(b.createdAt).getTime() : (b.publishedAt ? new Date(b.publishedAt).getTime() : 0);
           comparison = createdA - createdB;
           break;
         case 'updatedAt':
