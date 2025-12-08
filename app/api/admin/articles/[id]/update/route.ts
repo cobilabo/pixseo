@@ -29,16 +29,23 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log('[API] 以前の公開状態:', wasPublished, '→ 新しい公開状態:', body.isPublished);
     console.log('[API] ステータス変更:', statusChanged);
     
-    // publishedAtが送信されていればDateに変換
-    const publishedAt = body.publishedAt ? new Date(body.publishedAt) : undefined;
+    // publishedAtがnullの場合は下書き扱い
+    const isDraft = body.publishedAt === null || body.isDraft === true;
+    const publishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
     
     // updatedAtを現在時刻に設定
     let updateData: any = {
       ...body,
       updatedAt: FieldValue.serverTimestamp(),
-      // publishedAtが送信されていれば更新
-      ...(publishedAt && { publishedAt }),
+      // publishedAtを更新（nullの場合もnullとして保存）
+      publishedAt: publishedAt,
+      // 下書きの場合は非公開・非予約
+      isPublished: isDraft ? false : (body.isPublished || false),
+      isScheduled: isDraft ? false : (body.isScheduled || false),
     };
+    
+    // isDraftフィールドを削除（一時的なフラグ）
+    delete updateData.isDraft;
 
     // 🌐 日本語フィールドを保存（常に実行）
     if (updateData.title) {

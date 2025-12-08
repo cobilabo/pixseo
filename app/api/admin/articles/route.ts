@@ -75,17 +75,25 @@ export async function POST(request: NextRequest) {
     );
 
     const now = new Date();
-    // publishedAtが送信されていればそれを使用、なければ現在日時
-    const publishedAt = cleanData.publishedAt ? new Date(cleanData.publishedAt as string | number | Date) : now;
+    // publishedAtがnullまたは未設定の場合は下書き扱い
+    const isDraft = cleanData.publishedAt === null || cleanData.isDraft === true;
+    const publishedAt = cleanData.publishedAt ? new Date(cleanData.publishedAt as string | number | Date) : null;
     
     let articleData: any = {
       ...cleanData,
       createdAt: now,
-      publishedAt: publishedAt,
+      publishedAt: publishedAt, // nullの場合はnullとして保存
       updatedAt: now,
       viewCount: 0,
       likeCount: 0,
+      isDraft: isDraft,
+      // 下書きの場合は非公開・非予約
+      isPublished: isDraft ? false : (cleanData.isPublished || false),
+      isScheduled: isDraft ? false : (cleanData.isScheduled || false),
     };
+    
+    // isDraftフィールドを削除（一時的なフラグ）
+    delete articleData.isDraft;
 
     // 🌐 日本語フィールドを保存（常に実行）
     articleData.title_ja = articleData.title;

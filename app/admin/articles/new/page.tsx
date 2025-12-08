@@ -283,8 +283,13 @@ function NewArticlePageContent() {
       console.log('[handleSubmit] 目次:', tableOfContents);
       console.log('[handleSubmit] 読了時間:', readingTime, '分');
       
-      // 公開日をDateオブジェクトに変換
-      const publishedAtDate = new Date(formData.publishedAt + 'T00:00:00+09:00'); // JST
+      // 公開日をDateオブジェクトに変換（空の場合はnull）
+      const publishedAtDate = formData.publishedAt 
+        ? new Date(formData.publishedAt + 'T00:00:00+09:00') // JST
+        : null;
+
+      // 公開日が空の場合は下書き扱い
+      const isDraft = !publishedAtDate;
 
       // バックグラウンドで実行（await しない）
       fetch('/api/admin/articles', {
@@ -301,8 +306,10 @@ function NewArticlePageContent() {
           mediaId: currentTenant.id,
           tableOfContents,
           readingTime,
-          publishedAt: publishedAtDate.toISOString(),
-          isScheduled: formData.isScheduled,
+          publishedAt: publishedAtDate ? publishedAtDate.toISOString() : null,
+          isScheduled: isDraft ? false : formData.isScheduled,
+          isPublished: isDraft ? false : formData.isPublished,
+          isDraft: isDraft,
         }),
       }).then(async (response) => {
         if (!response.ok) {

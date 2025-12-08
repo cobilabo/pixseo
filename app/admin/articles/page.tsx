@@ -397,7 +397,12 @@ export default function ArticlesPage() {
                         )}
                       </td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
-                        {article.isScheduled ? (
+                        {!article.publishedAt ? (
+                          // 公開日がない場合は下書きバッジ表示
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            下書き
+                          </span>
+                        ) : article.isScheduled ? (
                           // 予約公開状態の場合はバッジ表示
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title="予約公開中 - 公開日になると自動公開されます">
                             予約中
@@ -426,10 +431,16 @@ export default function ArticlesPage() {
                         )}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {article.publishedAt 
+                          ? new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                          : '-'
+                        }
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {new Date(article.createdAt || article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {(article.createdAt || article.publishedAt)
+                          ? new Date(article.createdAt || article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                          : '-'
+                        }
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
                         {new Date(article.updatedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
