@@ -53,6 +53,16 @@ export async function DELETE(
   }
 }
 
+// Timestampまたは文字列をDateに変換するヘルパー
+const convertToDate = (value: any): Date => {
+  if (!value) return new Date();
+  if (value.toDate) return value.toDate(); // Firestore Timestamp
+  if (value.seconds) return new Date(value.seconds * 1000); // Timestamp object
+  if (typeof value === 'string') return new Date(value); // ISO string
+  if (value instanceof Date) return value;
+  return new Date();
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -77,8 +87,8 @@ export async function GET(
       ...data,
       // 管理画面用に faqs_ja を faqs にマッピング
       faqs: data.faqs_ja || [],
-      publishedAt: data.publishedAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      publishedAt: convertToDate(data.publishedAt),
+      updatedAt: convertToDate(data.updatedAt),
     } as Article;
 
     console.log(`[API /admin/articles/${id}] Found article:`, article.title);
@@ -227,8 +237,8 @@ export async function PUT(
           const article: Article = {
             id: finalDoc.id,
             ...finalData,
-            publishedAt: finalData.publishedAt?.toDate() || new Date(),
-            updatedAt: finalData.updatedAt?.toDate() || new Date(),
+            publishedAt: convertToDate(finalData.publishedAt),
+            updatedAt: convertToDate(finalData.updatedAt),
           } as Article;
 
           await syncArticleToAlgolia(article);
@@ -257,8 +267,8 @@ export async function PUT(
         const article: Article = {
           id: updatedDoc.id,
           ...updatedData,
-          publishedAt: updatedData.publishedAt?.toDate() || new Date(),
-          updatedAt: updatedData.updatedAt?.toDate() || new Date(),
+          publishedAt: convertToDate(updatedData.publishedAt),
+          updatedAt: convertToDate(updatedData.updatedAt),
         } as Article;
 
         await syncArticleToAlgolia(article);
