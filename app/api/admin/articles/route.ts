@@ -28,6 +28,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`[API /admin/articles] Found ${snapshot.size} articles`);
 
+    // Timestampまたは文字列をDateに変換するヘルパー
+    const convertToDate = (value: any): Date => {
+      if (!value) return new Date();
+      if (value.toDate) return value.toDate(); // Firestore Timestamp
+      if (value.seconds) return new Date(value.seconds * 1000); // Timestamp object
+      if (typeof value === 'string') return new Date(value); // ISO string
+      if (value instanceof Date) return value;
+      return new Date();
+    };
+
     const articles: Article[] = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -35,9 +45,9 @@ export async function GET(request: NextRequest) {
         ...data,
         // 管理画面用に faqs_ja を faqs にマッピング
         faqs: data.faqs_ja || [],
-        createdAt: data.createdAt?.toDate(),
-        publishedAt: data.publishedAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
+        createdAt: convertToDate(data.createdAt),
+        publishedAt: convertToDate(data.publishedAt),
+        updatedAt: convertToDate(data.updatedAt),
       } as Article;
     });
 
@@ -65,10 +75,13 @@ export async function POST(request: NextRequest) {
     );
 
     const now = new Date();
+    // publishedAtが送信されていればそれを使用、なければ現在日時
+    const publishedAt = cleanData.publishedAt ? new Date(cleanData.publishedAt) : now;
+    
     let articleData: any = {
       ...cleanData,
       createdAt: now,
-      publishedAt: now,
+      publishedAt: publishedAt,
       updatedAt: now,
       viewCount: 0,
       likeCount: 0,

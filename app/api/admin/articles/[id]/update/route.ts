@@ -29,10 +29,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log('[API] 以前の公開状態:', wasPublished, '→ 新しい公開状態:', body.isPublished);
     console.log('[API] ステータス変更:', statusChanged);
     
+    // publishedAtが送信されていればDateに変換
+    const publishedAt = body.publishedAt ? new Date(body.publishedAt) : undefined;
+    
     // updatedAtを現在時刻に設定
     let updateData: any = {
       ...body,
       updatedAt: FieldValue.serverTimestamp(),
+      // publishedAtが送信されていれば更新
+      ...(publishedAt && { publishedAt }),
     };
 
     // 🌐 日本語フィールドを保存（常に実行）
@@ -182,11 +187,22 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         const updatedDoc = await articleRef.get();
         if (updatedDoc.exists) {
           const updatedData = updatedDoc.data()!;
+          
+          // Timestampまたは文字列をDateに変換するヘルパー
+          const convertToDate = (value: any): Date => {
+            if (!value) return new Date();
+            if (value.toDate) return value.toDate(); // Firestore Timestamp
+            if (value.seconds) return new Date(value.seconds * 1000); // Timestamp object
+            if (typeof value === 'string') return new Date(value); // ISO string
+            if (value instanceof Date) return value;
+            return new Date();
+          };
+          
           const article: Article = {
             id: updatedDoc.id,
             ...updatedData,
-            publishedAt: updatedData.publishedAt?.toDate() || new Date(),
-            updatedAt: updatedData.updatedAt?.toDate() || new Date(),
+            publishedAt: convertToDate(updatedData.publishedAt),
+            updatedAt: convertToDate(updatedData.updatedAt),
           } as Article;
 
           await syncArticleToAlgolia(article);
