@@ -106,9 +106,11 @@ export async function syncArticleToAlgolia(
           mediaId: article.mediaId,
           categories: categoryNames, // その言語のカテゴリー名
           tags: tagNames, // その言語のタグ名
-          publishedAt: article.publishedAt instanceof Date
-            ? article.publishedAt.getTime()
-            : new Date(article.publishedAt).getTime(),
+          publishedAt: article.publishedAt
+            ? (article.publishedAt instanceof Date
+                ? article.publishedAt.getTime()
+                : new Date(article.publishedAt).getTime())
+            : 0,
           isPublished: article.isPublished,
           featuredImage: article.featuredImage,
           featuredImageAlt: article.featuredImageAlt,
