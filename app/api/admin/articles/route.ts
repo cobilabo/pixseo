@@ -40,14 +40,16 @@ export async function GET(request: NextRequest) {
 
     const articles: Article[] = snapshot.docs.map((doc) => {
       const data = doc.data();
+      const publishedAt = data.publishedAt ? convertToDate(data.publishedAt) : undefined;
       return {
         id: doc.id,
         ...data,
         // 管理画面用に faqs_ja を faqs にマッピング
         faqs: data.faqs_ja || [],
-        createdAt: convertToDate(data.createdAt),
+        // createdAtがない場合はpublishedAtをフォールバック
+        createdAt: convertToDate(data.createdAt) || publishedAt,
         // publishedAtがnull/undefinedの場合はそのまま返す（下書き対応）
-        publishedAt: data.publishedAt ? convertToDate(data.publishedAt) : null,
+        publishedAt: publishedAt,
         updatedAt: convertToDate(data.updatedAt) || new Date(),
       } as Article;
     });
