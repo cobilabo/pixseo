@@ -73,7 +73,7 @@ export const searchArticles = async (
       } as Article;
     })
     // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
-    .filter(article => article.publishedAt <= now);
+    .filter(article => !article.publishedAt || article.publishedAt <= now);
 
     // キーワード検索（クライアントサイドでフィルタリング）
     if (options.keyword) {
