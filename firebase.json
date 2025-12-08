@@ -74,9 +74,7 @@
   "functions": {
     "source": "functions",
     "predeploy": [
-      "npm run build",
-      "npm --prefix \"$RESOURCE_DIR\" run build",
-      "./copy-next.sh"
+      "npm --prefix \"$RESOURCE_DIR\" run build"
     ],
     "ignore": [
       "node_modules",
