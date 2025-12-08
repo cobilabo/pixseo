@@ -35,7 +35,7 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
         </div>
         
         {/* 更新日が公開日と異なる場合のみ表示 */}
-        {article.updatedAt && 
+        {article.updatedAt && article.publishedAt &&
          new Date(article.updatedAt).getTime() !== new Date(article.publishedAt).getTime() && (
           <>
             <span>•</span>
