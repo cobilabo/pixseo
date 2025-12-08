@@ -88,7 +88,8 @@ export async function GET(
       // 管理画面用に faqs_ja を faqs にマッピング
       faqs: data.faqs_ja || [],
       createdAt: convertToDate(data.createdAt),
-      publishedAt: convertToDate(data.publishedAt) || new Date(),
+      // publishedAtがnull/undefinedの場合はそのまま返す（下書き対応）
+      publishedAt: data.publishedAt ? convertToDate(data.publishedAt) : null,
       updatedAt: convertToDate(data.updatedAt) || new Date(),
     } as Article;
 
