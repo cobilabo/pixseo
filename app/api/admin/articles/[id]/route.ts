@@ -54,13 +54,13 @@ export async function DELETE(
 }
 
 // Timestampまたは文字列をDateに変換するヘルパー
-const convertToDate = (value: any): Date => {
-  if (!value) return new Date();
+const convertToDate = (value: any): Date | undefined => {
+  if (!value) return undefined; // 値がない場合はundefinedを返す
   if (value.toDate) return value.toDate(); // Firestore Timestamp
   if (value.seconds) return new Date(value.seconds * 1000); // Timestamp object
   if (typeof value === 'string') return new Date(value); // ISO string
   if (value instanceof Date) return value;
-  return new Date();
+  return undefined;
 };
 
 export async function GET(
@@ -87,8 +87,9 @@ export async function GET(
       ...data,
       // 管理画面用に faqs_ja を faqs にマッピング
       faqs: data.faqs_ja || [],
-      publishedAt: convertToDate(data.publishedAt),
-      updatedAt: convertToDate(data.updatedAt),
+      createdAt: convertToDate(data.createdAt),
+      publishedAt: convertToDate(data.publishedAt) || new Date(),
+      updatedAt: convertToDate(data.updatedAt) || new Date(),
     } as Article;
 
     console.log(`[API /admin/articles/${id}] Found article:`, article.title);
@@ -246,8 +247,8 @@ export async function PUT(
           const article: Article = {
             id: finalDoc.id,
             ...finalData,
-            publishedAt: convertToDate(finalData.publishedAt),
-            updatedAt: convertToDate(finalData.updatedAt),
+            publishedAt: convertToDate(finalData.publishedAt) || new Date(),
+            updatedAt: convertToDate(finalData.updatedAt) || new Date(),
           } as Article;
 
           await syncArticleToAlgolia(article);
@@ -276,8 +277,8 @@ export async function PUT(
         const article: Article = {
           id: updatedDoc.id,
           ...updatedData,
-          publishedAt: convertToDate(updatedData.publishedAt),
-          updatedAt: convertToDate(updatedData.updatedAt),
+          publishedAt: convertToDate(updatedData.publishedAt) || new Date(),
+          updatedAt: convertToDate(updatedData.updatedAt) || new Date(),
         } as Article;
 
         await syncArticleToAlgolia(article);

@@ -29,13 +29,13 @@ export async function GET(request: NextRequest) {
     console.log(`[API /admin/articles] Found ${snapshot.size} articles`);
 
     // Timestampまたは文字列をDateに変換するヘルパー
-    const convertToDate = (value: any): Date => {
-      if (!value) return new Date();
+    const convertToDate = (value: any): Date | undefined => {
+      if (!value) return undefined; // 値がない場合はundefinedを返す
       if (value.toDate) return value.toDate(); // Firestore Timestamp
       if (value.seconds) return new Date(value.seconds * 1000); // Timestamp object
       if (typeof value === 'string') return new Date(value); // ISO string
       if (value instanceof Date) return value;
-      return new Date();
+      return undefined;
     };
 
     const articles: Article[] = snapshot.docs.map((doc) => {
@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
         // 管理画面用に faqs_ja を faqs にマッピング
         faqs: data.faqs_ja || [],
         createdAt: convertToDate(data.createdAt),
-        publishedAt: convertToDate(data.publishedAt),
-        updatedAt: convertToDate(data.updatedAt),
+        publishedAt: convertToDate(data.publishedAt) || new Date(),
+        updatedAt: convertToDate(data.updatedAt) || new Date(),
       } as Article;
     });
 
