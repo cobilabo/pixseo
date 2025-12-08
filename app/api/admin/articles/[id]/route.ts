@@ -130,6 +130,15 @@ export async function PUT(
     // 既存データを取得（公開状態の変更を検出するため）
     const existingData = doc.data();
     const wasPublished = existingData?.isPublished || false;
+    const isScheduled = existingData?.isScheduled || false;
+
+    // 予約状態の記事は公開トグルで変更不可
+    if (isScheduled && typeof body.isPublished === 'boolean') {
+      return NextResponse.json(
+        { error: '予約公開状態の記事は公開状態を変更できません。編集画面から公開日を変更してください。' },
+        { status: 400 }
+      );
+    }
 
     // 更新データを作成
     const updateData: any = {

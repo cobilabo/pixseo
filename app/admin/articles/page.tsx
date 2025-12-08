@@ -397,25 +397,33 @@ export default function ArticlesPage() {
                         )}
                       </td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
-                        <label className="cursor-pointer inline-flex items-center justify-center">
-                          <div className="relative inline-block w-10 h-6">
-                            <input
-                              type="checkbox"
-                              checked={article.isPublished}
-                              onChange={() => handleTogglePublished(article.id, article.isPublished)}
-                              className="sr-only peer"
-                            />
-                            <div 
-                              className={`absolute inset-0 rounded-full transition-colors ${
-                                article.isPublished ? 'bg-blue-600' : 'bg-gray-400'
-                              }`}
-                            >
-                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                article.isPublished ? 'translate-x-4' : 'translate-x-0'
-                              }`}></div>
+                        {article.isScheduled ? (
+                          // 予約公開状態の場合はバッジ表示
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title="予約公開中 - 公開日になると自動公開されます">
+                            予約中
+                          </span>
+                        ) : (
+                          // 通常の公開トグル
+                          <label className="cursor-pointer inline-flex items-center justify-center">
+                            <div className="relative inline-block w-10 h-6">
+                              <input
+                                type="checkbox"
+                                checked={article.isPublished}
+                                onChange={() => handleTogglePublished(article.id, article.isPublished)}
+                                className="sr-only peer"
+                              />
+                              <div 
+                                className={`absolute inset-0 rounded-full transition-colors ${
+                                  article.isPublished ? 'bg-blue-600' : 'bg-gray-400'
+                                }`}
+                              >
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                  article.isPublished ? 'translate-x-4' : 'translate-x-0'
+                                }`}></div>
+                              </div>
                             </div>
-                          </div>
-                        </label>
+                          </label>
+                        )}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
                         {new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
