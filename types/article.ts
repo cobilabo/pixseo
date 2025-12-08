@@ -18,7 +18,7 @@ export interface Article {
   excerpt?: string;
   slug: string;
   createdAt?: Date;          // 作成日時（後方互換性のためオプショナル）
-  publishedAt: Date;         // 公開日時（予約公開日としても使用）
+  publishedAt?: Date;        // 公開日時（予約公開日としても使用、下書きの場合はundefined）
   updatedAt: Date;
   writerId: string;          // ライターID（必須・カテゴリー/タグと同じ設計）
   categoryIds: string[];
@@ -126,7 +126,7 @@ export interface RelatedArticle {
   excerpt?: string;
   featuredImage?: string;
   slug: string;
-  publishedAt: Date;
+  publishedAt?: Date;
   mediaId: string;
 }
 

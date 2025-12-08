@@ -50,12 +50,12 @@ export default function ArticlesPage() {
       const data: Article[] = await apiGet('/api/admin/articles');
       console.log('[ArticlesPage] Received articles:', data);
       
-      // 日付をDateオブジェクトに変換（nullの場合はnullのまま）
+      // 日付をDateオブジェクトに変換（nullの場合はundefinedのまま）
       const articlesWithDates = data.map(article => ({
         ...article,
-        publishedAt: article.publishedAt ? new Date(article.publishedAt) : null,
+        publishedAt: article.publishedAt ? new Date(article.publishedAt) : undefined,
         updatedAt: article.updatedAt ? new Date(article.updatedAt) : new Date(),
-        createdAt: article.createdAt ? new Date(article.createdAt) : null,
+        createdAt: article.createdAt ? new Date(article.createdAt) : undefined,
       }));
       
       // クライアント側で更新日時順にソート（新しい順）
