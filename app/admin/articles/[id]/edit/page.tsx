@@ -42,6 +42,18 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [slugError, setSlugError] = useState('');
   const [checkingSlug, setCheckingSlug] = useState(false);
   
+  // 日付をYYYY-MM-DD形式に変換
+  const formatDateToInput = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+  };
+
+  // 今日の日付をYYYY-MM-DD形式で取得
+  const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -53,12 +65,14 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     tagIds: [] as string[],
     relatedArticleIds: [] as string[],
     isPublished: false,
+    isScheduled: false,
     isFeatured: false,
     metaTitle: '',
     metaDescription: '',
     googleMapsUrl: '',
     reservationUrl: '',
     faqs: [] as FAQItem[],
+    publishedAt: getTodayString(),
   });
 
   useEffect(() => {
@@ -101,12 +115,14 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           tagIds: articleData.tagIds,
           relatedArticleIds: articleData.relatedArticleIds || [],
           isPublished: articleData.isPublished,
+          isScheduled: articleData.isScheduled || false,
           isFeatured: articleData.isFeatured || false,
           metaTitle: articleData.metaTitle || '',
           metaDescription: articleData.metaDescription || '',
           googleMapsUrl: articleData.googleMapsUrl || '',
           reservationUrl: articleData.reservationUrl || '',
           faqs: articleData.faqs || [],
+          publishedAt: formatDateToInput(articleData.publishedAt),
         });
         
         setCategories(categoriesData);
@@ -412,6 +428,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       console.log('[handleSubmit] 目次:', tableOfContents);
       console.log('[handleSubmit] 読了時間:', readingTime, '分');
       
+      // 公開日をDateオブジェクトに変換
+      const publishedAtDate = new Date(formData.publishedAt + 'T00:00:00+09:00'); // JST
+
       // バックグラウンドで実行（await しない）
       fetch(`/api/admin/articles/${params.id}/update`, {
         method: 'PUT',
@@ -427,6 +446,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           mediaId: article.mediaId,
           tableOfContents,
           readingTime,
+          publishedAt: publishedAtDate.toISOString(),
+          isScheduled: formData.isScheduled,
         }),
       }).then(async (response) => {
         if (!response.ok) {
@@ -493,6 +514,41 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
             {/* すべてのフィールドを1つのパネル内に表示 */}
             <div className="bg-white rounded-xl p-6 space-y-6">
+              {/* 公開日 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  公開日
+                  {formData.isScheduled && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                      予約公開
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="date"
+                  value={formData.publishedAt}
+                  onChange={(e) => {
+                    const selectedDate = e.target.value;
+                    const today = getTodayString();
+                    const isFuture = selectedDate > today;
+                    
+                    setFormData({
+                      ...formData,
+                      publishedAt: selectedDate,
+                      isScheduled: isFuture,
+                      // 未来の日付が選択された場合は自動的に非公開に
+                      isPublished: isFuture ? false : formData.isPublished,
+                    });
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {formData.isScheduled && (
+                  <p className="mt-2 text-sm text-yellow-600">
+                    ※ 公開日が未来のため、予約公開として設定されます。公開日になると自動的に公開されます。
+                  </p>
+                )}
+              </div>
+
               {/* カテゴリー */}
               <FloatingMultiSelect
                 label="カテゴリー"
@@ -823,20 +879,27 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
 
             {/* 公開トグル */}
-            <div className="bg-white rounded-full px-6 py-3 shadow-custom">
+            <div className={`bg-white rounded-full px-6 py-3 shadow-custom ${formData.isScheduled ? 'opacity-50' : ''}`}>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-700">公開</span>
-                <label className="cursor-pointer">
+                <span className="text-xs font-medium text-gray-700">
+                  {formData.isScheduled ? '予約中' : '公開'}
+                </span>
+                <label className={formData.isScheduled ? 'cursor-not-allowed' : 'cursor-pointer'}>
                   <div className="relative inline-block w-14 h-8">
                     <input
                       type="checkbox"
                       checked={formData.isPublished}
-                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                      onChange={(e) => {
+                        // 予約状態の場合は変更不可
+                        if (formData.isScheduled) return;
+                        setFormData({ ...formData, isPublished: e.target.checked });
+                      }}
+                      disabled={formData.isScheduled}
                       className="sr-only"
                     />
                     <div 
                       className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
-                        formData.isPublished ? 'bg-blue-600' : 'bg-gray-400'
+                        formData.isScheduled ? 'bg-yellow-500' : (formData.isPublished ? 'bg-blue-600' : 'bg-gray-400')
                       }`}
                     >
                       <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${

@@ -36,15 +36,23 @@ export const getArticle = async (slug: string): Promise<Article | null> => {
       return null;
     }
     
-    const doc = querySnapshot.docs[0];
-    const data = doc.data();
+    const docSnapshot = querySnapshot.docs[0];
+    const data = docSnapshot.data();
     
-    return {
-      id: doc.id,
+    const article = {
+      id: docSnapshot.id,
       ...data,
       publishedAt: convertTimestamp(data.publishedAt),
       updatedAt: convertTimestamp(data.updatedAt),
     } as Article;
+    
+    // 公開日が未来の場合は表示しない（予約公開記事の安全策）
+    const now = new Date();
+    if (article.publishedAt > now) {
+      return null;
+    }
+    
+    return article;
   } catch (error) {
     console.error('Error getting article:', error);
     return null;
@@ -88,15 +96,19 @@ export const getArticles = async (
     
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        publishedAt: convertTimestamp(data.publishedAt),
-        updatedAt: convertTimestamp(data.updatedAt),
-      } as Article;
-    });
+    const now = new Date();
+    return querySnapshot.docs
+      .map((docSnapshot) => {
+        const data = docSnapshot.data();
+        return {
+          id: docSnapshot.id,
+          ...data,
+          publishedAt: convertTimestamp(data.publishedAt),
+          updatedAt: convertTimestamp(data.updatedAt),
+        } as Article;
+      })
+      // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
+      .filter(article => article.publishedAt <= now);
   } catch (error) {
     console.error('Error getting articles:', error);
     return [];
@@ -133,10 +145,18 @@ export const getAllArticleSlugs = async (): Promise<string[]> => {
     const q = query(articlesRef, where('isPublished', '==', true));
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return data.slug as string;
-    });
+    const now = new Date();
+    return querySnapshot.docs
+      .filter((docSnapshot) => {
+        const data = docSnapshot.data();
+        const publishedAt = convertTimestamp(data.publishedAt);
+        // 公開日が現在日時以下の記事のみ
+        return publishedAt <= now;
+      })
+      .map((docSnapshot) => {
+        const data = docSnapshot.data();
+        return data.slug as string;
+      });
   } catch (error) {
     console.error('Error getting article slugs:', error);
     return [];
@@ -168,18 +188,21 @@ export const getRelatedArticles = async (
     
     const querySnapshot = await getDocs(q);
     
+    const now = new Date();
     // 関連度でソート（カテゴリー・タグの一致数が多い順）
     const articles = querySnapshot.docs
-      .map((doc) => {
-        const data = doc.data();
+      .map((docSnapshot) => {
+        const data = docSnapshot.data();
         return {
-          id: doc.id,
+          id: docSnapshot.id,
           ...data,
           publishedAt: convertTimestamp(data.publishedAt),
           updatedAt: convertTimestamp(data.updatedAt),
         } as Article;
       })
       .filter((article) => article.id !== excludeArticleId)
+      // 公開日が現在日時以下の記事のみ
+      .filter((article) => article.publishedAt <= now)
       .map((article) => {
         // 関連度スコアを計算
         const categoryMatch = article.categoryIds.filter((id: string) =>

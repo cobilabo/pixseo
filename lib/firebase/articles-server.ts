@@ -32,6 +32,11 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
     // キャッシュから取得
     const cached = cacheManager.get<Article>(cacheKey, CACHE_TTL.MEDIUM);
     if (cached) {
+      // キャッシュされた記事も公開日チェック
+      const now = new Date();
+      if (cached.publishedAt > now) {
+        return null; // 公開日が未来の場合は表示しない
+      }
       return cached;
     }
     
@@ -78,6 +83,12 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
       relatedArticleIds,
       readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
+    
+    // 公開日が未来の場合は表示しない（予約公開で万が一isPublishedがtrueの場合の安全策）
+    const now = new Date();
+    if (article.publishedAt > now) {
+      return null;
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, article);
@@ -139,6 +150,8 @@ export const getArticlesServer = async (
     // orderByは使わず、取得後にソートする（Firestoreの複合インデックス不足を回避）
     const snapshot = await q.get();
     
+    const now = new Date();
+    
     let articles = snapshot.docs.map((doc) => {
       const data = doc.data();
       
@@ -163,7 +176,9 @@ export const getArticlesServer = async (
         relatedArticleIds,
         readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
       } as Article;
-    });
+    })
+    // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
+    .filter(article => article.publishedAt <= now);
     
     // 取得後にソート
     const orderField = options.orderBy || 'publishedAt';
@@ -257,6 +272,7 @@ export const getRelatedArticlesServer = async (
         relatedArticleIds.slice(0, limitCount).map(id => articlesRef.doc(id).get())
       );
       
+      const now = new Date();
       articles = docs
         .filter(doc => doc.exists && doc.data()?.isPublished)
         .map(doc => {
@@ -284,7 +300,9 @@ export const getRelatedArticlesServer = async (
             readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
           } as Article;
         })
-        .filter(article => article.mediaId === (mediaId || article.mediaId));
+        .filter(article => article.mediaId === (mediaId || article.mediaId))
+        // 公開日が現在日時以下の記事のみを表示
+        .filter(article => article.publishedAt <= now);
     }
     
     // 2. 足りない場合は自動で補完
@@ -302,6 +320,7 @@ export const getRelatedArticlesServer = async (
       // すでに選択されているIDを除外
       const excludeIds = [excludeArticleId, ...articles.map(a => a.id)];
       
+      const nowAuto = new Date();
       let autoArticles = snapshot.docs
         .map((doc) => {
           const data = doc.data();
@@ -329,6 +348,8 @@ export const getRelatedArticlesServer = async (
           } as Article;
         })
         .filter((article) => !excludeIds.includes(article.id))
+        // 公開日が現在日時以下の記事のみを表示
+        .filter(article => article.publishedAt <= nowAuto)
         .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
         .slice(0, (limitCount - articles.length) * 2);
       
@@ -676,6 +697,7 @@ export const getArticlesByWriterServer = async (
     
     const snapshot = await query.get();
     
+    const nowWriter = new Date();
     let articles = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -687,7 +709,9 @@ export const getArticlesByWriterServer = async (
         relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
         readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
       } as Article;
-    });
+    })
+    // 公開日が現在日時以下の記事のみを表示
+    .filter(article => article.publishedAt <= nowWriter);
     
     // 取得後にソート（新しい順）
     articles.sort((a, b) => {

@@ -62,15 +62,18 @@ export const searchArticles = async (
 
     const querySnapshot = await getDocs(q);
 
-    let articles = querySnapshot.docs.map((doc) => {
-      const data = doc.data();
+    const now = new Date();
+    let articles = querySnapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
       return {
-        id: doc.id,
+        id: docSnapshot.id,
         ...data,
         publishedAt: convertTimestamp(data.publishedAt),
         updatedAt: convertTimestamp(data.updatedAt),
       } as Article;
-    });
+    })
+    // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
+    .filter(article => article.publishedAt <= now);
 
     // キーワード検索（クライアントサイドでフィルタリング）
     if (options.keyword) {

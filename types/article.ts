@@ -18,7 +18,7 @@ export interface Article {
   excerpt?: string;
   slug: string;
   createdAt?: Date;          // 作成日時（後方互換性のためオプショナル）
-  publishedAt: Date;         // 公開日時（初回作成時の日時として使用される場合もある）
+  publishedAt: Date;         // 公開日時（予約公開日としても使用）
   updatedAt: Date;
   writerId: string;          // ライターID（必須・カテゴリー/タグと同じ設計）
   categoryIds: string[];
@@ -27,6 +27,7 @@ export interface Article {
   featuredImageAlt?: string; // アイキャッチ画像のalt属性
   targetAudience?: string; // 想定読者（ペルソナ）
   isPublished: boolean;
+  isScheduled?: boolean;     // 予約公開待ち状態（true: 公開日が未来で公開待ち）
   isFeatured?: boolean;
   viewCount: number;
   likeCount: number;
