@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
     // publishedAtが送信されていればそれを使用、なければ現在日時
-    const publishedAt = cleanData.publishedAt ? new Date(cleanData.publishedAt) : now;
+    const publishedAt = cleanData.publishedAt ? new Date(cleanData.publishedAt as string | number | Date) : now;
     
     let articleData: any = {
       ...cleanData,
