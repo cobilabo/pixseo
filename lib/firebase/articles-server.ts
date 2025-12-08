@@ -34,7 +34,7 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
     if (cached) {
       // キャッシュされた記事も公開日チェック
       const now = new Date();
-      if (cached.publishedAt > now) {
+      if (cached.publishedAt && cached.publishedAt > now) {
         return null; // 公開日が未来の場合は表示しない
       }
       return cached;
@@ -86,7 +86,7 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
     
     // 公開日が未来の場合は表示しない（予約公開で万が一isPublishedがtrueの場合の安全策）
     const now = new Date();
-    if (article.publishedAt > now) {
+    if (article.publishedAt && article.publishedAt > now) {
       return null;
     }
     
@@ -178,7 +178,7 @@ export const getArticlesServer = async (
       } as Article;
     })
     // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
-    .filter(article => article.publishedAt <= now);
+    .filter(article => !article.publishedAt || article.publishedAt <= now);
     
     // 取得後にソート
     const orderField = options.orderBy || 'publishedAt';
@@ -302,7 +302,7 @@ export const getRelatedArticlesServer = async (
         })
         .filter(article => article.mediaId === (mediaId || article.mediaId))
         // 公開日が現在日時以下の記事のみを表示
-        .filter(article => article.publishedAt <= now);
+        .filter(article => !article.publishedAt || article.publishedAt <= now);
     }
     
     // 2. 足りない場合は自動で補完
@@ -349,8 +349,8 @@ export const getRelatedArticlesServer = async (
         })
         .filter((article) => !excludeIds.includes(article.id))
         // 公開日が現在日時以下の記事のみを表示
-        .filter(article => article.publishedAt <= nowAuto)
-        .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+        .filter(article => !article.publishedAt || article.publishedAt <= nowAuto)
+        .sort((a, b) => (b.publishedAt?.getTime() || 0) - (a.publishedAt?.getTime() || 0))
         .slice(0, (limitCount - articles.length) * 2);
       
       // 関連度でソート
@@ -711,12 +711,12 @@ export const getArticlesByWriterServer = async (
       } as Article;
     })
     // 公開日が現在日時以下の記事のみを表示
-    .filter(article => article.publishedAt <= nowWriter);
+    .filter(article => !article.publishedAt || article.publishedAt <= nowWriter);
     
     // 取得後にソート（新しい順）
     articles.sort((a, b) => {
-      const aTime = a.publishedAt.getTime();
-      const bTime = b.publishedAt.getTime();
+      const aTime = a.publishedAt?.getTime() || 0;
+      const bTime = b.publishedAt?.getTime() || 0;
       return bTime - aTime;
     });
     
