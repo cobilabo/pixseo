@@ -440,9 +440,11 @@ export default function ArticlesPage() {
                         }
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {(article.createdAt || article.publishedAt)
-                          ? new Date(article.createdAt || article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-                          : '-'
+                        {article.createdAt
+                          ? new Date(article.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                          : article.publishedAt
+                            ? new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                            : '-'
                         }
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
