@@ -37,7 +37,7 @@ export default function RelatedArticles({ articles, lang = 'ja' }: RelatedArticl
                 featuredImage: article.featuredImage,
                 slug: article.slug || '',
                 publishedAt: article.publishedAt,
-                updatedAt: article.publishedAt,
+                updatedAt: article.publishedAt || new Date(),
                 content: '',
                 writerId: '',  // ライターID（必須）
                 categoryIds: [],
