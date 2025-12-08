@@ -137,8 +137,6 @@ export const publishScheduledArticles = onSchedule(
     const jstNow = new Date(now.getTime() + jstOffset);
     const todayJST = new Date(jstNow.getFullYear(), jstNow.getMonth(), jstNow.getDate());
     
-    // UTCに戻す（比較用）
-    const todayUTC = new Date(todayJST.getTime() - jstOffset);
     // 今日の終わり（23:59:59 JST）
     const todayEndJST = new Date(todayJST.getTime() + 24 * 60 * 60 * 1000 - 1);
     const todayEndUTC = new Date(todayEndJST.getTime() - jstOffset);
