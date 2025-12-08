@@ -48,7 +48,7 @@ export const getArticle = async (slug: string): Promise<Article | null> => {
     
     // 公開日が未来の場合は表示しない（予約公開記事の安全策）
     const now = new Date();
-    if (article.publishedAt > now) {
+    if (article.publishedAt && article.publishedAt > now) {
       return null;
     }
     
@@ -108,7 +108,7 @@ export const getArticles = async (
         } as Article;
       })
       // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
-      .filter(article => article.publishedAt <= now);
+      .filter(article => !article.publishedAt || article.publishedAt <= now);
   } catch (error) {
     console.error('Error getting articles:', error);
     return [];
@@ -202,7 +202,7 @@ export const getRelatedArticles = async (
       })
       .filter((article) => article.id !== excludeArticleId)
       // 公開日が現在日時以下の記事のみ
-      .filter((article) => article.publishedAt <= now)
+      .filter((article) => !article.publishedAt || article.publishedAt <= now)
       .map((article) => {
         // 関連度スコアを計算
         const categoryMatch = article.categoryIds.filter((id: string) =>
