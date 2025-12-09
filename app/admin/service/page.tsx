@@ -16,6 +16,11 @@ interface MediaTenant {
   memberIds: string[];
   isActive: boolean;
   createdAt: string;
+  previewAuth?: {
+    enabled: boolean;
+    username: string;
+    password: string;
+  };
 }
 
 export default function TenantsPage() {
@@ -98,6 +103,12 @@ export default function TenantsPage() {
                         カスタムドメイン
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        プレビューURL
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        認証
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         有効化
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -119,7 +130,29 @@ export default function TenantsPage() {
                             {tenant.customDomain || '-'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4">
+                          <a
+                            href={`https://${tenant.slug}.pixseo-preview.cloud`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block max-w-[200px]"
+                            title={`https://${tenant.slug}.pixseo-preview.cloud`}
+                          >
+                            {tenant.slug}.pixseo-preview.cloud
+                          </a>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          {tenant.previewAuth?.enabled ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              有効
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                              無効
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <label className="cursor-pointer">
                             <div className="relative inline-block w-14 h-8">
                               <input
@@ -152,6 +185,20 @@ export default function TenantsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </Link>
+                            
+                            {/* プレビューボタン */}
+                            <a
+                              href={`https://${tenant.slug}.pixseo-preview.cloud`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors"
+                              title="プレビューを表示"
+                            >
+                              <svg className="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </a>
 
                             {/* 削除ボタン */}
                             <button
