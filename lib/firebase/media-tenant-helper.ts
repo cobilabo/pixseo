@@ -8,6 +8,32 @@ import { adminDb } from './admin';
 import { cacheManager } from '../cache-manager';
 
 /**
+ * プレビューモードかどうかを判定
+ * プレビューURL（{slug}.pixseo-preview.cloud）でアクセスしている場合はtrue
+ */
+export function isPreviewMode(): boolean {
+  try {
+    const headersList = headers();
+    const host = headersList.get('host') || '';
+    return host.endsWith('.pixseo-preview.cloud');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 現在のホスト名を取得
+ */
+export function getCurrentHost(): string {
+  try {
+    const headersList = headers();
+    return headersList.get('host') || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
  * ホスト名からmediaIdを取得（キャッシュ付き）
  * 
  * サポートする環境:
@@ -98,6 +124,7 @@ export async function getMediaIdFromHost(): Promise<string | null> {
 
 export interface SiteInfo {
   allowIndexing: boolean;
+  isPreview: boolean;           // プレビューモードかどうか
   // 後方互換性のため既存フィールドを保持
   name: string;
   description?: string;
@@ -122,8 +149,11 @@ export interface SiteInfo {
  * @returns SiteInfo
  */
 export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
+  const isPreview = isPreviewMode();
+  
   const defaultInfo: SiteInfo = {
     allowIndexing: false,
+    isPreview,
     name: 'ふらっと。',
   };
 
@@ -132,8 +162,8 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
   }
 
   try {
-    // キャッシュキー
-    const cacheKey = `siteInfo:${mediaId}`;
+    // キャッシュキー（プレビューモードかどうかも含める）
+    const cacheKey = `siteInfo:${mediaId}:${isPreview ? 'preview' : 'live'}`;
 
     // キャッシュから取得（5分間有効）
     const cachedInfo = cacheManager.get<SiteInfo>(
@@ -153,7 +183,9 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
 
     const data = tenantDoc.data();
     const siteInfo: SiteInfo = {
-      allowIndexing: data?.allowIndexing || false,
+      // プレビューモード時は常にnoindex（インデックスさせない）
+      allowIndexing: isPreview ? false : (data?.allowIndexing || false),
+      isPreview,
       name: data?.name || defaultInfo.name,
       description: data?.siteDescription || undefined,
       faviconUrl: data?.logoPortrait || undefined,

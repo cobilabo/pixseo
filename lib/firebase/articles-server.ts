@@ -11,6 +11,7 @@ import { adminDb } from './admin';
 import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
+import { isPreviewMode } from './media-tenant-helper';
 
 // FirestoreのTimestampをDateに変換
 const convertTimestamp = (timestamp: any): Date => {
@@ -26,29 +27,36 @@ const convertTimestamp = (timestamp: any): Date => {
 // 記事を取得（サーバーサイド用）
 export const getArticleServer = async (slug: string, mediaId?: string): Promise<Article | null> => {
   try {
-    // キャッシュキー生成
-    const cacheKey = generateCacheKey('article', slug, mediaId);
+    const isPreview = isPreviewMode();
+    
+    // キャッシュキー生成（プレビューモードかどうかも含める）
+    const cacheKey = generateCacheKey('article', slug, mediaId, isPreview ? 'preview' : 'live');
     
     // キャッシュから取得
     const cached = cacheManager.get<Article>(cacheKey, CACHE_TTL.MEDIUM);
     if (cached) {
-      // キャッシュされた記事も公開日チェック
-      const now = new Date();
-      if (cached.publishedAt && cached.publishedAt > now) {
-        return null; // 公開日が未来の場合は表示しない
+      // プレビューモードでない場合のみ公開日チェック
+      if (!isPreview) {
+        const now = new Date();
+        if (cached.publishedAt && cached.publishedAt > now) {
+          return null; // 公開日が未来の場合は表示しない
+        }
       }
       return cached;
     }
     
     // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
-    let query = articlesRef
-      .where('slug', '==', slug)
-      .where('isPublished', '==', true);
+    let query: admin.firestore.Query = articlesRef.where('slug', '==', slug);
+    
+    // プレビューモードでない場合のみ公開記事に絞る
+    if (!isPreview) {
+      query = query.where('isPublished', '==', true);
+    }
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
-      query = query.where('mediaId', '==', mediaId) as any;
+      query = query.where('mediaId', '==', mediaId);
     }
     
     const snapshot = await query.limit(1).get();
@@ -84,10 +92,12 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
       readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
     
-    // 公開日が未来の場合は表示しない（予約公開で万が一isPublishedがtrueの場合の安全策）
-    const now = new Date();
-    if (article.publishedAt && article.publishedAt > now) {
-      return null;
+    // プレビューモードでない場合のみ公開日チェック
+    if (!isPreview) {
+      const now = new Date();
+      if (article.publishedAt && article.publishedAt > now) {
+        return null;
+      }
     }
     
     // キャッシュに保存
@@ -112,7 +122,9 @@ export const getArticlesServer = async (
   } = {}
 ): Promise<Article[]> => {
   try {
-    // キャッシュキー生成
+    const isPreview = isPreviewMode();
+    
+    // キャッシュキー生成（プレビューモードかどうかも含める）
     const cacheKey = generateCacheKey(
       'articles',
       options.mediaId,
@@ -120,7 +132,8 @@ export const getArticlesServer = async (
       options.tagId,
       options.orderBy,
       options.orderDirection,
-      options.limit
+      options.limit,
+      isPreview ? 'preview' : 'live'
     );
     
     // キャッシュから取得
@@ -132,19 +145,23 @@ export const getArticlesServer = async (
     // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
     
-    let q = articlesRef.where('isPublished', '==', true);
+    // プレビューモードでない場合のみ公開記事に絞る
+    let q: admin.firestore.Query = articlesRef;
+    if (!isPreview) {
+      q = q.where('isPublished', '==', true);
+    }
     
     // mediaIdが指定されている場合はフィルタリング
     if (options.mediaId) {
-      q = q.where('mediaId', '==', options.mediaId) as any;
+      q = q.where('mediaId', '==', options.mediaId);
     }
     
     if (options.categoryId) {
-      q = q.where('categoryIds', 'array-contains', options.categoryId) as any;
+      q = q.where('categoryIds', 'array-contains', options.categoryId);
     }
     
     if (options.tagId) {
-      q = q.where('tagIds', 'array-contains', options.tagId) as any;
+      q = q.where('tagIds', 'array-contains', options.tagId);
     }
     
     // orderByは使わず、取得後にソートする（Firestoreの複合インデックス不足を回避）
@@ -177,8 +194,8 @@ export const getArticlesServer = async (
         readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
       } as Article;
     })
-    // 公開日が現在日時以下の記事のみを表示（予約公開記事を除外）
-    .filter(article => !article.publishedAt || article.publishedAt <= now);
+    // プレビューモードでない場合のみ、公開日が現在日時以下の記事に絞る
+    .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
     // 取得後にソート
     const orderField = options.orderBy || 'publishedAt';
