@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         logoUrl: '',
         faviconUrl: '',
         allowIndexing: false,
+        isPreview: false,
       };
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);

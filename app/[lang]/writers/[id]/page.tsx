@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const writer = localizeWriter(rawWriter, lang);
-  const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { allowIndexing: false, name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined };
+  const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { allowIndexing: false, isPreview: false, name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   
   const headersList = headers();
@@ -86,7 +86,7 @@ export default async function WriterPage({ params }: PageProps) {
   const host = headersList.get('host') || '';
 
   const [rawSiteInfo, rawTheme, articles, allCategories, popularArticles] = await Promise.all([
-    mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false }),
+    mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
     getArticlesByWriterServer(params.id, mediaId || undefined),
     getAllCategoriesServer(),

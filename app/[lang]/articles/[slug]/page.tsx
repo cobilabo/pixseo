@@ -79,6 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? await getSiteInfo(mediaId) 
     : { 
         allowIndexing: false, 
+        isPreview: false,
         name: 'メディアサイト',
         name_ja: 'メディアサイト', 
         name_en: 'Media Site', 
@@ -205,7 +206,8 @@ export default async function ArticlePage({ params }: PageProps) {
       description: '', 
       logoUrl: '', 
       faviconUrl: '', 
-      allowIndexing: false 
+      allowIndexing: false,
+      isPreview: false,
     }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
   ]);
