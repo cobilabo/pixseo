@@ -1,8 +1,89 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { DEFAULT_LANG, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
+import { DEFAULT_LANG, isValidLang } from '@/types/lang';
 
-export function middleware(request: NextRequest) {
+// 認証情報のキャッシュ（メモリ内、サーバーリスタートでクリア）
+const authCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 60 * 1000; // 1分
+
+/**
+ * ベーシック認証のチェック
+ */
+async function checkBasicAuth(request: NextRequest, slug: string): Promise<NextResponse | null> {
+  try {
+    // キャッシュをチェック
+    const cached = authCache.get(slug);
+    const now = Date.now();
+    
+    let authConfig: { enabled: boolean; username?: string; password?: string };
+    
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+      authConfig = cached.data;
+    } else {
+      // APIから認証設定を取得
+      const protocol = request.nextUrl.protocol;
+      const host = request.headers.get('host') || request.nextUrl.host;
+      const apiUrl = `${protocol}//${host}/api/preview-auth?slug=${encodeURIComponent(slug)}`;
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('[Middleware] Failed to fetch auth config:', response.status);
+        return null; // エラー時は認証スキップ
+      }
+      
+      authConfig = await response.json();
+      
+      // キャッシュに保存
+      authCache.set(slug, { data: authConfig, timestamp: now });
+    }
+    
+    // 認証が無効の場合
+    if (!authConfig.enabled) {
+      return null;
+    }
+    
+    // Authorizationヘッダーをチェック
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      // 認証ダイアログを表示
+      return new NextResponse('Authentication required', {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': 'Basic realm="Preview Site"',
+        },
+      });
+    }
+    
+    // Base64デコードして検証
+    const base64Credentials = authHeader.substring(6);
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    const [username, password] = credentials.split(':');
+    
+    if (username === authConfig.username && password === authConfig.password) {
+      return null; // 認証成功
+    }
+    
+    // 認証失敗
+    return new NextResponse('Invalid credentials', {
+      status: 401,
+      headers: {
+        'WWW-Authenticate': 'Basic realm="Preview Site"',
+      },
+    });
+    
+  } catch (error) {
+    console.error('[Middleware] Auth check error:', error);
+    return null; // エラー時は認証スキップ
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.nextUrl.hostname;
   
@@ -14,6 +95,15 @@ export function middleware(request: NextRequest) {
     pathname.includes('.') // .svg, .png, .jpg等
   ) {
     return NextResponse.next();
+  }
+  
+  // プレビューサイト（*.pixseo-preview.cloud）の場合、ベーシック認証をチェック
+  if (hostname.endsWith('.pixseo-preview.cloud') && !hostname.startsWith('admin.')) {
+    const slug = hostname.replace('.pixseo-preview.cloud', '');
+    const authResponse = await checkBasicAuth(request, slug);
+    if (authResponse) {
+      return authResponse;
+    }
   }
   
   // admin.pixseo.cloudサブドメインの場合、/admin/にリライト

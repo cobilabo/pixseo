@@ -52,7 +52,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       logoSquare,
       logoPortrait,
       allowIndexing,
-      theme
+      theme,
+      previewAuth,
     } = body;
 
     // 現在のサービスデータを取得
@@ -106,6 +107,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (logoPortrait !== undefined) updateData.logoPortrait = logoPortrait;
     if (allowIndexing !== undefined) updateData.allowIndexing = allowIndexing;
     if (theme !== undefined) updateData.theme = theme;
+    if (previewAuth !== undefined) updateData.previewAuth = previewAuth;
 
     // 多言語翻訳処理
     const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');

@@ -36,6 +36,13 @@ export interface DomainConfig {
   configuredAt?: Date | null;
 }
 
+// プレビューサイトのベーシック認証設定
+export interface PreviewAuth {
+  enabled: boolean;          // ベーシック認証有効/無効
+  username: string;          // ユーザー名
+  password: string;          // パスワード
+}
+
 export interface MediaTenant {
   id: string;
   name: string;              // サービス名（例：「旅行メディアABC」）
@@ -56,6 +63,7 @@ export interface MediaTenant {
   theme?: Theme;             // デザインテーマ設定
   isActive: boolean;
   allowIndexing: boolean;    // SEOインデックス許可（デフォルト：false）
+  previewAuth?: PreviewAuth; // プレビューサイトのベーシック認証設定
   createdAt: Date;
   updatedAt: Date;
 }
