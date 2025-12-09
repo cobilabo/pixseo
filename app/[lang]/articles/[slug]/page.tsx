@@ -44,6 +44,7 @@ import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
 
 // ISR: 5分ごとに再生成
@@ -338,6 +339,13 @@ export default async function ArticlePage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
+
+      {/* 閲覧数カウント（カスタムドメインの場合のみ） */}
+      <ViewCounter 
+        articleSlug={rawArticle.slug}
+        mediaId={mediaId || undefined}
+        isPreview={rawSiteInfo.isPreview}
+      />
 
       {/* ヘッダー */}
       <MediaHeader 

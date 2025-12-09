@@ -13,7 +13,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useRouter } from 'next/navigation';
 
 // ソート可能なカラム
-type SortColumn = 'title' | 'writer' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
+type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
@@ -216,6 +216,9 @@ export default function ArticlesPage() {
           const writerB = writers.find(w => w.id === b.writerId)?.handleName || '';
           comparison = writerA.localeCompare(writerB, 'ja');
           break;
+        case 'viewCount':
+          comparison = (a.viewCount || 0) - (b.viewCount || 0);
+          break;
         case 'isPublished':
           comparison = (a.isPublished ? 1 : 0) - (b.isPublished ? 1 : 0);
           break;
@@ -312,9 +315,19 @@ export default function ArticlesPage() {
                     </th>
                     <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" 
-                      style={{ width: '12%' }}
+                      style={{ width: '10%' }}
                     >
                       タグ
+                    </th>
+                    <th 
+                      className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '6%' }}
+                      onClick={() => handleSort('viewCount')}
+                    >
+                      <div className="flex items-center justify-end">
+                        閲覧数
+                        <SortIcon column="viewCount" />
+                      </div>
                     </th>
                     <th 
                       className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
@@ -440,6 +453,9 @@ export default function ArticlesPage() {
                             <span className="text-xs text-gray-500">+{(article.tagIds || []).length - 2}</span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-right text-xs text-gray-500">
+                        {(article.viewCount || 0).toLocaleString()}
                       </td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
                         {!article.publishedAt ? (
