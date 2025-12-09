@@ -226,51 +226,80 @@ export default function DomainSetupPanel({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">状態</th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">タイプ</th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">ホスト</th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">値</th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">用途</th>
+                  <th className="text-left py-2 px-3 text-gray-700 font-medium">状態</th>
+                  <th className="text-left py-2 px-3 text-gray-700 font-medium">タイプ</th>
+                  <th className="text-left py-2 px-3 text-gray-700 font-medium">ホスト</th>
+                  <th className="text-left py-2 px-3 text-gray-700 font-medium">値</th>
+                  <th className="text-left py-2 px-3 text-gray-700 font-medium">用途</th>
                   <th className="py-2 px-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {localDomainConfig.dnsRecords.map((record, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-3">
-                      {getVerificationIcon(record.verified)}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
-                        {record.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 font-mono text-gray-700">{record.host}</td>
-                    <td className="py-3 px-3">
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all max-w-xs block">
-                        {record.value}
-                      </code>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        record.purpose === 'web' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {record.purpose === 'web' ? 'Web' : 'メール'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <button
-                        onClick={() => copyToClipboard(record.value)}
-                        className="text-blue-600 hover:text-blue-700 text-xs"
-                        title="値をコピー"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {localDomainConfig.dnsRecords.map((record, index) => {
+                  // @はルートドメインを表すが、実際のDNS設定では空欄で良い場合が多い
+                  const displayHost = record.host === '@' ? '' : record.host;
+                  return (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-3">
+                        {getVerificationIcon(record.verified)}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs text-gray-900">
+                          {record.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={displayHost}
+                            readOnly
+                            className="font-mono text-gray-900 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm w-32"
+                            placeholder="（空欄）"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(displayHost)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="ホストをコピー"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={record.value}
+                            readOnly
+                            className="font-mono text-gray-900 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm w-48 truncate"
+                            title={record.value}
+                          />
+                          <button
+                            onClick={() => copyToClipboard(record.value)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="値をコピー"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          record.purpose === 'web' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {record.purpose === 'web' ? 'Web' : 'メール'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
