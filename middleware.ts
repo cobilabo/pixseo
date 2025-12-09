@@ -178,6 +178,7 @@ function handleWordPressRedirect(pathname: string): string | null {
   }
   
   return null;
+}
 
 export const config = {
   // 管理画面とAPIを除外
