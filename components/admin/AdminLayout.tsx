@@ -60,7 +60,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleTenantChange = useCallback((tenantId: string) => {
     const tenant = tenants.find(t => t.id === tenantId);
-    if (tenant) setCurrentTenant(tenant);
+    if (tenant) {
+      setCurrentTenant(tenant);
+      // テナント切り替え後にページをリロードしてコンテンツを更新
+      window.location.reload();
+    }
   }, [tenants, setCurrentTenant]);
 
   return (
