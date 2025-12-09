@@ -106,14 +106,14 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // ドメイン設定を構築
+    // ドメイン設定を構築（undefinedはFirestoreに保存できないのでnullに変換）
     const domainConfig: DomainConfig = {
       type: domainType,
-      vercelDomainId: vercelResult.domainId,
+      vercelDomainId: vercelResult.domainId || null,
       vercelVerified: vercelResult.verified || false,
       vercelConfigured: true,
       emailEnabled: enableEmail && !!emailDomainId,
-      emailDomainId,
+      emailDomainId: emailDomainId || null,
       emailVerified: false,
       dnsRecords: [...dnsRecords, ...emailRecords],
       status: 'pending',

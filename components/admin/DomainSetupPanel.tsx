@@ -349,7 +349,7 @@ export default function DomainSetupPanel({
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="example.com または blog.example.com"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
           />
           <p className="text-xs text-gray-500 mt-1">
             ルートドメイン（example.com）またはサブドメイン（blog.example.com）を入力

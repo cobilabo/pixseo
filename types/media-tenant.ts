@@ -16,13 +16,13 @@ export interface DomainConfig {
   type: 'root' | 'subdomain';           // ドメインタイプ
   
   // Vercel設定
-  vercelDomainId?: string;              // Vercel側のドメインID
+  vercelDomainId?: string | null;       // Vercel側のドメインID
   vercelVerified: boolean;              // Vercelでの検証状態
   vercelConfigured: boolean;            // Vercelに追加済みか
   
   // メール設定（Resend）
   emailEnabled: boolean;                // メール機能有効化
-  emailDomainId?: string;               // Resend側のドメインID
+  emailDomainId?: string | null;        // Resend側のドメインID
   emailVerified: boolean;               // メールドメイン検証状態
   
   // DNS設定状況
@@ -30,10 +30,10 @@ export interface DomainConfig {
   
   // ステータス
   status: 'pending' | 'verifying' | 'active' | 'error';
-  errorMessage?: string;
+  errorMessage?: string | null;
   
-  lastCheckedAt?: Date;
-  configuredAt?: Date;
+  lastCheckedAt?: Date | null;
+  configuredAt?: Date | null;
 }
 
 export interface MediaTenant {
