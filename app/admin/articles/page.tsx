@@ -10,7 +10,7 @@ import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // ソート可能なカラム
 type SortColumn = 'title' | 'writer' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
@@ -20,6 +20,7 @@ const ITEMS_PER_PAGE = 20;
 
 export default function ArticlesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
   const [articles, setArticles] = useState<Article[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
@@ -35,12 +36,15 @@ export default function ArticlesPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
+  // URLパラメータのtを取得（リフレッシュトリガー用）
+  const refreshTrigger = searchParams.get('t');
+
   useEffect(() => {
     fetchArticles();
     fetchWriters();
     fetchCategories();
     fetchTags();
-  }, []);
+  }, [refreshTrigger]); // refreshTriggerが変わるたびに再取得
 
   const fetchArticles = async () => {
     try {
