@@ -443,8 +443,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       // 公開日が空の場合は下書き扱い
       const isDraft = !publishedAtDate;
 
-      // バックグラウンドで実行（await しない）
-      fetch(`/api/admin/articles/${params.id}/update`, {
+      // 記事を更新（完了を待つ）
+      const response = await fetch(`/api/admin/articles/${params.id}/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -463,15 +463,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           isPublished: isDraft ? false : formData.isPublished,
           isDraft: isDraft,
         }),
-      }).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`更新に失敗しました: ${response.status}`);
-        }
-        console.log('[handleSubmit] 更新成功');
-      }).catch((error) => {
-        console.error('[handleSubmit] 更新エラー:', error);
-        alert('記事の更新に失敗しました');
       });
+
+      if (!response.ok) {
+        throw new Error(`更新に失敗しました: ${response.status}`);
+      }
+      
+      console.log('[handleSubmit] 更新成功');
 
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
       alert('記事を保存しました');

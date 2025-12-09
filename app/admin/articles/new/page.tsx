@@ -292,8 +292,8 @@ function NewArticlePageContent() {
       // 公開日が空の場合は下書き扱い
       const isDraft = !publishedAtDate;
 
-      // バックグラウンドで実行（await しない）
-      fetch('/api/admin/articles', {
+      // 記事を保存（完了を待つ）
+      const response = await fetch('/api/admin/articles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -312,15 +312,13 @@ function NewArticlePageContent() {
           isPublished: isDraft ? false : formData.isPublished,
           isDraft: isDraft,
         }),
-      }).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`作成に失敗しました: ${response.status}`);
-        }
-        console.log('[handleSubmit] 作成成功');
-      }).catch((error) => {
-        console.error('Error creating article:', error);
-        alert('記事の作成に失敗しました');
       });
+
+      if (!response.ok) {
+        throw new Error(`作成に失敗しました: ${response.status}`);
+      }
+      
+      console.log('[handleSubmit] 作成成功');
       
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
       alert('記事を保存しました');
