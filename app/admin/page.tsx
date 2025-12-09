@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { apiGet } from '@/lib/api-client';
+import { useMediaTenant } from '@/contexts/MediaTenantContext';
 
 interface Stats {
   articlesCount: number;
@@ -12,6 +14,7 @@ interface Stats {
 }
 
 export default function AdminPage() {
+  const { currentTenant } = useMediaTenant();
   const [stats, setStats] = useState<Stats>({
     articlesCount: 0,
     categoriesCount: 0,
@@ -22,11 +25,8 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/admin/stats');
-        if (!response.ok) {
-          throw new Error('Failed to fetch stats');
-        }
-        const data = await response.json();
+        // apiGetを使用してmediaIdヘッダーを自動追加
+        const data = await apiGet('/api/admin/stats');
         setStats(data);
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -36,7 +36,7 @@ export default function AdminPage() {
     };
 
     fetchStats();
-  }, []);
+  }, [currentTenant]); // currentTenantが変わったら再取得
 
   return (
     <AuthGuard>
