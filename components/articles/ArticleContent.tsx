@@ -340,6 +340,10 @@ if (typeof window !== 'undefined') {
     .article-content table tbody tr:hover {
       background-color: var(--block-background-color, #f9fafb) !important;
     }
+    .article-content {
+      word-break: break-word !important;
+      overflow-wrap: break-word !important;
+    }
     .article-content a {
       word-break: break-all !important;
       overflow-wrap: break-word !important;
