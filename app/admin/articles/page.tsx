@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
@@ -18,7 +18,7 @@ type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
 
-export default function ArticlesPage() {
+function ArticlesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
@@ -605,6 +605,22 @@ export default function ArticlesPage() {
         </div>
       </AdminLayout>
     </AuthGuard>
+  );
+}
+
+export default function ArticlesPage() {
+  return (
+    <Suspense fallback={
+      <AuthGuard>
+        <AdminLayout>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </AdminLayout>
+      </AuthGuard>
+    }>
+      <ArticlesPageContent />
+    </Suspense>
   );
 }
 
