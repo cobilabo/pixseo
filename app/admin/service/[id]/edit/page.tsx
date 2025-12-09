@@ -7,8 +7,10 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FloatingSelect from '@/components/admin/FloatingSelect';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
+import DomainSetupPanel from '@/components/admin/DomainSetupPanel';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Client } from '@/types/client';
+import { DomainConfig } from '@/types/media-tenant';
 
 export default function EditServicePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     name: '',
     slug: '',
     customDomain: '',
+    domainConfig: undefined as DomainConfig | undefined,
     siteDescription: '',
     logoLandscape: '',
     logoSquare: '',
@@ -52,6 +55,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
             name: data.name || '',
             slug: data.slug || '',
             customDomain: data.customDomain || '',
+            domainConfig: data.domainConfig || undefined,
             siteDescription: data.siteDescription || data.settings?.siteDescription || '',
             logoLandscape: data.logoLandscape || data.settings?.logos?.landscape || '',
             logoSquare: data.logoSquare || data.settings?.logos?.square || '',
@@ -187,13 +191,6 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                 ]}
               />
 
-              {/* カスタムドメイン */}
-              <FloatingInput
-                label="カスタムドメイン"
-                value={formData.customDomain}
-                onChange={(value) => setFormData({ ...formData, customDomain: value })}
-              />
-
               {/* サービス説明 */}
               <FloatingInput
                 label="サービス説明（SEO用メタディスクリプション）"
@@ -205,6 +202,27 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
 
             </div>
           </form>
+
+          {/* カスタムドメイン設定パネル */}
+          <div className="mt-6">
+            <DomainSetupPanel
+              serviceId={params.id}
+              currentDomain={formData.customDomain}
+              domainConfig={formData.domainConfig}
+              onSetupComplete={async () => {
+                // サービス情報を再取得
+                const response = await fetch(`/api/admin/service/${params.id}`);
+                if (response.ok) {
+                  const data = await response.json();
+                  setFormData(prev => ({
+                    ...prev,
+                    customDomain: data.customDomain || '',
+                    domainConfig: data.domainConfig || undefined,
+                  }));
+                }
+              }}
+            />
+          </div>
 
           {/* トグルエリア（固定位置） */}
           <div className="fixed bottom-36 right-8 w-32 space-y-4 z-50">
