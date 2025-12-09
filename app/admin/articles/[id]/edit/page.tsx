@@ -68,6 +68,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     relatedArticleIds: [] as string[],
     isPublished: false,
     isScheduled: false,
+    isDraft: false,
     isFeatured: false,
     metaTitle: '',
     metaDescription: '',
@@ -106,6 +107,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setFeaturedImageUrl(articleData.featuredImage || '');
         setFeaturedImageAlt(articleData.featuredImageAlt || '');
         console.log('[EditArticlePage] setFeaturedImageAlt called with:', articleData.featuredImageAlt || '');
+        // 公開日が空の場合は下書き状態
+        const isDraft = !articleData.publishedAt;
+        
         setFormData({
           title: articleData.title,
           content: articleData.content,
@@ -118,6 +122,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           relatedArticleIds: articleData.relatedArticleIds || [],
           isPublished: articleData.isPublished,
           isScheduled: articleData.isScheduled || false,
+          isDraft: isDraft,
           isFeatured: articleData.isFeatured || false,
           metaTitle: articleData.metaTitle || '',
           metaDescription: articleData.metaDescription || '',
@@ -544,9 +549,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                     setFormData({
                       ...formData,
                       publishedAt: selectedDate,
-                      isScheduled: isFuture,
+                      isScheduled: selectedDate ? isFuture : false,
                       // 未来の日付が選択された場合は自動的に非公開に
                       isPublished: isFuture ? false : formData.isPublished,
+                      // 公開日が設定された場合は下書きを解除
+                      isDraft: selectedDate ? false : formData.isDraft,
                     });
                   }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -901,7 +908,20 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                       onChange={(e) => {
                         // 予約状態の場合は変更不可
                         if (formData.isScheduled) return;
-                        setFormData({ ...formData, isPublished: e.target.checked });
+                        
+                        const newIsPublished = e.target.checked;
+                        
+                        // 下書き状態で公開トグルをオンにした場合
+                        if (newIsPublished && formData.isDraft) {
+                          setFormData({
+                            ...formData,
+                            isPublished: true,
+                            isDraft: false,
+                            publishedAt: getTodayString(), // 公開日を今日に設定
+                          });
+                        } else {
+                          setFormData({ ...formData, isPublished: newIsPublished });
+                        }
                       }}
                       disabled={formData.isScheduled}
                       className="sr-only"
@@ -913,6 +933,47 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                     >
                       <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
                         formData.isPublished ? 'translate-x-6' : 'translate-x-0'
+                      }`}></div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* 下書きトグル */}
+            <div className="bg-white rounded-full px-6 py-3 shadow-custom">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-700">下書き</span>
+                <label className="cursor-pointer">
+                  <div className="relative inline-block w-14 h-8">
+                    <input
+                      type="checkbox"
+                      checked={formData.isDraft}
+                      onChange={(e) => {
+                        const newIsDraft = e.target.checked;
+                        
+                        if (newIsDraft) {
+                          // 下書きをオンにした場合：公開日を空に、公開もオフに
+                          setFormData({
+                            ...formData,
+                            isDraft: true,
+                            publishedAt: '',
+                            isPublished: false,
+                            isScheduled: false,
+                          });
+                        } else {
+                          setFormData({ ...formData, isDraft: false });
+                        }
+                      }}
+                      className="sr-only"
+                    />
+                    <div 
+                      className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
+                        formData.isDraft ? 'bg-orange-500' : 'bg-gray-400'
+                      }`}
+                    >
+                      <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                        formData.isDraft ? 'translate-x-6' : 'translate-x-0'
                       }`}></div>
                     </div>
                   </div>
