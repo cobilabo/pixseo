@@ -322,9 +322,9 @@ function NewArticlePageContent() {
         alert('記事の作成に失敗しました');
       });
       
-      // 即座にリダイレクト（タイムスタンプ付きで一覧を再取得）
+      // 一覧ページにリダイレクト（完全リロードでデータを再取得）
       alert('記事を保存しました');
-      router.push('/articles?t=' + Date.now());
+      window.location.href = '/articles';
     } catch (error) {
       console.error('Error:', error);
       alert('記事の保存に失敗しました');

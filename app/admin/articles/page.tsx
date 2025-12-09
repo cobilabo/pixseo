@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, Suspense } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
@@ -10,7 +10,7 @@ import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 // ソート可能なカラム
 type SortColumn = 'title' | 'writer' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
@@ -18,9 +18,8 @@ type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
 
-function ArticlesPageContent() {
+export default function ArticlesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
   const [articles, setArticles] = useState<Article[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
@@ -36,15 +35,12 @@ function ArticlesPageContent() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  // URLパラメータのtを取得（リフレッシュトリガー用）
-  const refreshTrigger = searchParams.get('t');
-
   useEffect(() => {
     fetchArticles();
     fetchWriters();
     fetchCategories();
     fetchTags();
-  }, [refreshTrigger]); // refreshTriggerが変わるたびに再取得
+  }, []);
 
   const fetchArticles = async () => {
     try {
@@ -605,22 +601,6 @@ function ArticlesPageContent() {
         </div>
       </AdminLayout>
     </AuthGuard>
-  );
-}
-
-export default function ArticlesPage() {
-  return (
-    <Suspense fallback={
-      <AuthGuard>
-        <AdminLayout>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </AdminLayout>
-      </AuthGuard>
-    }>
-      <ArticlesPageContent />
-    </Suspense>
   );
 }
 

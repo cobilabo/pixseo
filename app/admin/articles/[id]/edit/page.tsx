@@ -473,9 +473,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         alert('記事の更新に失敗しました');
       });
 
-      // 即座にリダイレクト（タイムスタンプ付きで一覧を再取得）
+      // 一覧ページにリダイレクト（完全リロードでデータを再取得）
       alert('記事を保存しました');
-      router.push('/articles?t=' + Date.now());
+      window.location.href = '/articles';
     } catch (error) {
       console.error('[handleSubmit] エラー:', error);
       alert('記事の保存に失敗しました');
