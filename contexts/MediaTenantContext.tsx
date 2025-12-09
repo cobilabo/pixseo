@@ -7,6 +7,12 @@ interface DomainConfig {
   status: 'pending' | 'verifying' | 'active' | 'error';
 }
 
+interface PreviewAuth {
+  enabled: boolean;
+  username: string;
+  password: string;
+}
+
 interface MediaTenant {
   id: string;
   name: string;
@@ -25,6 +31,7 @@ interface MediaTenant {
     };
   };
   isActive: boolean;
+  previewAuth?: PreviewAuth;
 }
 
 interface MediaTenantContextType {
