@@ -18,6 +18,9 @@ type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
 
+// 公開ステータスのオプション
+type PublishStatus = 'published' | 'draft' | 'scheduled';
+
 export default function ArticlesPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
@@ -27,6 +30,13 @@ export default function ArticlesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // フィルター
+  const [filterWriter, setFilterWriter] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('');
+  const [filterTag, setFilterTag] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<PublishStatus[]>([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   
   // ページネーション
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,16 +204,50 @@ export default function ArticlesPage() {
     );
   };
 
+  // 記事のステータスを判定するヘルパー関数
+  const getArticleStatus = (article: Article): PublishStatus => {
+    if (!article.publishedAt) return 'draft';
+    if (article.isScheduled) return 'scheduled';
+    if (article.isPublished) return 'published';
+    return 'draft';
+  };
+
   // フィルタリング + ソート + ページネーション
   const { paginatedArticles, totalPages, totalCount } = useMemo(() => {
-    // 1. フィルタリング
+    // 1. テキスト検索フィルタリング
     const lowercaseSearch = searchTerm.toLowerCase();
     let filtered = articles.filter((article) => 
       article.title.toLowerCase().includes(lowercaseSearch) ||
       article.content.toLowerCase().includes(lowercaseSearch)
     );
+    
+    // 2. ライターフィルター
+    if (filterWriter) {
+      filtered = filtered.filter(article => article.writerId === filterWriter);
+    }
+    
+    // 3. カテゴリーフィルター
+    if (filterCategory) {
+      filtered = filtered.filter(article => 
+        (article.categoryIds || []).includes(filterCategory)
+      );
+    }
+    
+    // 4. タグフィルター
+    if (filterTag) {
+      filtered = filtered.filter(article => 
+        (article.tagIds || []).includes(filterTag)
+      );
+    }
+    
+    // 5. 公開ステータスフィルター
+    if (filterStatus.length > 0) {
+      filtered = filtered.filter(article => 
+        filterStatus.includes(getArticleStatus(article))
+      );
+    }
 
-    // 2. ソート
+    // 6. ソート
     filtered = [...filtered].sort((a, b) => {
       let comparison = 0;
       
@@ -240,41 +284,176 @@ export default function ArticlesPage() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-    // 3. ページネーション
+    // 7. ページネーション
     const totalCount = filtered.length;
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedArticles = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return { paginatedArticles, totalPages, totalCount };
-  }, [articles, searchTerm, sortColumn, sortDirection, currentPage, writers]);
+  }, [articles, searchTerm, filterWriter, filterCategory, filterTag, filterStatus, sortColumn, sortDirection, currentPage, writers]);
 
-  // 検索時は1ページ目に戻る
+  // フィルター変更時は1ページ目に戻る
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, filterWriter, filterCategory, filterTag, filterStatus]);
+  
+  // ステータスフィルターの切り替え
+  const toggleStatusFilter = (status: PublishStatus) => {
+    setFilterStatus(prev => 
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+  
+  // フィルターをクリア
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterWriter('');
+    setFilterCategory('');
+    setFilterTag('');
+    setFilterStatus([]);
+  };
+  
+  // フィルターが適用されているかどうか
+  const hasActiveFilters = searchTerm || filterWriter || filterCategory || filterTag || filterStatus.length > 0;
 
   return (
     <AuthGuard>
       <AdminLayout>
         {loading ? null : (
           <div className="space-y-6 animate-fadeIn">
-          {/* 検索バー */}
+          {/* 検索バー＆フィルター */}
           <div className="rounded-xl p-4" style={{ backgroundColor: '#ddecf8' }}>
-            <input
-              type="text"
-              placeholder="記事を検索..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            />
+            <div className="flex flex-wrap gap-3 items-center">
+              {/* 検索入力 */}
+              <div className="flex-shrink-0 w-48">
+                <input
+                  type="text"
+                  placeholder="記事を検索..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                />
+              </div>
+              
+              {/* ライターフィルター */}
+              <select
+                value={filterWriter}
+                onChange={(e) => setFilterWriter(e.target.value)}
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+              >
+                <option value="">ライター</option>
+                {writers.map(writer => (
+                  <option key={writer.id} value={writer.id}>{writer.handleName}</option>
+                ))}
+              </select>
+              
+              {/* カテゴリーフィルター */}
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+              >
+                <option value="">カテゴリー</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              
+              {/* タグフィルター */}
+              <select
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+              >
+                <option value="">タグ</option>
+                {tags.map(tag => (
+                  <option key={tag.id} value={tag.id}>{tag.name}</option>
+                ))}
+              </select>
+              
+              {/* 公開ステータスフィルター（複数選択） */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                  className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 flex items-center gap-2"
+                >
+                  <span>
+                    {filterStatus.length === 0 
+                      ? 'ステータス' 
+                      : `ステータス (${filterStatus.length})`
+                    }
+                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {showStatusDropdown && (
+                  <>
+                    {/* オーバーレイ */}
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowStatusDropdown(false)}
+                    />
+                    {/* ドロップダウン */}
+                    <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[140px] z-20">
+                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filterStatus.includes('published')}
+                          onChange={() => toggleStatusFilter('published')}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">公開中</span>
+                      </label>
+                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filterStatus.includes('draft')}
+                          onChange={() => toggleStatusFilter('draft')}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">下書き</span>
+                      </label>
+                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filterStatus.includes('scheduled')}
+                          onChange={() => toggleStatusFilter('scheduled')}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">予約中</span>
+                      </label>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* フィルタークリアボタン */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="px-3 py-2 rounded-lg bg-gray-500 text-white text-sm hover:bg-gray-600 transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  クリア
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 記事一覧 */}
           <div className="bg-white rounded-xl overflow-hidden">
             {totalCount === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                {searchTerm ? '検索結果がありません' : '記事がまだありません'}
+                {hasActiveFilters ? '条件に一致する記事がありません' : '記事がまだありません'}
               </div>
             ) : (
               <>
