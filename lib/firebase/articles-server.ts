@@ -750,4 +750,113 @@ export const getArticlesByWriterServer = async (
   }
 };
 
+/**
+ * おすすめカテゴリーに属する記事を取得（サーバーサイド用）
+ */
+export const getRecommendedArticlesServer = async (
+  limitCount: number = 10,
+  mediaId?: string
+): Promise<Article[]> => {
+  try {
+    const isPreview = isPreviewMode();
+    
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey(
+      'recommendedArticles',
+      limitCount,
+      mediaId,
+      isPreview ? 'preview' : 'live'
+    );
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<Article[]>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) {
+      return cached;
+    }
+    
+    // おすすめカテゴリーを取得
+    const categoriesRef = adminDb.collection('categories');
+    let categoriesQuery: admin.firestore.Query = categoriesRef.where('isRecommended', '==', true);
+    
+    if (mediaId) {
+      categoriesQuery = categoriesQuery.where('mediaId', '==', mediaId);
+    }
+    
+    const categoriesSnapshot = await categoriesQuery.get();
+    const recommendedCategoryIds = categoriesSnapshot.docs.map(doc => doc.id);
+    
+    if (recommendedCategoryIds.length === 0) {
+      return [];
+    }
+    
+    // おすすめカテゴリーに属する記事を取得
+    const articlesRef = adminDb.collection('articles');
+    let articlesQuery: admin.firestore.Query = articlesRef;
+    
+    // プレビューモードでない場合のみ公開記事に絞る
+    if (!isPreview) {
+      articlesQuery = articlesQuery.where('isPublished', '==', true);
+    }
+    
+    if (mediaId) {
+      articlesQuery = articlesQuery.where('mediaId', '==', mediaId);
+    }
+    
+    const snapshot = await articlesQuery.get();
+    
+    const now = new Date();
+    
+    let articles = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        
+        // tableOfContentsを安全に処理
+        let tableOfContents = data.tableOfContents || [];
+        if (!Array.isArray(tableOfContents)) {
+          tableOfContents = [];
+        }
+        
+        // relatedArticleIdsを安全に処理
+        let relatedArticleIds = data.relatedArticleIds || [];
+        if (!Array.isArray(relatedArticleIds)) {
+          relatedArticleIds = [];
+        }
+        
+        return {
+          id: doc.id,
+          ...data,
+          publishedAt: convertTimestamp(data.publishedAt),
+          updatedAt: convertTimestamp(data.updatedAt),
+          tableOfContents,
+          relatedArticleIds,
+          readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
+        } as Article;
+      })
+      // おすすめカテゴリーに属する記事のみをフィルタリング
+      .filter(article => {
+        const articleCategoryIds = article.categoryIds || [];
+        return articleCategoryIds.some((catId: string) => recommendedCategoryIds.includes(catId));
+      })
+      // プレビューモードでない場合のみ公開日チェック
+      .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
+    
+    // 公開日で降順ソート
+    articles.sort((a, b) => {
+      const aTime = a.publishedAt?.getTime() || 0;
+      const bTime = b.publishedAt?.getTime() || 0;
+      return bTime - aTime;
+    });
+    
+    // limit適用
+    articles = articles.slice(0, limitCount);
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, articles);
+    
+    return articles;
+  } catch (error) {
+    console.error('[getRecommendedArticlesServer] Error:', error);
+    return [];
+  }
+};
 

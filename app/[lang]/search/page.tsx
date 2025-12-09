@@ -13,7 +13,7 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
-import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
@@ -89,11 +89,12 @@ export default async function SearchPage({ params }: PageProps) {
   const mediaId = await getMediaIdFromHost();
   
   // サイト設定、Theme、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, popularArticles, recentArticles] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allCategories, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
     getPopularArticlesServer(10, mediaId || undefined),
+    getRecommendedArticlesServer(10, mediaId || undefined),
     getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
   ]);
 
@@ -105,6 +106,10 @@ export default async function SearchPage({ params }: PageProps) {
     .map(cat => localizeCategory(cat, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
+  // おすすめ記事（おすすめカテゴリーに属する記事、なければ最近の記事をフォールバック）
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(art => localizeArticle(art, lang))
+    : localizedRecentArticles;
 
   // スタイルとフッター情報を準備
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -174,7 +179,7 @@ export default async function SearchPage({ params }: PageProps) {
               <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
 
               {/* おすすめ記事 */}
-              <RecommendedArticles articles={localizedRecentArticles} categories={allCategories} lang={lang} />
+              <RecommendedArticles articles={localizedRecommendedArticles} categories={allCategories} lang={lang} />
 
               {/* バナーエリア */}
               {footerBlocks.length > 0 && (

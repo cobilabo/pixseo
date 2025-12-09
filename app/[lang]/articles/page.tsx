@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
@@ -84,11 +84,12 @@ export default async function ArticlesPage({ params }: PageProps) {
   const host = headersList.get('host') || '';
   
   // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
+    getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
   ]);
   
@@ -100,6 +101,10 @@ export default async function ArticlesPage({ params }: PageProps) {
     .map(cat => localizeCategory(cat, lang));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  // おすすめ記事（おすすめカテゴリーに属する記事、なければ一覧の記事をフォールバック）
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(art => localizeArticle(art, lang))
+    : localizedArticles;
   
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -190,7 +195,7 @@ export default async function ArticlesPage({ params }: PageProps) {
             <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
 
             {/* おすすめ記事 */}
-            <RecommendedArticles articles={localizedArticles} categories={allCategories} lang={lang} />
+            <RecommendedArticles articles={localizedRecommendedArticles} categories={allCategories} lang={lang} />
 
             {/* バナーエリア */}
             {footerBlocks.length > 0 && (

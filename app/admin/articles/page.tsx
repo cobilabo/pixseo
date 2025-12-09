@@ -286,17 +286,17 @@ export default function ArticlesPage() {
                   <tr>
                     <th 
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '30%' }}
+                      style={{ width: '20%' }}
                       onClick={() => handleSort('title')}
                     >
                       <div className="flex items-center">
-                        タイトル&ディスクリプション
+                        タイトル
                         <SortIcon column="title" />
                       </div>
                     </th>
                     <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '10%' }}
+                      style={{ width: '8%' }}
                       onClick={() => handleSort('writer')}
                     >
                       <div className="flex items-center">
@@ -305,8 +305,20 @@ export default function ArticlesPage() {
                       </div>
                     </th>
                     <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" 
+                      style={{ width: '12%' }}
+                    >
+                      カテゴリー
+                    </th>
+                    <th 
+                      className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" 
+                      style={{ width: '12%' }}
+                    >
+                      タグ
+                    </th>
+                    <th 
                       className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '8%' }}
+                      style={{ width: '6%' }}
                       onClick={() => handleSort('isPublished')}
                     >
                       <div className="flex items-center justify-center">
@@ -316,7 +328,7 @@ export default function ArticlesPage() {
                     </th>
                     <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '13%' }}
+                      style={{ width: '11%' }}
                       onClick={() => handleSort('publishedAt')}
                     >
                       <div className="flex items-center">
@@ -326,7 +338,7 @@ export default function ArticlesPage() {
                     </th>
                     <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '13%' }}
+                      style={{ width: '11%' }}
                       onClick={() => handleSort('createdAt')}
                     >
                       <div className="flex items-center">
@@ -336,7 +348,7 @@ export default function ArticlesPage() {
                     </th>
                     <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '13%' }}
+                      style={{ width: '11%' }}
                       onClick={() => handleSort('updatedAt')}
                     >
                       <div className="flex items-center">
@@ -344,7 +356,7 @@ export default function ArticlesPage() {
                         <SortIcon column="updatedAt" />
                       </div>
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '13%' }}>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '9%' }}>
                       操作
                     </th>
                   </tr>
@@ -398,6 +410,36 @@ export default function ArticlesPage() {
                             <span className="text-xs text-gray-900 truncate">{writer.handleName}</span>
                           </div>
                         )}
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {(article.categoryIds || []).slice(0, 2).map(catId => {
+                            const cat = categories.find(c => c.id === catId);
+                            return cat ? (
+                              <span key={catId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 truncate max-w-[80px]" title={cat.name}>
+                                {cat.name}
+                              </span>
+                            ) : null;
+                          })}
+                          {(article.categoryIds || []).length > 2 && (
+                            <span className="text-xs text-gray-500">+{(article.categoryIds || []).length - 2}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {(article.tagIds || []).slice(0, 2).map(tagId => {
+                            const tag = tags.find(t => t.id === tagId);
+                            return tag ? (
+                              <span key={tagId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 truncate max-w-[80px]" title={tag.name}>
+                                {tag.name}
+                              </span>
+                            ) : null;
+                          })}
+                          {(article.tagIds || []).length > 2 && (
+                            <span className="text-xs text-gray-500">+{(article.tagIds || []).length - 2}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
                         {!article.publishedAt ? (
