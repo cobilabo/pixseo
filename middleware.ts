@@ -118,6 +118,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // WordPress旧URL形式のリダイレクト（301 Permanent Redirect）
+  const wpRedirect = handleWordPressRedirect(pathname);
+  if (wpRedirect) {
+    const url = request.nextUrl.clone();
+    url.pathname = wpRedirect;
+    return NextResponse.redirect(url, { status: 301 });
+  }
+  
   // パスを分解
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
@@ -135,6 +143,41 @@ export async function middleware(request: NextRequest) {
   
   return NextResponse.redirect(url);
 }
+
+/**
+ * WordPress旧URL形式を新URL形式にリダイレクト
+ * @returns 新しいパス（リダイレクトが必要な場合）またはnull
+ */
+function handleWordPressRedirect(pathname: string): string | null {
+  // 記事: /YYYY/MM/DD/slug/ → /ja/articles/slug
+  const articleMatch = pathname.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/([^/]+)\/?$/);
+  if (articleMatch) {
+    const slug = articleMatch[4];
+    return `/${DEFAULT_LANG}/articles/${slug}`;
+  }
+  
+  // カテゴリー: /category/slug/ → /ja/categories/slug
+  const categoryMatch = pathname.match(/^\/category\/([^/]+)\/?$/);
+  if (categoryMatch) {
+    const slug = categoryMatch[1];
+    return `/${DEFAULT_LANG}/categories/${slug}`;
+  }
+  
+  // タグ: /tag/slug/ → /ja/tags/slug
+  const tagMatch = pathname.match(/^\/tag\/([^/]+)\/?$/);
+  if (tagMatch) {
+    const slug = tagMatch[1];
+    return `/${DEFAULT_LANG}/tags/${slug}`;
+  }
+  
+  // 著者: /author/slug/ → /ja/writers/slug
+  const authorMatch = pathname.match(/^\/author\/([^/]+)\/?$/);
+  if (authorMatch) {
+    const slug = authorMatch[1];
+    return `/${DEFAULT_LANG}/writers/${slug}`;
+  }
+  
+  return null;
 
 export const config = {
   // 管理画面とAPIを除外
