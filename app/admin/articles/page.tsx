@@ -19,7 +19,7 @@ type SortDirection = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 20;
 
 // 公開ステータスのオプション
-type PublishStatus = 'published' | 'draft' | 'scheduled';
+type PublishStatus = 'published' | 'unpublished' | 'draft' | 'scheduled';
 
 export default function ArticlesPage() {
   const router = useRouter();
@@ -206,10 +206,14 @@ export default function ArticlesPage() {
 
   // 記事のステータスを判定するヘルパー関数
   const getArticleStatus = (article: Article): PublishStatus => {
+    // 公開日が設定されていない場合は下書き
     if (!article.publishedAt) return 'draft';
+    // 予約公開待ち状態
     if (article.isScheduled) return 'scheduled';
+    // 公開中
     if (article.isPublished) return 'published';
-    return 'draft';
+    // 公開日が設定されているが非公開
+    return 'unpublished';
   };
 
   // フィルタリング + ソート + ページネーション
@@ -409,6 +413,15 @@ export default function ArticlesPage() {
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
                         <span className="text-sm text-gray-700">公開中</span>
+                      </label>
+                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filterStatus.includes('unpublished')}
+                          onChange={() => toggleStatusFilter('unpublished')}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">非公開</span>
                       </label>
                       <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer">
                         <input
