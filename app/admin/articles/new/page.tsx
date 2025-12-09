@@ -927,7 +927,12 @@ function NewArticlePageContent() {
                             isScheduled: false,
                           });
                         } else {
-                          setFormData({ ...formData, isDraft: false });
+                          // 下書きをオフにした場合：公開日が空なら本日を設定
+                          setFormData({
+                            ...formData,
+                            isDraft: false,
+                            publishedAt: formData.publishedAt || getTodayString(),
+                          });
                         }
                       }}
                       className="sr-only"
