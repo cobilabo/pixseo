@@ -20,6 +20,8 @@ interface AdminSidebarProps {
   isSuperAdmin: boolean;
   currentTenantName: string | undefined;
   currentTenantSlug: string | undefined;
+  currentTenantCustomDomain: string | undefined;
+  currentTenantDomainStatus: string | undefined;
   tenants: Array<{ id: string; name: string; slug: string }>;
   onTenantChange: (tenantId: string) => void;
   onSignOut: () => void;
@@ -35,10 +37,18 @@ const AdminSidebar = memo(function AdminSidebar({
   isSuperAdmin,
   currentTenantName,
   currentTenantSlug,
+  currentTenantCustomDomain,
+  currentTenantDomainStatus,
   tenants,
   onTenantChange,
   onSignOut,
 }: AdminSidebarProps) {
+  // サイトURLを決定（カスタムドメインが有効ならそちらを使用）
+  const siteUrl = currentTenantCustomDomain && currentTenantDomainStatus === 'active'
+    ? `https://${currentTenantCustomDomain}`
+    : currentTenantSlug 
+      ? `https://${currentTenantSlug}.pixseo-preview.cloud`
+      : null;
   // セクション1: ダッシュボード、アカウント
   const section1Navigation: MenuItem[] = [
     { 
@@ -270,9 +280,9 @@ const AdminSidebar = memo(function AdminSidebar({
             </select>
             
             {/* サイトビューボタン */}
-            {currentTenantSlug && (
+            {siteUrl && (
               <a
-                href={`https://${currentTenantSlug}.pixseo-preview.cloud`}
+                href={siteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-r-lg hover:bg-blue-700 transition-colors flex items-center justify-center border border-l-0 border-blue-600"

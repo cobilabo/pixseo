@@ -3,11 +3,16 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
+interface DomainConfig {
+  status: 'pending' | 'verifying' | 'active' | 'error';
+}
+
 interface MediaTenant {
   id: string;
   name: string;
   slug: string;
   customDomain?: string;
+  domainConfig?: DomainConfig;
   ownerId: string;
   memberIds: string[];
   clientId?: string;

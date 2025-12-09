@@ -75,6 +75,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         isSuperAdmin={isSuperAdmin}
         currentTenantName={currentTenant?.name}
         currentTenantSlug={currentTenant?.slug}
+        currentTenantCustomDomain={currentTenant?.customDomain}
+        currentTenantDomainStatus={currentTenant?.domainConfig?.status}
         tenants={tenants}
         onTenantChange={handleTenantChange}
         onSignOut={handleSignOut}
