@@ -10,24 +10,38 @@ export async function GET(
 ) {
   try {
     const formId = params.id;
+    console.log('[API] Fetching submissions for formId:', formId);
 
+    // orderByを使用せずに取得（インデックス不要）
     const submissionsSnapshot = await adminDb
       .collection('formSubmissions')
       .where('formId', '==', formId)
-      .orderBy('submittedAt', 'desc')
       .get();
 
-    const submissions = submissionsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      submittedAt: doc.data().submittedAt?.toDate?.() || new Date(),
-    }));
+    console.log('[API] Found submissions:', submissionsSnapshot.size);
+
+    const submissions = submissionsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        submittedAt: data.submittedAt?.toDate?.() 
+          ? data.submittedAt.toDate().toISOString() 
+          : data.submittedAt || new Date().toISOString(),
+      };
+    });
+
+    // クライアントサイドでソート（新しい順）
+    submissions.sort((a, b) => 
+      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
 
     return NextResponse.json(submissions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API] Error fetching submissions:', error);
+    console.error('[API] Error details:', error.message, error.code);
     return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
+      { error: 'Failed to fetch submissions', details: error.message },
       { status: 500 }
     );
   }
