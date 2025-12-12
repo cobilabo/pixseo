@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
@@ -21,8 +21,15 @@ interface MediaFile {
   width?: number;
   height?: number;
   createdAt: string;
+  mediaId?: string;
   usageCount?: number;
   usageDetails?: string[];
+}
+
+interface UsageData {
+  id: string;
+  usageCount: number;
+  usageDetails: string[];
 }
 
 export default function MediaPage() {
@@ -33,6 +40,8 @@ export default function MediaPage() {
   const [filterType, setFilterType] = useState<'all' | 'image' | 'video'>('all');
   const [isImagePromptModalOpen, setIsImagePromptModalOpen] = useState(false);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_LOAD);
+  const [loadingUsage, setLoadingUsage] = useState(false);
+  const [usageLoadedIds, setUsageLoadedIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -43,12 +52,62 @@ export default function MediaPage() {
     try {
       const data = await apiGet<MediaFile[]>('/api/admin/media');
       setMediaFiles(data);
+      // 使用状況のキャッシュをリセット
+      setUsageLoadedIds(new Set());
     } catch (error) {
       console.error('Error fetching media:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // 表示中のメディアの使用状況を取得
+  const fetchUsage = useCallback(async (mediaToFetch: MediaFile[]) => {
+    if (mediaToFetch.length === 0) return;
+
+    // まだ使用状況を取得していないメディアのみを対象にする
+    const unfetchedMedia = mediaToFetch.filter(m => !usageLoadedIds.has(m.id));
+    if (unfetchedMedia.length === 0) return;
+
+    setLoadingUsage(true);
+    try {
+      const response = await fetch('/api/admin/media/usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mediaItems: unfetchedMedia.map(m => ({
+            id: m.id,
+            url: m.url,
+            mediaId: m.mediaId || '',
+          })),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch usage');
+
+      const usageData: UsageData[] = await response.json();
+
+      // 使用状況をマージ
+      setMediaFiles(prev => prev.map(media => {
+        const usage = usageData.find(u => u.id === media.id);
+        if (usage) {
+          return { ...media, usageCount: usage.usageCount, usageDetails: usage.usageDetails };
+        }
+        return media;
+      }));
+
+      // 取得済みIDを記録
+      setUsageLoadedIds(prev => {
+        const newSet = new Set(prev);
+        unfetchedMedia.forEach(m => newSet.add(m.id));
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Error fetching usage:', error);
+    } finally {
+      setLoadingUsage(false);
+    }
+  }, [usageLoadedIds]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -132,6 +191,13 @@ export default function MediaPage() {
   useEffect(() => {
     setDisplayCount(ITEMS_PER_LOAD);
   }, [searchQuery, filterType]);
+
+  // 表示中のメディアが変わったら使用状況を取得
+  useEffect(() => {
+    if (displayedMedia.length > 0 && !loading) {
+      fetchUsage(displayedMedia);
+    }
+  }, [displayedMedia, loading, fetchUsage]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -258,21 +324,28 @@ export default function MediaPage() {
                         )}
                       </div>
                       {/* 使用数表示 */}
-                      {media.usageCount !== undefined && (
-                        <div className="mt-2 pt-2 border-t border-gray-200">
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        {media.usageCount !== undefined ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-700">使用数:</span>
+                              <span className={`text-xs font-bold ${media.usageCount > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                {media.usageCount}
+                              </span>
+                            </div>
+                            {media.usageDetails && media.usageDetails.length > 0 && (
+                              <div className="mt-1 text-xs text-gray-500">
+                                {media.usageDetails.join(', ')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-gray-700">使用数:</span>
-                            <span className={`text-xs font-bold ${media.usageCount > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                              {media.usageCount}
-                            </span>
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
                           </div>
-                          {media.usageDetails && media.usageDetails.length > 0 && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              {media.usageDetails.join(', ')}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
