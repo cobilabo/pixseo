@@ -85,7 +85,7 @@ export default function NewFormPage() {
 
       const data = await response.json();
       alert('フォームを作成しました');
-      router.push('/forms');
+      router.push('/admin/forms');
     } catch (error) {
       console.error('Error creating form:', error);
       alert('フォームの作成に失敗しました');

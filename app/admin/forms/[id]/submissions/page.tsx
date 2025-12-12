@@ -89,7 +89,7 @@ export default function FormSubmissionsPage() {
                 {formName} - 送信データ
               </h1>
               <button
-                onClick={() => router.push('/forms')}
+                onClick={() => router.push('/admin/forms')}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
                 戻る

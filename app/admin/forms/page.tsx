@@ -175,7 +175,7 @@ export default function FormsListPage() {
                         </td>
                         <td className="px-3 py-3 text-center whitespace-nowrap">
                           <Link
-                            href={`/forms/${form.id}/submissions`}
+                            href={`/admin/forms/${form.id}/submissions`}
                             className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                           >
                             {form.submissionCount || 0}件
@@ -185,7 +185,7 @@ export default function FormsListPage() {
                           <div className="flex justify-end gap-2">
                             {/* 編集ボタン */}
                             <Link
-                              href={`/forms/${form.id}/edit`}
+                              href={`/admin/forms/${form.id}/edit`}
                               className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors"
                               title="編集"
                             >
@@ -228,7 +228,7 @@ export default function FormsListPage() {
 
           {/* 新規作成ボタン */}
           <Link
-            href="/forms/new"
+            href="/admin/forms/new"
             className="w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center shadow-lg"
             title="新規作成"
           >

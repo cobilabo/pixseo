@@ -91,7 +91,7 @@ export default function EditFormPage() {
     } catch (error) {
       console.error('Error fetching form:', error);
       alert('フォームの取得に失敗しました');
-      router.push('/forms');
+      router.push('/admin/forms');
     }
   };
 
@@ -132,7 +132,7 @@ export default function EditFormPage() {
       }
 
       alert('フォームを更新しました');
-      router.push('/forms');
+      router.push('/admin/forms');
     } catch (error) {
       console.error('Error updating form:', error);
       alert('フォームの更新に失敗しました');
