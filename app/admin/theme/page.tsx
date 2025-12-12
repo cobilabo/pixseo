@@ -776,7 +776,6 @@ export default function ThemePage() {
                                 label="スクリプト名"
                                 value={script.name}
                                 onChange={(value) => updateScript(index, 'name', value)}
-                                placeholder="例：Google Analytics 4"
                               />
 
                               {/* 設置位置選択 */}
@@ -812,7 +811,6 @@ export default function ThemePage() {
                                     label="<head> 用コード"
                                     value={script.headCode || ''}
                                     onChange={(value) => updateScript(index, 'headCode', value)}
-                                    placeholder="<!-- GA4 など -->"
                                     multiline
                                     rows={8}
                                   />
@@ -820,7 +818,6 @@ export default function ThemePage() {
                                     label="<body> 末尾用コード"
                                     value={script.bodyCode || ''}
                                     onChange={(value) => updateScript(index, 'bodyCode', value)}
-                                    placeholder="<!-- GTM noscript など -->"
                                     multiline
                                     rows={8}
                                   />
@@ -830,7 +827,6 @@ export default function ThemePage() {
                                   label={`スクリプトコード（${script.position === 'head' ? '<head>' : '<body>末尾'} に挿入）`}
                                   value={script.code}
                                   onChange={(value) => updateScript(index, 'code', value)}
-                                  placeholder="<script>...</script> または JavaScript コードを入力"
                                   multiline
                                   rows={8}
                                 />
@@ -873,10 +869,6 @@ export default function ThemePage() {
                                             updateScriptTrigger(index, { slugs: values });
                                           }
                                         }}
-                                        placeholder={trigger.type === 'custom' 
-                                          ? '例: /contact, /about, /articles/*'
-                                          : '例: sample-article, another-post'
-                                        }
                                       />
                                       <p className="text-xs text-gray-500 mt-2">
                                         {trigger.type === 'custom' 
