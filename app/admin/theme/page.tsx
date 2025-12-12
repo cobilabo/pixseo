@@ -213,7 +213,32 @@ export default function ThemePage() {
   const updateScript = (index: number, field: keyof ScriptItem, value: string | boolean | ScriptTrigger[]) => {
     const newScripts = [...(theme.scripts || [])];
     if (newScripts[index]) {
-      newScripts[index] = { ...newScripts[index], [field]: value };
+      const currentScript = newScripts[index];
+      let updatedScript = { ...currentScript, [field]: value };
+      
+      // position変更時のコード引き継ぎ処理
+      if (field === 'position') {
+        const oldPosition = currentScript.position;
+        const newPosition = value as string;
+        
+        if (oldPosition === 'both' && newPosition === 'head') {
+          // 「両方」→「<head>」: headCodeをcodeに引き継ぎ
+          updatedScript.code = currentScript.headCode || '';
+        } else if (oldPosition === 'both' && newPosition === 'body') {
+          // 「両方」→「<body>末尾」: bodyCodeをcodeに引き継ぎ
+          updatedScript.code = currentScript.bodyCode || '';
+        } else if (oldPosition === 'head' && newPosition === 'both') {
+          // 「<head>」→「両方」: codeをheadCodeに引き継ぎ
+          updatedScript.headCode = currentScript.code || '';
+          updatedScript.bodyCode = currentScript.bodyCode || '';
+        } else if (oldPosition === 'body' && newPosition === 'both') {
+          // 「<body>末尾」→「両方」: codeをbodyCodeに引き継ぎ
+          updatedScript.headCode = currentScript.headCode || '';
+          updatedScript.bodyCode = currentScript.code || '';
+        }
+      }
+      
+      newScripts[index] = updatedScript;
       setTheme(prev => ({ ...prev, scripts: newScripts }));
     }
   };
