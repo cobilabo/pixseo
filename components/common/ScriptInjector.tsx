@@ -35,15 +35,9 @@ function matchPath(pattern: string, currentPath: string): boolean {
 }
 
 /**
- * 発火条件をチェック
+ * 単一の発火条件をチェック
  */
-function checkTrigger(script: ScriptItem, pathname: string): boolean {
-  const trigger = script.trigger || { type: 'all' };
-  
-  // 言語プレフィックスを除去
-  const pathWithoutLang = pathname.replace(/^\/(ja|en|zh|ko)/, '');
-  const normalizedPath = pathWithoutLang || '/';
-  
+function checkSingleTrigger(trigger: { type: string; customPaths?: string[] }, normalizedPath: string, pathname: string): boolean {
   switch (trigger.type) {
     case 'all':
       return true;
@@ -53,11 +47,6 @@ function checkTrigger(script: ScriptItem, pathname: string): boolean {
       
     case 'articles':
       return normalizedPath.startsWith('/articles/') && normalizedPath !== '/articles';
-      
-    case 'article-slug':
-      if (!trigger.slugs || trigger.slugs.length === 0) return false;
-      const articleSlug = normalizedPath.replace('/articles/', '');
-      return trigger.slugs.includes(articleSlug);
       
     case 'categories':
       return normalizedPath.startsWith('/categories/');
@@ -75,11 +64,6 @@ function checkTrigger(script: ScriptItem, pathname: string): boolean {
              normalizedPath !== '/' &&
              normalizedPath !== '';
       
-    case 'page-slug':
-      if (!trigger.slugs || trigger.slugs.length === 0) return false;
-      const pageSlug = normalizedPath.replace('/', '');
-      return trigger.slugs.includes(pageSlug);
-      
     case 'search':
       return normalizedPath === '/search' || normalizedPath.startsWith('/search');
       
@@ -90,6 +74,20 @@ function checkTrigger(script: ScriptItem, pathname: string): boolean {
     default:
       return true;
   }
+}
+
+/**
+ * 発火条件をチェック（複数条件はOR評価）
+ */
+function checkTriggers(script: ScriptItem, pathname: string): boolean {
+  const triggers = script.triggers || [{ type: 'all' }];
+  
+  // 言語プレフィックスを除去
+  const pathWithoutLang = pathname.replace(/^\/(ja|en|zh|ko)/, '');
+  const normalizedPath = pathWithoutLang || '/';
+  
+  // いずれかの条件にマッチすればtrue（OR評価）
+  return triggers.some(trigger => checkSingleTrigger(trigger, normalizedPath, pathname));
 }
 
 /**
@@ -150,8 +148,8 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     if (script.device === 'pc' && isMobile) return false;
     if (script.device === 'mobile' && !isMobile) return false;
     
-    // 発火条件でフィルタリング
-    if (!checkTrigger(script, pathname || '/')) return false;
+    // 発火条件でフィルタリング（複数条件はOR評価）
+    if (!checkTriggers(script, pathname || '/')) return false;
     
     return true;
   });

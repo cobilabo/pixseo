@@ -200,7 +200,7 @@ export default function ThemePage() {
       bodyCode: '',
       position: 'head',
       device: 'all',
-      trigger: { type: 'all' },
+      triggers: [{ type: 'all' }],
       isEnabled: true,
       isTest: false,
     };
@@ -210,7 +210,7 @@ export default function ThemePage() {
     }));
   };
 
-  const updateScript = (index: number, field: keyof ScriptItem, value: string | boolean | ScriptTrigger) => {
+  const updateScript = (index: number, field: keyof ScriptItem, value: string | boolean | ScriptTrigger[]) => {
     const newScripts = [...(theme.scripts || [])];
     if (newScripts[index]) {
       newScripts[index] = { ...newScripts[index], [field]: value };
@@ -218,13 +218,37 @@ export default function ThemePage() {
     }
   };
 
-  const updateScriptTrigger = (index: number, triggerUpdate: Partial<ScriptTrigger>) => {
+  const addScriptTrigger = (scriptIndex: number) => {
     const newScripts = [...(theme.scripts || [])];
-    if (newScripts[index]) {
-      newScripts[index] = {
-        ...newScripts[index],
-        trigger: { ...newScripts[index].trigger, ...triggerUpdate },
-      };
+    if (newScripts[scriptIndex]) {
+      const triggers = [...(newScripts[scriptIndex].triggers || [])];
+      triggers.push({ type: 'all' });
+      newScripts[scriptIndex] = { ...newScripts[scriptIndex], triggers };
+      setTheme(prev => ({ ...prev, scripts: newScripts }));
+    }
+  };
+
+  const updateScriptTrigger = (scriptIndex: number, triggerIndex: number, triggerUpdate: Partial<ScriptTrigger>) => {
+    const newScripts = [...(theme.scripts || [])];
+    if (newScripts[scriptIndex]) {
+      const triggers = [...(newScripts[scriptIndex].triggers || [])];
+      if (triggers[triggerIndex]) {
+        triggers[triggerIndex] = { ...triggers[triggerIndex], ...triggerUpdate };
+        newScripts[scriptIndex] = { ...newScripts[scriptIndex], triggers };
+        setTheme(prev => ({ ...prev, scripts: newScripts }));
+      }
+    }
+  };
+
+  const removeScriptTrigger = (scriptIndex: number, triggerIndex: number) => {
+    const newScripts = [...(theme.scripts || [])];
+    if (newScripts[scriptIndex]) {
+      const triggers = (newScripts[scriptIndex].triggers || []).filter((_, i) => i !== triggerIndex);
+      // 最低1つは残す
+      if (triggers.length === 0) {
+        triggers.push({ type: 'all' });
+      }
+      newScripts[scriptIndex] = { ...newScripts[scriptIndex], triggers };
       setTheme(prev => ({ ...prev, scripts: newScripts }));
     }
   };
@@ -245,17 +269,15 @@ export default function ThemePage() {
   };
 
   // 発火条件のオプション
-  const triggerOptions: { value: ScriptTriggerType; label: string; needsSlug?: boolean }[] = [
+  const triggerOptions: { value: ScriptTriggerType; label: string; needsPath?: boolean }[] = [
     { value: 'all', label: 'サイト全体' },
     { value: 'home', label: 'トップページのみ' },
     { value: 'articles', label: '記事ページ全体' },
-    { value: 'article-slug', label: '特定の記事（スラッグ指定）', needsSlug: true },
     { value: 'categories', label: 'カテゴリーページ全体' },
     { value: 'tags', label: 'タグページ全体' },
     { value: 'pages', label: '固定ページ全体' },
-    { value: 'page-slug', label: '特定の固定ページ（スラッグ指定）', needsSlug: true },
     { value: 'search', label: '検索ページ' },
-    { value: 'custom', label: 'カスタムパス指定', needsSlug: true },
+    { value: 'custom', label: 'カスタムパス指定', needsPath: true },
   ];
 
   const selectedThemeLayout = THEME_LAYOUTS[theme.layoutTheme as ThemeLayoutId] || THEME_LAYOUTS.cobi;
@@ -707,9 +729,8 @@ export default function ThemePage() {
                   ) : (
                     <div className="space-y-6">
                       {(theme.scripts || []).map((script, index) => {
-                        // triggerがない場合のデフォルト値を設定
-                        const trigger = script.trigger || { type: 'all' as ScriptTriggerType };
-                        const selectedTriggerOption = triggerOptions.find(o => o.value === trigger.type);
+                        // triggersがない場合のデフォルト値を設定
+                        const triggers = script.triggers || [{ type: 'all' as ScriptTriggerType }];
                         
                         return (
                           <div key={script.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -832,52 +853,85 @@ export default function ThemePage() {
                                 />
                               )}
 
-                              {/* 発火条件 */}
+                              {/* 発火条件（複数設定可能） */}
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">発火条件（対象ページ）</label>
+                                <div className="flex items-center justify-between mb-3">
+                                  <label className="block text-sm font-medium text-gray-700">発火条件（対象ページ）</label>
+                                  <span className="text-xs text-gray-500">※ 複数条件はOR（いずれかにマッチ）で評価</span>
+                                </div>
                                 <div className="space-y-3">
-                                  <select
-                                    value={trigger.type}
-                                    onChange={(e) => updateScriptTrigger(index, { 
-                                      type: e.target.value as ScriptTriggerType,
-                                      slugs: [],
-                                      customPaths: [],
-                                    })}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                                  >
-                                    {triggerOptions.map((option) => (
-                                      <option key={option.value} value={option.value}>
-                                        {option.label}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  {triggers.map((trigger, triggerIndex) => {
+                                    const selectedTriggerOption = triggerOptions.find(o => o.value === trigger.type);
+                                    
+                                    return (
+                                      <div key={triggerIndex} className="bg-gray-50 rounded-lg p-4">
+                                        <div className="flex items-start gap-3">
+                                          <div className="flex-1 space-y-3">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                                                条件 {triggerIndex + 1}
+                                              </span>
+                                              <select
+                                                value={trigger.type}
+                                                onChange={(e) => updateScriptTrigger(index, triggerIndex, { 
+                                                  type: e.target.value as ScriptTriggerType,
+                                                  customPaths: [],
+                                                })}
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white text-sm"
+                                              >
+                                                {triggerOptions.map((option) => (
+                                                  <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
 
-                                  {/* スラッグ/パス入力 */}
-                                  {selectedTriggerOption?.needsSlug && (
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                      <FloatingInput
-                                        label={trigger.type === 'custom' ? 'パスパターン（カンマ区切りで複数指定可）' : 'スラッグ（カンマ区切りで複数指定可）'}
-                                        value={trigger.type === 'custom' 
-                                          ? (trigger.customPaths || []).join(', ')
-                                          : (trigger.slugs || []).join(', ')
-                                        }
-                                        onChange={(value) => {
-                                          const values = value.split(',').map(v => v.trim()).filter(v => v);
-                                          if (trigger.type === 'custom') {
-                                            updateScriptTrigger(index, { customPaths: values });
-                                          } else {
-                                            updateScriptTrigger(index, { slugs: values });
-                                          }
-                                        }}
-                                      />
-                                      <p className="text-xs text-gray-500 mt-2">
-                                        {trigger.type === 'custom' 
-                                          ? '※ ワイルドカード（*）使用可。例: /articles/* で記事ページ全体にマッチ'
-                                          : '※ 複数指定する場合はカンマで区切ってください'
-                                        }
-                                      </p>
-                                    </div>
-                                  )}
+                                            {/* カスタムパス入力 */}
+                                            {selectedTriggerOption?.needsPath && (
+                                              <div>
+                                                <FloatingInput
+                                                  label="パスパターン（カンマ区切りで複数指定可）"
+                                                  value={(trigger.customPaths || []).join(', ')}
+                                                  onChange={(value) => {
+                                                    const values = value.split(',').map(v => v.trim()).filter(v => v);
+                                                    updateScriptTrigger(index, triggerIndex, { customPaths: values });
+                                                  }}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                  ※ ワイルドカード（*）使用可。例: /articles/*, /contact, /about
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* 削除ボタン */}
+                                          <button
+                                            type="button"
+                                            onClick={() => removeScriptTrigger(index, triggerIndex)}
+                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                            title="この条件を削除"
+                                          >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  
+                                  {/* 条件追加ボタン */}
+                                  <button
+                                    type="button"
+                                    onClick={() => addScriptTrigger(index)}
+                                    className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-1 text-sm"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    発火条件を追加
+                                  </button>
                                 </div>
                               </div>
 
