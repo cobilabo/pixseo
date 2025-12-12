@@ -256,12 +256,21 @@ export default function ThemePage() {
   const updateScriptTrigger = (scriptIndex: number, triggerIndex: number, triggerUpdate: Partial<ScriptTrigger>) => {
     const newScripts = [...(theme.scripts || [])];
     if (newScripts[scriptIndex]) {
-      const triggers = [...(newScripts[scriptIndex].triggers || [])];
+      // triggersが未定義または空の場合、デフォルト値を設定
+      const existingTriggers = newScripts[scriptIndex].triggers;
+      const triggers = existingTriggers && existingTriggers.length > 0 
+        ? [...existingTriggers] 
+        : [{ type: 'all' as ScriptTriggerType }];
+      
+      // 指定されたインデックスのtriggerを更新（存在しない場合は新規作成）
       if (triggers[triggerIndex]) {
         triggers[triggerIndex] = { ...triggers[triggerIndex], ...triggerUpdate };
-        newScripts[scriptIndex] = { ...newScripts[scriptIndex], triggers };
-        setTheme(prev => ({ ...prev, scripts: newScripts }));
+      } else {
+        triggers[triggerIndex] = { type: 'all', ...triggerUpdate };
       }
+      
+      newScripts[scriptIndex] = { ...newScripts[scriptIndex], triggers };
+      setTheme(prev => ({ ...prev, scripts: newScripts }));
     }
   };
 
