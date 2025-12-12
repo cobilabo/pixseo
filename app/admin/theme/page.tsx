@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -15,7 +15,7 @@ export default function ThemePage() {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css'>('fv');
+  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js'>('fv');
 
   useEffect(() => {
     if (currentTenant) {
@@ -190,6 +190,46 @@ export default function ThemePage() {
     }));
   };
 
+  // スクリプト設定関連の関数
+  const addScript = () => {
+    const newScript: ScriptItem = {
+      id: `script_${Date.now()}`,
+      name: '',
+      code: '',
+      position: 'head',
+      device: 'all',
+      isEnabled: true,
+      isTest: false,
+    };
+    setTheme(prev => ({
+      ...prev,
+      scripts: [...(prev.scripts || []), newScript],
+    }));
+  };
+
+  const updateScript = (index: number, field: keyof ScriptItem, value: string | boolean) => {
+    const newScripts = [...(theme.scripts || [])];
+    if (newScripts[index]) {
+      newScripts[index] = { ...newScripts[index], [field]: value };
+      setTheme(prev => ({ ...prev, scripts: newScripts }));
+    }
+  };
+
+  const removeScript = (index: number) => {
+    const newScripts = (theme.scripts || []).filter((_, i) => i !== index);
+    setTheme(prev => ({ ...prev, scripts: newScripts }));
+  };
+
+  const moveScript = (index: number, direction: 'up' | 'down') => {
+    const scripts = [...(theme.scripts || [])];
+    if (direction === 'up' && index > 0) {
+      [scripts[index - 1], scripts[index]] = [scripts[index], scripts[index - 1]];
+    } else if (direction === 'down' && index < scripts.length - 1) {
+      [scripts[index], scripts[index + 1]] = [scripts[index + 1], scripts[index]];
+    }
+    setTheme(prev => ({ ...prev, scripts }));
+  };
+
   const selectedThemeLayout = THEME_LAYOUTS[theme.layoutTheme as ThemeLayoutId] || THEME_LAYOUTS.cobi;
 
   return (
@@ -331,6 +371,18 @@ export default function ThemePage() {
                   style={activeTab === 'css' ? { backgroundColor: '#f9fafb' } : {}}
                 >
                   CSS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('js')}
+                  className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    activeTab === 'js'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  style={activeTab === 'js' ? { backgroundColor: '#f9fafb' } : {}}
+                >
+                  JavaScript
                 </button>
               </div>
             </div>
@@ -583,6 +635,234 @@ export default function ThemePage() {
                     multiline
                     rows={16}
                   />
+                </div>
+              )}
+
+              {/* JavaScriptタブ */}
+              {activeTab === 'js' && (
+                <div className="space-y-6">
+                  {/* 説明 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">スクリプト設定について</p>
+                        <ul className="list-disc list-inside space-y-1 text-blue-600">
+                          <li>Google Analytics、GTMなどの外部タグを設定できます</li>
+                          <li>テストモードを有効にすると、URLに <code className="bg-blue-100 px-1 rounded">?script_test=1</code> を付けた場合のみ実行されます</li>
+                          <li>スクリプトは上から順に読み込まれます（並び替え可能）</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* スクリプト一覧 */}
+                  {(theme.scripts || []).length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                      </svg>
+                      <p className="text-gray-500 mb-4">スクリプトが設定されていません</p>
+                      <button
+                        type="button"
+                        onClick={addScript}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        スクリプトを追加
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(theme.scripts || []).map((script, index) => (
+                        <div key={script.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                          {/* ヘッダー */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                              <input
+                                type="text"
+                                value={script.name}
+                                onChange={(e) => updateScript(index, 'name', e.target.value)}
+                                placeholder="スクリプト名（例：GA4）"
+                                className="text-lg font-medium bg-transparent border-none outline-none focus:ring-0 placeholder-gray-400"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {/* 並び替えボタン */}
+                              <button
+                                type="button"
+                                onClick={() => moveScript(index, 'up')}
+                                disabled={index === 0}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="上に移動"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveScript(index, 'down')}
+                                disabled={index === (theme.scripts?.length || 0) - 1}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="下に移動"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                              {/* 削除ボタン */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm('このスクリプトを削除しますか？')) {
+                                    removeScript(index);
+                                  }
+                                }}
+                                className="p-1.5 text-red-400 hover:text-red-600"
+                                title="削除"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* コード入力 */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              スクリプトコード
+                            </label>
+                            <textarea
+                              value={script.code}
+                              onChange={(e) => updateScript(index, 'code', e.target.value)}
+                              placeholder="<script>...</script> または JavaScript コードを入力"
+                              rows={6}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm bg-white"
+                            />
+                          </div>
+
+                          {/* 設定オプション */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            {/* 設置位置 */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">設置位置</label>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { value: 'head', label: '<head>' },
+                                  { value: 'body', label: '<body>末尾' },
+                                  { value: 'both', label: '両方' },
+                                ].map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => updateScript(index, 'position', option.value)}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                                      script.position === option.value
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                                    }`}
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* デバイス */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">対象デバイス</label>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { value: 'all', label: 'すべて' },
+                                  { value: 'pc', label: 'PCのみ' },
+                                  { value: 'mobile', label: 'モバイルのみ' },
+                                ].map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => updateScript(index, 'device', option.value)}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                                      script.device === option.value
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                                    }`}
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* 状態トグル */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">状態</label>
+                              <div className="flex flex-wrap gap-3">
+                                {/* 有効/無効 */}
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <div className="relative">
+                                    <input
+                                      type="checkbox"
+                                      checked={script.isEnabled}
+                                      onChange={(e) => updateScript(index, 'isEnabled', e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-4 transition-transform"></div>
+                                  </div>
+                                  <span className="text-sm text-gray-600">有効</span>
+                                </label>
+                                {/* テストモード */}
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <div className="relative">
+                                    <input
+                                      type="checkbox"
+                                      checked={script.isTest}
+                                      onChange={(e) => updateScript(index, 'isTest', e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
+                                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-4 transition-transform"></div>
+                                  </div>
+                                  <span className="text-sm text-gray-600">テスト</span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* テストモードの説明 */}
+                          {script.isTest && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-700">
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>テストモード: URLに <code className="bg-orange-100 px-1 rounded">?script_test=1</code> を付けた場合のみ実行されます</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* 追加ボタン */}
+                      <button
+                        type="button"
+                        onClick={addScript}
+                        className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        スクリプトを追加
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

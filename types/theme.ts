@@ -104,6 +104,17 @@ export interface SnsSettings {
   xUserId?: string;           // X（Twitter）のユーザーID
 }
 
+// スクリプト設定の定義
+export interface ScriptItem {
+  id: string;                                      // 一意のID
+  name: string;                                    // スクリプト名（管理用）
+  code: string;                                    // スクリプトコード
+  position: 'head' | 'body' | 'both';              // 設置位置
+  device: 'all' | 'pc' | 'mobile';                 // 対象デバイス
+  isEnabled: boolean;                              // 有効/無効
+  isTest: boolean;                                 // テストモード（URLパラメータ ?script_test=1 の場合のみ実行）
+}
+
 // FV（ファーストビュー）設定の定義
 export interface FirstViewSettings {
   imageUrl: string;           // FV画像
@@ -166,6 +177,9 @@ export interface Theme {
   
   // カスタムCSS
   customCss?: string;               // 自由なCSS記述エリア
+  
+  // カスタムJavaScript
+  scripts?: ScriptItem[];           // スクリプト設定（複数可）
   
   // 🔄 後方互換性のために残す（オプショナル）
   panelBackgroundColor?: string;
