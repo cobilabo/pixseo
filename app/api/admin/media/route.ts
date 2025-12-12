@@ -3,7 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
 
-// メディア一覧取得（高速版：使用数は計算しない）
+// メディア一覧取得
 export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
@@ -35,23 +35,169 @@ export async function GET(request: NextRequest) {
       total: allDocs.length,
     });
     
-    // メディアデータをマッピング（使用数の計算は省略して高速化）
-    const mediaList = allDocs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      };
-    });
+    // 各メディアの使用数を計算
+    const mediaWithUsage = await Promise.all(
+      allDocs.map(async (doc) => {
+        const data = doc.data();
+        const mediaUrl = data.url;
+        
+        // 使用数をカウント
+        let usageCount = 0;
+        const usageDetails: string[] = [];
+        
+        // 記事での使用をチェック（アイキャッチ + 記事内画像）
+        const articlesSnapshot = await adminDb.collection('articles')
+          .where('mediaId', '==', data.mediaId)
+          .get();
+        
+        let articleUsageCount = 0;
+        for (const articleDoc of articlesSnapshot.docs) {
+          const article = articleDoc.data();
+          
+          // アイキャッチ画像
+          if (article.featuredImage === mediaUrl) {
+            articleUsageCount++;
+          }
+          
+          // 記事内の画像（全言語のコンテンツをチェック）
+          const contentFields = [
+            article.content,
+            article.content_ja,
+            article.content_en,
+            article.content_zh,
+            article.content_ko,
+          ];
+          
+          for (const content of contentFields) {
+            if (content && typeof content === 'string' && content.includes(mediaUrl)) {
+              articleUsageCount++;
+              break; // 同じ記事で複数回カウントしないため
+            }
+          }
+        }
+        
+        if (articleUsageCount > 0) {
+          usageCount += articleUsageCount;
+          usageDetails.push(`記事 (${articleUsageCount})`);
+        }
+        
+        // カテゴリーでの使用をチェック
+        const categoriesSnapshot = await adminDb.collection('categories')
+          .where('imageUrl', '==', mediaUrl)
+          .get();
+        if (categoriesSnapshot.size > 0) {
+          usageCount += categoriesSnapshot.size;
+          usageDetails.push(`カテゴリー (${categoriesSnapshot.size})`);
+        }
+        
+        // ライターでの使用をチェック（アイコンと背景画像）
+        const writersIconSnapshot = await adminDb.collection('writers')
+          .where('icon', '==', mediaUrl)
+          .get();
+        const writersBackgroundSnapshot = await adminDb.collection('writers')
+          .where('backgroundImage', '==', mediaUrl)
+          .get();
+        const writerUsage = writersIconSnapshot.size + writersBackgroundSnapshot.size;
+        if (writerUsage > 0) {
+          usageCount += writerUsage;
+          usageDetails.push(`ライター (${writerUsage})`);
+        }
+        
+        // テーマ（FV画像、フッターブロック、フッターコンテンツ）での使用をチェック
+        const tenantsSnapshot = await adminDb.collection('mediaTenants').get();
+        let themeUsage = 0;
+        for (const tenantDoc of tenantsSnapshot.docs) {
+          const tenant = tenantDoc.data();
+          const theme = tenant.theme || {};
+          
+          // FV画像
+          if (theme.firstView?.imageUrl === mediaUrl) {
+            themeUsage++;
+          }
+          
+          // フッターブロック
+          if (theme.footerBlocks) {
+            const blockUsage = theme.footerBlocks.filter((block: any) => block.imageUrl === mediaUrl).length;
+            themeUsage += blockUsage;
+          }
+          
+          // フッターコンテンツ
+          if (theme.footerContents) {
+            const contentUsage = theme.footerContents.filter((content: any) => content.imageUrl === mediaUrl).length;
+            themeUsage += contentUsage;
+          }
+        }
+        if (themeUsage > 0) {
+          usageCount += themeUsage;
+          usageDetails.push(`テーマ (${themeUsage})`);
+        }
+        
+        // サイト設定での使用をチェック
+        let siteUsage = 0;
+        for (const tenantDoc of tenantsSnapshot.docs) {
+          const tenant = tenantDoc.data();
+          // ロゴ3種類 + OGイメージをチェック
+          if (
+            tenant.logoLandscape === mediaUrl ||
+            tenant.logoSquare === mediaUrl ||
+            tenant.logoPortrait === mediaUrl ||
+            tenant.ogImage === mediaUrl
+          ) {
+            siteUsage++;
+          }
+        }
+        if (siteUsage > 0) {
+          usageCount += siteUsage;
+          usageDetails.push(`サイト (${siteUsage})`);
+        }
+        
+        // 固定ページのブロックでの使用をチェック
+        const pagesSnapshot = await adminDb.collection('pages')
+          .where('mediaId', '==', data.mediaId)
+          .get();
+        let pageBlockUsage = 0;
+        for (const pageDoc of pagesSnapshot.docs) {
+          const page = pageDoc.data();
+          if (page.blocks && Array.isArray(page.blocks)) {
+            for (const block of page.blocks) {
+              const config = block.config || {};
+              // 画像ブロック
+              if (block.type === 'image' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+              // 画像&テキストブロック
+              if (block.type === 'imageText' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+              // CTAブロック
+              if (block.type === 'cta' && config.imageUrl === mediaUrl) {
+                pageBlockUsage++;
+              }
+            }
+          }
+        }
+        if (pageBlockUsage > 0) {
+          usageCount += pageBlockUsage;
+          usageDetails.push(`固定ページ (${pageBlockUsage})`);
+        }
+        
+        return {
+          id: doc.id,
+          ...data,
+          usageCount,
+          usageDetails,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        };
+      })
+    );
 
     // 作成日時で降順ソート
-    mediaList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    mediaWithUsage.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    console.log('[API Media] 取得したメディア数:', mediaList.length);
+    console.log('[API Media] 取得したメディア数:', mediaWithUsage.length);
     
-    return NextResponse.json(mediaList);
+    return NextResponse.json(mediaWithUsage);
   } catch (error: any) {
     console.error('[API Media] エラー:', error);
     return NextResponse.json({ error: 'Failed to fetch media' }, { status: 500 });
