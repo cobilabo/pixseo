@@ -179,6 +179,14 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return script.code || '';
   };
 
+  // スクリプトのstrategyを決定
+  // Next.js App RouterではbeforeInteractiveはクライアントコンポーネントで動作しないため
+  // afterInteractiveを使用（ページのhydration後に実行）
+  const getStrategy = (): 'afterInteractive' | 'lazyOnload' => {
+    // headスクリプトは早めに実行、bodyスクリプトは遅延可能
+    return 'afterInteractive';
+  };
+
   return (
     <>
       {filteredScripts.map((script) => {
@@ -186,6 +194,8 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
         
         // コードが空の場合はスキップ
         if (!code) return null;
+        
+        const strategy = getStrategy();
         
         // <script src="...">形式の外部スクリプト
         if (isScriptTag(code)) {
@@ -196,7 +206,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
                 key={`${script.id}-${position}`}
                 id={`${script.id}-${position}`}
                 src={src}
-                strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
+                strategy={strategy}
               />
             );
           }
@@ -208,7 +218,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
               <Script
                 key={`${script.id}-${position}`}
                 id={`${script.id}-${position}`}
-                strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
+                strategy={strategy}
                 dangerouslySetInnerHTML={{ __html: inlineCode }}
               />
             );
@@ -220,7 +230,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
           <Script
             key={`${script.id}-${position}`}
             id={`${script.id}-${position}`}
-            strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
+            strategy={strategy}
             dangerouslySetInnerHTML={{ __html: code }}
           />
         );
