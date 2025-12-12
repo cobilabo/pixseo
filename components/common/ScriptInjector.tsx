@@ -1,7 +1,7 @@
 'use client';
 
 import Script from 'next/script';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ScriptItem } from '@/types/theme';
 
@@ -11,11 +11,94 @@ interface ScriptInjectorProps {
 }
 
 /**
+ * パスがパターンにマッチするかチェック
+ * ワイルドカード（*）をサポート
+ */
+function matchPath(pattern: string, currentPath: string): boolean {
+  // 言語プレフィックスを除去（/ja/, /en/, /zh/, /ko/）
+  const pathWithoutLang = currentPath.replace(/^\/(ja|en|zh|ko)/, '');
+  const normalizedPath = pathWithoutLang || '/';
+  
+  // 完全一致
+  if (pattern === normalizedPath) return true;
+  
+  // ワイルドカード対応
+  if (pattern.includes('*')) {
+    const regexPattern = pattern
+      .replace(/\*/g, '.*')
+      .replace(/\//g, '\\/');
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(normalizedPath);
+  }
+  
+  return false;
+}
+
+/**
+ * 発火条件をチェック
+ */
+function checkTrigger(script: ScriptItem, pathname: string): boolean {
+  const trigger = script.trigger || { type: 'all' };
+  
+  // 言語プレフィックスを除去
+  const pathWithoutLang = pathname.replace(/^\/(ja|en|zh|ko)/, '');
+  const normalizedPath = pathWithoutLang || '/';
+  
+  switch (trigger.type) {
+    case 'all':
+      return true;
+      
+    case 'home':
+      return normalizedPath === '/' || normalizedPath === '';
+      
+    case 'articles':
+      return normalizedPath.startsWith('/articles/') && normalizedPath !== '/articles';
+      
+    case 'article-slug':
+      if (!trigger.slugs || trigger.slugs.length === 0) return false;
+      const articleSlug = normalizedPath.replace('/articles/', '');
+      return trigger.slugs.includes(articleSlug);
+      
+    case 'categories':
+      return normalizedPath.startsWith('/categories/');
+      
+    case 'tags':
+      return normalizedPath.startsWith('/tags/');
+      
+    case 'pages':
+      // 記事、カテゴリ、タグ、検索、ライター以外のページ
+      return !normalizedPath.startsWith('/articles') &&
+             !normalizedPath.startsWith('/categories') &&
+             !normalizedPath.startsWith('/tags') &&
+             !normalizedPath.startsWith('/search') &&
+             !normalizedPath.startsWith('/writers') &&
+             normalizedPath !== '/' &&
+             normalizedPath !== '';
+      
+    case 'page-slug':
+      if (!trigger.slugs || trigger.slugs.length === 0) return false;
+      const pageSlug = normalizedPath.replace('/', '');
+      return trigger.slugs.includes(pageSlug);
+      
+    case 'search':
+      return normalizedPath === '/search' || normalizedPath.startsWith('/search');
+      
+    case 'custom':
+      if (!trigger.customPaths || trigger.customPaths.length === 0) return false;
+      return trigger.customPaths.some(pattern => matchPath(pattern, pathname));
+      
+    default:
+      return true;
+  }
+}
+
+/**
  * スクリプト挿入コンポーネント
  * テーマ設定で設定されたスクリプトを動的に挿入する
  */
 export default function ScriptInjector({ scripts, position }: ScriptInjectorProps) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   
   // テストモードかどうか
@@ -67,6 +150,9 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     if (script.device === 'pc' && isMobile) return false;
     if (script.device === 'mobile' && !isMobile) return false;
     
+    // 発火条件でフィルタリング
+    if (!checkTrigger(script, pathname || '/')) return false;
+    
     return true;
   });
 
@@ -87,10 +173,21 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return match ? match[1].trim() : code;
   };
 
+  // スクリプトコードを取得（position=bothの場合は別々のコードを使用）
+  const getScriptCode = (script: ScriptItem): string => {
+    if (script.position === 'both') {
+      return position === 'head' ? (script.headCode || '') : (script.bodyCode || '');
+    }
+    return script.code || '';
+  };
+
   return (
     <>
       {filteredScripts.map((script) => {
-        const code = script.code.trim();
+        const code = getScriptCode(script).trim();
+        
+        // コードが空の場合はスキップ
+        if (!code) return null;
         
         // <script src="...">形式の外部スクリプト
         if (isScriptTag(code)) {
@@ -99,7 +196,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
             return (
               <Script
                 key={`${script.id}-${position}`}
-                id={script.id}
+                id={`${script.id}-${position}`}
                 src={src}
                 strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
               />
@@ -112,7 +209,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
             return (
               <Script
                 key={`${script.id}-${position}`}
-                id={script.id}
+                id={`${script.id}-${position}`}
                 strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
                 dangerouslySetInnerHTML={{ __html: inlineCode }}
               />
@@ -124,7 +221,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
         return (
           <Script
             key={`${script.id}-${position}`}
-            id={script.id}
+            id={`${script.id}-${position}`}
             strategy={position === 'head' ? 'beforeInteractive' : 'afterInteractive'}
             dangerouslySetInnerHTML={{ __html: code }}
           />
@@ -133,4 +230,3 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     </>
   );
 }
-

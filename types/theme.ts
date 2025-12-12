@@ -104,13 +104,35 @@ export interface SnsSettings {
   xUserId?: string;           // X（Twitter）のユーザーID
 }
 
+// スクリプト発火条件の定義
+export type ScriptTriggerType = 
+  | 'all'           // サイト全体
+  | 'home'          // トップページのみ
+  | 'articles'      // 記事ページ全体
+  | 'article-slug'  // 特定の記事（スラッグ指定）
+  | 'categories'    // カテゴリーページ全体
+  | 'tags'          // タグページ全体
+  | 'pages'         // 固定ページ全体
+  | 'page-slug'     // 特定の固定ページ（スラッグ指定）
+  | 'search'        // 検索ページ
+  | 'custom';       // カスタムパス指定
+
+export interface ScriptTrigger {
+  type: ScriptTriggerType;
+  slugs?: string[];           // スラッグ指定時の対象スラッグ（複数可）
+  customPaths?: string[];     // カスタムパス指定時のパス（複数可）
+}
+
 // スクリプト設定の定義
 export interface ScriptItem {
   id: string;                                      // 一意のID
   name: string;                                    // スクリプト名（管理用）
-  code: string;                                    // スクリプトコード
+  code: string;                                    // スクリプトコード（head/body単独時に使用）
+  headCode?: string;                               // head用コード（position='both'時に使用）
+  bodyCode?: string;                               // body用コード（position='both'時に使用）
   position: 'head' | 'body' | 'both';              // 設置位置
   device: 'all' | 'pc' | 'mobile';                 // 対象デバイス
+  trigger: ScriptTrigger;                          // 発火条件
   isEnabled: boolean;                              // 有効/無効
   isTest: boolean;                                 // テストモード（URLパラメータ ?script_test=1 の場合のみ実行）
 }
