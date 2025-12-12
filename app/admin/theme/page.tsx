@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -58,9 +58,22 @@ export default function ThemePage() {
 
     try {
       setLoading(true);
-      const response = await apiClient.put('/api/admin/theme', { theme });
+      
+      // 保存前に現在のテーマ設定をthemeSettingsに保存
+      const currentSettings = extractCurrentLayoutSettings(theme);
+      const themeToSave: Theme = {
+        ...theme,
+        themeSettings: {
+          ...theme.themeSettings,
+          [theme.layoutTheme]: currentSettings,
+        },
+      };
+      
+      const response = await apiClient.put('/api/admin/theme', { theme: themeToSave });
       
       if (response.ok) {
+        // 保存成功時に state も更新
+        setTheme(themeToSave);
         alert('デザイン設定を保存しました');
       } else {
         const error = await response.json();
@@ -80,7 +93,84 @@ export default function ThemePage() {
     }
   };
 
+  // 現在のテーマ設定を抽出（themeSettings用）
+  const extractCurrentLayoutSettings = (currentTheme: Theme): ThemeLayoutSettings => {
+    return {
+      firstView: currentTheme.firstView,
+      footerBlocks: currentTheme.footerBlocks,
+      footerContents: currentTheme.footerContents,
+      footerTextLinkSections: currentTheme.footerTextLinkSections,
+      menuSettings: currentTheme.menuSettings,
+      snsSettings: currentTheme.snsSettings,
+      primaryColor: currentTheme.primaryColor,
+      secondaryColor: currentTheme.secondaryColor,
+      accentColor: currentTheme.accentColor,
+      backgroundColor: currentTheme.backgroundColor,
+      headerBackgroundColor: currentTheme.headerBackgroundColor,
+      footerBackgroundColor: currentTheme.footerBackgroundColor,
+      blockBackgroundColor: currentTheme.blockBackgroundColor,
+      menuBackgroundColor: currentTheme.menuBackgroundColor,
+      menuTextColor: currentTheme.menuTextColor,
+      linkColor: currentTheme.linkColor,
+      linkHoverColor: currentTheme.linkHoverColor,
+      borderColor: currentTheme.borderColor,
+      shadowColor: currentTheme.shadowColor,
+      customCss: currentTheme.customCss,
+      scripts: currentTheme.scripts,
+    };
+  };
+
+  // テーマレイアウト切り替え処理
+  const handleLayoutThemeChange = (newLayoutTheme: ThemeLayoutId) => {
+    setTheme(prev => {
+      const currentLayoutTheme = prev.layoutTheme;
+      
+      // 現在の設定を保存
+      const currentSettings = extractCurrentLayoutSettings(prev);
+      const updatedThemeSettings = {
+        ...prev.themeSettings,
+        [currentLayoutTheme]: currentSettings,
+      };
+      
+      // 新しいテーマの設定を取得（保存されていればそれを使用、なければデフォルト）
+      const newSettings = updatedThemeSettings[newLayoutTheme] || extractCurrentLayoutSettings(defaultTheme);
+      
+      return {
+        ...prev,
+        layoutTheme: newLayoutTheme,
+        themeSettings: updatedThemeSettings,
+        // 新しいテーマの設定を適用
+        firstView: newSettings.firstView,
+        footerBlocks: newSettings.footerBlocks,
+        footerContents: newSettings.footerContents,
+        footerTextLinkSections: newSettings.footerTextLinkSections,
+        menuSettings: newSettings.menuSettings || defaultTheme.menuSettings,
+        snsSettings: newSettings.snsSettings,
+        primaryColor: newSettings.primaryColor || defaultTheme.primaryColor,
+        secondaryColor: newSettings.secondaryColor || defaultTheme.secondaryColor,
+        accentColor: newSettings.accentColor || defaultTheme.accentColor,
+        backgroundColor: newSettings.backgroundColor || defaultTheme.backgroundColor,
+        headerBackgroundColor: newSettings.headerBackgroundColor || defaultTheme.headerBackgroundColor,
+        footerBackgroundColor: newSettings.footerBackgroundColor || defaultTheme.footerBackgroundColor,
+        blockBackgroundColor: newSettings.blockBackgroundColor || defaultTheme.blockBackgroundColor,
+        menuBackgroundColor: newSettings.menuBackgroundColor || defaultTheme.menuBackgroundColor,
+        menuTextColor: newSettings.menuTextColor || defaultTheme.menuTextColor,
+        linkColor: newSettings.linkColor || defaultTheme.linkColor,
+        linkHoverColor: newSettings.linkHoverColor || defaultTheme.linkHoverColor,
+        borderColor: newSettings.borderColor || defaultTheme.borderColor,
+        shadowColor: newSettings.shadowColor || defaultTheme.shadowColor,
+        customCss: newSettings.customCss,
+        scripts: newSettings.scripts,
+      };
+    });
+  };
+
   const updateTheme = (key: keyof Theme, value: any) => {
+    // layoutThemeの変更は専用ハンドラを使用
+    if (key === 'layoutTheme') {
+      handleLayoutThemeChange(value as ThemeLayoutId);
+      return;
+    }
     setTheme(prev => ({ ...prev, [key]: value }));
   };
 

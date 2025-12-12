@@ -151,9 +151,62 @@ export interface FirstViewSettings {
   description_ko?: string;
 }
 
+// テーマごとの設定（レイアウトテーマ別に保持）
+export interface ThemeLayoutSettings {
+  // FV設定
+  firstView?: FirstViewSettings;
+  
+  // フッターブロック（最大4つ）
+  footerBlocks?: FooterBlock[];
+  
+  // フッターコンテンツ（最大3つ）- cobi テーマ用
+  footerContents?: FooterContent[];
+  
+  // テキストリンクセクション（2セット）- cobi テーマ用
+  footerTextLinkSections?: FooterTextLinkSection[];
+  
+  // メニュー設定
+  menuSettings?: MenuSettings;
+  
+  // SNS設定
+  snsSettings?: SnsSettings;
+  
+  // 基本カラー
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  
+  // 背景色
+  backgroundColor?: string;
+  headerBackgroundColor?: string;
+  footerBackgroundColor?: string;
+  blockBackgroundColor?: string;
+  menuBackgroundColor?: string;
+  menuTextColor?: string;
+  
+  // テキスト・リンク
+  linkColor?: string;
+  linkHoverColor?: string;
+  
+  // 装飾
+  borderColor?: string;
+  shadowColor?: string;
+  
+  // カスタムCSS
+  customCss?: string;
+  
+  // カスタムJavaScript
+  scripts?: ScriptItem[];
+}
+
 export interface Theme {
   // レイアウトテーマ
   layoutTheme: ThemeLayoutId; // 'cobi' | 'furatto'
+  
+  // テーマごとの設定を保持（キーはThemeLayoutId）
+  themeSettings?: {
+    [key: string]: ThemeLayoutSettings;
+  };
   
   // FV設定
   firstView?: FirstViewSettings;
