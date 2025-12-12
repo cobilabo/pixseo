@@ -222,19 +222,37 @@ export default function ThemePage() {
         const newPosition = value as string;
         
         if (oldPosition === 'both' && newPosition === 'head') {
-          // 「両方」→「<head>」: headCodeをcodeに引き継ぎ
+          // 「両方」→「<head>」: headCodeをcodeに引き継ぎ、bodyCodeは保持
           updatedScript.code = currentScript.headCode || '';
+          // headCode, bodyCodeはそのまま保持（後で「両方」に戻す時のため）
         } else if (oldPosition === 'both' && newPosition === 'body') {
-          // 「両方」→「<body>末尾」: bodyCodeをcodeに引き継ぎ
+          // 「両方」→「<body>末尾」: bodyCodeをcodeに引き継ぎ、headCodeは保持
           updatedScript.code = currentScript.bodyCode || '';
+          // headCode, bodyCodeはそのまま保持（後で「両方」に戻す時のため）
         } else if (oldPosition === 'head' && newPosition === 'both') {
-          // 「<head>」→「両方」: codeをheadCodeに引き継ぎ
+          // 「<head>」→「両方」: codeをheadCodeに引き継ぎ、bodyCodeは既存値を使用
           updatedScript.headCode = currentScript.code || '';
-          updatedScript.bodyCode = currentScript.bodyCode || '';
+          // bodyCodeは現在の値をそのまま使用（既に保持されているはず）
+          // 明示的に保持する（undefinedでないことを保証）
+          if (!updatedScript.bodyCode) {
+            updatedScript.bodyCode = currentScript.bodyCode || '';
+          }
         } else if (oldPosition === 'body' && newPosition === 'both') {
-          // 「<body>末尾」→「両方」: codeをbodyCodeに引き継ぎ
-          updatedScript.headCode = currentScript.headCode || '';
+          // 「<body>末尾」→「両方」: codeをbodyCodeに引き継ぎ、headCodeは既存値を使用
           updatedScript.bodyCode = currentScript.code || '';
+          // headCodeは現在の値をそのまま使用（既に保持されているはず）
+          // 明示的に保持する（undefinedでないことを保証）
+          if (!updatedScript.headCode) {
+            updatedScript.headCode = currentScript.headCode || '';
+          }
+        } else if (oldPosition === 'head' && newPosition === 'body') {
+          // 「<head>」→「<body>末尾」: codeはそのまま使用可能だが、headCodeを保持
+          updatedScript.headCode = currentScript.code || '';
+          updatedScript.code = currentScript.bodyCode || '';
+        } else if (oldPosition === 'body' && newPosition === 'head') {
+          // 「<body>末尾」→「<head>」: codeはそのまま使用可能だが、bodyCodeを保持
+          updatedScript.bodyCode = currentScript.code || '';
+          updatedScript.code = currentScript.headCode || '';
         }
       }
       
