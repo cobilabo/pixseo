@@ -26,6 +26,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [showTableModal, setShowTableModal] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
+  const [showHtmlModal, setShowHtmlModal] = useState(false);
+  const [htmlContent, setHtmlContent] = useState('');
+  const [showFontSizeModal, setShowFontSizeModal] = useState(false);
+  const [fontSize, setFontSize] = useState('16');
 
   // デザイン設定を取得
   useEffect(() => {
@@ -282,6 +286,90 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     handleInput();
   };
 
+  // HTML挿入
+  const insertHtml = () => {
+    if (htmlContent.trim()) {
+      document.execCommand('insertHTML', false, htmlContent.trim());
+      handleInput();
+      setShowHtmlModal(false);
+      setHtmlContent('');
+    }
+  };
+
+  // フォントサイズ変更
+  const applyFontSize = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && editorRef.current) {
+      const range = selection.getRangeAt(0);
+      
+      // 選択範囲がエディタ内にあるかチェック
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        // 選択範囲が空の場合は、カーソル位置にテキストノードを作成
+        if (range.collapsed) {
+          const textNode = document.createTextNode('\u200B'); // ゼロ幅スペース
+          range.insertNode(textNode);
+          range.selectNodeContents(textNode);
+        }
+        
+        // 選択範囲をspanで囲んでフォントサイズを適用
+        const span = document.createElement('span');
+        span.style.fontSize = `${fontSize}px`;
+        
+        try {
+          range.surroundContents(span);
+        } catch (e) {
+          // 選択範囲が適切でない場合は、選択範囲全体をspanで囲む
+          const contents = range.extractContents();
+          span.appendChild(contents);
+          range.insertNode(span);
+        }
+        
+        // カーソルを選択範囲の後に移動
+        selection.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.setStartAfter(span);
+        newRange.collapse(true);
+        selection.addRange(newRange);
+        
+        handleInput();
+        setShowFontSizeModal(false);
+        editorRef.current.focus();
+      } else {
+        alert('エディタ内のテキストを選択してください');
+      }
+    } else {
+      alert('テキストを選択してください');
+    }
+  };
+
+  // フォントサイズモーダルを開く際に、選択範囲のフォントサイズを取得
+  const openFontSizeModal = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && editorRef.current) {
+      const range = selection.getRangeAt(0);
+      
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        // 選択範囲または親要素からフォントサイズを取得
+        let element: Node | null = range.commonAncestorContainer;
+        if (element.nodeType === Node.TEXT_NODE) {
+          element = element.parentElement;
+        }
+        
+        if (element && element.nodeType === Node.ELEMENT_NODE) {
+          const computedStyle = window.getComputedStyle(element as Element);
+          const fontSize = computedStyle.fontSize;
+          if (fontSize) {
+            const fontSizeNum = parseFloat(fontSize);
+            if (!isNaN(fontSizeNum)) {
+              setFontSize(Math.round(fontSizeNum).toString());
+            }
+          }
+        }
+      }
+    }
+    setShowFontSizeModal(true);
+  };
+
   // ツールバーボタンコンポーネント
   const ToolbarButton = ({ 
     onClick, 
@@ -372,6 +460,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           </ToolbarButton>
           <ToolbarButton onClick={insertReferenceBlock} title="参照">
             📎
+          </ToolbarButton>
+          
+          <div className="w-px bg-gray-300 mx-1" />
+          
+          <ToolbarButton onClick={() => setShowHtmlModal(true)} title="HTML挿入">
+            &lt;/&gt;
+          </ToolbarButton>
+          
+          <div className="w-px bg-gray-300 mx-1" />
+          
+          <ToolbarButton onClick={openFontSizeModal} title="フォントサイズ">
+            <span className="text-xs">A</span>
+            <span className="text-[10px]">大小</span>
           </ToolbarButton>
         </div>
       )}
@@ -591,6 +692,167 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               </button>
               <button
                 onClick={() => setShowTableModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HTML挿入モーダル */}
+      {showHtmlModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">HTML挿入</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              スクリプトタグ、Googleマップ、YouTube埋め込みなどのHTMLコードを直接挿入できます。
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                HTMLコード
+              </label>
+              <textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                placeholder="例: <script>...</script> または <iframe src=&quot;...&quot;></iframe>"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                rows={10}
+              />
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-blue-800">
+                <strong>使用例:</strong><br />
+                Googleマップ: <code className="text-xs">&lt;iframe src=&quot;https://www.google.com/maps/embed?pb=...&quot;&gt;&lt;/iframe&gt;</code><br />
+                YouTube: <code className="text-xs">&lt;iframe src=&quot;https://www.youtube.com/embed/VIDEO_ID&quot;&gt;&lt;/iframe&gt;</code><br />
+                スクリプト: <code className="text-xs">&lt;script&gt;...&lt;/script&gt;</code>
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={insertHtml}
+                disabled={!htmlContent.trim()}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                挿入
+              </button>
+              <button
+                onClick={() => {
+                  setShowHtmlModal(false);
+                  setHtmlContent('');
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* フォントサイズ変更モーダル */}
+      {showFontSizeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
+            <h3 className="text-xl font-bold mb-4">フォントサイズ変更</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              テキストを選択してから、フォントサイズを変更してください。
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                フォントサイズ (px)
+              </label>
+              <input
+                type="number"
+                min="8"
+                max="72"
+                value={fontSize}
+                onChange={(e) => setFontSize(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="16"
+              />
+            </div>
+
+            {/* よく使うサイズのクイック選択 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                よく使うサイズ
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {['12', '14', '16', '18', '20', '24', '28', '32'].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setFontSize(size)}
+                    className={`px-3 py-2 rounded-lg border transition-colors ${
+                      fontSize === size
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {size}px
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* プレビュー */}
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-600 mb-2">プレビュー:</p>
+              <p style={{ fontSize: `${fontSize}px` }} className="text-gray-800">
+                サンプルテキスト (Sample Text)
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={applyFontSize}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+              >
+                適用
+              </button>
+              <button
+                onClick={() => {
+                  // フォントサイズをリセット（デフォルトに戻す）
+                  const selection = window.getSelection();
+                  if (selection && selection.rangeCount > 0 && editorRef.current) {
+                    const range = selection.getRangeAt(0);
+                    if (editorRef.current.contains(range.commonAncestorContainer)) {
+                      // 選択範囲内のspan要素からfontSizeスタイルを削除
+                      const spanElements = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+                        ? (range.commonAncestorContainer as Element).querySelectorAll('span[style*="font-size"]')
+                        : [];
+                      
+                      spanElements.forEach((span) => {
+                        const element = span as HTMLElement;
+                        if (element.style.fontSize) {
+                          element.style.fontSize = '';
+                          // スタイルが空になったらspanタグを削除
+                          if (!element.style.cssText.trim()) {
+                            element.outerHTML = element.innerHTML;
+                          }
+                        }
+                      });
+                      
+                      handleInput();
+                      setShowFontSizeModal(false);
+                      editorRef.current.focus();
+                    }
+                  }
+                }}
+                className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-sm"
+              >
+                リセット
+              </button>
+              <button
+                onClick={() => {
+                  setShowFontSizeModal(false);
+                  setFontSize('16');
+                }}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
               >
                 キャンセル

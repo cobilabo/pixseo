@@ -178,20 +178,24 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
     );
   }
 
-  // Instagram埋め込みが含まれている場合は、dangerouslySetInnerHTMLで直接挿入
-  // これにより、ReactがInstagramの動的HTMLを管理しなくなる
+  // スクリプトタグや埋め込みコンテンツが含まれているかをチェック
+  const hasScriptTag = /<script[\s\S]*?>[\s\S]*?<\/script>/i.test(processedContent);
+  const hasGoogleMapsIframe = /<iframe[\s\S]*?src=["'][^"']*(?:maps\.google\.com|google\.com\/maps)[^"']*["'][\s\S]*?>/i.test(processedContent);
   const hasInstagramEmbed = processedContent.includes('instagram-media');
   
-  if (hasInstagramEmbed) {
+  // スクリプトタグ、Googleマップのiframe、またはInstagram埋め込みが含まれている場合は、
+  // dangerouslySetInnerHTMLで直接挿入（これにより、スクリプトが正常に動作する）
+  if (hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed) {
+    // Instagram埋め込みスクリプトのロード処理は既にuseEffectで行われている
     return (
       <div 
-        className="prose prose-lg max-w-none"
+        className="prose prose-lg max-w-none article-content"
         dangerouslySetInnerHTML={{ __html: processedContent }}
       />
     );
   }
 
-  // Instagram埋め込みがない場合は、通常のパース処理
+  // スクリプトタグや埋め込みコンテンツがない場合は、通常のパース処理
   return (
     <div className="prose prose-lg max-w-none article-content">
       {parse(processedContent, options)}
