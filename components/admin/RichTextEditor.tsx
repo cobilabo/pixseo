@@ -100,10 +100,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           
           // 選択中またはカーソルがエディタ内にある場合
           if (!selection.isCollapsed || document.activeElement === editorRef.current) {
-            // ツールバーの高さを考慮（約50px）
+            // ツールバーのサイズを考慮
             const toolbarHeight = 50;
+            const toolbarWidth = 600; // ツールバーの推定幅
             let top = rect.top - toolbarHeight - 10; // 10pxのマージン
-            const left = rect.left + rect.width / 2;
+            let left = rect.left + rect.width / 2;
             
             // 画面上部に出ないように調整
             if (top < 60) {
@@ -114,7 +115,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             // 画面下部に出ないように調整
             const windowHeight = window.innerHeight;
             if (top + toolbarHeight > windowHeight - 20) {
-              top = windowHeight - toolbarHeight - 20;
+              top = Math.max(20, windowHeight - toolbarHeight - 20);
+            }
+            
+            // 画面左側に出ないように調整
+            const windowWidth = window.innerWidth;
+            const toolbarLeft = left - toolbarWidth / 2;
+            if (toolbarLeft < 10) {
+              left = toolbarWidth / 2 + 10;
+            }
+            
+            // 画面右側に出ないように調整
+            const toolbarRight = left + toolbarWidth / 2;
+            if (toolbarRight > windowWidth - 10) {
+              left = windowWidth - toolbarWidth / 2 - 10;
             }
             
             setToolbarPosition({ top, left });
@@ -171,19 +185,83 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const switchToSource = () => {
     if (editorRef.current) {
       const currentHtml = editorRef.current.innerHTML || '';
-      setSourceCode(currentHtml);
-      onChange(currentHtml);
+      // ソースコードモードに切り替える際に、改行を追加して見やすくする
+      const formattedHtml = currentHtml
+        .replace(/></g, '>\n<')
+        .replace(/\n\s*\n+/g, '\n')
+        .trim();
+      setSourceCode(formattedHtml);
+      onChange(currentHtml); // フォーマット前のHTMLを保持
     } else {
       // エディターが存在しない場合は、現在のvalueを使用
-      setSourceCode(value || '');
+      const formattedValue = (value || '')
+        .replace(/></g, '>\n<')
+        .replace(/\n\s*\n+/g, '\n')
+        .trim();
+      setSourceCode(formattedValue);
     }
     setViewMode('source');
+  };
+
+  // HTMLフォーマッター（簡易版）
+  const formatHtml = (html: string): string => {
+    if (!html || typeof html !== 'string') return '';
+    
+    let formatted = html;
+    let indent = 0;
+    const indentSize = 2;
+    
+    // タグの前後に改行を追加
+    formatted = formatted
+      .replace(/></g, '>\n<')
+      .replace(/\n\s*\n/g, '\n'); // 連続する改行を1つに
+    
+    const lines = formatted.split('\n');
+    const formattedLines: string[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      // 閉じタグの場合はインデントを減らす
+      if (line.startsWith('</')) {
+        indent = Math.max(0, indent - indentSize);
+      }
+      
+      // インデントを追加
+      formattedLines.push(' '.repeat(indent) + line);
+      
+      // 開きタグで閉じタグでない場合はインデントを増やす
+      if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>') && !line.includes('</')) {
+        // スクリプトタグやスタイルタグ内はインデントしない
+        if (!line.match(/<(script|style|textarea|pre)/i)) {
+          indent += indentSize;
+        }
+      }
+      
+      // 閉じタグの場合は次の行のインデントを調整
+      if (line.startsWith('</')) {
+        // 次の行が閉じタグでない場合のみインデントを調整
+        if (i < lines.length - 1 && !lines[i + 1].trim().startsWith('</')) {
+          indent = Math.max(0, indent - indentSize);
+        }
+      }
+    }
+    
+    return formattedLines.join('\n');
   };
 
   // ソースコード変更時の処理
   const handleSourceCodeChange = (newSourceCode: string) => {
     setSourceCode(newSourceCode);
     onChange(newSourceCode);
+  };
+  
+  // ソースコードをフォーマット
+  const formatSourceCode = () => {
+    const formatted = formatHtml(sourceCode);
+    setSourceCode(formatted);
+    onChange(formatted);
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
@@ -348,11 +426,51 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // HTML挿入
   const insertHtml = () => {
-    if (htmlContent.trim()) {
-      document.execCommand('insertHTML', false, htmlContent.trim());
-      handleInput();
-      setShowHtmlModal(false);
-      setHtmlContent('');
+    if (htmlContent.trim() && editorRef.current) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        
+        // エディタ内での選択かチェック
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          // insertHTMLコマンドを使用
+          document.execCommand('insertHTML', false, htmlContent.trim());
+          handleInput();
+          setShowHtmlModal(false);
+          setHtmlContent('');
+          editorRef.current.focus();
+          return;
+        }
+      }
+      
+      // 選択範囲がない場合は、カーソル位置に挿入
+      if (editorRef.current) {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        
+        if (selection && selection.rangeCount > 0) {
+          range.setStart(selection.anchorNode || editorRef.current, selection.anchorOffset);
+          range.collapse(true);
+        } else {
+          // カーソルがエディタ内にある場合
+          range.selectNodeContents(editorRef.current);
+          range.collapse(false);
+        }
+        
+        const fragment = range.createContextualFragment(htmlContent.trim());
+        range.insertNode(fragment);
+        
+        // カーソルを挿入した要素の後に移動
+        range.setStartAfter(fragment.lastChild || fragment);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        
+        handleInput();
+        setShowHtmlModal(false);
+        setHtmlContent('');
+        editorRef.current.focus();
+      }
     }
   };
 
@@ -589,18 +707,35 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           data-placeholder={placeholder || '本文を入力...'}
         />
       ) : (
-        <textarea
-          value={sourceCode}
-          onChange={(e) => handleSourceCodeChange(e.target.value)}
-          className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-          placeholder="HTMLコードを入力..."
-          style={{
-            fontFamily: 'monospace',
-            lineHeight: '1.6',
-            tabSize: 2,
-            color: '#111827',
-          }}
-        />
+        <div className="relative">
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                formatSourceCode();
+              }}
+              className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              title="HTMLを整形"
+            >
+              整形
+            </button>
+          </div>
+          <textarea
+            value={sourceCode}
+            onChange={(e) => handleSourceCodeChange(e.target.value)}
+            className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            placeholder="HTMLコードを入力..."
+            style={{
+              fontFamily: 'monospace',
+              lineHeight: '1.6',
+              tabSize: 2,
+              color: '#111827',
+              whiteSpace: 'pre',
+            }}
+          />
+        </div>
       )}
 
       {/* 画像挿入モーダル */}
@@ -831,7 +966,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 value={htmlContent}
                 onChange={(e) => setHtmlContent(e.target.value)}
                 placeholder="例: <script>...</script> または <iframe src=&quot;...&quot;></iframe>"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm text-gray-900"
+                style={{ color: '#111827' }}
                 rows={10}
               />
             </div>
@@ -894,7 +1030,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 max="72"
                 value={fontSize}
                 onChange={(e) => setFontSize(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                style={{ color: '#111827' }}
                 placeholder="16"
               />
             </div>
