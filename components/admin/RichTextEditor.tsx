@@ -73,8 +73,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // valueが外部から変更されたときにソースコードも更新
   useEffect(() => {
     if (viewMode === 'source') {
+      // ソースコードモードでは、valueが変更されたときにフォーマットして表示
       if (value !== sourceCode) {
-        setSourceCode(value);
+        const formattedValue = (value || '')
+          .replace(/></g, '>\n<')
+          .replace(/\n\s*\n+/g, '\n');
+        setSourceCode(formattedValue);
       }
     }
     if (viewMode === 'wysiwyg' && editorRef.current) {
@@ -102,7 +106,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           if (!selection.isCollapsed || document.activeElement === editorRef.current) {
             // ツールバーのサイズを考慮
             const toolbarHeight = 50;
-            const toolbarWidth = 600; // ツールバーの推定幅
+            const toolbarMaxWidth = Math.min(600, window.innerWidth * 0.9); // 最大幅を90vwに制限
+            const toolbarWidth = toolbarMaxWidth;
             let top = rect.top - toolbarHeight - 10; // 10pxのマージン
             let left = rect.left + rect.width / 2;
             
@@ -121,14 +126,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             // 画面左側に出ないように調整
             const windowWidth = window.innerWidth;
             const toolbarLeft = left - toolbarWidth / 2;
-            if (toolbarLeft < 10) {
-              left = toolbarWidth / 2 + 10;
+            const margin = 20; // マージンを大きくする
+            if (toolbarLeft < margin) {
+              left = toolbarWidth / 2 + margin;
             }
             
             // 画面右側に出ないように調整
             const toolbarRight = left + toolbarWidth / 2;
-            if (toolbarRight > windowWidth - 10) {
-              left = windowWidth - toolbarWidth / 2 - 10;
+            if (toolbarRight > windowWidth - margin) {
+              left = windowWidth - toolbarWidth / 2 - margin;
             }
             
             setToolbarPosition({ top, left });
@@ -170,7 +176,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const switchToWysiwyg = () => {
     if (editorRef.current) {
       // ソースコードの内容をエディターに設定
-      const htmlToSet = sourceCode || '';
+      // 改行を削除して元のHTML形式に戻す
+      const htmlToSet = (sourceCode || '')
+        .replace(/\n\s*/g, ' ') // 改行とインデントをスペースに変換
+        .replace(/>\s+</g, '><') // タグ間の余分なスペースを削除
+        .trim();
       editorRef.current.innerHTML = htmlToSet;
       onChange(htmlToSet);
       // エディターを再初期化
@@ -185,19 +195,18 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const switchToSource = () => {
     if (editorRef.current) {
       const currentHtml = editorRef.current.innerHTML || '';
-      // ソースコードモードに切り替える際に、改行を追加して見やすくする
+      // ソースコードモードに切り替える際に、改行を追加して見やすくする（表示用のみ）
+      // ただし、元のHTMLは保持するため、onChangeは呼ばない
       const formattedHtml = currentHtml
         .replace(/></g, '>\n<')
-        .replace(/\n\s*\n+/g, '\n')
-        .trim();
+        .replace(/\n\s*\n+/g, '\n');
       setSourceCode(formattedHtml);
-      onChange(currentHtml); // フォーマット前のHTMLを保持
+      // onChangeは呼ばない（元のHTMLを保持）
     } else {
       // エディターが存在しない場合は、現在のvalueを使用
       const formattedValue = (value || '')
         .replace(/></g, '>\n<')
-        .replace(/\n\s*\n+/g, '\n')
-        .trim();
+        .replace(/\n\s*\n+/g, '\n');
       setSourceCode(formattedValue);
     }
     setViewMode('source');
@@ -214,13 +223,18 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     // タグの前後に改行を追加
     formatted = formatted
       .replace(/></g, '>\n<')
-      .replace(/\n\s*\n/g, '\n'); // 連続する改行を1つに
+      .replace(/\n\s*\n+/g, '\n'); // 連続する改行を1つに
     
     const lines = formatted.split('\n');
     const formattedLines: string[] = [];
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
+      // 空行はスキップしない（表示用の改行として保持）
+      if (!line && i > 0 && i < lines.length - 1) {
+        formattedLines.push('');
+        continue;
+      }
       if (!line) continue;
       
       // 閉じタグの場合はインデントを減らす
@@ -254,14 +268,24 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // ソースコード変更時の処理
   const handleSourceCodeChange = (newSourceCode: string) => {
     setSourceCode(newSourceCode);
-    onChange(newSourceCode);
+    // 改行を削除して元のHTML形式に戻してから保存
+    const cleanedHtml = newSourceCode
+      .replace(/\n\s*/g, ' ') // 改行とインデントをスペースに変換
+      .replace(/>\s+</g, '><') // タグ間の余分なスペースを削除
+      .trim();
+    onChange(cleanedHtml);
   };
   
   // ソースコードをフォーマット
   const formatSourceCode = () => {
-    const formatted = formatHtml(sourceCode);
+    // 現在のvalueからフォーマット（改行を削除してからフォーマット）
+    const cleanedHtml = (sourceCode || '')
+      .replace(/\n\s*/g, ' ')
+      .replace(/>\s+</g, '><')
+      .trim();
+    const formatted = formatHtml(cleanedHtml);
     setSourceCode(formatted);
-    onChange(formatted);
+    // onChangeは呼ばない（フォーマットは表示用のみ）
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
