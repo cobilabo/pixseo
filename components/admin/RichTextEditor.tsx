@@ -65,7 +65,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const initialValue = value || '';
       if (initialValue) {
         editorRef.current.innerHTML = initialValue;
-        setSourceCode(initialValue);
+        // ソースコードも初期化（フォーマット済み）
+        const formattedValue = initialValue
+          .replace(/></g, '>\n<')
+          .replace(/\n\s*\n+/g, '\n');
+        setSourceCode(formattedValue);
+      } else {
+        setSourceCode('');
       }
     }
   }, []);
@@ -74,11 +80,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   useEffect(() => {
     if (viewMode === 'source') {
       // ソースコードモードでは、valueが変更されたときにフォーマットして表示
-      if (value !== sourceCode) {
-        const formattedValue = (value || '')
+      // フォーマット前のvalueと比較するため、sourceCodeを逆フォーマットして比較
+      const currentValue = (sourceCode || '')
+        .replace(/\n\s*/g, ' ')
+        .replace(/>\s+</g, '><')
+        .trim();
+      const newValue = (value || '').trim();
+      if (newValue !== currentValue && value !== undefined && value !== null) {
+        const formattedValue = newValue
           .replace(/></g, '>\n<')
           .replace(/\n\s*\n+/g, '\n');
         setSourceCode(formattedValue);
+      } else if (!newValue && sourceCode) {
+        // valueが空になった場合は、sourceCodeも空にする
+        setSourceCode('');
       }
     }
     if (viewMode === 'wysiwyg' && editorRef.current) {
@@ -108,13 +123,36 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             const toolbarHeight = 50;
             const toolbarMaxWidth = Math.min(600, window.innerWidth * 0.9); // 最大幅を90vwに制限
             const toolbarWidth = toolbarMaxWidth;
-            let top = rect.top - toolbarHeight - 10; // 10pxのマージン
-            let left = rect.left + rect.width / 2;
+            
+            // rectのサイズが0の場合（改行など）は、カーソル位置を使用
+            let top: number;
+            let left: number;
+            
+            if (rect.width === 0 && rect.height === 0) {
+              // カーソル位置を使用
+              const rangeRect = range.getClientRects();
+              if (rangeRect.length > 0) {
+                const cursorRect = rangeRect[0];
+                top = cursorRect.top - toolbarHeight - 10;
+                left = cursorRect.left;
+              } else {
+                // フォールバック: エディターの中央上部に表示
+                top = editorRect.top + 20;
+                left = editorRect.left + editorRect.width / 2;
+              }
+            } else {
+              top = rect.top - toolbarHeight - 10; // 10pxのマージン
+              left = rect.left + (rect.width > 0 ? rect.width / 2 : 0);
+            }
             
             // 画面上部に出ないように調整
             if (top < 60) {
               // ツールバーを選択範囲の下に表示
-              top = rect.bottom + 10;
+              if (rect.height > 0) {
+                top = rect.bottom + 10;
+              } else {
+                top = Math.max(60, top + toolbarHeight + 20);
+              }
             }
             
             // 画面下部に出ないように調整
@@ -137,9 +175,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               left = windowWidth - toolbarWidth / 2 - margin;
             }
             
-            setToolbarPosition({ top, left });
-            setShowToolbar(true);
-            return;
+            // 有効な位置であることを確認
+            if (top >= 0 && left >= 0 && top < windowHeight && left < windowWidth) {
+              setToolbarPosition({ top, left });
+              setShowToolbar(true);
+              return;
+            }
           }
         }
       }
@@ -197,17 +238,25 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const currentHtml = editorRef.current.innerHTML || '';
       // ソースコードモードに切り替える際に、改行を追加して見やすくする（表示用のみ）
       // ただし、元のHTMLは保持するため、onChangeは呼ばない
-      const formattedHtml = currentHtml
-        .replace(/></g, '>\n<')
-        .replace(/\n\s*\n+/g, '\n');
-      setSourceCode(formattedHtml);
+      if (currentHtml.trim()) {
+        const formattedHtml = currentHtml
+          .replace(/></g, '>\n<')
+          .replace(/\n\s*\n+/g, '\n');
+        setSourceCode(formattedHtml);
+      } else {
+        setSourceCode('');
+      }
       // onChangeは呼ばない（元のHTMLを保持）
     } else {
       // エディターが存在しない場合は、現在のvalueを使用
-      const formattedValue = (value || '')
-        .replace(/></g, '>\n<')
-        .replace(/\n\s*\n+/g, '\n');
-      setSourceCode(formattedValue);
+      if (value && value.trim()) {
+        const formattedValue = value
+          .replace(/></g, '>\n<')
+          .replace(/\n\s*\n+/g, '\n');
+        setSourceCode(formattedValue);
+      } else {
+        setSourceCode('');
+      }
     }
     setViewMode('source');
   };
@@ -749,7 +798,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           <textarea
             value={sourceCode}
             onChange={(e) => handleSourceCodeChange(e.target.value)}
-            className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="HTMLコードを入力..."
             style={{
               fontFamily: 'monospace',
