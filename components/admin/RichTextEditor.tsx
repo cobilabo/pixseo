@@ -62,20 +62,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   useEffect(() => {
     if (editorRef.current && !editorRef.current.hasAttribute('data-initialized')) {
       editorRef.current.setAttribute('data-initialized', 'true');
-      editorRef.current.innerHTML = value;
-      setSourceCode(value);
+      const initialValue = value || '';
+      if (initialValue) {
+        editorRef.current.innerHTML = initialValue;
+        setSourceCode(initialValue);
+      }
     }
   }, []);
 
   // valueが外部から変更されたときにソースコードも更新
   useEffect(() => {
-    if (value !== sourceCode && viewMode === 'source') {
-      setSourceCode(value);
+    if (viewMode === 'source') {
+      if (value !== sourceCode) {
+        setSourceCode(value);
+      }
     }
-    if (editorRef.current && value !== editorRef.current.innerHTML && viewMode === 'wysiwyg') {
-      editorRef.current.innerHTML = value;
+    if (viewMode === 'wysiwyg' && editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      if (value !== currentHtml && value) {
+        editorRef.current.innerHTML = value;
+        editorRef.current.setAttribute('data-initialized', 'true');
+      }
     }
-  }, [value]);
+  }, [value, viewMode]);
 
   // テキスト選択時 or カーソル移動時にツールバーを表示
   useEffect(() => {
@@ -146,10 +155,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // ソースコードモードからWYSIWYGモードに切り替え
   const switchToWysiwyg = () => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = sourceCode;
-      onChange(sourceCode);
+      // ソースコードの内容をエディターに設定
+      const htmlToSet = sourceCode || '';
+      editorRef.current.innerHTML = htmlToSet;
+      onChange(htmlToSet);
       // エディターを再初期化
       editorRef.current.setAttribute('data-initialized', 'true');
+      // フォーカスを設定して内容が表示されるようにする
+      editorRef.current.focus();
     }
     setViewMode('wysiwyg');
   };
@@ -157,9 +170,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // WYSIWYGモードからソースコードモードに切り替え
   const switchToSource = () => {
     if (editorRef.current) {
-      const currentHtml = editorRef.current.innerHTML;
+      const currentHtml = editorRef.current.innerHTML || '';
       setSourceCode(currentHtml);
       onChange(currentHtml);
+    } else {
+      // エディターが存在しない場合は、現在のvalueを使用
+      setSourceCode(value || '');
     }
     setViewMode('source');
   };
@@ -576,12 +592,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         <textarea
           value={sourceCode}
           onChange={(e) => handleSourceCodeChange(e.target.value)}
-          className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
           placeholder="HTMLコードを入力..."
           style={{
             fontFamily: 'monospace',
             lineHeight: '1.6',
             tabSize: 2,
+            color: '#111827',
           }}
         />
       )}
