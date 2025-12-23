@@ -30,6 +30,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [htmlContent, setHtmlContent] = useState('');
   const [showFontSizeModal, setShowFontSizeModal] = useState(false);
   const [fontSize, setFontSize] = useState('16');
+  const [viewMode, setViewMode] = useState<'wysiwyg' | 'source'>('wysiwyg');
+  const [sourceCode, setSourceCode] = useState('');
 
   // デザイン設定を取得
   useEffect(() => {
@@ -61,8 +63,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     if (editorRef.current && !editorRef.current.hasAttribute('data-initialized')) {
       editorRef.current.setAttribute('data-initialized', 'true');
       editorRef.current.innerHTML = value;
+      setSourceCode(value);
     }
   }, []);
+
+  // valueが外部から変更されたときにソースコードも更新
+  useEffect(() => {
+    if (value !== sourceCode && viewMode === 'source') {
+      setSourceCode(value);
+    }
+    if (editorRef.current && value !== editorRef.current.innerHTML && viewMode === 'wysiwyg') {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value]);
 
   // テキスト選択時 or カーソル移動時にツールバーを表示
   useEffect(() => {
@@ -122,8 +135,39 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const html = editorRef.current.innerHTML;
+      onChange(html);
+      if (viewMode === 'source') {
+        setSourceCode(html);
+      }
     }
+  };
+
+  // ソースコードモードからWYSIWYGモードに切り替え
+  const switchToWysiwyg = () => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = sourceCode;
+      onChange(sourceCode);
+      // エディターを再初期化
+      editorRef.current.setAttribute('data-initialized', 'true');
+    }
+    setViewMode('wysiwyg');
+  };
+
+  // WYSIWYGモードからソースコードモードに切り替え
+  const switchToSource = () => {
+    if (editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      setSourceCode(currentHtml);
+      onChange(currentHtml);
+    }
+    setViewMode('source');
+  };
+
+  // ソースコード変更時の処理
+  const handleSourceCodeChange = (newSourceCode: string) => {
+    setSourceCode(newSourceCode);
+    onChange(newSourceCode);
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
@@ -298,48 +342,52 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // フォントサイズ変更
   const applyFontSize = () => {
+    if (!editorRef.current) return;
+    
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0 && editorRef.current) {
-      const range = selection.getRangeAt(0);
-      
-      // 選択範囲がエディタ内にあるかチェック
-      if (editorRef.current.contains(range.commonAncestorContainer)) {
-        // 選択範囲が空の場合は、カーソル位置にテキストノードを作成
-        if (range.collapsed) {
-          const textNode = document.createTextNode('\u200B'); // ゼロ幅スペース
-          range.insertNode(textNode);
-          range.selectNodeContents(textNode);
-        }
-        
-        // 選択範囲をspanで囲んでフォントサイズを適用
-        const span = document.createElement('span');
-        span.style.fontSize = `${fontSize}px`;
-        
-        try {
-          range.surroundContents(span);
-        } catch (e) {
-          // 選択範囲が適切でない場合は、選択範囲全体をspanで囲む
-          const contents = range.extractContents();
-          span.appendChild(contents);
-          range.insertNode(span);
-        }
-        
-        // カーソルを選択範囲の後に移動
-        selection.removeAllRanges();
-        const newRange = document.createRange();
-        newRange.setStartAfter(span);
-        newRange.collapse(true);
-        selection.addRange(newRange);
-        
-        handleInput();
-        setShowFontSizeModal(false);
-        editorRef.current.focus();
-      } else {
-        alert('エディタ内のテキストを選択してください');
-      }
-    } else {
+    if (!selection || selection.rangeCount === 0) {
       alert('テキストを選択してください');
+      return;
     }
+    
+    const range = selection.getRangeAt(0).cloneRange();
+    
+    // 選択範囲がエディタ内にあるかチェック
+    if (!editorRef.current.contains(range.commonAncestorContainer)) {
+      alert('エディタ内のテキストを選択してください');
+      return;
+    }
+    
+    // 選択範囲が空の場合は、カーソル位置にテキストノードを作成
+    if (range.collapsed) {
+      const textNode = document.createTextNode('\u200B'); // ゼロ幅スペース
+      range.insertNode(textNode);
+      range.selectNodeContents(textNode);
+    }
+    
+    // 選択範囲をspanで囲んでフォントサイズを適用
+    const span = document.createElement('span');
+    span.style.fontSize = `${fontSize}px`;
+    
+    try {
+      range.surroundContents(span);
+    } catch (e) {
+      // 選択範囲が適切でない場合は、選択範囲全体をspanで囲む
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+    }
+    
+    // カーソルを選択範囲の後に移動
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.setStartAfter(span);
+    newRange.collapse(true);
+    selection.addRange(newRange);
+    
+    handleInput();
+    setShowFontSizeModal(false);
+    editorRef.current.focus();
   };
 
   // フォントサイズモーダルを開く際に、選択範囲のフォントサイズを取得
@@ -393,8 +441,42 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   return (
     <div className="relative">
+      {/* ビューモード切り替えタブ */}
+      <div className="flex gap-2 mb-2 border-b border-gray-200">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            switchToWysiwyg();
+          }}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            viewMode === 'wysiwyg'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          ビジュアル
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            switchToSource();
+          }}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            viewMode === 'source'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          ソースコード
+        </button>
+      </div>
+
       {/* フローティングツールバー（選択時/カーソル移動時） */}
-      {showToolbar && (
+      {showToolbar && viewMode === 'wysiwyg' && (
         <div
           className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
           style={{ 
@@ -478,17 +560,31 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       )}
 
       {/* エディター */}
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        className="min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content"
-        style={{
-          whiteSpace: 'pre-wrap',
-          color: theme.textColor,
-        }}
-        data-placeholder={placeholder || '本文を入力...'}
-      />
+      {viewMode === 'wysiwyg' ? (
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          className="min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content"
+          style={{
+            whiteSpace: 'pre-wrap',
+            color: theme.textColor,
+          }}
+          data-placeholder={placeholder || '本文を入力...'}
+        />
+      ) : (
+        <textarea
+          value={sourceCode}
+          onChange={(e) => handleSourceCodeChange(e.target.value)}
+          className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="HTMLコードを入力..."
+          style={{
+            fontFamily: 'monospace',
+            lineHeight: '1.6',
+            tabSize: 2,
+          }}
+        />
+      )}
 
       {/* 画像挿入モーダル */}
       {showImageModal && (
@@ -734,14 +830,22 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
             <div className="flex gap-3">
               <button
-                onClick={insertHtml}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  insertHtml();
+                }}
                 disabled={!htmlContent.trim()}
                 className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 挿入
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowHtmlModal(false);
                   setHtmlContent('');
                 }}
@@ -787,7 +891,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 {['12', '14', '16', '18', '20', '24', '28', '32'].map((size) => (
                   <button
                     key={size}
-                    onClick={() => setFontSize(size)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setFontSize(size);
+                    }}
                     className={`px-3 py-2 rounded-lg border transition-colors ${
                       fontSize === size
                         ? 'bg-blue-600 text-white border-blue-600'
@@ -810,13 +919,21 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
             <div className="flex gap-3">
               <button
-                onClick={applyFontSize}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  applyFontSize();
+                }}
                 className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
               >
                 適用
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   // フォントサイズをリセット（デフォルトに戻す）
                   const selection = window.getSelection();
                   if (selection && selection.rangeCount > 0 && editorRef.current) {
@@ -849,7 +966,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 リセット
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowFontSizeModal(false);
                   setFontSize('16');
                 }}

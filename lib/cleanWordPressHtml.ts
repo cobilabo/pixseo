@@ -4,6 +4,7 @@
  * - 不正なHTMLタグのネストを修正
  * - 空タグを削除
  * - HTMLを正規化
+ * - スクリプトタグやiframeは保持（埋め込みコンテンツ用）
  */
 export function cleanWordPressHtml(html: string): string {
   if (!html || typeof html !== 'string') {
@@ -12,12 +13,29 @@ export function cleanWordPressHtml(html: string): string {
 
   let cleaned = html;
 
-  // 1. WordPressコメントタグを削除
+  // 1. WordPressコメントタグを削除（スクリプトタグ内のコメントは除外）
+  // スクリプトタグやiframe内のコメントは保持するため、先にそれらを一時的に置換
+  const scriptPlaceholders: string[] = [];
+  const iframePlaceholders: string[] = [];
+  
+  // スクリプトタグを一時的に置換
+  cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, (match) => {
+    scriptPlaceholders.push(match);
+    return `__SCRIPT_PLACEHOLDER_${scriptPlaceholders.length - 1}__`;
+  });
+  
+  // iframeタグを一時的に置換
+  cleaned = cleaned.replace(/<iframe[\s\S]*?<\/iframe>/gi, (match) => {
+    iframePlaceholders.push(match);
+    return `__IFRAME_PLACEHOLDER_${iframePlaceholders.length - 1}__`;
+  });
+
+  // WordPressコメントタグを削除
   cleaned = cleaned.replace(/<!--\s*wp:.*?-->/g, '');
   cleaned = cleaned.replace(/<!--\s*\/wp:.*?-->/g, '');
   cleaned = cleaned.replace(/<!--\s*\/wp:.*?$/gm, '');
 
-  // 2. 不要なHTMLコメントを削除（wp以外も）
+  // 2. 不要なHTMLコメントを削除（wp以外も、ただしスクリプト/iframe内は除外済み）
   cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
 
   // 3. WordPressクラス名を削除（instagram-mediaなどのSNS埋め込みは除外）
@@ -54,8 +72,17 @@ export function cleanWordPressHtml(html: string): string {
   // 11. 連続する空行を削除
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
 
-  // 12. 余分な空白を削除
+  // 12. 余分な空白を削除（スクリプト/iframe内は除外）
   cleaned = cleaned.replace(/>\s+</g, '><');
+
+  // 13. スクリプトタグとiframeタグを復元
+  scriptPlaceholders.forEach((script, index) => {
+    cleaned = cleaned.replace(`__SCRIPT_PLACEHOLDER_${index}__`, script);
+  });
+  
+  iframePlaceholders.forEach((iframe, index) => {
+    cleaned = cleaned.replace(`__IFRAME_PLACEHOLDER_${index}__`, iframe);
+  });
 
   return cleaned;
 }
