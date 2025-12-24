@@ -56,6 +56,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearch': 'タグで検索',
     'search.selectTag': 'タグを選択',
     'search.noTags': 'タグがありません',
+    'search.tagSearchResults': 'タグ検索結果',
+    'search.categorySearchResults': 'カテゴリー検索結果',
     
     // メッセージ
     'message.noArticles': '記事がまだありません',
@@ -130,6 +132,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearch': 'Search by tag',
     'search.selectTag': 'Select a tag',
     'search.noTags': 'No tags available',
+    'search.tagSearchResults': 'Tag search results',
+    'search.categorySearchResults': 'Category search results',
     
     // Messages
     'message.noArticles': 'No articles yet',
@@ -204,6 +208,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearch': '标签搜索',
     'search.selectTag': '选择标签',
     'search.noTags': '暂无标签',
+    'search.tagSearchResults': '标签搜索结果',
+    'search.categorySearchResults': '分类搜索结果',
     
     // 消息
     'message.noArticles': '暂无文章',
@@ -278,6 +284,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearch': '태그로 검색',
     'search.selectTag': '태그 선택',
     'search.noTags': '태그가 없습니다',
+    'search.tagSearchResults': '태그 검색 결과',
+    'search.categorySearchResults': '카테고리 검색 결과',
     
     // 메시지
     'message.noArticles': '아직 기사가 없습니다',

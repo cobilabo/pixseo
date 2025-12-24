@@ -3,7 +3,9 @@ import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
 
 export interface AlgoliaSearchOptions {
-  keyword: string;
+  keyword?: string;
+  tagName?: string;       // タグ名で検索（Algoliaに保存されているタグ名）
+  categoryName?: string;  // カテゴリー名で検索
   lang: Lang;
   mediaId?: string;
   page?: number;
@@ -12,11 +14,12 @@ export interface AlgoliaSearchOptions {
 
 /**
  * Algoliaで記事を検索（言語別インデックス）
+ * キーワード検索またはタグ/カテゴリーフィルターで検索可能
  */
 export async function searchArticlesWithAlgolia(
   options: AlgoliaSearchOptions
-): Promise<{ articles: Partial<Article>[]; totalHits: number }> {
-  const { keyword, lang, mediaId, page = 0, hitsPerPage = 20 } = options;
+): Promise<{ articles: Partial<Article>[]; totalHits: number; searchType: 'keyword' | 'tag' | 'category' }> {
+  const { keyword, tagName, categoryName, lang, mediaId, page = 0, hitsPerPage = 20 } = options;
 
   try {
     let filters = 'isPublished:true';
@@ -26,18 +29,34 @@ export async function searchArticlesWithAlgolia(
       filters += ` AND mediaId:${mediaId}`;
     }
 
+    // タグでフィルタリング（tagsフィールドに対してフィルター）
+    if (tagName) {
+      filters += ` AND tags:"${tagName}"`;
+    }
+
+    // カテゴリーでフィルタリング（categoriesフィールドに対してフィルター）
+    if (categoryName) {
+      filters += ` AND categories:"${categoryName}"`;
+    }
+
     // 言語別インデックスを使用
     const indexName = getArticlesIndexName(lang);
 
-    console.log('[Algolia Search] Query:', keyword);
+    // 検索タイプを判定
+    const searchType: 'keyword' | 'tag' | 'category' = tagName ? 'tag' : categoryName ? 'category' : 'keyword';
+
+    console.log('[Algolia Search] Query:', keyword || '(empty)');
     console.log('[Algolia Search] Index:', indexName);
     console.log('[Algolia Search] Filters:', filters);
     console.log('[Algolia Search] MediaId:', mediaId);
+    console.log('[Algolia Search] SearchType:', searchType);
+    if (tagName) console.log('[Algolia Search] TagName:', tagName);
+    if (categoryName) console.log('[Algolia Search] CategoryName:', categoryName);
 
     const result = await searchClient.searchSingleIndex({
       indexName,
       searchParams: {
-        query: keyword,
+        query: keyword || '',  // タグ/カテゴリー検索時はキーワードは空でもOK
         page,
         hitsPerPage,
         filters,
@@ -57,15 +76,17 @@ export async function searchArticlesWithAlgolia(
       featuredImage: hit.featuredImage,
       featuredImageAlt: hit.featuredImageAlt,
       viewCount: hit.viewCount || 0,
-      // カテゴリーとタグは別途取得が必要
+      categories: hit.categories || [],
+      tags: hit.tags || [],
     }));
 
     return {
       articles,
       totalHits: result.nbHits || 0,
+      searchType,
     };
   } catch (error) {
     console.error('[Algolia] Search error:', error);
-    return { articles: [], totalHits: 0 };
+    return { articles: [], totalHits: 0, searchType: 'keyword' };
   }
 }

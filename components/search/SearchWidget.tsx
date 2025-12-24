@@ -28,6 +28,7 @@ export default function SearchWidget({
 
   const searchBoxType: SearchBoxType = searchSettings?.searchBoxType || 'keyword';
 
+  // キーワード検索 - 検索ページへ遷移
   const handleKeywordSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -35,57 +36,19 @@ export default function SearchWidget({
 
     setIsSubmitting(true);
     
-    try {
-      // 検索ログを記録
-      if (mediaId) {
-        await fetch('/api/search-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'keyword',
-            value: keyword.trim(),
-            mediaId,
-          }),
-        });
-      }
-
-      // 検索ページへ遷移
-      router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
-    } catch (error) {
-      console.error('Search error:', error);
-      // エラーでも検索ページへ遷移
-      router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // 検索ページへ遷移（検索ログは SearchContent で記録）
+    router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
+    setIsSubmitting(false);
   };
 
+  // タグ検索 - 検索ページへ遷移（Algolia経由で検索）
   const handleTagSearch = async (tagId: string, tagName: string) => {
     setIsSubmitting(true);
     
-    try {
-      // 検索ログを記録
-      if (mediaId) {
-        await fetch('/api/search-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'tag',
-            value: tagId,
-            displayName: tagName,
-            mediaId,
-          }),
-        });
-      }
-
-      // タグページへ遷移
-      router.push(`/${lang}/tags/${tagId}`);
-    } catch (error) {
-      console.error('Tag search error:', error);
-      router.push(`/${lang}/tags/${tagId}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // 検索ページへ遷移（タグ名パラメータで検索）
+    // タグ名を使ってAlgoliaで検索する（検索ログは SearchContent で記録）
+    router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
+    setIsSubmitting(false);
   };
 
   const isCompact = variant === 'compact';
