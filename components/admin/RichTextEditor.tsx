@@ -496,9 +496,28 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // HTML挿入
   const insertHtml = () => {
-    if (htmlContent.trim() && editorRef.current) {
+    if (!htmlContent.trim()) {
+      alert('HTMLコードを入力してください');
+      return;
+    }
+
+    if (!editorRef.current) {
+      alert('エディターが初期化されていません');
+      return;
+    }
+
+    // ビジュアルモードでない場合は警告
+    if (viewMode !== 'wysiwyg') {
+      alert('ビジュアルモードでHTMLを挿入してください');
+      return;
+    }
+
+    try {
       const selection = window.getSelection();
       let range: Range;
+      
+      // エディターにフォーカスを設定
+      editorRef.current.focus();
       
       if (selection && selection.rangeCount > 0) {
         range = selection.getRangeAt(0);
@@ -517,7 +536,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           range.setStart(selection.anchorNode, selection.anchorOffset);
           range.collapse(true);
         } else {
-          // カーソルがエディタ内にない場合
+          // カーソルがエディタ内にない場合、エディタの最後に挿入
           range.selectNodeContents(editorRef.current);
           range.collapse(false);
         }
@@ -534,18 +553,42 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         fragment.appendChild(tempDiv.firstChild);
       }
       
-      range.insertNode(fragment);
+      // フラグメントが空でないことを確認
+      if (fragment.childNodes.length === 0) {
+        // フラグメントが空の場合は、テキストノードとして挿入
+        const textNode = document.createTextNode(htmlContent.trim());
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+      } else {
+        range.insertNode(fragment);
+        
+        // カーソルを挿入した要素の後に移動
+        const lastNode = fragment.lastChild;
+        if (lastNode) {
+          range.setStartAfter(lastNode);
+          range.collapse(true);
+        }
+      }
       
-      // カーソルを挿入した要素の後に移動
-      range.setStartAfter(fragment.lastChild || fragment);
-      range.collapse(true);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
+      // 選択範囲を更新
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
       
+      // エディターの内容を更新
       handleInput();
+      
+      // モーダルを閉じる
       setShowHtmlModal(false);
       setHtmlContent('');
+      
+      // エディターにフォーカスを戻す
       editorRef.current.focus();
+    } catch (error) {
+      console.error('HTML挿入エラー:', error);
+      alert('HTMLの挿入に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
 
