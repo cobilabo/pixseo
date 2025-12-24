@@ -204,12 +204,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   }, []);
 
   const handleInput = () => {
-    if (editorRef.current) {
+    if (editorRef.current && viewMode === 'wysiwyg') {
       const html = editorRef.current.innerHTML;
       onChange(html);
-      if (viewMode === 'source') {
-        setSourceCode(html);
-      }
     }
   };
 
@@ -647,7 +644,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   );
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
       {/* ビューモード切り替えタブ */}
       <div className="flex gap-2 mb-2 border-b border-gray-200">
         <button
@@ -767,7 +764,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       )}
 
       {/* エディター */}
-      {viewMode === 'wysiwyg' ? (
+      <div className="relative" style={{ minHeight: '500px' }}>
+        {/* ビジュアルエディター */}
         <div
           ref={editorRef}
           contentEditable
@@ -776,11 +774,24 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           style={{
             whiteSpace: 'pre-wrap',
             color: theme.textColor,
+            display: viewMode === 'wysiwyg' ? 'block' : 'none',
+            position: viewMode === 'wysiwyg' ? 'relative' : 'absolute',
+            visibility: viewMode === 'wysiwyg' ? 'visible' : 'hidden',
+            zIndex: viewMode === 'wysiwyg' ? 1 : -1,
           }}
           data-placeholder={placeholder || '本文を入力...'}
         />
-      ) : (
-        <div className="relative">
+        
+        {/* ソースコードエディター */}
+        <div 
+          className="relative" 
+          style={{ 
+            display: viewMode === 'source' ? 'block' : 'none',
+            position: viewMode === 'source' ? 'relative' : 'absolute',
+            visibility: viewMode === 'source' ? 'visible' : 'hidden',
+            zIndex: viewMode === 'source' ? 2 : -1,
+          }}
+        >
           <div className="absolute top-2 right-2 z-10">
             <button
               type="button"
@@ -798,7 +809,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           <textarea
             value={sourceCode}
             onChange={(e) => handleSourceCodeChange(e.target.value)}
-            className="w-full min-h-[500px] p-6 font-mono text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full min-h-[500px] p-6 font-mono text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="HTMLコードを入力..."
             style={{
               fontFamily: 'monospace',
@@ -806,10 +817,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               tabSize: 2,
               color: '#111827',
               whiteSpace: 'pre',
+              backgroundColor: '#ffffff',
             }}
           />
         </div>
-      )}
+      </div>
 
       {/* 画像挿入モーダル */}
       {showImageModal && (
