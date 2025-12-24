@@ -28,6 +28,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [tableCols, setTableCols] = useState(3);
   const [showHtmlModal, setShowHtmlModal] = useState(false);
   const [htmlContent, setHtmlContent] = useState('');
+  const [savedRange, setSavedRange] = useState<Range | null>(null);
   const [showFontSizeModal, setShowFontSizeModal] = useState(false);
   const [fontSize, setFontSize] = useState('16');
   const [viewMode, setViewMode] = useState<'wysiwyg' | 'source'>('wysiwyg');
@@ -494,6 +495,33 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     handleInput();
   };
 
+  // HTML挿入モーダルを開く前にカーソル位置を保存
+  const openHtmlModal = () => {
+    if (!editorRef.current || viewMode !== 'wysiwyg') {
+      setShowHtmlModal(true);
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      // エディタ内での選択かチェック
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        // カーソル位置を保存
+        setSavedRange(range.cloneRange());
+      }
+    } else {
+      // 選択範囲がない場合は、現在のカーソル位置を取得
+      const range = document.createRange();
+      if (selection && selection.anchorNode && editorRef.current.contains(selection.anchorNode)) {
+        range.setStart(selection.anchorNode, selection.anchorOffset);
+        range.collapse(true);
+        setSavedRange(range);
+      }
+    }
+    setShowHtmlModal(true);
+  };
+
   // HTML挿入
   const insertHtml = () => {
     if (!htmlContent.trim()) {
@@ -513,30 +541,64 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     try {
-      const selection = window.getSelection();
-      let range: Range;
+      let range: Range | null = null;
+      
+      // 保存されたカーソル位置を使用
+      if (savedRange && editorRef.current.contains(savedRange.commonAncestorContainer)) {
+        range = savedRange.cloneRange();
+      } else {
+        // 保存された位置が無効な場合は、現在の選択範囲を使用
+        const selection = window.getSelection();
+        editorRef.current.focus();
+        
+        if (selection && selection.rangeCount > 0) {
+          range = selection.getRangeAt(0);
+          
+          // エディタ内での選択かチェック
+          if (!editorRef.current.contains(range.commonAncestorContainer)) {
+            // エディタ外の場合は、エディタの最後に挿入
+            range = document.createRange();
+            range.selectNodeContents(editorRef.current);
+            range.collapse(false);
+          }
+        } else {
+          // 選択範囲がない場合は、カーソル位置に挿入
+          range = document.createRange();
+          if (selection && selection.anchorNode && editorRef.current.contains(selection.anchorNode)) {
+            range.setStart(selection.anchorNode, selection.anchorOffset);
+            range.collapse(true);
+          } else {
+            // カーソルがエディタ内にない場合、エディタの最後に挿入
+            range.selectNodeContents(editorRef.current);
+            range.collapse(false);
+          }
+        }
+      }
+      
+      if (!range) {
+        alert('カーソル位置を取得できませんでした');
+        return;
+      }
       
       // エディターにフォーカスを設定
       editorRef.current.focus();
       
-      if (selection && selection.rangeCount > 0) {
-        range = selection.getRangeAt(0);
-        
-        // エディタ内での選択かチェック
-        if (!editorRef.current.contains(range.commonAncestorContainer)) {
-          // エディタ外の場合は、エディタの最後に挿入
-          range = document.createRange();
-          range.selectNodeContents(editorRef.current);
-          range.collapse(false);
-        }
-      } else {
-        // 選択範囲がない場合は、カーソル位置に挿入
-        range = document.createRange();
-        if (selection && selection.anchorNode && editorRef.current.contains(selection.anchorNode)) {
-          range.setStart(selection.anchorNode, selection.anchorOffset);
-          range.collapse(true);
+      // 保存された範囲がまだ有効か確認し、必要に応じて再設定
+      try {
+        // 範囲が有効かテスト
+        range.getBoundingClientRect();
+      } catch (e) {
+        // 範囲が無効な場合は、現在のカーソル位置を使用
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          range = selection.getRangeAt(0);
+          if (!editorRef.current.contains(range.commonAncestorContainer)) {
+            range = document.createRange();
+            range.selectNodeContents(editorRef.current);
+            range.collapse(false);
+          }
         } else {
-          // カーソルがエディタ内にない場合、エディタの最後に挿入
+          range = document.createRange();
           range.selectNodeContents(editorRef.current);
           range.collapse(false);
         }
@@ -572,6 +634,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       }
       
       // 選択範囲を更新
+      const selection = window.getSelection();
       if (selection) {
         selection.removeAllRanges();
         selection.addRange(range);
@@ -579,6 +642,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       
       // エディターの内容を更新
       handleInput();
+      
+      // 保存された範囲をクリア
+      setSavedRange(null);
       
       // モーダルを閉じる
       setShowHtmlModal(false);
@@ -589,6 +655,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     } catch (error) {
       console.error('HTML挿入エラー:', error);
       alert('HTMLの挿入に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+      setSavedRange(null);
     }
   };
 
@@ -798,7 +865,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           
           <div className="w-px bg-gray-300 mx-1" />
           
-          <ToolbarButton onClick={() => setShowHtmlModal(true)} title="HTML挿入">
+          <ToolbarButton onClick={openHtmlModal} title="HTML挿入">
             &lt;/&gt;
           </ToolbarButton>
           
@@ -1134,6 +1201,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   e.stopPropagation();
                   setShowHtmlModal(false);
                   setHtmlContent('');
+                  setSavedRange(null);
                 }}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
               >
