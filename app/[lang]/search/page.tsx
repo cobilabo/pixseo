@@ -13,14 +13,17 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SearchWidget from '@/components/search/SearchWidget';
+import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
-import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
+import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag } from '@/lib/i18n/localize';
 
 interface PageProps {
   params: {
@@ -88,11 +91,12 @@ export default async function SearchPage({ params }: PageProps) {
   // サーバーサイドでデータを取得
   const mediaId = await getMediaIdFromHost();
   
-  // サイト設定、Theme、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
+  // サイト設定、Theme、カテゴリー、タグを並列取得
+  const [rawSiteInfo, rawTheme, allCategories, allTags, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
+    getTagsServer(),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
@@ -104,6 +108,9 @@ export default async function SearchPage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const tags = allTags
+    .filter(tag => !mediaId || tag.mediaId === mediaId)
+    .map(tag => localizeTag(tag, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   // おすすめ記事（おすすめカテゴリーに属する記事、なければ最近の記事をフォールバック）
@@ -175,6 +182,17 @@ export default async function SearchPage({ params }: PageProps) {
 
             {/* サイドバー（30%） */}
             <aside className="w-full lg:w-[30%] space-y-6">
+              {/* 検索ウィジェット（ふらっとテーマ専用・サイドバー表示の場合） */}
+              {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+                <SearchWidget
+                  searchSettings={rawTheme.searchSettings}
+                  mediaId={mediaId || undefined}
+                  lang={lang}
+                  tags={tags}
+                  variant="compact"
+                />
+              )}
+
               {/* 人気記事 */}
               <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
 
@@ -188,6 +206,11 @@ export default async function SearchPage({ params }: PageProps) {
 
               {/* Xタイムライン */}
               {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
+
+              {/* カスタムHTML（ふらっとテーマ専用） */}
+              {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
+                <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
+              )}
             </aside>
           </div>
         </main>

@@ -4,14 +4,16 @@ import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getTagsServer } from '@/lib/firebase/tags-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
-import { localizeSiteInfo, localizeTheme, localizePage } from '@/lib/i18n/localize';
+import { localizeSiteInfo, localizeTheme, localizePage, localizeTag } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
 import MediaHeader from '@/components/layout/MediaHeader';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
+import SearchWidget from '@/components/search/SearchWidget';
 
 interface PageProps {
   params: {
@@ -111,10 +113,16 @@ export default async function FixedPage({ params }: PageProps) {
   }
 
   const page = localizePage(rawPage, lang);
-  const [rawSiteInfo, rawTheme] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allTags] = await Promise.all([
     getSiteInfo(mediaId),
     getTheme(mediaId),
+    getTagsServer(),
   ]);
+  
+  // サイドバー検索用のタグ一覧（メディアIDでフィルタリング）
+  const sidebarTags = allTags
+    .filter(tag => !mediaId || tag.mediaId === mediaId)
+    .map(tag => localizeTag(tag, lang));
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
@@ -156,6 +164,18 @@ export default async function FixedPage({ params }: PageProps) {
         }}
       >
         <main className={`max-w-4xl mx-auto ${rawPage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : ''}`}>
+        {/* 検索ウィジェット（ふらっとテーマ専用・固定ページ表示の場合） */}
+        {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.staticPages && (
+          <div className="mb-6">
+            <SearchWidget
+              searchSettings={rawTheme.searchSettings}
+              mediaId={mediaId || undefined}
+              lang={lang}
+              tags={sidebarTags}
+            />
+          </div>
+        )}
+
         <article 
           className={rawPage.showPanel !== false ? 'bg-white rounded-lg shadow-md p-8' : ''}
           style={{

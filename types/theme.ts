@@ -104,6 +104,32 @@ export interface SnsSettings {
   xUserId?: string;           // X（Twitter）のユーザーID
 }
 
+// 検索表示対象ページの定義
+export interface SearchDisplayPages {
+  topPage: boolean;           // TOPページ
+  staticPages: boolean;       // 固定ページ
+  articlePages: boolean;      // 記事ページ
+  sidebar: boolean;           // サイドコンテンツ内
+}
+
+// 検索ボックスの種類
+export type SearchBoxType = 'keyword' | 'tag' | 'both';
+
+// 検索設定の定義（ふらっとテーマ専用）
+export interface SearchSettings {
+  displayPages: SearchDisplayPages;  // 表示対象ページ
+  searchBoxType: SearchBoxType;      // 検索ボックスの種類
+}
+
+// サイドコンテンツHTMLアイテムの定義（ふらっとテーマ専用）
+export interface SideContentHtmlItem {
+  id: string;                 // 一意のID
+  title: string;              // 管理用タイトル
+  htmlCode: string;           // HTMLコード
+  isEnabled: boolean;         // 有効/無効
+  order: number;              // 表示順
+}
+
 // スクリプト発火条件の定義
 export type ScriptTriggerType = 
   | 'all'           // サイト全体
@@ -171,6 +197,12 @@ export interface ThemeLayoutSettings {
   // SNS設定
   snsSettings?: SnsSettings;
   
+  // 検索設定（ふらっとテーマ専用）
+  searchSettings?: SearchSettings;
+  
+  // サイドコンテンツHTML（ふらっとテーマ専用）
+  sideContentHtmlItems?: SideContentHtmlItem[];
+  
   // 基本カラー
   primaryColor?: string;
   secondaryColor?: string;
@@ -225,6 +257,12 @@ export interface Theme {
   
   // SNS設定
   snsSettings?: SnsSettings;
+  
+  // 検索設定（ふらっとテーマ専用）
+  searchSettings?: SearchSettings;
+  
+  // サイドコンテンツHTML（ふらっとテーマ専用）
+  sideContentHtmlItems?: SideContentHtmlItem[];
   
   // 基本カラー
   primaryColor: string;             // メインカラー

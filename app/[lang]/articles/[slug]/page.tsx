@@ -12,6 +12,7 @@ import {
   getPopularArticlesServer 
 } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
+import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
@@ -44,6 +45,8 @@ import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SearchWidget from '@/components/search/SearchWidget';
+import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
 
@@ -216,14 +219,15 @@ export default async function ArticlePage({ params }: PageProps) {
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
 
-  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、人気記事を並行取得
-  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, rawPopularArticles] = await Promise.all([
+  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、全タグ、人気記事を並行取得
+  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allTags, rawPopularArticles] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
     rawArticle.writerId ? getWriterServer(rawArticle.writerId).catch(() => null) : Promise.resolve(null),
     getAdjacentArticlesServer(rawArticle, mediaId || undefined).catch(() => ({ previousArticle: null, nextArticle: null })),
     getRelatedArticlesServer(rawArticle, 6, mediaId || undefined).catch(() => []),
     getAllCategoriesServer().catch(() => []),
+    getAllTagsServer().catch(() => []),
     getPopularArticlesServer(10, mediaId || undefined).catch(() => []),
   ]);
   
@@ -233,6 +237,10 @@ export default async function ArticlePage({ params }: PageProps) {
   const writer = rawWriter ? localizeWriter(rawWriter, lang) : null;
   const relatedArticles = rawRelatedArticles.map(art => localizeArticle(art, lang));
   const popularArticles = rawPopularArticles.map(art => localizeArticle(art, lang));
+  // サイドバー検索用のタグ一覧（メディアIDでフィルタリング）
+  const sidebarTags = allTags
+    .filter(tag => !mediaId || tag.mediaId === mediaId)
+    .map(tag => localizeTag(tag, lang));
   
   // 前後の記事のカテゴリー情報を取得
   const [previousCategories, nextCategories] = await Promise.all([
@@ -396,6 +404,18 @@ export default async function ArticlePage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
+            {/* 検索ウィジェット（ふらっとテーマ専用・記事ページ表示の場合） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.articlePages && (
+              <div className="mb-6">
+                <SearchWidget
+                  searchSettings={rawTheme.searchSettings}
+                  mediaId={mediaId || undefined}
+                  lang={lang}
+                  tags={sidebarTags}
+                />
+              </div>
+            )}
+
             {/* パンくずリスト */}
             <Breadcrumbs article={article} category={category} lang={lang} />
 
@@ -458,6 +478,17 @@ export default async function ArticlePage({ params }: PageProps) {
 
           {/* サイドバー（30%） */}
           <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 検索ウィジェット（ふらっとテーマ専用・サイドバー表示の場合） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+              <SearchWidget
+                searchSettings={rawTheme.searchSettings}
+                mediaId={mediaId || undefined}
+                lang={lang}
+                tags={sidebarTags}
+                variant="compact"
+              />
+            )}
+
             {/* 著者プロフィール */}
             {writer && <AuthorProfile writer={writer} lang={lang} />}
 
@@ -475,6 +506,11 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* Xタイムライン */}
             {rawTheme.snsSettings?.xUserId && (
               <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />
+            )}
+
+            {/* カスタムHTML（ふらっとテーマ専用） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
+              <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
             )}
           </aside>
         </div>

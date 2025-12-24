@@ -51,6 +51,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.searchResults': '件の記事が見つかりました',
     'section.searchResultsEn': 'Search Results',
     
+    // 検索
+    'search.keywordPlaceholder': 'キーワードで検索',
+    'search.tagSearch': 'タグで検索',
+    'search.selectTag': 'タグを選択',
+    'search.noTags': 'タグがありません',
+    
     // メッセージ
     'message.noArticles': '記事がまだありません',
     'message.noCategoryArticles': 'このカテゴリーの記事はまだありません',
@@ -118,6 +124,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.recommendedArticlesEn': 'Recommended Articles',
     'section.searchResults': ' articles found',
     'section.searchResultsEn': 'Search Results',
+    
+    // Search
+    'search.keywordPlaceholder': 'Search by keyword',
+    'search.tagSearch': 'Search by tag',
+    'search.selectTag': 'Select a tag',
+    'search.noTags': 'No tags available',
     
     // Messages
     'message.noArticles': 'No articles yet',
@@ -187,6 +199,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.searchResults': '篇文章',
     'section.searchResultsEn': 'Search Results',
     
+    // 搜索
+    'search.keywordPlaceholder': '关键词搜索',
+    'search.tagSearch': '标签搜索',
+    'search.selectTag': '选择标签',
+    'search.noTags': '暂无标签',
+    
     // 消息
     'message.noArticles': '暂无文章',
     'message.noCategoryArticles': '此分类暂无文章',
@@ -254,6 +272,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.recommendedArticlesEn': 'Recommended Articles',
     'section.searchResults': '개의 기사를 찾았습니다',
     'section.searchResultsEn': 'Search Results',
+    
+    // 검색
+    'search.keywordPlaceholder': '키워드로 검색',
+    'search.tagSearch': '태그로 검색',
+    'search.selectTag': '태그 선택',
+    'search.noTags': '태그가 없습니다',
     
     // 메시지
     'message.noArticles': '아직 기사가 없습니다',

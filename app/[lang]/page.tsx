@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getRecentArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
@@ -17,8 +18,10 @@ import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SearchWidget from '@/components/search/SearchWidget';
+import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
-import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
+import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
 
 interface PageProps {
@@ -97,13 +100,14 @@ export default async function HomePage({ params }: PageProps) {
   const host = headersList.get('host') || '';
   
   // サイト設定、Theme、記事を並列取得
-  const [rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
+    getTagsServer(),
   ]);
   
   // 多言語化
@@ -112,6 +116,9 @@ export default async function HomePage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const tags = allTags
+    .filter(tag => !mediaId || tag.mediaId === mediaId)
+    .map(tag => localizeTag(tag, lang));
   
   // 記事も多言語化
   const localizedRecentArticles = recentArticles.map(article => localizeArticle(article, lang));
@@ -181,6 +188,18 @@ export default async function HomePage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
+            {/* 検索ウィジェット（ふらっとテーマ専用・TOPページ表示の場合） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.topPage && (
+              <div className="mb-8">
+                <SearchWidget
+                  searchSettings={rawTheme.searchSettings}
+                  mediaId={mediaId || undefined}
+                  lang={lang}
+                  tags={tags}
+                />
+              </div>
+            )}
+
             {/* 新着記事 */}
             <section className="mb-12">
               <div className="text-center mb-8">
@@ -227,6 +246,17 @@ export default async function HomePage({ params }: PageProps) {
 
           {/* サイドバー（30%） */}
           <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 検索ウィジェット（ふらっとテーマ専用・サイドバー表示の場合） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+              <SearchWidget
+                searchSettings={rawTheme.searchSettings}
+                mediaId={mediaId || undefined}
+                lang={lang}
+                tags={tags}
+                variant="compact"
+              />
+            )}
+
             {/* 人気記事 */}
             <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
 
@@ -240,6 +270,11 @@ export default async function HomePage({ params }: PageProps) {
 
             {/* Xリンク */}
             {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
+
+            {/* カスタムHTML（ふらっとテーマ専用） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
+              <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
+            )}
           </aside>
         </div>
       </main>
