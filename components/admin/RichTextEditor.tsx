@@ -498,49 +498,54 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const insertHtml = () => {
     if (htmlContent.trim() && editorRef.current) {
       const selection = window.getSelection();
+      let range: Range;
+      
       if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
+        range = selection.getRangeAt(0);
         
         // エディタ内での選択かチェック
-        if (editorRef.current.contains(range.commonAncestorContainer)) {
-          // insertHTMLコマンドを使用
-          document.execCommand('insertHTML', false, htmlContent.trim());
-          handleInput();
-          setShowHtmlModal(false);
-          setHtmlContent('');
-          editorRef.current.focus();
-          return;
-        }
-      }
-      
-      // 選択範囲がない場合は、カーソル位置に挿入
-      if (editorRef.current) {
-        const range = document.createRange();
-        const selection = window.getSelection();
-        
-        if (selection && selection.rangeCount > 0) {
-          range.setStart(selection.anchorNode || editorRef.current, selection.anchorOffset);
-          range.collapse(true);
-        } else {
-          // カーソルがエディタ内にある場合
+        if (!editorRef.current.contains(range.commonAncestorContainer)) {
+          // エディタ外の場合は、エディタの最後に挿入
+          range = document.createRange();
           range.selectNodeContents(editorRef.current);
           range.collapse(false);
         }
-        
-        const fragment = range.createContextualFragment(htmlContent.trim());
-        range.insertNode(fragment);
-        
-        // カーソルを挿入した要素の後に移動
-        range.setStartAfter(fragment.lastChild || fragment);
-        range.collapse(true);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        
-        handleInput();
-        setShowHtmlModal(false);
-        setHtmlContent('');
-        editorRef.current.focus();
+      } else {
+        // 選択範囲がない場合は、カーソル位置に挿入
+        range = document.createRange();
+        if (selection && selection.anchorNode && editorRef.current.contains(selection.anchorNode)) {
+          range.setStart(selection.anchorNode, selection.anchorOffset);
+          range.collapse(true);
+        } else {
+          // カーソルがエディタ内にない場合
+          range.selectNodeContents(editorRef.current);
+          range.collapse(false);
+        }
       }
+      
+      // スクリプトタグを含むHTMLを安全に挿入するため、一時的なdiv要素を作成
+      // これにより、スクリプトが実行されずにHTMLとして保存される
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent.trim();
+      
+      // tempDivの子要素をエディターに挿入
+      const fragment = document.createDocumentFragment();
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+      
+      range.insertNode(fragment);
+      
+      // カーソルを挿入した要素の後に移動
+      range.setStartAfter(fragment.lastChild || fragment);
+      range.collapse(true);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      
+      handleInput();
+      setShowHtmlModal(false);
+      setHtmlContent('');
+      editorRef.current.focus();
     }
   };
 

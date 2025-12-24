@@ -19,7 +19,7 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
     setMounted(true);
   }, []);
 
-  // Instagram埋め込みを処理するuseEffect（mountedがtrueになった後に実行）
+  // Instagram埋め込みとスクリプトタグを処理するuseEffect（mountedがtrueになった後に実行）
   useEffect(() => {
     if (!mounted) return;
 
@@ -46,6 +46,35 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
     // Instagram埋め込みが含まれている場合のみスクリプトをロード
     if (content.includes('instagram-media')) {
       loadInstagramScript();
+    }
+
+    // スクリプトタグが含まれている場合、dangerouslySetInnerHTMLで挿入されたスクリプトを実行
+    if (content.includes('<script')) {
+      // コンテンツエリア内のスクリプトタグを実行
+      const contentElement = document.querySelector('.article-content');
+      if (contentElement) {
+        const scripts = contentElement.querySelectorAll('script');
+        scripts.forEach((oldScript) => {
+          // 既に実行済みのスクリプトをスキップ
+          if (oldScript.hasAttribute('data-executed')) return;
+          
+          const newScript = document.createElement('script');
+          // スクリプトの属性をコピー
+          Array.from(oldScript.attributes).forEach((attr) => {
+            newScript.setAttribute(attr.name, attr.value);
+          });
+          // スクリプトの内容をコピー
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          // 実行済みフラグを設定
+          oldScript.setAttribute('data-executed', 'true');
+          // 新しいスクリプトを実行
+          document.body.appendChild(newScript);
+        });
+      }
     }
   }, [mounted, content]);
 
