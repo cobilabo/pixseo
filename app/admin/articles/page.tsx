@@ -42,7 +42,7 @@ export default function ArticlesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   
   // ソート
-  const [sortColumn, setSortColumn] = useState<SortColumn>('updatedAt');
+  const [sortColumn, setSortColumn] = useState<SortColumn>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
