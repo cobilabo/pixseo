@@ -69,7 +69,7 @@ export default function SearchWidget({
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder={t('search.keywordPlaceholder', lang)}
-                className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
                   isCompact ? 'pl-3 pr-10 py-2 text-sm' : 'pl-4 pr-12 py-3'
                 }`}
               />
