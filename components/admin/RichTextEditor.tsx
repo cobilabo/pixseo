@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme } from '@/types/theme';
+import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
 import ImageGenerator from './ImageGenerator';
 
 interface RichTextEditorProps {
@@ -1157,6 +1157,35 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             <p className="text-sm text-gray-600 mb-4">
               スクリプトタグ、Googleマップ、YouTube埋め込みなどのHTMLコードを直接挿入できます。
             </p>
+
+            {/* ショートコード選択プルダウン */}
+            {theme.htmlShortcodes && theme.htmlShortcodes.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ショートコードから挿入
+                </label>
+                <select
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId) {
+                      const shortcode = theme.htmlShortcodes?.find(s => s.id === selectedId);
+                      if (shortcode) {
+                        setHtmlContent(shortcode.htmlCode);
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  defaultValue=""
+                >
+                  <option value="">-- ショートコードを選択 --</option>
+                  {theme.htmlShortcodes.map((shortcode) => (
+                    <option key={shortcode.id} value={shortcode.id}>
+                      {shortcode.label || '(ラベル未設定)'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">

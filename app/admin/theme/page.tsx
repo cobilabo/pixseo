@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -15,7 +15,7 @@ export default function ThemePage() {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content'>('fv');
+  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode'>('fv');
 
   useEffect(() => {
     if (currentTenant) {
@@ -104,6 +104,7 @@ export default function ThemePage() {
       snsSettings: currentTheme.snsSettings,
       searchSettings: currentTheme.searchSettings,
       sideContentHtmlItems: currentTheme.sideContentHtmlItems,
+      htmlShortcodes: currentTheme.htmlShortcodes,
       primaryColor: currentTheme.primaryColor,
       secondaryColor: currentTheme.secondaryColor,
       accentColor: currentTheme.accentColor,
@@ -150,6 +151,7 @@ export default function ThemePage() {
         snsSettings: newSettings.snsSettings,
         searchSettings: newSettings.searchSettings,
         sideContentHtmlItems: newSettings.sideContentHtmlItems,
+        htmlShortcodes: newSettings.htmlShortcodes,
         primaryColor: newSettings.primaryColor || defaultTheme.primaryColor,
         secondaryColor: newSettings.secondaryColor || defaultTheme.secondaryColor,
         accentColor: newSettings.accentColor || defaultTheme.accentColor,
@@ -493,6 +495,42 @@ export default function ThemePage() {
     setTheme(prev => ({ ...prev, sideContentHtmlItems: items }));
   };
 
+  // HTMLショートコード関連の関数
+  const addHtmlShortcode = () => {
+    const newItem: HtmlShortcodeItem = {
+      id: `shortcode_${Date.now()}`,
+      label: '',
+      htmlCode: '',
+    };
+    setTheme(prev => ({
+      ...prev,
+      htmlShortcodes: [...(prev.htmlShortcodes || []), newItem],
+    }));
+  };
+
+  const updateHtmlShortcode = (index: number, field: keyof HtmlShortcodeItem, value: string) => {
+    const items = [...(theme.htmlShortcodes || [])];
+    if (items[index]) {
+      items[index] = { ...items[index], [field]: value };
+      setTheme(prev => ({ ...prev, htmlShortcodes: items }));
+    }
+  };
+
+  const removeHtmlShortcode = (index: number) => {
+    const items = (theme.htmlShortcodes || []).filter((_, i) => i !== index);
+    setTheme(prev => ({ ...prev, htmlShortcodes: items }));
+  };
+
+  const moveHtmlShortcode = (index: number, direction: 'up' | 'down') => {
+    const items = [...(theme.htmlShortcodes || [])];
+    if (direction === 'up' && index > 0) {
+      [items[index - 1], items[index]] = [items[index], items[index - 1]];
+    } else if (direction === 'down' && index < items.length - 1) {
+      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+    }
+    setTheme(prev => ({ ...prev, htmlShortcodes: items }));
+  };
+
   // 発火条件のオプション
   const triggerOptions: { value: ScriptTriggerType; label: string; needsPath?: boolean }[] = [
     { value: 'all', label: 'サイト全体' },
@@ -687,6 +725,20 @@ export default function ThemePage() {
                 >
                   JavaScript
                 </button>
+                {theme.layoutTheme === 'furatto' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('shortcode')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'shortcode'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    style={activeTab === 'shortcode' ? { backgroundColor: '#f9fafb' } : {}}
+                  >
+                    HTMLショートコード
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1523,6 +1575,135 @@ export default function ThemePage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         スクリプトを追加
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* HTMLショートコードタブ（ふらっとテーマ専用） */}
+              {activeTab === 'shortcode' && (
+                <div className="space-y-6">
+                  {/* 説明 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">HTMLショートコード設定</p>
+                        <ul className="list-disc list-inside space-y-1 text-blue-600">
+                          <li>記事編集画面のHTML挿入モーダルで呼び出せるショートコードを登録できます</li>
+                          <li>よく使うHTMLコードをラベル付きで登録しておくことで、素早く挿入できます</li>
+                          <li>広告コード、埋め込みウィジェットなどの登録に便利です</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ショートコード一覧 */}
+                  {(theme.htmlShortcodes || []).length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                      </svg>
+                      <p className="text-gray-500 mb-4">ショートコードが設定されていません</p>
+                      <button
+                        type="button"
+                        onClick={addHtmlShortcode}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        ショートコードを追加
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {(theme.htmlShortcodes || []).map((item, index) => (
+                        <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                          {/* ヘッダー */}
+                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-sm font-bold">
+                                {index + 1}
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                {item.label || 'ラベル未設定'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => moveHtmlShortcode(index, 'up')}
+                                disabled={index === 0}
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="上に移動"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveHtmlShortcode(index, 'down')}
+                                disabled={index === (theme.htmlShortcodes?.length || 0) - 1}
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="下に移動"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm('このショートコードを削除しますか？')) {
+                                    removeHtmlShortcode(index);
+                                  }
+                                }}
+                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="削除"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* コンテンツ */}
+                          <div className="p-6 space-y-4">
+                            {/* ラベル */}
+                            <FloatingInput
+                              label="ラベル（プルダウン表示名）"
+                              value={item.label}
+                              onChange={(value) => updateHtmlShortcode(index, 'label', value)}
+                            />
+
+                            {/* HTMLコード */}
+                            <FloatingInput
+                              label="HTMLコード"
+                              value={item.htmlCode}
+                              onChange={(value) => updateHtmlShortcode(index, 'htmlCode', value)}
+                              multiline
+                              rows={8}
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* 追加ボタン */}
+                      <button
+                        type="button"
+                        onClick={addHtmlShortcode}
+                        className="w-full py-5 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 font-medium"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        ショートコードを追加
                       </button>
                     </div>
                   )}

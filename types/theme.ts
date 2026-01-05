@@ -130,6 +130,13 @@ export interface SideContentHtmlItem {
   order: number;              // 表示順
 }
 
+// HTMLショートコードの定義（ふらっとテーマ専用）
+export interface HtmlShortcodeItem {
+  id: string;                 // 一意のID
+  label: string;              // 識別用ラベル（プルダウン表示用）
+  htmlCode: string;           // HTMLコード
+}
+
 // スクリプト発火条件の定義
 export type ScriptTriggerType = 
   | 'all'           // サイト全体
@@ -203,6 +210,9 @@ export interface ThemeLayoutSettings {
   // サイドコンテンツHTML（ふらっとテーマ専用）
   sideContentHtmlItems?: SideContentHtmlItem[];
   
+  // HTMLショートコード（ふらっとテーマ専用）
+  htmlShortcodes?: HtmlShortcodeItem[];
+  
   // 基本カラー
   primaryColor?: string;
   secondaryColor?: string;
@@ -263,6 +273,9 @@ export interface Theme {
   
   // サイドコンテンツHTML（ふらっとテーマ専用）
   sideContentHtmlItems?: SideContentHtmlItem[];
+  
+  // HTMLショートコード（ふらっとテーマ専用）
+  htmlShortcodes?: HtmlShortcodeItem[];
   
   // 基本カラー
   primaryColor: string;             // メインカラー
