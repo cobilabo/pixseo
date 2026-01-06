@@ -1807,10 +1807,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
         /* HTMLブロック共通 */
         [contenteditable="true"] .html-block {
+          display: block !important;
           position: relative;
           margin: 1rem 0;
           border-radius: 0.5rem;
           transition: all 0.2s ease;
+          width: 100% !important;
+          box-sizing: border-box !important;
         }
 
         /* HTMLブロック - ソースモード */
@@ -1823,44 +1826,108 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           border-color: #3b82f6;
         }
 
-        [contenteditable="true"] .html-block[data-mode="source"] .html-block-source {
-          margin: 0;
-          padding: 1rem;
-          background-color: transparent;
-          overflow-x: auto;
-          font-size: 0.8125rem;
-          line-height: 1.6;
-        }
-
-        [contenteditable="true"] .html-block[data-mode="source"] .html-block-source code {
-          font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-          color: #1f2937;
-          white-space: pre-wrap;
-          word-break: break-all;
-        }
-
         /* HTMLブロック - プレビューモード */
         [contenteditable="true"] .html-block[data-mode="preview"] {
           border: 2px solid #e5e7eb;
           background-color: #ffffff;
         }
 
-        /* プレビューモードのコンテンツ部分のみpointer-events無効 */
-        [contenteditable="true"] .html-block[data-mode="preview"] .html-block-preview-content {
-          pointer-events: none;
-        }
-        
-        [contenteditable="true"] .html-block[data-mode="preview"] .html-block-preview-content * {
-          pointer-events: none;
-        }
-
-        /* ツールバーは常にクリック可能 */
+        /* HTMLブロックツールバー */
         [contenteditable="true"] .html-block .html-block-toolbar {
+          display: flex !important;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background-color: #f3f4f6;
+          border-bottom: 1px solid #e5e7eb;
+          border-radius: 6px 6px 0 0;
+          width: 100% !important;
+          box-sizing: border-box !important;
           pointer-events: auto !important;
         }
 
         [contenteditable="true"] .html-block .html-block-toolbar * {
           pointer-events: auto !important;
+        }
+
+        /* ドラッグハンドル */
+        [contenteditable="true"] .html-block .html-block-drag-handle {
+          cursor: grab;
+          padding: 4px 6px;
+          color: #9ca3af;
+          font-weight: bold;
+          user-select: none;
+          letter-spacing: -2px;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+
+        [contenteditable="true"] .html-block .html-block-drag-handle:hover {
+          color: #6b7280;
+          background-color: #e5e7eb;
+          border-radius: 4px;
+        }
+
+        /* HTMLブロックボタン */
+        [contenteditable="true"] .html-block .html-block-btn {
+          display: inline-flex !important;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 10px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #374151;
+          background-color: #ffffff;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+
+        [contenteditable="true"] .html-block .html-block-btn:hover {
+          background-color: #e5e7eb;
+          border-color: #9ca3af;
+        }
+
+        [contenteditable="true"] .html-block .html-block-delete-btn:hover {
+          background-color: #fee2e2;
+          border-color: #f87171;
+          color: #dc2626;
+        }
+
+        /* HTMLブロック textarea */
+        [contenteditable="true"] .html-block .html-block-textarea {
+          display: block !important;
+          width: 100% !important;
+          min-height: 120px;
+          padding: 12px;
+          font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+          font-size: 13px;
+          line-height: 1.5;
+          color: #1f2937;
+          background-color: #ffffff;
+          border: none;
+          border-radius: 0 0 6px 6px;
+          resize: vertical;
+          outline: none;
+          box-sizing: border-box !important;
+        }
+
+        [contenteditable="true"] .html-block .html-block-textarea:focus {
+          background-color: #fffbeb;
+        }
+
+        /* HTMLブロック プレビューコンテンツ */
+        [contenteditable="true"] .html-block .html-block-preview-content {
+          padding: 12px;
+          background-color: #ffffff;
+          border-radius: 0 0 6px 6px;
+          pointer-events: none;
+        }
+        
+        [contenteditable="true"] .html-block .html-block-preview-content * {
+          pointer-events: none;
         }
 
         [contenteditable="true"]:empty:before {
