@@ -157,16 +157,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           if (newMode === 'preview') {
             block.innerHTML = `
               <div class="html-block-toolbar" data-toolbar-for="${blockId}">
+                <span class="html-block-label">HTML</span>
                 <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-                <button type="button" class="html-block-btn html-block-mode-btn" data-action="toggle-mode" data-block-id="${blockId}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                  </svg>
-                  HTML
-                </button>
-                <button type="button" class="html-block-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                <div class="html-block-tabs">
+                  <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                    HTML
+                  </button>
+                  <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    プレビュー
+                  </button>
+                </div>
+                <div class="html-block-spacer"></div>
+                <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
                   </svg>
                 </button>
               </div>
@@ -199,17 +212,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             
             block.innerHTML = `
               <div class="html-block-toolbar" data-toolbar-for="${blockId}">
+                <span class="html-block-label">HTML</span>
                 <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-                <button type="button" class="html-block-btn html-block-mode-btn" data-action="toggle-mode" data-block-id="${blockId}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>
-                  プレビュー
-                </button>
-                <button type="button" class="html-block-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                <div class="html-block-tabs">
+                  <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                    HTML
+                  </button>
+                  <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    プレビュー
+                  </button>
+                </div>
+                <div class="html-block-spacer"></div>
+                <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
                   </svg>
                 </button>
               </div>
@@ -885,16 +910,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       ) || formattedHtml;
       return `
         <div class="html-block-toolbar" data-toolbar-for="${blockId}">
+          <span class="html-block-label">HTML</span>
           <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-          <button type="button" class="html-block-btn html-block-mode-btn" data-action="toggle-mode" data-block-id="${blockId}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-            </svg>
-            HTML
-          </button>
-          <button type="button" class="html-block-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          <div class="html-block-tabs">
+            <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              HTML
+            </button>
+            <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              プレビュー
+            </button>
+          </div>
+          <div class="html-block-spacer"></div>
+          <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="2"/>
+              <circle cx="12" cy="12" r="2"/>
+              <circle cx="12" cy="19" r="2"/>
             </svg>
           </button>
         </div>
@@ -904,17 +942,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       // ソースモード：ツールバー + textarea
       return `
         <div class="html-block-toolbar" data-toolbar-for="${blockId}">
+          <span class="html-block-label">HTML</span>
           <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-          <button type="button" class="html-block-btn html-block-mode-btn" data-action="toggle-mode" data-block-id="${blockId}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-            プレビュー
-          </button>
-          <button type="button" class="html-block-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          <div class="html-block-tabs">
+            <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              HTML
+            </button>
+            <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              プレビュー
+            </button>
+          </div>
+          <div class="html-block-spacer"></div>
+          <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="2"/>
+              <circle cx="12" cy="12" r="2"/>
+              <circle cx="12" cy="19" r="2"/>
             </svg>
           </button>
         </div>
@@ -1810,39 +1860,26 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           display: block !important;
           position: relative;
           margin: 1rem 0;
-          border-radius: 0.5rem;
-          transition: all 0.2s ease;
+          border: 1px solid #e5e7eb;
+          border-radius: 4px;
+          background-color: #ffffff;
+          overflow: hidden;
           width: 100% !important;
           box-sizing: border-box !important;
-        }
-
-        /* HTMLブロック - ソースモード */
-        [contenteditable="true"] .html-block[data-mode="source"] {
-          border: 2px dashed #d1d5db;
-          background-color: #f9fafb;
-        }
-
-        [contenteditable="true"] .html-block[data-mode="source"]:hover {
-          border-color: #3b82f6;
-        }
-
-        /* HTMLブロック - プレビューモード */
-        [contenteditable="true"] .html-block[data-mode="preview"] {
-          border: 2px solid #e5e7eb;
-          background-color: #ffffff;
         }
 
         /* HTMLブロックツールバー */
         [contenteditable="true"] .html-block .html-block-toolbar {
           display: flex !important;
           align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background-color: #f3f4f6;
-          border-bottom: 1px solid #e5e7eb;
-          border-radius: 6px 6px 0 0;
+          gap: 0;
+          padding: 0;
+          background-color: #1f2937;
+          border-bottom: none;
+          border-radius: 3px 3px 0 0;
           width: 100% !important;
           box-sizing: border-box !important;
+          height: 36px;
           pointer-events: auto !important;
         }
 
@@ -1850,79 +1887,152 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           pointer-events: auto !important;
         }
 
+        /* HTMLラベル */
+        [contenteditable="true"] .html-block .html-block-label {
+          display: flex !important;
+          align-items: center;
+          padding: 0 12px;
+          height: 100%;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 600;
+          background-color: #374151;
+          border-right: 1px solid #4b5563;
+          flex-shrink: 0;
+        }
+
         /* ドラッグハンドル */
         [contenteditable="true"] .html-block .html-block-drag-handle {
+          display: flex !important;
+          align-items: center;
+          justify-content: center;
           cursor: grab;
-          padding: 4px 6px;
+          padding: 0 8px;
+          height: 100%;
           color: #9ca3af;
           font-weight: bold;
           user-select: none;
-          letter-spacing: -2px;
-          font-size: 16px;
+          letter-spacing: 1px;
+          font-size: 14px;
+          border-right: 1px solid #4b5563;
           flex-shrink: 0;
         }
 
         [contenteditable="true"] .html-block .html-block-drag-handle:hover {
-          color: #6b7280;
-          background-color: #e5e7eb;
-          border-radius: 4px;
+          color: #ffffff;
+          background-color: #374151;
         }
 
-        /* HTMLブロックボタン */
+        /* タブグループ */
+        [contenteditable="true"] .html-block .html-block-tabs {
+          display: flex !important;
+          align-items: center;
+          height: 100%;
+          flex-shrink: 0;
+        }
+
+        /* HTMLブロックボタン（タブスタイル） */
         [contenteditable="true"] .html-block .html-block-btn {
           display: inline-flex !important;
           align-items: center;
-          gap: 4px;
-          padding: 6px 10px;
+          justify-content: center;
+          gap: 6px;
+          padding: 0 16px;
+          height: 100%;
           font-size: 12px;
           font-weight: 500;
-          color: #374151;
-          background-color: #ffffff;
-          border: 1px solid #d1d5db;
-          border-radius: 4px;
+          color: #9ca3af;
+          background-color: transparent;
+          border: none;
+          border-right: 1px solid #4b5563;
+          border-radius: 0;
           cursor: pointer;
           transition: all 0.15s ease;
           flex-shrink: 0;
         }
 
         [contenteditable="true"] .html-block .html-block-btn:hover {
-          background-color: #e5e7eb;
-          border-color: #9ca3af;
+          color: #ffffff;
+          background-color: #374151;
+        }
+
+        [contenteditable="true"] .html-block .html-block-btn.active {
+          color: #ffffff;
+          background-color: #4b5563;
+        }
+
+        [contenteditable="true"] .html-block .html-block-btn svg {
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+        }
+
+        /* スペーサー */
+        [contenteditable="true"] .html-block .html-block-spacer {
+          flex: 1;
+        }
+
+        /* メニューボタン */
+        [contenteditable="true"] .html-block .html-block-menu-btn {
+          display: flex !important;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 100%;
+          color: #9ca3af;
+          background-color: transparent;
+          border: none;
+          border-left: 1px solid #4b5563;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+
+        [contenteditable="true"] .html-block .html-block-menu-btn:hover {
+          color: #ffffff;
+          background-color: #374151;
+        }
+
+        [contenteditable="true"] .html-block .html-block-menu-btn svg {
+          width: 16px;
+          height: 16px;
         }
 
         [contenteditable="true"] .html-block .html-block-delete-btn:hover {
-          background-color: #fee2e2;
-          border-color: #f87171;
-          color: #dc2626;
+          background-color: #dc2626 !important;
+          color: #ffffff !important;
         }
 
         /* HTMLブロック textarea */
         [contenteditable="true"] .html-block .html-block-textarea {
           display: block !important;
           width: 100% !important;
-          min-height: 120px;
+          min-height: 80px;
           padding: 12px;
           font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
           font-size: 13px;
-          line-height: 1.5;
+          line-height: 1.6;
           color: #1f2937;
           background-color: #ffffff;
           border: none;
-          border-radius: 0 0 6px 6px;
+          border-radius: 0;
           resize: vertical;
           outline: none;
           box-sizing: border-box !important;
         }
 
         [contenteditable="true"] .html-block .html-block-textarea:focus {
-          background-color: #fffbeb;
+          background-color: #fefce8;
         }
 
         /* HTMLブロック プレビューコンテンツ */
         [contenteditable="true"] .html-block .html-block-preview-content {
+          display: block !important;
           padding: 12px;
           background-color: #ffffff;
-          border-radius: 0 0 6px 6px;
+          border-radius: 0;
+          width: 100% !important;
+          box-sizing: border-box !important;
           pointer-events: none;
         }
         
