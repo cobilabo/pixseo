@@ -115,3 +115,141 @@ body {
   @apply leading-relaxed;
 }
 
+/* HTMLブロック */
+.html-block {
+  position: relative;
+  margin: 1rem 0;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  overflow: visible;
+}
+
+.html-block[data-mode="source"] {
+  border-style: dashed;
+}
+
+.html-block[data-mode="preview"] {
+  border-style: solid;
+  border-color: #d1d5db;
+  background-color: #ffffff;
+}
+
+.html-block.dragging {
+  opacity: 0.5;
+  border-color: #3b82f6 !important;
+}
+
+.html-block.drop-above {
+  border-top: 3px solid #3b82f6 !important;
+}
+
+.html-block.drop-below {
+  border-bottom: 3px solid #3b82f6 !important;
+}
+
+/* HTMLブロックツールバー */
+.html-block-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 6px 6px 0 0;
+}
+
+.html-block[data-mode="preview"] .html-block-toolbar {
+  background-color: #f9fafb;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ドラッグハンドル */
+.html-block-drag-handle {
+  cursor: grab;
+  padding: 4px 6px;
+  color: #9ca3af;
+  font-weight: bold;
+  user-select: none;
+  letter-spacing: -2px;
+  font-size: 16px;
+}
+
+.html-block-drag-handle:hover {
+  color: #6b7280;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+.html-block-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* HTMLブロックボタン */
+.html-block-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  pointer-events: auto !important;
+}
+
+.html-block-btn:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.html-block-btn svg {
+  flex-shrink: 0;
+}
+
+.html-block-delete-btn:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+  color: #dc2626;
+}
+
+/* HTMLブロック textarea */
+.html-block-textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 0 0 6px 6px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.html-block-textarea:focus {
+  background-color: #fffbeb;
+}
+
+/* HTMLブロック プレビューコンテンツ */
+.html-block-preview-content {
+  padding: 12px;
+  background-color: #ffffff;
+  border-radius: 0 0 6px 6px;
+}
+
+/* ツールバー内の要素は常にクリック可能 */
+.html-block-toolbar,
+.html-block-toolbar * {
+  pointer-events: auto !important;
+}
+
