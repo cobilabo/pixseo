@@ -251,7 +251,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         e.preventDefault();
         e.stopPropagation();
         const htmlBlock = dragHandle.closest('.html-block') as HTMLElement;
-        if (htmlBlock) {
+      if (htmlBlock) {
           draggedElement = htmlBlock;
           isDragging = true;
           htmlBlock.classList.add('dragging');
@@ -271,10 +271,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         if (block === draggedElement) return;
         
         const rect = block.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        
+          const midY = rect.top + rect.height / 2;
+          
         block.classList.remove('drop-above', 'drop-below');
-        
+          
         if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
           if (e.clientY < midY) {
             block.classList.add('drop-above');
@@ -295,30 +295,31 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       
       // ドロップ先を探す
       const htmlBlocks = editor.querySelectorAll('.html-block');
-      let targetBlock: HTMLElement | null = null;
+      let targetBlock: Element | null = null;
       let insertBefore = true;
       
       htmlBlocks.forEach(block => {
         if (block === draggedElement) return;
         
         if (block.classList.contains('drop-above')) {
-          targetBlock = block as HTMLElement;
+          targetBlock = block;
           insertBefore = true;
         } else if (block.classList.contains('drop-below')) {
-          targetBlock = block as HTMLElement;
+          targetBlock = block;
           insertBefore = false;
         }
       });
       
       // 移動実行
       if (targetBlock && draggedElement) {
+        const target = targetBlock as HTMLElement;
         if (insertBefore) {
-          targetBlock.parentNode?.insertBefore(draggedElement, targetBlock);
-        } else {
-          targetBlock.parentNode?.insertBefore(draggedElement, targetBlock.nextSibling);
-        }
-        
-        // 変更を通知
+          target.parentNode?.insertBefore(draggedElement, target);
+            } else {
+          target.parentNode?.insertBefore(draggedElement, target.nextSibling);
+            }
+            
+            // 変更を通知
         if (editorRef.current) {
           const html = editorRef.current.innerHTML;
           onChange(html);
@@ -1903,7 +1904,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           box-sizing: border-box !important;
           pointer-events: none;
         }
-        
+
         [contenteditable="true"] .html-block .html-block-preview-content * {
           pointer-events: none;
         }
