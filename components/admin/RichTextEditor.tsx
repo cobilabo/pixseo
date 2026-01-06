@@ -966,6 +966,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     </button>
   );
 
+  // ツールバーの左端位置を計算（サイドバー幅256px + マージンを考慮）
+  const getToolbarLeftPosition = () => {
+    const sidebarWidth = typeof window !== 'undefined' && window.innerWidth >= 1024 ? 256 : 0;
+    const minLeft = sidebarWidth + 20; // サイドバー + マージン
+    const toolbarWidth = 600; // ツールバーの概算幅
+    
+    // ツールバーの中心位置から左端位置を計算
+    let leftEdge = toolbarPosition.left - toolbarWidth / 2;
+    
+    // 左端がサイドバーより左にならないように調整
+    if (leftEdge < minLeft) {
+      leftEdge = minLeft;
+    }
+    
+    // 右端が画面外に出ないように調整
+    const maxLeft = (typeof window !== 'undefined' ? window.innerWidth : 1200) - toolbarWidth - 20;
+    if (leftEdge > maxLeft) {
+      leftEdge = Math.max(minLeft, maxLeft);
+    }
+    
+    return leftEdge;
+  };
+
   return (
     <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
       {/* フローティングツールバー（選択時/カーソル移動時） */}
@@ -974,8 +997,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           className="fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 animate-fadeIn"
           style={{ 
             top: `${toolbarPosition.top}px`, 
-            left: `${Math.max(toolbarPosition.left, 300)}px`,
-            transform: 'translateX(-50%)',
+            left: `${getToolbarLeftPosition()}px`,
             whiteSpace: 'nowrap',
             flexWrap: 'nowrap'
           }}
