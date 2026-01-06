@@ -222,16 +222,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           const textarea = target as HTMLTextAreaElement;
           const block = editor.querySelector(`[data-html-id="${blockId}"]`) as HTMLElement;
           if (block) {
-            // HTMLアンエスケープしてから保存
+            // HTMLアンエスケープしてから保存（改行は保持）
             const cleanedHtml = textarea.value
               .replace(/&lt;/g, '<')
               .replace(/&gt;/g, '>')
               .replace(/&quot;/g, '"')
               .replace(/&#039;/g, "'")
-              .replace(/&amp;/g, '&')
-              .replace(/\n\s*/g, ' ')
-              .replace(/>\s+</g, '><')
-              .trim();
+              .replace(/&amp;/g, '&');
             block.setAttribute('data-html-content', encodeURIComponent(cleanedHtml));
           }
         }
