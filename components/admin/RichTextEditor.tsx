@@ -238,125 +238,100 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       }
     };
 
-    // mousedownでドラッグ準備
+    // ドラッグ用の変数（クロージャ内で保持）
+    let draggedElement: HTMLElement | null = null;
+    let isDragging = false;
+
+    // mousedownでドラッグ開始
     const handleMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const dragHandle = target.closest('.html-block-drag-handle') as HTMLElement;
       
       if (dragHandle) {
+        e.preventDefault();
+        e.stopPropagation();
         const htmlBlock = dragHandle.closest('.html-block') as HTMLElement;
         if (htmlBlock) {
-          // HTMLブロックをドラッグ可能にする
-          htmlBlock.setAttribute('draggable', 'true');
+          draggedElement = htmlBlock;
+          isDragging = true;
+          htmlBlock.classList.add('dragging');
+          draggingBlockIdRef.current = htmlBlock.getAttribute('data-html-id');
+          setDraggingBlockId(htmlBlock.getAttribute('data-html-id'));
         }
       }
     };
 
-    // mouseupでドラッグ解除
-    const handleMouseUp = () => {
-      editor.querySelectorAll('.html-block').forEach(block => {
-        block.removeAttribute('draggable');
+    // mousemoveでドラッグ中の処理
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !draggedElement) return;
+      
+      // 他のHTMLブロックを探してドロップ位置を表示
+      const htmlBlocks = editor.querySelectorAll('.html-block');
+      htmlBlocks.forEach(block => {
+        if (block === draggedElement) return;
+        
+        const rect = block.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        
+        block.classList.remove('drop-above', 'drop-below');
+        
+        if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          if (e.clientY < midY) {
+            block.classList.add('drop-above');
+          } else {
+            block.classList.add('drop-below');
+          }
+        }
       });
     };
 
-    // ドラッグ開始
-    const handleDragStart = (e: DragEvent) => {
-      const target = e.target as HTMLElement;
-      const htmlBlock = target.closest('.html-block') as HTMLElement;
-      
-      if (htmlBlock && htmlBlock.getAttribute('draggable') === 'true') {
-        const blockId = htmlBlock.getAttribute('data-html-id');
-        if (blockId) {
-          e.stopPropagation();
-          draggingBlockIdRef.current = blockId;
-          setDraggingBlockId(blockId);
-          if (e.dataTransfer) {
-            e.dataTransfer.setData('text/plain', blockId);
-            e.dataTransfer.effectAllowed = 'move';
-          }
-          htmlBlock.classList.add('dragging');
-        }
-      } else {
-        e.preventDefault();
+    // mouseupでドロップ
+    const handleMouseUp = () => {
+      if (!isDragging || !draggedElement) {
+        isDragging = false;
+        draggedElement = null;
+        return;
       }
-    };
-
-    // ドラッグオーバー
-    const handleDragOver = (e: DragEvent) => {
-      const currentDraggingId = draggingBlockIdRef.current;
-      if (!currentDraggingId) return;
       
-      e.preventDefault();
-      const target = e.target as HTMLElement;
-      const htmlBlock = target.closest('.html-block') as HTMLElement;
+      // ドロップ先を探す
+      const htmlBlocks = editor.querySelectorAll('.html-block');
+      let targetBlock: HTMLElement | null = null;
+      let insertBefore = true;
       
-      if (htmlBlock) {
-        const blockId = htmlBlock.getAttribute('data-html-id');
-        if (blockId && blockId !== currentDraggingId) {
-          const rect = htmlBlock.getBoundingClientRect();
-          const midY = rect.top + rect.height / 2;
-          
-          // ドロップ位置のインジケーターを表示
-          editor.querySelectorAll('.html-block').forEach(b => {
-            b.classList.remove('drop-above', 'drop-below');
-          });
-          
-          if (e.clientY < midY) {
-            htmlBlock.classList.add('drop-above');
-          } else {
-            htmlBlock.classList.add('drop-below');
-          }
+      htmlBlocks.forEach(block => {
+        if (block === draggedElement) return;
+        
+        if (block.classList.contains('drop-above')) {
+          targetBlock = block as HTMLElement;
+          insertBefore = true;
+        } else if (block.classList.contains('drop-below')) {
+          targetBlock = block as HTMLElement;
+          insertBefore = false;
         }
-      }
-    };
-
-    // ドロップ
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      const currentDraggingId = draggingBlockIdRef.current;
-      if (!currentDraggingId) return;
+      });
       
-      const target = e.target as HTMLElement;
-      const targetBlock = target.closest('.html-block') as HTMLElement;
-      
-      if (targetBlock) {
-        const targetBlockId = targetBlock.getAttribute('data-html-id');
-        if (targetBlockId && targetBlockId !== currentDraggingId) {
-          const draggedBlock = editor.querySelector(`[data-html-id="${currentDraggingId}"]`);
-          
-          if (draggedBlock) {
-            const rect = targetBlock.getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
-            
-            if (e.clientY < midY) {
-              targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock);
-            } else {
-              targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock.nextSibling);
-            }
-            
-            // 変更を通知
-            if (editorRef.current) {
-              const html = editorRef.current.innerHTML;
-              onChange(html);
-            }
-          }
+      // 移動実行
+      if (targetBlock && draggedElement) {
+        if (insertBefore) {
+          targetBlock.parentNode?.insertBefore(draggedElement, targetBlock);
+        } else {
+          targetBlock.parentNode?.insertBefore(draggedElement, targetBlock.nextSibling);
+        }
+        
+        // 変更を通知
+        if (editorRef.current) {
+          const html = editorRef.current.innerHTML;
+          onChange(html);
         }
       }
       
       // クリーンアップ
-      editor.querySelectorAll('.html-block').forEach(b => {
-        b.classList.remove('dragging', 'drop-above', 'drop-below');
+      htmlBlocks.forEach(block => {
+        block.classList.remove('dragging', 'drop-above', 'drop-below');
       });
-      draggingBlockIdRef.current = null;
-      setDraggingBlockId(null);
-    };
-
-    // ドラッグ終了
-    const handleDragEnd = () => {
-      editor.querySelectorAll('.html-block').forEach(b => {
-        b.classList.remove('dragging', 'drop-above', 'drop-below');
-        b.removeAttribute('draggable');
-      });
+      
+      isDragging = false;
+      draggedElement = null;
       draggingBlockIdRef.current = null;
       setDraggingBlockId(null);
     };
@@ -364,21 +339,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     editor.addEventListener('click', handleClick);
     editor.addEventListener('input', handleTextareaInput);
     editor.addEventListener('mousedown', handleMouseDown);
-    editor.addEventListener('mouseup', handleMouseUp);
-    editor.addEventListener('dragstart', handleDragStart);
-    editor.addEventListener('dragover', handleDragOver);
-    editor.addEventListener('drop', handleDrop);
-    editor.addEventListener('dragend', handleDragEnd);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       editor.removeEventListener('click', handleClick);
       editor.removeEventListener('input', handleTextareaInput);
       editor.removeEventListener('mousedown', handleMouseDown);
-      editor.removeEventListener('mouseup', handleMouseUp);
-      editor.removeEventListener('dragstart', handleDragStart);
-      editor.removeEventListener('dragover', handleDragOver);
-      editor.removeEventListener('drop', handleDrop);
-      editor.removeEventListener('dragend', handleDragEnd);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [onChange]);
 
@@ -1780,8 +1749,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           gap: 0;
           padding: 0;
           margin: 0;
-          background-color: #1f2937;
-          border: none;
+          background-color: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-bottom: none;
           border-radius: 4px 4px 0 0;
           width: 100% !important;
           box-sizing: border-box !important;
@@ -1799,20 +1769,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           align-items: center;
           justify-content: center;
           cursor: grab;
-          padding: 0 8px;
+          padding: 0 10px;
           height: 100%;
           color: #9ca3af;
           font-weight: bold;
           user-select: none;
           letter-spacing: 1px;
           font-size: 14px;
-          border-right: 1px solid #4b5563;
+          border-right: 1px solid #e5e7eb;
           flex-shrink: 0;
         }
 
         [contenteditable="true"] .html-block .html-block-drag-handle:hover {
-          color: #ffffff;
-          background-color: #374151;
+          color: #374151;
+          background-color: #f3f4f6;
         }
 
         /* タブグループ */
@@ -1829,14 +1799,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           align-items: center;
           justify-content: center;
           gap: 6px;
-          padding: 0 16px;
+          padding: 0 14px;
           height: 100%;
           font-size: 12px;
           font-weight: 500;
-          color: #9ca3af;
+          color: #6b7280;
           background-color: transparent;
           border: none;
-          border-right: 1px solid #4b5563;
+          border-right: 1px solid #e5e7eb;
           border-radius: 0;
           cursor: pointer;
           transition: all 0.15s ease;
@@ -1844,13 +1814,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         [contenteditable="true"] .html-block .html-block-btn:hover {
-          color: #ffffff;
-          background-color: #374151;
+          color: #111827;
+          background-color: #f3f4f6;
         }
 
         [contenteditable="true"] .html-block .html-block-btn.active {
-          color: #ffffff;
-          background-color: #4b5563;
+          color: #111827;
+          background-color: #f3f4f6;
+          font-weight: 600;
         }
 
         [contenteditable="true"] .html-block .html-block-btn svg {
@@ -1874,15 +1845,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           color: #9ca3af;
           background-color: transparent;
           border: none;
-          border-left: 1px solid #4b5563;
+          border-left: 1px solid #e5e7eb;
           cursor: pointer;
           transition: all 0.15s ease;
           flex-shrink: 0;
         }
 
         [contenteditable="true"] .html-block .html-block-menu-btn:hover {
-          color: #ffffff;
-          background-color: #374151;
+          color: #374151;
+          background-color: #f3f4f6;
         }
 
         [contenteditable="true"] .html-block .html-block-menu-btn svg {
@@ -1891,8 +1862,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         [contenteditable="true"] .html-block .html-block-delete-btn:hover {
-          background-color: #dc2626 !important;
-          color: #ffffff !important;
+          background-color: #fee2e2 !important;
+          color: #dc2626 !important;
         }
 
         /* HTMLブロック textarea */
