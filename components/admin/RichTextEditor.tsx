@@ -155,36 +155,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           block.setAttribute('data-mode', newMode);
           
           if (newMode === 'preview') {
-            block.innerHTML = `
-              <div class="html-block-toolbar" data-toolbar-for="${blockId}">
-                <span class="html-block-label">HTML</span>
-                <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-                <div class="html-block-tabs">
-                  <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                    </svg>
-                    HTML
-                  </button>
-                  <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    プレビュー
-                  </button>
-                </div>
-                <div class="html-block-spacer"></div>
-                <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="12" cy="19" r="2"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="html-block-preview-content">${htmlContent}</div>
-            `;
+            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
           } else {
             // フォーマット済みHTML
             let formatted = htmlContent;
@@ -210,36 +181,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&#039;');
             
-            block.innerHTML = `
-              <div class="html-block-toolbar" data-toolbar-for="${blockId}">
-                <span class="html-block-label">HTML</span>
-                <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-                <div class="html-block-tabs">
-                  <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                    </svg>
-                    HTML
-                  </button>
-                  <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    プレビュー
-                  </button>
-                </div>
-                <div class="html-block-spacer"></div>
-                <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="12" cy="19" r="2"/>
-                  </svg>
-                </button>
-              </div>
-              <textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapedHtml}</textarea>
-            `;
+            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapedHtml}</textarea>`;
           }
           
           setHtmlBlockModes(prev => ({ ...prev, [blockId]: newMode }));
@@ -299,23 +241,23 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     // ドラッグ開始
     const handleDragStart = (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      // ドラッグハンドルからの開始のみ許可
-      if (!target.classList.contains('html-block-drag-handle')) {
-        const htmlBlock = target.closest('.html-block') as HTMLElement;
-        if (htmlBlock && !target.closest('.html-block-drag-handle')) {
-          e.preventDefault();
-          return;
-        }
+      
+      // ドラッグハンドルからの開始かチェック
+      const dragHandle = target.closest('.html-block-drag-handle');
+      if (!dragHandle) {
+        // ドラッグハンドル以外からのドラッグは無効
+        return;
       }
       
       const htmlBlock = target.closest('.html-block') as HTMLElement;
       if (htmlBlock) {
         const blockId = htmlBlock.getAttribute('data-html-id');
         if (blockId) {
+          e.stopPropagation();
           draggingBlockIdRef.current = blockId;
           setDraggingBlockId(blockId);
-          e.dataTransfer?.setData('text/plain', blockId);
           if (e.dataTransfer) {
+            e.dataTransfer.setData('text/plain', blockId);
             e.dataTransfer.effectAllowed = 'move';
           }
           htmlBlock.classList.add('dragging');
@@ -908,68 +850,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const htmlContent = decodeURIComponent(
         editorRef.current?.querySelector(`[data-html-id="${blockId}"]`)?.getAttribute('data-html-content') || ''
       ) || formattedHtml;
-      return `
-        <div class="html-block-toolbar" data-toolbar-for="${blockId}">
-          <span class="html-block-label">HTML</span>
-          <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-          <div class="html-block-tabs">
-            <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-              </svg>
-              HTML
-            </button>
-            <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              プレビュー
-            </button>
-          </div>
-          <div class="html-block-spacer"></div>
-          <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="12" cy="19" r="2"/>
-            </svg>
-          </button>
-        </div>
-        <div class="html-block-preview-content">${htmlContent}</div>
-      `;
+      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
     } else {
       // ソースモード：ツールバー + textarea
-      return `
-        <div class="html-block-toolbar" data-toolbar-for="${blockId}">
-          <span class="html-block-label">HTML</span>
-          <span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span>
-          <div class="html-block-tabs">
-            <button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-              </svg>
-              HTML
-            </button>
-            <button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              プレビュー
-            </button>
-          </div>
-          <div class="html-block-spacer"></div>
-          <button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="12" cy="19" r="2"/>
-            </svg>
-          </button>
-        </div>
-        <textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapeHtml(formattedHtml)}</textarea>
-      `;
+      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapeHtml(formattedHtml)}</textarea>`;
     }
   };
 
@@ -2034,10 +1918,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           display: block !important;
           margin: 0;
           padding: 12px;
-          background-color: #ffffff;
-          border: 1px solid #d1d5db;
-          border-top: none;
-          border-radius: 0 0 4px 4px;
+          background-color: transparent;
+          border: none;
+          border-radius: 0;
           width: 100% !important;
           box-sizing: border-box !important;
           pointer-events: none;
