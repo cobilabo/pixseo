@@ -415,15 +415,17 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               top = Math.max(20, windowHeight - toolbarHeight - 20);
             }
             
-            // 画面左側に出ないように調整
+            // 画面左側に出ないように調整（サイドバーの幅256px + マージンを考慮）
             const windowWidth = window.innerWidth;
+            const sidebarWidth = window.innerWidth >= 1024 ? 256 : 0; // lg:breakpoint以上でサイドバー表示
             const toolbarLeft = left - toolbarWidth / 2;
-            const margin = 20; // マージンを大きくする
-            if (toolbarLeft < margin) {
-              left = toolbarWidth / 2 + margin;
+            const minLeft = sidebarWidth + 20; // サイドバー + マージン
+            if (toolbarLeft < minLeft) {
+              left = minLeft + toolbarWidth / 2;
             }
             
             // 画面右側に出ないように調整
+            const margin = 20;
             const toolbarRight = left + toolbarWidth / 2;
             if (toolbarRight > windowWidth - margin) {
               left = windowWidth - toolbarWidth / 2 - margin;
@@ -969,11 +971,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* フローティングツールバー（選択時/カーソル移動時） */}
       {showToolbar && (
         <div
-          className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
+          className="fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 animate-fadeIn"
           style={{ 
             top: `${toolbarPosition.top}px`, 
-            left: `${toolbarPosition.left}px`,
-            maxWidth: '90vw'
+            left: `${Math.max(toolbarPosition.left, 300)}px`,
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+            flexWrap: 'nowrap'
           }}
         >
           <ToolbarButton onClick={() => execCommand('bold')} title="太字 (Ctrl+B)">
