@@ -31,8 +31,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [savedRange, setSavedRange] = useState<Range | null>(null);
   const [showFontSizeModal, setShowFontSizeModal] = useState(false);
   const [fontSize, setFontSize] = useState('16');
-  const [viewMode, setViewMode] = useState<'wysiwyg' | 'source'>('wysiwyg');
-  const [sourceCode, setSourceCode] = useState('');
+  // HTMLブロック編集用
+  const [showHtmlBlockEditModal, setShowHtmlBlockEditModal] = useState(false);
+  const [editingHtmlBlockId, setEditingHtmlBlockId] = useState<string | null>(null);
+  const [editingHtmlBlockContent, setEditingHtmlBlockContent] = useState('');
 
   // デザイン設定を取得
   useEffect(() => {
@@ -66,45 +68,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const initialValue = value || '';
       if (initialValue) {
         editorRef.current.innerHTML = initialValue;
-        // ソースコードも初期化（フォーマット済み）
-        const formattedValue = initialValue
-          .replace(/></g, '>\n<')
-          .replace(/\n\s*\n+/g, '\n');
-        setSourceCode(formattedValue);
-      } else {
-        setSourceCode('');
       }
     }
   }, []);
 
-  // valueが外部から変更されたときにソースコードも更新
+  // valueが外部から変更されたときにエディタを更新
   useEffect(() => {
-    if (viewMode === 'source') {
-      // ソースコードモードでは、valueが変更されたときにフォーマットして表示
-      // フォーマット前のvalueと比較するため、sourceCodeを逆フォーマットして比較
-      const currentValue = (sourceCode || '')
-        .replace(/\n\s*/g, ' ')
-        .replace(/>\s+</g, '><')
-        .trim();
-      const newValue = (value || '').trim();
-      if (newValue !== currentValue && value !== undefined && value !== null) {
-        const formattedValue = newValue
-          .replace(/></g, '>\n<')
-          .replace(/\n\s*\n+/g, '\n');
-        setSourceCode(formattedValue);
-      } else if (!newValue && sourceCode) {
-        // valueが空になった場合は、sourceCodeも空にする
-        setSourceCode('');
-      }
-    }
-    if (viewMode === 'wysiwyg' && editorRef.current) {
+    if (editorRef.current) {
       const currentHtml = editorRef.current.innerHTML;
       if (value !== currentHtml && value) {
         editorRef.current.innerHTML = value;
         editorRef.current.setAttribute('data-initialized', 'true');
       }
     }
-  }, [value, viewMode]);
+  }, [value]);
 
   // テキスト選択時 or カーソル移動時にツールバーを表示
   useEffect(() => {
@@ -205,61 +182,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   }, []);
 
   const handleInput = () => {
-    if (editorRef.current && viewMode === 'wysiwyg') {
+    if (editorRef.current) {
       const html = editorRef.current.innerHTML;
       onChange(html);
     }
   };
 
-  // ソースコードモードからWYSIWYGモードに切り替え
-  const switchToWysiwyg = () => {
-    if (editorRef.current) {
-      // ソースコードの内容をエディターに設定
-      // 改行を削除して元のHTML形式に戻す
-      const htmlToSet = (sourceCode || '')
-        .replace(/\n\s*/g, ' ') // 改行とインデントをスペースに変換
-        .replace(/>\s+</g, '><') // タグ間の余分なスペースを削除
-        .trim();
-      editorRef.current.innerHTML = htmlToSet;
-      onChange(htmlToSet);
-      // エディターを再初期化
-      editorRef.current.setAttribute('data-initialized', 'true');
-      // フォーカスを設定して内容が表示されるようにする
-      editorRef.current.focus();
-    }
-    setViewMode('wysiwyg');
-  };
-
-  // WYSIWYGモードからソースコードモードに切り替え
-  const switchToSource = () => {
-    if (editorRef.current) {
-      const currentHtml = editorRef.current.innerHTML || '';
-      // ソースコードモードに切り替える際に、改行を追加して見やすくする（表示用のみ）
-      // ただし、元のHTMLは保持するため、onChangeは呼ばない
-      if (currentHtml.trim()) {
-        const formattedHtml = currentHtml
-          .replace(/></g, '>\n<')
-          .replace(/\n\s*\n+/g, '\n');
-        setSourceCode(formattedHtml);
-      } else {
-        setSourceCode('');
-      }
-      // onChangeは呼ばない（元のHTMLを保持）
-    } else {
-      // エディターが存在しない場合は、現在のvalueを使用
-      if (value && value.trim()) {
-        const formattedValue = value
-          .replace(/></g, '>\n<')
-          .replace(/\n\s*\n+/g, '\n');
-        setSourceCode(formattedValue);
-      } else {
-        setSourceCode('');
-      }
-    }
-    setViewMode('source');
-  };
-
-  // HTMLフォーマッター（簡易版）
+  // HTMLフォーマッター（ブロック編集用）
   const formatHtml = (html: string): string => {
     if (!html || typeof html !== 'string') return '';
     
@@ -270,39 +199,32 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     // タグの前後に改行を追加
     formatted = formatted
       .replace(/></g, '>\n<')
-      .replace(/\n\s*\n+/g, '\n'); // 連続する改行を1つに
+      .replace(/\n\s*\n+/g, '\n');
     
     const lines = formatted.split('\n');
     const formattedLines: string[] = [];
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      // 空行はスキップしない（表示用の改行として保持）
       if (!line && i > 0 && i < lines.length - 1) {
         formattedLines.push('');
         continue;
       }
       if (!line) continue;
       
-      // 閉じタグの場合はインデントを減らす
       if (line.startsWith('</')) {
         indent = Math.max(0, indent - indentSize);
       }
       
-      // インデントを追加
       formattedLines.push(' '.repeat(indent) + line);
       
-      // 開きタグで閉じタグでない場合はインデントを増やす
       if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>') && !line.includes('</')) {
-        // スクリプトタグやスタイルタグ内はインデントしない
         if (!line.match(/<(script|style|textarea|pre)/i)) {
           indent += indentSize;
         }
       }
       
-      // 閉じタグの場合は次の行のインデントを調整
       if (line.startsWith('</')) {
-        // 次の行が閉じタグでない場合のみインデントを調整
         if (i < lines.length - 1 && !lines[i + 1].trim().startsWith('</')) {
           indent = Math.max(0, indent - indentSize);
         }
@@ -310,29 +232,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
     
     return formattedLines.join('\n');
-  };
-
-  // ソースコード変更時の処理
-  const handleSourceCodeChange = (newSourceCode: string) => {
-    setSourceCode(newSourceCode);
-    // 改行を削除して元のHTML形式に戻してから保存
-    const cleanedHtml = newSourceCode
-      .replace(/\n\s*/g, ' ') // 改行とインデントをスペースに変換
-      .replace(/>\s+</g, '><') // タグ間の余分なスペースを削除
-      .trim();
-    onChange(cleanedHtml);
-  };
-  
-  // ソースコードをフォーマット
-  const formatSourceCode = () => {
-    // 現在のvalueからフォーマット（改行を削除してからフォーマット）
-    const cleanedHtml = (sourceCode || '')
-      .replace(/\n\s*/g, ' ')
-      .replace(/>\s+</g, '><')
-      .trim();
-    const formatted = formatHtml(cleanedHtml);
-    setSourceCode(formatted);
-    // onChangeは呼ばない（フォーマットは表示用のみ）
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
@@ -497,7 +396,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // HTML挿入モーダルを開く前にカーソル位置を保存
   const openHtmlModal = () => {
-    if (!editorRef.current || viewMode !== 'wysiwyg') {
+    if (!editorRef.current) {
       setShowHtmlModal(true);
       return;
     }
@@ -522,7 +421,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     setShowHtmlModal(true);
   };
 
-  // HTML挿入
+  // HTML挿入（HTMLブロックとして挿入）
   const insertHtml = () => {
     if (!htmlContent.trim()) {
       alert('HTMLコードを入力してください');
@@ -531,12 +430,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     if (!editorRef.current) {
       alert('エディターが初期化されていません');
-      return;
-    }
-
-    // ビジュアルモードでない場合は警告
-    if (viewMode !== 'wysiwyg') {
-      alert('ビジュアルモードでHTMLを挿入してください');
       return;
     }
 
@@ -604,34 +497,28 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
       }
       
-      // スクリプトタグを含むHTMLを安全に挿入するため、一時的なdiv要素を作成
-      // これにより、スクリプトが実行されずにHTMLとして保存される
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent.trim();
+      // HTMLブロックとして挿入（編集可能なコンテナで包む）
+      const blockId = `html-block-${Date.now()}`;
+      const htmlBlock = document.createElement('div');
+      htmlBlock.className = 'html-block';
+      htmlBlock.setAttribute('data-html-id', blockId);
+      htmlBlock.setAttribute('contenteditable', 'false');
+      htmlBlock.innerHTML = htmlContent.trim();
       
-      // tempDivの子要素をエディターに挿入
-      const fragment = document.createDocumentFragment();
-      while (tempDiv.firstChild) {
-        fragment.appendChild(tempDiv.firstChild);
-      }
+      // ブロックを挿入
+      range.insertNode(htmlBlock);
       
-      // フラグメントが空でないことを確認
-      if (fragment.childNodes.length === 0) {
-        // フラグメントが空の場合は、テキストノードとして挿入
-        const textNode = document.createTextNode(htmlContent.trim());
-        range.insertNode(textNode);
-        range.setStartAfter(textNode);
-        range.collapse(true);
+      // 挿入後に改行を追加（次の入力のため）
+      const br = document.createElement('br');
+      if (htmlBlock.nextSibling) {
+        htmlBlock.parentNode?.insertBefore(br, htmlBlock.nextSibling);
       } else {
-        range.insertNode(fragment);
-        
-        // カーソルを挿入した要素の後に移動
-        const lastNode = fragment.lastChild;
-        if (lastNode) {
-          range.setStartAfter(lastNode);
-          range.collapse(true);
-        }
+        htmlBlock.parentNode?.appendChild(br);
       }
+      
+      // カーソルを挿入した要素の後に移動
+      range.setStartAfter(br);
+      range.collapse(true);
       
       // 選択範囲を更新
       const selection = window.getSelection();
@@ -657,6 +544,54 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       alert('HTMLの挿入に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
       setSavedRange(null);
     }
+  };
+
+  // HTMLブロックの編集を開始
+  const openHtmlBlockEdit = (blockId: string) => {
+    if (!editorRef.current) return;
+    
+    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`);
+    if (block) {
+      const formattedHtml = formatHtml(block.innerHTML);
+      setEditingHtmlBlockId(blockId);
+      setEditingHtmlBlockContent(formattedHtml);
+      setShowHtmlBlockEditModal(true);
+    }
+  };
+
+  // HTMLブロックの編集を保存
+  const saveHtmlBlockEdit = () => {
+    if (!editorRef.current || !editingHtmlBlockId) return;
+    
+    const block = editorRef.current.querySelector(`[data-html-id="${editingHtmlBlockId}"]`);
+    if (block) {
+      // 改行を削除して元のHTML形式に戻す
+      const cleanedHtml = editingHtmlBlockContent
+        .replace(/\n\s*/g, ' ')
+        .replace(/>\s+</g, '><')
+        .trim();
+      block.innerHTML = cleanedHtml;
+      handleInput();
+    }
+    
+    setShowHtmlBlockEditModal(false);
+    setEditingHtmlBlockId(null);
+    setEditingHtmlBlockContent('');
+  };
+
+  // HTMLブロックを削除
+  const deleteHtmlBlock = (blockId: string) => {
+    if (!editorRef.current) return;
+    
+    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`);
+    if (block) {
+      block.remove();
+      handleInput();
+    }
+    
+    setShowHtmlBlockEditModal(false);
+    setEditingHtmlBlockId(null);
+    setEditingHtmlBlockContent('');
   };
 
   // フォントサイズ変更
@@ -760,42 +695,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   return (
     <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
-      {/* ビューモード切り替えタブ */}
-      <div className="flex gap-2 mb-2 border-b border-gray-200">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            switchToWysiwyg();
-          }}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            viewMode === 'wysiwyg'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          ビジュアル
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            switchToSource();
-          }}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            viewMode === 'source'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          ソースコード
-        </button>
-      </div>
-
       {/* フローティングツールバー（選択時/カーソル移動時） */}
-      {showToolbar && viewMode === 'wysiwyg' && (
+      {showToolbar && (
         <div
           className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 transform -translate-x-1/2 animate-fadeIn"
           style={{ 
@@ -880,62 +781,30 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
       {/* エディター */}
       <div className="relative" style={{ minHeight: '500px' }}>
-        {/* ビジュアルエディター */}
         <div
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onClick={(e) => {
+            // HTMLブロックのクリック処理
+            const target = e.target as HTMLElement;
+            const htmlBlock = target.closest('.html-block');
+            if (htmlBlock) {
+              const blockId = htmlBlock.getAttribute('data-html-id');
+              if (blockId) {
+                e.preventDefault();
+                e.stopPropagation();
+                openHtmlBlockEdit(blockId);
+              }
+            }
+          }}
           className="min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content"
           style={{
             whiteSpace: 'pre-wrap',
             color: theme.textColor,
-            display: viewMode === 'wysiwyg' ? 'block' : 'none',
-            position: viewMode === 'wysiwyg' ? 'relative' : 'absolute',
-            visibility: viewMode === 'wysiwyg' ? 'visible' : 'hidden',
-            zIndex: viewMode === 'wysiwyg' ? 1 : -1,
           }}
           data-placeholder={placeholder || '本文を入力...'}
         />
-        
-        {/* ソースコードエディター */}
-        <div 
-          className="relative" 
-          style={{ 
-            display: viewMode === 'source' ? 'block' : 'none',
-            position: viewMode === 'source' ? 'relative' : 'absolute',
-            visibility: viewMode === 'source' ? 'visible' : 'hidden',
-            zIndex: viewMode === 'source' ? 2 : -1,
-          }}
-        >
-          <div className="absolute top-2 right-2 z-10">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                formatSourceCode();
-              }}
-              className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              title="HTMLを整形"
-            >
-              整形
-            </button>
-          </div>
-          <textarea
-            value={sourceCode}
-            onChange={(e) => handleSourceCodeChange(e.target.value)}
-            className="w-full min-h-[500px] p-6 font-mono text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="HTMLコードを入力..."
-            style={{
-              fontFamily: 'monospace',
-              lineHeight: '1.6',
-              tabSize: 2,
-              color: '#111827',
-              whiteSpace: 'pre',
-              backgroundColor: '#ffffff',
-            }}
-          />
-        </div>
       </div>
 
       {/* 画像挿入モーダル */}
@@ -1366,6 +1235,85 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         </div>
       )}
 
+      {/* HTMLブロック編集モーダル */}
+      {showHtmlBlockEditModal && editingHtmlBlockId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">HTMLブロックを編集</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              このHTMLブロックのコードを編集できます。
+            </p>
+            
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  HTMLコード
+                </label>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const formatted = formatHtml(editingHtmlBlockContent.replace(/\n\s*/g, ' ').replace(/>\s+</g, '><').trim());
+                    setEditingHtmlBlockContent(formatted);
+                  }}
+                  className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  整形
+                </button>
+              </div>
+              <textarea
+                value={editingHtmlBlockContent}
+                onChange={(e) => setEditingHtmlBlockContent(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm text-gray-900"
+                style={{ color: '#111827' }}
+                rows={12}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  saveHtmlBlockEdit();
+                }}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+              >
+                保存
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (confirm('このHTMLブロックを削除しますか？')) {
+                    deleteHtmlBlock(editingHtmlBlockId);
+                  }
+                }}
+                className="px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600"
+              >
+                削除
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowHtmlBlockEditModal(false);
+                  setEditingHtmlBlockId(null);
+                  setEditingHtmlBlockContent('');
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* エディタ内のスタイル適用 */}
       <style jsx global>{`
         [contenteditable="true"] {
@@ -1574,6 +1522,40 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           color: #6b7280;
           margin-top: 0.5rem;
           text-align: center;
+        }
+
+        /* HTMLブロック */
+        [contenteditable="true"] .html-block {
+          position: relative;
+          margin: 1.5rem 0;
+          padding: 1rem;
+          border: 2px dashed #d1d5db;
+          border-radius: 0.75rem;
+          background-color: #f9fafb;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        [contenteditable="true"] .html-block:hover {
+          border-color: #3b82f6;
+          background-color: #eff6ff;
+        }
+
+        [contenteditable="true"] .html-block::before {
+          content: '🔧 HTMLブロック（クリックで編集）';
+          position: absolute;
+          top: -0.75rem;
+          left: 0.75rem;
+          background-color: #3b82f6;
+          color: white;
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.375rem;
+          font-weight: 500;
+        }
+
+        [contenteditable="true"] .html-block:hover::before {
+          background-color: #2563eb;
         }
 
         [contenteditable="true"]:empty:before {
