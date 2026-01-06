@@ -1127,7 +1127,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
       {/* 画像挿入モーダル */}
       {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
             <h3 className="text-xl font-bold mb-4">画像を挿入</h3>
             
@@ -1284,7 +1284,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
       {/* テーブル挿入モーダル */}
       {showTableModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
             <h3 className="text-xl font-bold mb-4">表を挿入</h3>
             
@@ -1338,7 +1338,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
       {/* HTML挿入モーダル */}
       {showHtmlModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">HTML挿入</h3>
             <p className="text-sm text-gray-600 mb-4">
@@ -1430,7 +1430,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
       {/* フォントサイズ変更モーダル */}
       {showFontSizeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
             <h3 className="text-xl font-bold mb-4">フォントサイズ変更</h3>
             <p className="text-sm text-gray-600 mb-4">
