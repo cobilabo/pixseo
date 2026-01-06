@@ -155,7 +155,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           block.setAttribute('data-mode', newMode);
           
           if (newMode === 'preview') {
-            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
+            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
           } else {
             // フォーマット済みHTML
             let formatted = htmlContent;
@@ -181,7 +181,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&#039;');
             
-            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapedHtml}</textarea>`;
+            block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapedHtml}</textarea>`;
           }
           
           setHtmlBlockModes(prev => ({ ...prev, [blockId]: newMode }));
@@ -238,19 +238,33 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       }
     };
 
+    // mousedownでドラッグ準備
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const dragHandle = target.closest('.html-block-drag-handle') as HTMLElement;
+      
+      if (dragHandle) {
+        const htmlBlock = dragHandle.closest('.html-block') as HTMLElement;
+        if (htmlBlock) {
+          // HTMLブロックをドラッグ可能にする
+          htmlBlock.setAttribute('draggable', 'true');
+        }
+      }
+    };
+
+    // mouseupでドラッグ解除
+    const handleMouseUp = () => {
+      editor.querySelectorAll('.html-block').forEach(block => {
+        block.removeAttribute('draggable');
+      });
+    };
+
     // ドラッグ開始
     const handleDragStart = (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      
-      // ドラッグハンドルからの開始かチェック
-      const dragHandle = target.closest('.html-block-drag-handle');
-      if (!dragHandle) {
-        // ドラッグハンドル以外からのドラッグは無効
-        return;
-      }
-      
       const htmlBlock = target.closest('.html-block') as HTMLElement;
-      if (htmlBlock) {
+      
+      if (htmlBlock && htmlBlock.getAttribute('draggable') === 'true') {
         const blockId = htmlBlock.getAttribute('data-html-id');
         if (blockId) {
           e.stopPropagation();
@@ -262,6 +276,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           }
           htmlBlock.classList.add('dragging');
         }
+      } else {
+        e.preventDefault();
       }
     };
 
@@ -339,6 +355,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const handleDragEnd = () => {
       editor.querySelectorAll('.html-block').forEach(b => {
         b.classList.remove('dragging', 'drop-above', 'drop-below');
+        b.removeAttribute('draggable');
       });
       draggingBlockIdRef.current = null;
       setDraggingBlockId(null);
@@ -346,6 +363,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     editor.addEventListener('click', handleClick);
     editor.addEventListener('input', handleTextareaInput);
+    editor.addEventListener('mousedown', handleMouseDown);
+    editor.addEventListener('mouseup', handleMouseUp);
     editor.addEventListener('dragstart', handleDragStart);
     editor.addEventListener('dragover', handleDragOver);
     editor.addEventListener('drop', handleDrop);
@@ -354,6 +373,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     return () => {
       editor.removeEventListener('click', handleClick);
       editor.removeEventListener('input', handleTextareaInput);
+      editor.removeEventListener('mousedown', handleMouseDown);
+      editor.removeEventListener('mouseup', handleMouseUp);
       editor.removeEventListener('dragstart', handleDragStart);
       editor.removeEventListener('dragover', handleDragOver);
       editor.removeEventListener('drop', handleDrop);
@@ -850,10 +871,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const htmlContent = decodeURIComponent(
         editorRef.current?.querySelector(`[data-html-id="${blockId}"]`)?.getAttribute('data-html-content') || ''
       ) || formattedHtml;
-      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
+      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
     } else {
       // ソースモード：ツールバー + textarea
-      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-label">HTML</span><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapeHtml(formattedHtml)}</textarea>`;
+      return `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div><textarea class="html-block-textarea" data-block-id="${blockId}" spellcheck="false">${escapeHtml(formattedHtml)}</textarea>`;
     }
   };
 
@@ -1770,20 +1791,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
         [contenteditable="true"] .html-block .html-block-toolbar * {
           pointer-events: auto !important;
-        }
-
-        /* HTMLラベル */
-        [contenteditable="true"] .html-block .html-block-label {
-          display: flex !important;
-          align-items: center;
-          padding: 0 12px;
-          height: 100%;
-          color: #ffffff;
-          font-size: 12px;
-          font-weight: 600;
-          background-color: #374151;
-          border-right: 1px solid #4b5563;
-          flex-shrink: 0;
         }
 
         /* ドラッグハンドル */
