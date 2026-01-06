@@ -125,7 +125,7 @@ function HtmlBlockToolbar({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (isEditing) {
+            if (mode === 'source') {
               finishEditing();
             }
             onToggleMode();
@@ -266,6 +266,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         editorRef.current.innerHTML = initialValue;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // valueが外部から変更されたときにエディタを更新
@@ -388,12 +389,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       }
     };
 
+    const editor = editorRef.current;
     document.addEventListener('selectionchange', handleSelectionChange);
-    editorRef.current?.addEventListener('click', handleClick);
+    editor?.addEventListener('click', handleClick);
     
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
-      editorRef.current?.removeEventListener('click', handleClick);
+      editor?.removeEventListener('click', handleClick);
     };
   }, []);
 
