@@ -1,9 +1,205 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
 import ImageGenerator from './ImageGenerator';
+
+// HTMLブロックツールバーのProps
+interface HtmlBlockToolbarProps {
+  blockId: string;
+  mode: 'source' | 'preview';
+  editorRef: React.RefObject<HTMLDivElement>;
+  onToggleMode: () => void;
+  onDelete: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  onSourceChange: (newSource: string) => void;
+  getSource: () => string;
+}
+
+// HTMLブロックツールバーコンポーネント
+function HtmlBlockToolbar({
+  blockId,
+  mode,
+  editorRef,
+  onToggleMode,
+  onDelete,
+  onDragStart,
+  onDragEnd,
+  onSourceChange,
+  getSource,
+}: HtmlBlockToolbarProps) {
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [editSource, setEditSource] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [initialized, setInitialized] = useState(false);
+
+  // ブロックの位置を計算
+  useEffect(() => {
+    const updatePosition = () => {
+      if (!editorRef.current) return;
+      
+      const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`);
+      if (!block) return;
+      
+      const blockRect = block.getBoundingClientRect();
+      const editorRect = editorRef.current.getBoundingClientRect();
+      const editorScrollTop = editorRef.current.scrollTop || 0;
+      
+      setPosition({
+        top: blockRect.top - editorRect.top + editorScrollTop,
+        left: 0,
+        width: editorRect.width - 48, // パディング分を引く
+      });
+    };
+    
+    updatePosition();
+    const interval = setInterval(updatePosition, 100); // 定期的に位置を更新
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [blockId, editorRef]);
+
+  // 初期化時にソースを取得
+  useEffect(() => {
+    if (!initialized && mode === 'source') {
+      const source = getSource();
+      setEditSource(source);
+      setInitialized(true);
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }
+  }, [initialized, mode, getSource]);
+
+  // モード切替時にソースを更新
+  useEffect(() => {
+    if (mode === 'source' && initialized) {
+      const source = getSource();
+      setEditSource(source);
+    }
+  }, [mode, getSource, initialized]);
+
+  // 編集終了（保存）
+  const finishEditing = useCallback(() => {
+    if (editSource.trim()) {
+      onSourceChange(editSource);
+    }
+  }, [editSource, onSourceChange]);
+
+  return (
+    <div
+      className="absolute z-40"
+      style={{
+        top: position.top - 36,
+        left: position.left,
+        width: position.width,
+      }}
+    >
+      {/* ツールバー */}
+      <div className="flex items-center gap-1 bg-gray-800 text-white rounded-t-lg px-2 py-1.5 text-sm">
+        {/* ドラッグハンドル */}
+        <div
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          className="cursor-grab active:cursor-grabbing px-1 py-0.5 hover:bg-gray-700 rounded"
+          title="ドラッグして移動"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+        </div>
+        
+        <div className="flex-1" />
+        
+        {/* モード切替ボタン */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isEditing) {
+              finishEditing();
+            }
+            onToggleMode();
+          }}
+          className="px-2 py-0.5 hover:bg-gray-700 rounded flex items-center gap-1"
+        >
+          {mode === 'source' ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              プレビュー
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              HTML
+            </>
+          )}
+        </button>
+        
+        {/* 削除ボタン */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="px-2 py-0.5 hover:bg-red-600 rounded flex items-center gap-1"
+          title="削除"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* ソース編集エリア（ソースモード時のみ） */}
+      {mode === 'source' && (
+        <textarea
+          ref={textareaRef}
+          value={editSource}
+          onChange={(e) => setEditSource(e.target.value)}
+          onBlur={() => {
+            // フォーカスを失った時に保存
+            setTimeout(() => finishEditing(), 100);
+          }}
+          onKeyDown={(e) => {
+            // タブキーでインデント
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const start = e.currentTarget.selectionStart;
+              const end = e.currentTarget.selectionEnd;
+              const value = e.currentTarget.value;
+              setEditSource(value.substring(0, start) + '  ' + value.substring(end));
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
+                }
+              }, 0);
+            }
+          }}
+          className="w-full border-2 border-gray-800 border-t-0 rounded-b-lg p-3 font-mono text-sm bg-gray-50 focus:outline-none focus:bg-white resize-y"
+          style={{ minHeight: '150px', color: '#111827' }}
+          placeholder="HTMLコードを入力..."
+        />
+      )}
+    </div>
+  );
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -31,10 +227,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [savedRange, setSavedRange] = useState<Range | null>(null);
   const [showFontSizeModal, setShowFontSizeModal] = useState(false);
   const [fontSize, setFontSize] = useState('16');
-  // HTMLブロック編集用
-  const [showHtmlBlockEditModal, setShowHtmlBlockEditModal] = useState(false);
-  const [editingHtmlBlockId, setEditingHtmlBlockId] = useState<string | null>(null);
-  const [editingHtmlBlockContent, setEditingHtmlBlockContent] = useState('');
+  // HTMLブロック用
+  const [activeHtmlBlockId, setActiveHtmlBlockId] = useState<string | null>(null);
+  const [htmlBlockModes, setHtmlBlockModes] = useState<Record<string, 'source' | 'preview'>>({});
+  const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
 
   // デザイン設定を取得
   useEffect(() => {
@@ -82,6 +278,26 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       }
     }
   }, [value]);
+
+  // 既存のHTMLブロックを検出して初期化
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    const htmlBlocks = editorRef.current.querySelectorAll('.html-block[data-html-id]');
+    const newModes: Record<string, 'source' | 'preview'> = {};
+    
+    htmlBlocks.forEach((block) => {
+      const blockId = block.getAttribute('data-html-id');
+      const currentMode = block.getAttribute('data-mode') as 'source' | 'preview' | null;
+      if (blockId && !htmlBlockModes[blockId]) {
+        newModes[blockId] = currentMode || 'source';
+      }
+    });
+    
+    if (Object.keys(newModes).length > 0) {
+      setHtmlBlockModes(prev => ({ ...prev, ...newModes }));
+    }
+  }, [value, htmlBlockModes]);
 
   // テキスト選択時 or カーソル移動時にツールバーを表示
   useEffect(() => {
@@ -497,13 +713,21 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
       }
       
-      // HTMLブロックとして挿入（編集可能なコンテナで包む）
+      // HTMLブロックとして挿入
       const blockId = `html-block-${Date.now()}`;
       const htmlBlock = document.createElement('div');
       htmlBlock.className = 'html-block';
       htmlBlock.setAttribute('data-html-id', blockId);
+      htmlBlock.setAttribute('data-mode', 'source');
       htmlBlock.setAttribute('contenteditable', 'false');
-      htmlBlock.innerHTML = htmlContent.trim();
+      // HTMLコンテンツをdata属性に保存（エスケープ）
+      htmlBlock.setAttribute('data-html-content', encodeURIComponent(htmlContent.trim()));
+      // ソースコード表示
+      const formattedHtml = formatHtml(htmlContent.trim());
+      htmlBlock.innerHTML = `<pre class="html-block-source"><code>${escapeHtml(formattedHtml)}</code></pre>`;
+      
+      // 新しいブロックのモードを設定
+      setHtmlBlockModes(prev => ({ ...prev, [blockId]: 'source' }));
       
       // ブロックを挿入
       range.insertNode(htmlBlock);
@@ -537,8 +761,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setShowHtmlModal(false);
       setHtmlContent('');
       
-      // エディターにフォーカスを戻す
-      editorRef.current.focus();
+      // 新しいブロックをアクティブにする
+      setActiveHtmlBlockId(blockId);
+      
     } catch (error) {
       console.error('HTML挿入エラー:', error);
       alert('HTMLの挿入に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
@@ -546,42 +771,81 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
   };
 
-  // HTMLブロックの編集を開始
-  const openHtmlBlockEdit = (blockId: string) => {
-    if (!editorRef.current) return;
-    
-    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`);
-    if (block) {
-      const formattedHtml = formatHtml(block.innerHTML);
-      setEditingHtmlBlockId(blockId);
-      setEditingHtmlBlockContent(formattedHtml);
-      setShowHtmlBlockEditModal(true);
-    }
+  // HTMLエスケープ
+  const escapeHtml = (html: string): string => {
+    return html
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   };
 
-  // HTMLブロックの編集を保存
-  const saveHtmlBlockEdit = () => {
-    if (!editorRef.current || !editingHtmlBlockId) return;
+  // HTMLアンエスケープ
+  const unescapeHtml = (html: string): string => {
+    return html
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&amp;/g, '&');
+  };
+
+  // HTMLブロックのモードを切り替え
+  const toggleHtmlBlockMode = (blockId: string) => {
+    if (!editorRef.current) return;
     
-    const block = editorRef.current.querySelector(`[data-html-id="${editingHtmlBlockId}"]`);
-    if (block) {
-      // 改行を削除して元のHTML形式に戻す
-      const cleanedHtml = editingHtmlBlockContent
-        .replace(/\n\s*/g, ' ')
-        .replace(/>\s+</g, '><')
-        .trim();
-      block.innerHTML = cleanedHtml;
-      handleInput();
+    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`) as HTMLElement;
+    if (!block) return;
+    
+    const currentMode = htmlBlockModes[blockId] || 'source';
+    const newMode = currentMode === 'source' ? 'preview' : 'source';
+    
+    const htmlContent = decodeURIComponent(block.getAttribute('data-html-content') || '');
+    
+    if (newMode === 'preview') {
+      // プレビューモード: 実際のHTMLを表示
+      block.setAttribute('data-mode', 'preview');
+      block.innerHTML = htmlContent;
+    } else {
+      // ソースモード: エスケープされたHTMLを表示
+      block.setAttribute('data-mode', 'source');
+      const formattedHtml = formatHtml(htmlContent);
+      block.innerHTML = `<pre class="html-block-source"><code>${escapeHtml(formattedHtml)}</code></pre>`;
     }
     
-    setShowHtmlBlockEditModal(false);
-    setEditingHtmlBlockId(null);
-    setEditingHtmlBlockContent('');
+    setHtmlBlockModes(prev => ({ ...prev, [blockId]: newMode }));
+    handleInput();
+  };
+
+  // HTMLブロックのソースコードを更新
+  const updateHtmlBlockSource = (blockId: string, newSource: string) => {
+    if (!editorRef.current) return;
+    
+    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`) as HTMLElement;
+    if (!block) return;
+    
+    // 改行を削除してクリーンなHTMLに
+    const cleanedHtml = newSource
+      .replace(/\n\s*/g, ' ')
+      .replace(/>\s+</g, '><')
+      .trim();
+    
+    // data属性を更新
+    block.setAttribute('data-html-content', encodeURIComponent(cleanedHtml));
+    
+    // 表示を更新
+    const formattedHtml = formatHtml(cleanedHtml);
+    block.innerHTML = `<pre class="html-block-source"><code>${escapeHtml(formattedHtml)}</code></pre>`;
+    
+    handleInput();
   };
 
   // HTMLブロックを削除
   const deleteHtmlBlock = (blockId: string) => {
     if (!editorRef.current) return;
+    
+    if (!confirm('このHTMLブロックを削除しますか？')) return;
     
     const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`);
     if (block) {
@@ -589,9 +853,59 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       handleInput();
     }
     
-    setShowHtmlBlockEditModal(false);
-    setEditingHtmlBlockId(null);
-    setEditingHtmlBlockContent('');
+    setActiveHtmlBlockId(null);
+    setHtmlBlockModes(prev => {
+      const newModes = { ...prev };
+      delete newModes[blockId];
+      return newModes;
+    });
+  };
+
+  // HTMLブロックのドラッグ開始
+  const handleHtmlBlockDragStart = (e: React.DragEvent, blockId: string) => {
+    setDraggingBlockId(blockId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', blockId);
+  };
+
+  // HTMLブロックのドラッグ終了
+  const handleHtmlBlockDragEnd = () => {
+    setDraggingBlockId(null);
+  };
+
+  // HTMLブロックのドロップ
+  const handleHtmlBlockDrop = (e: React.DragEvent, targetBlockId: string) => {
+    e.preventDefault();
+    if (!editorRef.current || !draggingBlockId || draggingBlockId === targetBlockId) return;
+    
+    const draggedBlock = editorRef.current.querySelector(`[data-html-id="${draggingBlockId}"]`);
+    const targetBlock = editorRef.current.querySelector(`[data-html-id="${targetBlockId}"]`);
+    
+    if (draggedBlock && targetBlock) {
+      const rect = targetBlock.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      
+      if (e.clientY < midY) {
+        targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock);
+      } else {
+        targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock.nextSibling);
+      }
+      
+      handleInput();
+    }
+    
+    setDraggingBlockId(null);
+  };
+
+  // HTMLブロックのソースを取得
+  const getHtmlBlockSource = (blockId: string): string => {
+    if (!editorRef.current) return '';
+    
+    const block = editorRef.current.querySelector(`[data-html-id="${blockId}"]`) as HTMLElement;
+    if (!block) return '';
+    
+    const htmlContent = decodeURIComponent(block.getAttribute('data-html-content') || '');
+    return formatHtml(htmlContent);
   };
 
   // フォントサイズ変更
@@ -788,14 +1102,50 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           onClick={(e) => {
             // HTMLブロックのクリック処理
             const target = e.target as HTMLElement;
-            const htmlBlock = target.closest('.html-block');
+            const htmlBlock = target.closest('.html-block') as HTMLElement;
             if (htmlBlock) {
               const blockId = htmlBlock.getAttribute('data-html-id');
               if (blockId) {
                 e.preventDefault();
                 e.stopPropagation();
-                openHtmlBlockEdit(blockId);
+                setActiveHtmlBlockId(blockId);
               }
+            } else {
+              // HTMLブロック以外をクリックしたらアクティブを解除
+              setActiveHtmlBlockId(null);
+            }
+          }}
+          onDragOver={(e) => {
+            if (draggingBlockId) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }
+          }}
+          onDrop={(e) => {
+            if (draggingBlockId) {
+              e.preventDefault();
+              const target = e.target as HTMLElement;
+              const targetBlock = target.closest('.html-block') as HTMLElement;
+              
+              if (targetBlock && editorRef.current) {
+                const targetBlockId = targetBlock.getAttribute('data-html-id');
+                if (targetBlockId && targetBlockId !== draggingBlockId) {
+                  const draggedBlock = editorRef.current.querySelector(`[data-html-id="${draggingBlockId}"]`);
+                  if (draggedBlock) {
+                    const rect = targetBlock.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midY) {
+                      targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock);
+                    } else {
+                      targetBlock.parentNode?.insertBefore(draggedBlock, targetBlock.nextSibling);
+                    }
+                    
+                    handleInput();
+                  }
+                }
+              }
+              setDraggingBlockId(null);
             }
           }}
           className="min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content"
@@ -805,6 +1155,21 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           }}
           data-placeholder={placeholder || '本文を入力...'}
         />
+        
+        {/* HTMLブロックツールバー */}
+        {activeHtmlBlockId && editorRef.current && (
+          <HtmlBlockToolbar
+            blockId={activeHtmlBlockId}
+            mode={htmlBlockModes[activeHtmlBlockId] || 'source'}
+            editorRef={editorRef}
+            onToggleMode={() => toggleHtmlBlockMode(activeHtmlBlockId)}
+            onDelete={() => deleteHtmlBlock(activeHtmlBlockId)}
+            onDragStart={(e) => handleHtmlBlockDragStart(e, activeHtmlBlockId)}
+            onDragEnd={handleHtmlBlockDragEnd}
+            onSourceChange={(newSource) => updateHtmlBlockSource(activeHtmlBlockId, newSource)}
+            getSource={() => getHtmlBlockSource(activeHtmlBlockId)}
+          />
+        )}
       </div>
 
       {/* 画像挿入モーダル */}
@@ -1235,85 +1600,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         </div>
       )}
 
-      {/* HTMLブロック編集モーダル */}
-      {showHtmlBlockEditModal && editingHtmlBlockId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">HTMLブロックを編集</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              このHTMLブロックのコードを編集できます。
-            </p>
-            
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  HTMLコード
-                </label>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const formatted = formatHtml(editingHtmlBlockContent.replace(/\n\s*/g, ' ').replace(/>\s+</g, '><').trim());
-                    setEditingHtmlBlockContent(formatted);
-                  }}
-                  className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  整形
-                </button>
-              </div>
-              <textarea
-                value={editingHtmlBlockContent}
-                onChange={(e) => setEditingHtmlBlockContent(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm text-gray-900"
-                style={{ color: '#111827' }}
-                rows={12}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  saveHtmlBlockEdit();
-                }}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
-              >
-                保存
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (confirm('このHTMLブロックを削除しますか？')) {
-                    deleteHtmlBlock(editingHtmlBlockId);
-                  }
-                }}
-                className="px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600"
-              >
-                削除
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowHtmlBlockEditModal(false);
-                  setEditingHtmlBlockId(null);
-                  setEditingHtmlBlockContent('');
-                }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
-              >
-                キャンセル
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* エディタ内のスタイル適用 */}
       <style jsx global>{`
         [contenteditable="true"] {
@@ -1524,38 +1810,48 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           text-align: center;
         }
 
-        /* HTMLブロック */
-        [contenteditable="true"] .html-block {
+        /* HTMLブロック - ソースモード */
+        [contenteditable="true"] .html-block[data-mode="source"] {
           position: relative;
-          margin: 1.5rem 0;
-          padding: 1rem;
-          border: 2px dashed #d1d5db;
-          border-radius: 0.75rem;
+          margin: 3rem 0 1.5rem 0;
+          border: 2px solid #d1d5db;
+          border-radius: 0 0 0.5rem 0.5rem;
           background-color: #f9fafb;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        [contenteditable="true"] .html-block:hover {
+        [contenteditable="true"] .html-block[data-mode="source"]:hover {
           border-color: #3b82f6;
-          background-color: #eff6ff;
         }
 
-        [contenteditable="true"] .html-block::before {
-          content: '🔧 HTMLブロック（クリックで編集）';
-          position: absolute;
-          top: -0.75rem;
-          left: 0.75rem;
-          background-color: #3b82f6;
-          color: white;
-          font-size: 0.75rem;
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.375rem;
-          font-weight: 500;
+        [contenteditable="true"] .html-block[data-mode="source"] .html-block-source {
+          margin: 0;
+          padding: 1rem;
+          background-color: transparent;
+          overflow-x: auto;
+          font-size: 0.8125rem;
+          line-height: 1.6;
         }
 
-        [contenteditable="true"] .html-block:hover::before {
-          background-color: #2563eb;
+        [contenteditable="true"] .html-block[data-mode="source"] .html-block-source code {
+          font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+          color: #1f2937;
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+
+        /* HTMLブロック - プレビューモード */
+        [contenteditable="true"] .html-block[data-mode="preview"] {
+          position: relative;
+          margin: 3rem 0 1.5rem 0;
+          padding: 0;
+          border: none;
+          background-color: transparent;
+        }
+
+        [contenteditable="true"] .html-block[data-mode="preview"] * {
+          pointer-events: none;
         }
 
         [contenteditable="true"]:empty:before {
