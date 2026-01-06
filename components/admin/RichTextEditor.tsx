@@ -1860,10 +1860,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           display: block !important;
           position: relative;
           margin: 1rem 0;
-          border: 1px solid #e5e7eb;
-          border-radius: 4px;
-          background-color: #ffffff;
-          overflow: hidden;
+          border: none;
+          border-radius: 0;
+          background-color: transparent;
+          overflow: visible;
           width: 100% !important;
           box-sizing: border-box !important;
         }
@@ -1874,9 +1874,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           align-items: center;
           gap: 0;
           padding: 0;
+          margin: 0;
           background-color: #1f2937;
-          border-bottom: none;
-          border-radius: 3px 3px 0 0;
+          border: none;
+          border-radius: 4px 4px 0 0;
           width: 100% !important;
           box-sizing: border-box !important;
           height: 36px;
@@ -2008,14 +2009,16 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           display: block !important;
           width: 100% !important;
           min-height: 80px;
+          margin: 0;
           padding: 12px;
           font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
           font-size: 13px;
           line-height: 1.6;
           color: #1f2937;
           background-color: #ffffff;
-          border: none;
-          border-radius: 0;
+          border: 1px solid #d1d5db;
+          border-top: none;
+          border-radius: 0 0 4px 4px;
           resize: vertical;
           outline: none;
           box-sizing: border-box !important;
@@ -2023,14 +2026,18 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
         [contenteditable="true"] .html-block .html-block-textarea:focus {
           background-color: #fefce8;
+          border-color: #3b82f6;
         }
 
         /* HTMLブロック プレビューコンテンツ */
         [contenteditable="true"] .html-block .html-block-preview-content {
           display: block !important;
+          margin: 0;
           padding: 12px;
           background-color: #ffffff;
-          border-radius: 0;
+          border: 1px solid #d1d5db;
+          border-top: none;
+          border-radius: 0 0 4px 4px;
           width: 100% !important;
           box-sizing: border-box !important;
           pointer-events: none;
