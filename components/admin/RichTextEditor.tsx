@@ -251,30 +251,33 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         e.preventDefault();
         e.stopPropagation();
         const htmlBlock = dragHandle.closest('.html-block') as HTMLElement;
-      if (htmlBlock) {
+        if (htmlBlock) {
           draggedElement = htmlBlock;
           isDragging = true;
           htmlBlock.classList.add('dragging');
           draggingBlockIdRef.current = htmlBlock.getAttribute('data-html-id');
           setDraggingBlockId(htmlBlock.getAttribute('data-html-id'));
+          
+          // カーソルを変更
+          document.body.style.cursor = 'grabbing';
         }
       }
     };
 
     // mousemoveでドラッグ中の処理
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !draggedElement) return;
+      if (!isDragging || !draggedElement || !editorRef.current) return;
       
       // 他のHTMLブロックを探してドロップ位置を表示
-      const htmlBlocks = editor.querySelectorAll('.html-block');
+      const htmlBlocks = editorRef.current.querySelectorAll('.html-block');
       htmlBlocks.forEach(block => {
         if (block === draggedElement) return;
         
         const rect = block.getBoundingClientRect();
-          const midY = rect.top + rect.height / 2;
-          
+        const midY = rect.top + rect.height / 2;
+        
         block.classList.remove('drop-above', 'drop-below');
-          
+        
         if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
           if (e.clientY < midY) {
             block.classList.add('drop-above');
@@ -287,14 +290,17 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     // mouseupでドロップ
     const handleMouseUp = () => {
-      if (!isDragging || !draggedElement) {
+      // カーソルを元に戻す
+      document.body.style.cursor = '';
+      
+      if (!isDragging || !draggedElement || !editorRef.current) {
         isDragging = false;
         draggedElement = null;
         return;
       }
       
       // ドロップ先を探す
-      const htmlBlocks = editor.querySelectorAll('.html-block');
+      const htmlBlocks = editorRef.current.querySelectorAll('.html-block');
       let targetBlock: Element | null = null;
       let insertBefore = true;
       
@@ -315,11 +321,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         const target = targetBlock as HTMLElement;
         if (insertBefore) {
           target.parentNode?.insertBefore(draggedElement, target);
-            } else {
+        } else {
           target.parentNode?.insertBefore(draggedElement, target.nextSibling);
-            }
-            
-            // 変更を通知
+        }
+        
+        // 変更を通知
         if (editorRef.current) {
           const html = editorRef.current.innerHTML;
           onChange(html);
@@ -349,6 +355,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       editor.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
     };
   }, [onChange]);
 
@@ -1752,7 +1759,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           margin: 0;
           background-color: #ffffff;
           border: 1px solid #e5e7eb;
-          border-bottom: none;
           border-radius: 4px 4px 0 0;
           width: 100% !important;
           box-sizing: border-box !important;
@@ -1873,6 +1879,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           width: 100% !important;
           min-height: 80px;
           margin: 0;
+          margin-top: -1px;
           padding: 12px;
           font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
           font-size: 13px;
@@ -1880,7 +1887,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           color: #1f2937;
           background-color: #ffffff;
           border: 1px solid #d1d5db;
-          border-top: none;
           border-radius: 0 0 4px 4px;
           resize: vertical;
           outline: none;
@@ -1896,6 +1902,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         [contenteditable="true"] .html-block .html-block-preview-content {
           display: block !important;
           margin: 0;
+          margin-top: -1px;
           padding: 12px;
           background-color: transparent;
           border: none;
