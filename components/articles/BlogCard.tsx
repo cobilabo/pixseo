@@ -81,12 +81,12 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
   if (loading) {
     return (
       <div className="my-4 block">
-        <div className="flex border border-gray-200 rounded overflow-hidden animate-pulse">
-          <div className="w-28 h-28 bg-gray-200 flex-shrink-0"></div>
-          <div className="flex-1 p-3 space-y-2">
-            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
+        <div className="flex border border-gray-200 overflow-hidden animate-pulse" style={{ height: '150px' }}>
+          <div className="bg-gray-200 flex-shrink-0" style={{ width: '150px', height: '150px' }}></div>
+          <div className="flex-1 p-4 space-y-2">
+            <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
             <div className="h-3 bg-gray-200 rounded w-full"></div>
+            <div className="h-2.5 bg-gray-200 rounded w-full"></div>
           </div>
         </div>
       </div>
@@ -98,17 +98,18 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     <div className="my-4 block not-prose">
       <Link
         href={href}
-        className="flex border border-gray-200 rounded overflow-hidden hover:shadow-md transition-shadow duration-200 no-underline group bg-white"
+        className="flex border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 no-underline group bg-white"
+        style={{ height: '150px' }}
       >
-        {/* サムネイル（正方形） */}
-        <div className="w-28 h-28 flex-shrink-0 relative bg-gray-100">
+        {/* サムネイル（正方形 150x150） */}
+        <div className="flex-shrink-0 relative bg-gray-100" style={{ width: '150px', height: '150px' }}>
           {data?.featuredImage ? (
             <Image
               src={data.featuredImage}
               alt={data.title || ''}
               fill
               className="object-cover"
-              sizes="112px"
+              sizes="150px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -120,9 +121,9 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         </div>
 
         {/* コンテンツ */}
-        <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+        <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
           {/* 最上段: 投稿日・ライター名 */}
-          <p className="text-xs text-gray-500 m-0">
+          <p className="text-[11px] text-gray-500 m-0">
             {data?.publishedDate && (
               <span className="text-orange-500 font-medium">{data.publishedDate}</span>
             )}
@@ -135,13 +136,13 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
           </p>
           
           {/* 中段: タイトル */}
-          <h4 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-orange-500 transition-colors m-0 my-1">
+          <h4 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-orange-500 transition-colors m-0">
             {data?.title || '記事'}
           </h4>
           
           {/* 最下段: 見出し（メタディスクリプション） */}
           {data?.metaDescription && (
-            <p className="text-xs text-gray-600 line-clamp-2 m-0">
+            <p className="text-[11px] text-gray-600 line-clamp-2 m-0">
               {data.metaDescription}
             </p>
           )}
