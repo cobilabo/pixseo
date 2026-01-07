@@ -12,6 +12,31 @@ interface ArticleContentProps {
   tableOfContents?: TableOfContentsItem[];
 }
 
+/**
+ * エディタのHTMLブロック構造を実際のHTMLコンテンツに変換する
+ * <div class="html-block" data-html-content="...encoded...">...</div>
+ * → data-html-contentのデコードされたHTML
+ */
+function processHtmlBlocks(html: string): string {
+  if (!html) return '';
+  
+  // HTMLブロックを検出して変換
+  // data-html-content属性から実際のHTMLコンテンツを抽出
+  const htmlBlockRegex = /<div[^>]*class="html-block"[^>]*data-html-content="([^"]*)"[^>]*>[\s\S]*?<\/div>/gi;
+  
+  return html.replace(htmlBlockRegex, (match, encodedContent) => {
+    try {
+      // URLエンコードされたコンテンツをデコード
+      const decodedContent = decodeURIComponent(encodedContent);
+      // デコードしたHTMLをそのまま返す
+      return decodedContent;
+    } catch (e) {
+      console.error('Failed to decode HTML block content:', e);
+      return ''; // デコードに失敗した場合は空文字を返す
+    }
+  });
+}
+
 export default function ArticleContent({ content, tableOfContents }: ArticleContentProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -78,8 +103,11 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
     }
   }, [mounted, content]);
 
+  // HTMLブロックを実際のHTMLコンテンツに変換
+  const htmlBlockProcessed = processHtmlBlocks(content);
+  
   // ショートコードを処理
-  const processedContent = ShortCodeRenderer.process(content);
+  const processedContent = ShortCodeRenderer.process(htmlBlockProcessed);
 
   // 見出しの出現順をカウント
   let headingCount = 0;
