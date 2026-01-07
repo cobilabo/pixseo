@@ -95,20 +95,35 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
 
   // ブログカード表示
   return (
-    <div className="my-4 block not-prose">
+    <div className="my-4 block not-prose" style={{ margin: '16px 0' }}>
       <Link
         href={href}
-        className="flex border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 no-underline group bg-white"
-        style={{ height: '150px' }}
+        className="flex overflow-hidden hover:shadow-md transition-shadow duration-200 no-underline group bg-white"
+        style={{ 
+          height: '150px', 
+          border: '1px solid #e5e7eb', 
+          borderRadius: '0',
+          textDecoration: 'none'
+        }}
       >
         {/* サムネイル（正方形 150x150） */}
-        <div className="flex-shrink-0 relative bg-gray-100" style={{ width: '150px', height: '150px' }}>
+        <div 
+          className="flex-shrink-0 relative bg-gray-100" 
+          style={{ 
+            width: '150px', 
+            height: '150px', 
+            borderRadius: '0',
+            margin: '0',
+            padding: '0'
+          }}
+        >
           {data?.featuredImage ? (
             <Image
               src={data.featuredImage}
               alt={data.title || ''}
               fill
               className="object-cover"
+              style={{ borderRadius: '0' }}
               sizes="150px"
             />
           ) : (
@@ -121,14 +136,24 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         </div>
 
         {/* コンテンツ */}
-        <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
+        <div 
+          className="flex-1 min-w-0 flex flex-col"
+          style={{ padding: '12px 16px', gap: '6px' }}
+        >
           {/* 最上段: 投稿日・ライター名 */}
-          <p className="text-[11px] text-gray-500 m-0">
+          <p style={{ 
+            fontSize: '11px', 
+            color: '#6b7280', 
+            margin: '0', 
+            padding: '0',
+            border: 'none',
+            lineHeight: '1.4'
+          }}>
             {data?.publishedDate && (
-              <span className="text-orange-500 font-medium">{data.publishedDate}</span>
+              <span style={{ color: '#f97316', fontWeight: '500' }}>{data.publishedDate}</span>
             )}
             {data?.publishedDate && data?.writerName && (
-              <span className="mx-1">|</span>
+              <span style={{ margin: '0 4px' }}>|</span>
             )}
             {data?.writerName && (
               <span>{data.writerName}</span>
@@ -136,13 +161,39 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
           </p>
           
           {/* 中段: タイトル */}
-          <h4 className="text-xs font-bold text-gray-900 line-clamp-2 group-hover:text-orange-500 transition-colors m-0">
+          <h4 
+            className="group-hover:text-orange-500 transition-colors"
+            style={{ 
+              fontSize: '13px', 
+              fontWeight: '700', 
+              color: '#111827', 
+              margin: '0', 
+              padding: '0',
+              border: 'none',
+              lineHeight: '1.4',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
             {data?.title || '記事'}
           </h4>
           
           {/* 最下段: 見出し（メタディスクリプション） */}
           {data?.metaDescription && (
-            <p className="text-[11px] text-gray-600 line-clamp-2 m-0">
+            <p style={{ 
+              fontSize: '11px', 
+              color: '#4b5563', 
+              margin: '0', 
+              padding: '0',
+              border: 'none',
+              lineHeight: '1.5',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
               {data.metaDescription}
             </p>
           )}
