@@ -5,11 +5,17 @@ import parse, { DOMNode, Element } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
 import ShortCodeRenderer from './ShortCodeRenderer';
+import BlogCard from './BlogCard';
 import { TableOfContentsItem } from '@/types/article';
+import { InternalLinkStyle } from '@/types/theme';
+import { Lang } from '@/types/lang';
 
 interface ArticleContentProps {
   content: string;
   tableOfContents?: TableOfContentsItem[];
+  internalLinkStyle?: InternalLinkStyle;
+  lang?: Lang;
+  siteHost?: string;
 }
 
 /**
@@ -91,8 +97,16 @@ function processHtmlBlocks(html: string): string {
   return result;
 }
 
-export default function ArticleContent({ content, tableOfContents }: ArticleContentProps) {
+export default function ArticleContent({ 
+  content, 
+  tableOfContents, 
+  internalLinkStyle = 'text',
+  lang = 'ja',
+  siteHost = ''
+}: ArticleContentProps) {
   const [mounted, setMounted] = useState(false);
+  // 内部リンクをブログカードに変換したリンクを追跡
+  const [blogCardLinks, setBlogCardLinks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setMounted(true);
@@ -212,6 +226,15 @@ export default function ArticleContent({ content, tableOfContents }: ArticleCont
         if (href.includes('the-ayumi.jp')) {
           // /2024/01/10/disability-certificate/ のような相対パスに変換
           newHref = href.replace(/https?:\/\/the-ayumi\.jp/, '');
+        }
+        
+        // 内部記事リンクかどうかチェック
+        const isInternalArticleLink = checkIsInternalArticleLink(newHref, siteHost);
+        
+        // ブログカード形式で表示する場合
+        if (internalLinkStyle === 'blogcard' && isInternalArticleLink) {
+          // 親がp要素の場合、ブロック要素として表示するために適切に処理
+          return <BlogCard href={newHref} lang={lang} />;
         }
         
         // リンクの内容を抽出
@@ -474,6 +497,67 @@ function extractYouTubeId(url: string): string | null {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
+}
+
+/**
+ * URLが内部記事リンクかどうかをチェック
+ * @param href リンクのURL
+ * @param siteHost サイトのホスト（例: "example.pixseo-preview.cloud" or "example.com"）
+ * @returns 内部記事リンクの場合true
+ */
+function checkIsInternalArticleLink(href: string, siteHost: string): boolean {
+  // 相対パスで記事ページへのリンクの場合
+  // /ja/articles/slug, /en/articles/slug, /articles/slug, /2024/01/10/slug/ など
+  if (href.startsWith('/')) {
+    // /ja/articles/slug または /articles/slug の形式をチェック
+    if (/^\/(?:ja|en|zh|ko)\/articles\/[^\/]+\/?$/.test(href)) {
+      return true;
+    }
+    if (/^\/articles\/[^\/]+\/?$/.test(href)) {
+      return true;
+    }
+    // WordPress形式 /2024/01/10/slug/
+    if (/^\/\d{4}\/\d{2}\/\d{2}\/[^\/]+\/?$/.test(href)) {
+      return true;
+    }
+    return false;
+  }
+
+  // 絶対URLの場合
+  try {
+    const url = new URL(href);
+    
+    // 同じホストかどうかチェック
+    if (siteHost && url.host !== siteHost) {
+      // siteHostが設定されていて、異なるホストの場合は外部リンク
+      return false;
+    }
+    
+    // pixseo-preview.cloud または pixseo.app ドメインの場合は内部リンクとして扱う
+    if (!url.host.endsWith('.pixseo-preview.cloud') && !url.host.endsWith('.pixseo.app')) {
+      // その他のドメインの場合、siteHostと一致しない限り外部リンク
+      if (!siteHost || url.host !== siteHost) {
+        return false;
+      }
+    }
+    
+    // パスが記事ページかどうかチェック
+    const pathname = url.pathname;
+    if (/^\/(?:ja|en|zh|ko)\/articles\/[^\/]+\/?$/.test(pathname)) {
+      return true;
+    }
+    if (/^\/articles\/[^\/]+\/?$/.test(pathname)) {
+      return true;
+    }
+    // WordPress形式
+    if (/^\/\d{4}\/\d{2}\/\d{2}\/[^\/]+\/?$/.test(pathname)) {
+      return true;
+    }
+    
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 

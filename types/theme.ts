@@ -137,6 +137,14 @@ export interface HtmlShortcodeItem {
   htmlCode: string;           // HTMLコード
 }
 
+// 内部リンク表示形式
+export type InternalLinkStyle = 'text' | 'blogcard';
+
+// 記事設定の定義
+export interface ArticleSettings {
+  internalLinkStyle: InternalLinkStyle;  // 内部記事リンクの表示形式
+}
+
 // スクリプト発火条件の定義
 export type ScriptTriggerType = 
   | 'all'           // サイト全体
@@ -213,6 +221,9 @@ export interface ThemeLayoutSettings {
   // HTMLショートコード（ふらっとテーマ専用）
   htmlShortcodes?: HtmlShortcodeItem[];
   
+  // 記事設定
+  articleSettings?: ArticleSettings;
+  
   // 基本カラー
   primaryColor?: string;
   secondaryColor?: string;
@@ -276,6 +287,9 @@ export interface Theme {
   
   // HTMLショートコード（ふらっとテーマ専用）
   htmlShortcodes?: HtmlShortcodeItem[];
+  
+  // 記事設定
+  articleSettings?: ArticleSettings;
   
   // 基本カラー
   primaryColor: string;             // メインカラー

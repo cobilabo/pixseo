@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle } from '@/types/theme';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -15,7 +15,7 @@ export default function ThemePage() {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode'>('fv');
+  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode' | 'article'>('fv');
 
   useEffect(() => {
     if (currentTenant) {
@@ -105,6 +105,7 @@ export default function ThemePage() {
       searchSettings: currentTheme.searchSettings,
       sideContentHtmlItems: currentTheme.sideContentHtmlItems,
       htmlShortcodes: currentTheme.htmlShortcodes,
+      articleSettings: currentTheme.articleSettings,
       primaryColor: currentTheme.primaryColor,
       secondaryColor: currentTheme.secondaryColor,
       accentColor: currentTheme.accentColor,
@@ -152,6 +153,7 @@ export default function ThemePage() {
         searchSettings: newSettings.searchSettings,
         sideContentHtmlItems: newSettings.sideContentHtmlItems,
         htmlShortcodes: newSettings.htmlShortcodes,
+        articleSettings: newSettings.articleSettings,
         primaryColor: newSettings.primaryColor || defaultTheme.primaryColor,
         secondaryColor: newSettings.secondaryColor || defaultTheme.secondaryColor,
         accentColor: newSettings.accentColor || defaultTheme.accentColor,
@@ -531,6 +533,22 @@ export default function ThemePage() {
     setTheme(prev => ({ ...prev, htmlShortcodes: items }));
   };
 
+  // 記事設定のデフォルト値
+  const defaultArticleSettings: ArticleSettings = {
+    internalLinkStyle: 'text',
+  };
+
+  // 記事設定の更新
+  const updateArticleSettings = (field: keyof ArticleSettings, value: InternalLinkStyle) => {
+    setTheme(prev => ({
+      ...prev,
+      articleSettings: {
+        ...(prev.articleSettings || defaultArticleSettings),
+        [field]: value,
+      },
+    }));
+  };
+
   // 発火条件のオプション
   const triggerOptions: { value: ScriptTriggerType; label: string; needsPath?: boolean }[] = [
     { value: 'all', label: 'サイト全体' },
@@ -688,6 +706,18 @@ export default function ThemePage() {
                   style={activeTab === 'sns' ? { backgroundColor: '#f9fafb' } : {}}
                 >
                   SNS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('article')}
+                  className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    activeTab === 'article'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  style={activeTab === 'article' ? { backgroundColor: '#f9fafb' } : {}}
+                >
+                  記事設定
                 </button>
                 <button
                   type="button"
@@ -941,6 +971,105 @@ export default function ThemePage() {
                   <p className="text-sm text-gray-500 mt-2">
                     ※ 未入力の場合、サイドバーにX（Twitter）タイムラインは表示されません
                   </p>
+                </div>
+              )}
+
+              {/* 記事設定タブ */}
+              {activeTab === 'article' && (
+                <div className="space-y-8">
+                  {/* 説明 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">記事設定</p>
+                        <p className="text-blue-600">
+                          記事ページの表示に関する設定を行います。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 内部記事リンクの表示形式 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">内部記事リンクの表示形式</label>
+                    <div className="flex flex-wrap gap-4">
+                      {[
+                        { 
+                          value: 'text', 
+                          label: 'テキストリンク形式', 
+                          icon: '🔗', 
+                          description: '通常のテキストリンクとして表示',
+                          preview: (
+                            <div className="mt-3 p-3 bg-white rounded border border-gray-200">
+                              <p className="text-sm text-gray-700">
+                                詳しくは<span className="text-blue-600 underline">こちらの記事</span>をご覧ください。
+                              </p>
+                            </div>
+                          )
+                        },
+                        { 
+                          value: 'blogcard', 
+                          label: 'ブログカード形式', 
+                          icon: '📰', 
+                          description: 'サムネイル・タイトル・説明付きカードで表示',
+                          preview: (
+                            <div className="mt-3 p-3 bg-white rounded border border-gray-200">
+                              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="w-20 h-14 bg-gray-300 rounded flex-shrink-0 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 truncate">記事タイトル</p>
+                                  <p className="text-xs text-gray-500 truncate">ライター名</p>
+                                  <p className="text-xs text-gray-600 line-clamp-1">記事の説明文...</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => updateArticleSettings('internalLinkStyle', option.value as InternalLinkStyle)}
+                          className={`flex-1 min-w-[280px] p-4 rounded-xl border-2 transition-all text-left ${
+                            (theme.articleSettings?.internalLinkStyle || 'text') === option.value
+                              ? 'bg-blue-50 text-blue-700 border-blue-500'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">{option.icon}</span>
+                            <span className="font-medium">{option.label}</span>
+                          </div>
+                          <p className="text-xs text-gray-500">{option.description}</p>
+                          {option.preview}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 補足説明 */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div className="text-sm text-gray-700">
+                        <p className="font-medium mb-1">内部記事リンクについて</p>
+                        <ul className="text-gray-600 space-y-1">
+                          <li>• 記事内の同一サイト内へのリンクが対象となります</li>
+                          <li>• 外部サイトへのリンクはテキストリンクのまま表示されます</li>
+                          <li>• ブログカード形式ではリンク先の記事情報（画像、タイトル、ライター、説明）が表示されます</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 

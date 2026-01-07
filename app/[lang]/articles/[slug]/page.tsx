@@ -189,6 +189,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ArticlePage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   
+  // ホスト情報を取得
+  const headersList = headers();
+  const siteHost = headersList.get('host') || '';
+  
   // mediaIdを取得
   const mediaId = await getMediaIdFromHost();
   const rawArticle = await getArticleServer(params.slug, mediaId || undefined);
@@ -277,8 +281,8 @@ export default async function ArticlePage({ params }: PageProps) {
   const category = categories.length > 0 ? categories[0] : null;
 
   // JSON-LD 構造化データ（SEO強化 + AIO対策）
-  const headersList = headers();
-  const host = headersList.get('host') || '';
+  // headersList と siteHost は関数の先頭で定義済み
+  const host = siteHost;
   
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -431,7 +435,10 @@ export default async function ArticlePage({ params }: PageProps) {
             <article className="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
               <ArticleContent 
                 content={typeof article.content === 'string' ? article.content : ''} 
-                tableOfContents={Array.isArray(article.tableOfContents) ? article.tableOfContents : []} 
+                tableOfContents={Array.isArray(article.tableOfContents) ? article.tableOfContents : []}
+                internalLinkStyle={theme.articleSettings?.internalLinkStyle || 'text'}
+                lang={lang}
+                siteHost={siteHost}
               />
             </article>
 
