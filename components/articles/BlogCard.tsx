@@ -9,6 +9,7 @@ interface BlogCardData {
   featuredImage?: string;
   metaDescription?: string;
   writerName?: string;
+  publishedDate?: string;
   slug: string;
   lang: string;
 }
@@ -80,11 +81,11 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
   if (loading) {
     return (
       <div className="my-4 block">
-        <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 animate-pulse">
-          <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-0"></div>
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+        <div className="flex border border-gray-200 rounded overflow-hidden animate-pulse">
+          <div className="w-28 h-28 bg-gray-200 flex-shrink-0"></div>
+          <div className="flex-1 p-3 space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
             <div className="h-3 bg-gray-200 rounded w-full"></div>
           </div>
         </div>
@@ -97,17 +98,17 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     <div className="my-4 block not-prose">
       <Link
         href={href}
-        className="flex gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 no-underline group"
+        className="flex border border-gray-200 rounded overflow-hidden hover:shadow-md transition-shadow duration-200 no-underline group bg-white"
       >
-        {/* サムネイル */}
-        <div className="w-32 h-20 flex-shrink-0 relative overflow-hidden rounded-lg bg-gray-100">
+        {/* サムネイル（正方形） */}
+        <div className="w-28 h-28 flex-shrink-0 relative bg-gray-100">
           {data?.featuredImage ? (
             <Image
               src={data.featuredImage}
               alt={data.title || ''}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
-              sizes="128px"
+              className="object-cover"
+              sizes="112px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -119,37 +120,31 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         </div>
 
         {/* コンテンツ */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          {/* タイトル */}
-          <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors m-0">
+        <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+          {/* 最上段: 投稿日・ライター名 */}
+          <p className="text-xs text-gray-500 m-0">
+            {data?.publishedDate && (
+              <span className="text-orange-500 font-medium">{data.publishedDate}</span>
+            )}
+            {data?.publishedDate && data?.writerName && (
+              <span className="mx-1">|</span>
+            )}
+            {data?.writerName && (
+              <span>{data.writerName}</span>
+            )}
+          </p>
+          
+          {/* 中段: タイトル */}
+          <h4 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-orange-500 transition-colors m-0 my-1">
             {data?.title || '記事'}
           </h4>
           
-          {/* ライター */}
-          {data?.writerName && (
-            <p className="text-xs text-gray-500 mt-1 m-0">
-              <span className="inline-flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                {data.writerName}
-              </span>
-            </p>
-          )}
-          
-          {/* 説明（メタディスクリプション） */}
+          {/* 最下段: 見出し（メタディスクリプション） */}
           {data?.metaDescription && (
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2 m-0">
+            <p className="text-xs text-gray-600 line-clamp-2 m-0">
               {data.metaDescription}
             </p>
           )}
-        </div>
-
-        {/* 矢印アイコン */}
-        <div className="flex-shrink-0 flex items-center text-gray-400 group-hover:text-blue-500 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
         </div>
       </Link>
     </div>

@@ -45,12 +45,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 投稿日をフォーマット
+    let publishedDate = '';
+    if (rawArticle.publishedAt) {
+      const date = rawArticle.publishedAt instanceof Date 
+        ? rawArticle.publishedAt 
+        : new Date(rawArticle.publishedAt);
+      publishedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    }
+
     // ブログカード用のデータを返す
     return NextResponse.json({
       title: article.title || '',
       featuredImage: article.featuredImage || null,
       metaDescription: article.metaDescription || article.excerpt || '',
       writerName,
+      publishedDate,
       slug: article.slug,
       lang,
     });
