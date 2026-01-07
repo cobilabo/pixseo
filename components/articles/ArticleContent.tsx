@@ -536,6 +536,30 @@ if (typeof window !== 'undefined') {
       word-break: break-all !important;
       overflow-wrap: break-word !important;
     }
+    /* BlogCard (not-prose) 内のスタイルをリセット */
+    .article-content .not-prose,
+    .article-content .not-prose * {
+      all: revert !important;
+    }
+    .article-content .not-prose a {
+      text-decoration: none !important;
+      color: inherit !important;
+    }
+    .article-content .not-prose h4 {
+      border: none !important;
+      border-bottom: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .article-content .not-prose h4::after {
+      display: none !important;
+    }
+    .article-content .not-prose p {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      line-height: 1.4 !important;
+    }
   `;
   if (!document.querySelector('#article-content-styles')) {
     style.id = 'article-content-styles';
