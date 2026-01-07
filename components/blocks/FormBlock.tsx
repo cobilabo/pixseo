@@ -190,7 +190,7 @@ function FormFieldRenderer({ field, value, onChange }: FormFieldRendererProps) {
           onChange={(e) => onChange(e.target.value)}
           placeholder={(field as any).config?.placeholder}
           required={field.required}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
       )}
 
@@ -201,7 +201,7 @@ function FormFieldRenderer({ field, value, onChange }: FormFieldRendererProps) {
           placeholder={(field as any).config?.placeholder}
           required={field.required}
           rows={(field as any).config?.rows || 4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
       )}
 
@@ -214,7 +214,7 @@ function FormFieldRenderer({ field, value, onChange }: FormFieldRendererProps) {
           min={(field as any).config?.min}
           max={(field as any).config?.max}
           step={(field as any).config?.step}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
       )}
 
@@ -223,7 +223,7 @@ function FormFieldRenderer({ field, value, onChange }: FormFieldRendererProps) {
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           required={field.required}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         >
           <option value="">選択してください</option>
           {((field as any).config?.options || []).map((option: string) => (
