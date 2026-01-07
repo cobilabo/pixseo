@@ -98,6 +98,22 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (blockId && !htmlBlockModes[blockId]) {
         newModes[blockId] = currentMode || 'source';
       }
+      
+      // ソースモードのtextareaの内容をdata-html-contentから復元
+      if (currentMode === 'source' || !currentMode) {
+        const textarea = block.querySelector('.html-block-textarea') as HTMLTextAreaElement;
+        const savedContent = block.getAttribute('data-html-content');
+        if (textarea && savedContent) {
+          try {
+            // URLエンコードされたコンテンツをデコード
+            const decodedContent = decodeURIComponent(savedContent);
+            // textareaのvalueはそのままセット（HTMLエスケープ不要）
+            textarea.value = decodedContent;
+          } catch (e) {
+            console.error('Failed to restore HTML block content:', e);
+          }
+        }
+      }
     });
     
     if (Object.keys(newModes).length > 0) {
@@ -136,16 +152,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           if (currentMode === 'source') {
             const textarea = block.querySelector('.html-block-textarea') as HTMLTextAreaElement;
             if (textarea) {
-              const newHtml = textarea.value
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"')
-                .replace(/&#039;/g, "'")
-                .replace(/&amp;/g, '&')
-                .replace(/\n\s*/g, ' ')
-                .replace(/>\s+</g, '><')
-                .trim();
-              block.setAttribute('data-html-content', encodeURIComponent(newHtml));
+              // textareaの値をそのまま保存（改行も保持）
+              block.setAttribute('data-html-content', encodeURIComponent(textarea.value));
             }
           }
           
@@ -157,24 +165,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           if (newMode === 'preview') {
             block.innerHTML = `<div class="html-block-toolbar" data-toolbar-for="${blockId}"><span class="html-block-drag-handle" draggable="true" title="ドラッグして移動">⋮⋮</span><div class="html-block-tabs"><button type="button" class="html-block-btn" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>HTML</button><button type="button" class="html-block-btn active" data-action="toggle-mode" data-block-id="${blockId}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>プレビュー</button></div><div class="html-block-spacer"></div><button type="button" class="html-block-menu-btn html-block-delete-btn" data-action="delete" data-block-id="${blockId}" title="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div><div class="html-block-preview-content">${htmlContent}</div>`;
           } else {
-            // フォーマット済みHTML
-            let formatted = htmlContent;
-            let indent = 0;
-            const indentSize = 2;
-            formatted = formatted.replace(/></g, '>\n<').replace(/\n\s*\n+/g, '\n');
-            const lines = formatted.split('\n');
-            const formattedLines: string[] = [];
-            for (let i = 0; i < lines.length; i++) {
-              const line = lines[i].trim();
-              if (!line) continue;
-              if (line.startsWith('</')) indent = Math.max(0, indent - indentSize);
-              formattedLines.push(' '.repeat(indent) + line);
-              if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>') && !line.includes('</')) {
-                if (!line.match(/<(script|style|textarea|pre)/i)) indent += indentSize;
-              }
-            }
-            const formattedHtml = formattedLines.join('\n');
-            const escapedHtml = formattedHtml
+            // HTMLコンテンツをそのままエスケープして表示（フォーマットせず元の形式を保持）
+            const escapedHtml = htmlContent
               .replace(/&/g, '&amp;')
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
@@ -222,14 +214,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           const textarea = target as HTMLTextAreaElement;
           const block = editor.querySelector(`[data-html-id="${blockId}"]`) as HTMLElement;
           if (block) {
-            // HTMLアンエスケープしてから保存（改行は保持）
-            const cleanedHtml = textarea.value
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&quot;/g, '"')
-              .replace(/&#039;/g, "'")
-              .replace(/&amp;/g, '&');
-            block.setAttribute('data-html-content', encodeURIComponent(cleanedHtml));
+            // textareaの値をそのまま保存（改行も保持）
+            block.setAttribute('data-html-content', encodeURIComponent(textarea.value));
           }
         }
       }
@@ -248,7 +234,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         e.preventDefault();
         e.stopPropagation();
         const htmlBlock = dragHandle.closest('.html-block') as HTMLElement;
-        if (htmlBlock) {
+      if (htmlBlock) {
           draggedElement = htmlBlock;
           isDragging = true;
           htmlBlock.classList.add('dragging');
@@ -271,10 +257,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         if (block === draggedElement) return;
         
         const rect = block.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        
+          const midY = rect.top + rect.height / 2;
+          
         block.classList.remove('drop-above', 'drop-below');
-        
+          
         if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
           if (e.clientY < midY) {
             block.classList.add('drop-above');
@@ -318,11 +304,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         const target = targetBlock as HTMLElement;
         if (insertBefore) {
           target.parentNode?.insertBefore(draggedElement, target);
-        } else {
+            } else {
           target.parentNode?.insertBefore(draggedElement, target.nextSibling);
-        }
-        
-        // 変更を通知
+            }
+            
+            // 変更を通知
         if (editorRef.current) {
           const html = editorRef.current.innerHTML;
           onChange(html);

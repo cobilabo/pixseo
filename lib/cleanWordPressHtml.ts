@@ -14,9 +14,16 @@ export function cleanWordPressHtml(html: string): string {
   let cleaned = html;
 
   // 1. WordPressコメントタグを削除（スクリプトタグ内のコメントは除外）
-  // スクリプトタグやiframe内のコメントは保持するため、先にそれらを一時的に置換
+  // スクリプトタグ、iframe、HTMLブロック内のコメントは保持するため、先にそれらを一時的に置換
   const scriptPlaceholders: string[] = [];
   const iframePlaceholders: string[] = [];
+  const htmlBlockPlaceholders: string[] = [];
+  
+  // HTMLブロック（カスタムエディタのHTMLブロック）を一時的に置換
+  cleaned = cleaned.replace(/<div[^>]*class="html-block"[^>]*>[\s\S]*?<\/div>/gi, (match) => {
+    htmlBlockPlaceholders.push(match);
+    return `__HTML_BLOCK_PLACEHOLDER_${htmlBlockPlaceholders.length - 1}__`;
+  });
   
   // スクリプトタグを一時的に置換
   cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, (match) => {
@@ -75,13 +82,17 @@ export function cleanWordPressHtml(html: string): string {
   // 12. 余分な空白を削除（スクリプト/iframe内は除外）
   cleaned = cleaned.replace(/>\s+</g, '><');
 
-  // 13. スクリプトタグとiframeタグを復元
+  // 13. スクリプトタグ、iframeタグ、HTMLブロックを復元
   scriptPlaceholders.forEach((script, index) => {
     cleaned = cleaned.replace(`__SCRIPT_PLACEHOLDER_${index}__`, script);
   });
   
   iframePlaceholders.forEach((iframe, index) => {
     cleaned = cleaned.replace(`__IFRAME_PLACEHOLDER_${index}__`, iframe);
+  });
+  
+  htmlBlockPlaceholders.forEach((htmlBlock, index) => {
+    cleaned = cleaned.replace(`__HTML_BLOCK_PLACEHOLDER_${index}__`, htmlBlock);
   });
 
   return cleaned;
