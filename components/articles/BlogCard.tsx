@@ -93,103 +93,17 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     );
   }
 
-  // ブログカード表示
-  const cardStyles = {
-    wrapper: {
-      margin: '16px 0',
-      display: 'block',
-    } as React.CSSProperties,
-    link: {
-      display: 'flex',
-      height: '150px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '0',
-      textDecoration: 'none',
-      backgroundColor: '#fff',
-      overflow: 'hidden',
-      transition: 'box-shadow 0.2s',
-    } as React.CSSProperties,
-    thumbnail: {
-      width: '150px',
-      height: '150px',
-      minWidth: '150px',
-      maxWidth: '150px',
-      minHeight: '150px',
-      maxHeight: '150px',
-      borderRadius: '0',
-      margin: '0',
-      padding: '0',
-      position: 'relative' as const,
-      backgroundColor: '#f3f4f6',
-      flexShrink: 0,
-    } as React.CSSProperties,
-    image: {
-      borderRadius: '0',
-      objectFit: 'cover' as const,
-    } as React.CSSProperties,
-    content: {
-      flex: '1',
-      minWidth: '0',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      padding: '12px 16px',
-      gap: '4px',
-      justifyContent: 'center',
-    } as React.CSSProperties,
-    meta: {
-      fontSize: '11px',
-      color: '#6b7280',
-      margin: '0',
-      padding: '0',
-      border: 'none',
-      lineHeight: '1.4',
-      fontWeight: 'normal' as const,
-    } as React.CSSProperties,
-    date: {
-      color: '#f97316',
-      fontWeight: '500' as const,
-    } as React.CSSProperties,
-    title: {
-      fontSize: '13px',
-      fontWeight: '700' as const,
-      color: '#111827',
-      margin: '0',
-      padding: '0',
-      border: 'none',
-      borderBottom: 'none',
-      lineHeight: '1.4',
-      display: '-webkit-box',
-      WebkitLineClamp: 2,
-      WebkitBoxOrient: 'vertical' as const,
-      overflow: 'hidden',
-      textDecoration: 'none',
-    } as React.CSSProperties,
-    description: {
-      fontSize: '11px',
-      color: '#4b5563',
-      margin: '0',
-      padding: '0',
-      border: 'none',
-      lineHeight: '1.5',
-      display: '-webkit-box',
-      WebkitLineClamp: 2,
-      WebkitBoxOrient: 'vertical' as const,
-      overflow: 'hidden',
-      fontWeight: 'normal' as const,
-    } as React.CSSProperties,
-  };
-
+  // ブログカード表示（専用クラス名を使用してproseスタイルをオーバーライド）
   return (
-    <div className="not-prose" style={cardStyles.wrapper}>
-      <Link href={href} style={cardStyles.link}>
+    <div className="blogcard-wrapper">
+      <Link href={href} className="blogcard-link">
         {/* サムネイル（正方形 150x150） */}
-        <div style={cardStyles.thumbnail}>
+        <div className="blogcard-thumbnail">
           {data?.featuredImage ? (
             <Image
               src={data.featuredImage}
               alt={data.title || ''}
               fill
-              style={cardStyles.image}
               sizes="150px"
             />
           ) : (
@@ -209,11 +123,11 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         </div>
 
         {/* コンテンツ */}
-        <div style={cardStyles.content}>
+        <div className="blogcard-content">
           {/* 最上段: 投稿日・ライター名 */}
-          <p style={cardStyles.meta}>
+          <p className="blogcard-meta">
             {data?.publishedDate && (
-              <span style={cardStyles.date}>{data.publishedDate}</span>
+              <span className="blogcard-date">{data.publishedDate}</span>
             )}
             {data?.publishedDate && data?.writerName && (
               <span style={{ margin: '0 4px' }}>|</span>
@@ -224,13 +138,13 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
           </p>
           
           {/* 中段: タイトル */}
-          <div style={cardStyles.title}>
+          <div className="blogcard-title">
             {data?.title || '記事'}
           </div>
           
           {/* 最下段: 見出し（メタディスクリプション） */}
           {data?.metaDescription && (
-            <p style={cardStyles.description}>
+            <p className="blogcard-description">
               {data.metaDescription}
             </p>
           )}

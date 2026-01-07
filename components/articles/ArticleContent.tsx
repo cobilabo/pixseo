@@ -536,31 +536,112 @@ if (typeof window !== 'undefined') {
       word-break: break-all !important;
       overflow-wrap: break-word !important;
     }
-    /* BlogCard (not-prose) 内のスタイルをリセット */
-    .article-content .not-prose {
-      all: unset !important;
+    /* BlogCard専用スタイルリセット */
+    .article-content .blogcard-wrapper {
       display: block !important;
       margin: 16px 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
     }
-    .article-content .not-prose a {
-      all: unset !important;
+    .article-content .blogcard-link {
       display: flex !important;
-      cursor: pointer !important;
+      text-decoration: none !important;
+      color: inherit !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 0 !important;
+      overflow: hidden !important;
+      background: #fff !important;
+      height: 150px !important;
     }
-    .article-content .not-prose h1,
-    .article-content .not-prose h2,
-    .article-content .not-prose h3,
-    .article-content .not-prose h4,
-    .article-content .not-prose h5,
-    .article-content .not-prose h6,
-    .article-content .not-prose p,
-    .article-content .not-prose span,
-    .article-content .not-prose div {
-      all: unset !important;
-      display: block !important;
+    .article-content .blogcard-link:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
     }
-    .article-content .not-prose h4::after,
-    .article-content .not-prose h4::before {
+    .article-content .blogcard-thumbnail {
+      width: 150px !important;
+      min-width: 150px !important;
+      max-width: 150px !important;
+      height: 150px !important;
+      min-height: 150px !important;
+      max-height: 150px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      position: relative !important;
+      flex-shrink: 0 !important;
+      background: #f3f4f6 !important;
+    }
+    .article-content .blogcard-thumbnail img {
+      border-radius: 0 !important;
+      object-fit: cover !important;
+    }
+    .article-content .blogcard-content {
+      flex: 1 !important;
+      min-width: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 12px 16px !important;
+      gap: 4px !important;
+      justify-content: center !important;
+      margin: 0 !important;
+      border: none !important;
+    }
+    .article-content .blogcard-meta {
+      font-size: 11px !important;
+      color: #6b7280 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      line-height: 1.4 !important;
+      font-weight: normal !important;
+    }
+    .article-content .blogcard-meta::before,
+    .article-content .blogcard-meta::after {
+      display: none !important;
+      content: none !important;
+    }
+    .article-content .blogcard-date {
+      color: #f97316 !important;
+      font-weight: 500 !important;
+    }
+    .article-content .blogcard-title {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #111827 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-bottom: none !important;
+      line-height: 1.4 !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .article-content .blogcard-title::before,
+    .article-content .blogcard-title::after {
+      display: none !important;
+      content: none !important;
+    }
+    .article-content .blogcard-link:hover .blogcard-title {
+      color: #f97316 !important;
+    }
+    .article-content .blogcard-description {
+      font-size: 11px !important;
+      color: #4b5563 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      line-height: 1.5 !important;
+      font-weight: normal !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .article-content .blogcard-description::before,
+    .article-content .blogcard-description::after {
       display: none !important;
       content: none !important;
     }
