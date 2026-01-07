@@ -14,27 +14,81 @@ interface ArticleContentProps {
 
 /**
  * エディタのHTMLブロック構造を実際のHTMLコンテンツに変換する
- * <div class="html-block" data-html-content="...encoded...">...</div>
- * → data-html-contentのデコードされたHTML
+ * ネストされたdiv構造を正しく処理するため、開始タグと終了タグをカウントする
  */
 function processHtmlBlocks(html: string): string {
   if (!html) return '';
   
-  // HTMLブロックを検出して変換
-  // data-html-content属性から実際のHTMLコンテンツを抽出
-  const htmlBlockRegex = /<div[^>]*class="html-block"[^>]*data-html-content="([^"]*)"[^>]*>[\s\S]*?<\/div>/gi;
+  let result = html;
+  let searchStart = 0;
   
-  return html.replace(htmlBlockRegex, (match, encodedContent) => {
-    try {
-      // URLエンコードされたコンテンツをデコード
-      const decodedContent = decodeURIComponent(encodedContent);
-      // デコードしたHTMLをそのまま返す
-      return decodedContent;
-    } catch (e) {
-      console.error('Failed to decode HTML block content:', e);
-      return ''; // デコードに失敗した場合は空文字を返す
+  while (true) {
+    // html-blockの開始位置を検索
+    const blockStartMatch = result.slice(searchStart).match(/<div[^>]*class="html-block"[^>]*>/i);
+    if (!blockStartMatch || blockStartMatch.index === undefined) break;
+    
+    const absoluteBlockStart = searchStart + blockStartMatch.index;
+    const openingTag = blockStartMatch[0];
+    
+    // data-html-content属性を抽出
+    const contentMatch = openingTag.match(/data-html-content="([^"]*)"/);
+    if (!contentMatch) {
+      // data-html-contentがない場合はスキップして次を検索
+      searchStart = absoluteBlockStart + openingTag.length;
+      continue;
     }
-  });
+    
+    const encodedContent = contentMatch[1];
+    
+    // ネストされたdivを考慮して対応する閉じタグを見つける
+    let depth = 1;
+    let pos = absoluteBlockStart + openingTag.length;
+    
+    while (depth > 0 && pos < result.length) {
+      const nextOpen = result.indexOf('<div', pos);
+      const nextClose = result.indexOf('</div>', pos);
+      
+      if (nextClose === -1) break; // 閉じタグが見つからない
+      
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        // 開きタグが先に見つかった
+        depth++;
+        pos = nextOpen + 4;
+      } else {
+        // 閉じタグが先に見つかった
+        depth--;
+        if (depth === 0) {
+          // 対応する閉じタグを見つけた
+          const blockEnd = nextClose + 6; // '</div>'.length
+          
+          try {
+            // URLエンコードされたコンテンツをデコード
+            const decodedContent = decodeURIComponent(encodedContent);
+            
+            // ブロック全体を置換
+            result = result.slice(0, absoluteBlockStart) + decodedContent + result.slice(blockEnd);
+            
+            // 置換後の位置から次の検索を開始
+            searchStart = absoluteBlockStart + decodedContent.length;
+          } catch (e) {
+            console.error('Failed to decode HTML block content:', e);
+            // デコードに失敗した場合はブロックを削除
+            result = result.slice(0, absoluteBlockStart) + result.slice(blockEnd);
+            searchStart = absoluteBlockStart;
+          }
+        } else {
+          pos = nextClose + 6;
+        }
+      }
+    }
+    
+    // 閉じタグが見つからなかった場合は次を検索
+    if (depth > 0) {
+      searchStart = absoluteBlockStart + openingTag.length;
+    }
+  }
+  
+  return result;
 }
 
 export default function ArticleContent({ content, tableOfContents }: ArticleContentProps) {
