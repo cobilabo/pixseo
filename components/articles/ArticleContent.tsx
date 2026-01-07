@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import parse, { DOMNode, Element } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
@@ -105,12 +106,57 @@ export default function ArticleContent({
   siteHost = ''
 }: ArticleContentProps) {
   const [mounted, setMounted] = useState(false);
-  // 内部リンクをブログカードに変換したリンクを追跡
-  const [blogCardLinks, setBlogCardLinks] = useState<Set<string>>(new Set());
+  const contentRef = useRef<HTMLDivElement>(null);
+  // ブログカードプレースホルダーの要素を追跡
+  const [blogCardPlaceholders, setBlogCardPlaceholders] = useState<Array<{ element: HTMLElement; href: string }>>([]);
+
+  // HTMLブロックを実際のHTMLコンテンツに変換
+  const htmlBlockProcessed = processHtmlBlocks(content);
+  
+  // ショートコードを処理
+  const shortcodeProcessed = ShortCodeRenderer.process(htmlBlockProcessed);
+  
+  // 内部リンクをブログカードプレースホルダーに変換（ブログカード形式の場合のみ）
+  const [processedContent, internalLinkUrls] = processInternalLinksForBlogCard(
+    shortcodeProcessed, 
+    internalLinkStyle, 
+    siteHost
+  );
+
+  // デバッグ: 設定値を確認
+  useEffect(() => {
+    console.log('[ArticleContent] internalLinkStyle:', internalLinkStyle);
+    console.log('[ArticleContent] lang:', lang);
+    console.log('[ArticleContent] siteHost:', siteHost);
+    console.log('[ArticleContent] internalLinkUrls:', internalLinkUrls);
+  }, [internalLinkStyle, lang, siteHost, internalLinkUrls]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ブログカードプレースホルダーを検出
+  useEffect(() => {
+    if (!mounted || !contentRef.current) return;
+
+    const placeholders = contentRef.current.querySelectorAll('.blogcard-placeholder');
+    const placeholderData: Array<{ element: HTMLElement; href: string }> = [];
+    
+    placeholders.forEach((placeholder) => {
+      const href = placeholder.getAttribute('data-href');
+      if (href) {
+        placeholderData.push({
+          element: placeholder as HTMLElement,
+          href: decodeURIComponent(href),
+        });
+      }
+    });
+
+    if (placeholderData.length > 0) {
+      console.log('[ArticleContent] Found blogcard placeholders:', placeholderData.length);
+      setBlogCardPlaceholders(placeholderData);
+    }
+  }, [mounted, internalLinkUrls]);
 
   // Instagram埋め込みとスクリプトタグを処理するuseEffect（mountedがtrueになった後に実行）
   useEffect(() => {
@@ -170,12 +216,6 @@ export default function ArticleContent({
       }
     }
   }, [mounted, content]);
-
-  // HTMLブロックを実際のHTMLコンテンツに変換
-  const htmlBlockProcessed = processHtmlBlocks(content);
-  
-  // ショートコードを処理
-  const processedContent = ShortCodeRenderer.process(htmlBlockProcessed);
 
   // 見出しの出現順をカウント
   let headingCount = 0;
@@ -317,23 +357,40 @@ export default function ArticleContent({
   const hasGoogleMapsIframe = /<iframe[\s\S]*?src=["'][^"']*(?:maps\.google\.com|google\.com\/maps)[^"']*["'][\s\S]*?>/i.test(processedContent);
   const hasInstagramEmbed = processedContent.includes('instagram-media');
   
+  // ブログカードのポータルをレンダリング
+  const renderBlogCardPortals = () => {
+    return blogCardPlaceholders.map(({ element, href }, index) => 
+      createPortal(
+        <BlogCard key={`blogcard-${index}`} href={href} lang={lang} />,
+        element
+      )
+    );
+  };
+  
   // スクリプトタグ、Googleマップのiframe、またはInstagram埋め込みが含まれている場合は、
   // dangerouslySetInnerHTMLで直接挿入（これにより、スクリプトが正常に動作する）
   if (hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed) {
     // Instagram埋め込みスクリプトのロード処理は既にuseEffectで行われている
     return (
-      <div 
-        className="prose prose-lg max-w-none article-content"
-        dangerouslySetInnerHTML={{ __html: processedContent }}
-      />
+      <>
+        <div 
+          ref={contentRef}
+          className="prose prose-lg max-w-none article-content"
+          dangerouslySetInnerHTML={{ __html: processedContent }}
+        />
+        {renderBlogCardPortals()}
+      </>
     );
   }
 
   // スクリプトタグや埋め込みコンテンツがない場合は、通常のパース処理
   return (
-    <div className="prose prose-lg max-w-none article-content">
-      {parse(processedContent, options)}
-    </div>
+    <>
+      <div ref={contentRef} className="prose prose-lg max-w-none article-content">
+        {parse(processedContent, options)}
+      </div>
+      {renderBlogCardPortals()}
+    </>
   );
 }
 
@@ -505,6 +562,47 @@ function extractYouTubeId(url: string): string | null {
  * @param siteHost サイトのホスト（例: "example.pixseo-preview.cloud" or "example.com"）
  * @returns 内部記事リンクの場合true
  */
+/**
+ * 内部記事リンクをブログカードプレースホルダーに変換
+ * @returns [処理後のHTML, 内部リンクURLの配列]
+ */
+function processInternalLinksForBlogCard(
+  html: string, 
+  internalLinkStyle: InternalLinkStyle,
+  siteHost: string
+): [string, string[]] {
+  // ブログカード形式でない場合は何もしない
+  if (internalLinkStyle !== 'blogcard') {
+    return [html, []];
+  }
+
+  const internalLinkUrls: string[] = [];
+  let processedHtml = html;
+
+  // aタグを検索して内部リンクをプレースホルダーに置換
+  // <a href="...">...</a> の形式を検索
+  const linkRegex = /<a\s+([^>]*href=["']([^"']+)["'][^>]*)>([^<]*(?:<(?!\/a>)[^<]*)*)<\/a>/gi;
+  
+  processedHtml = processedHtml.replace(linkRegex, (match, attrs, href, linkText) => {
+    // the-ayumi.jp のリンクを変換
+    let normalizedHref = href;
+    if (href.includes('the-ayumi.jp')) {
+      normalizedHref = href.replace(/https?:\/\/the-ayumi\.jp/, '');
+    }
+    
+    // 内部記事リンクかチェック
+    if (checkIsInternalArticleLink(normalizedHref, siteHost)) {
+      internalLinkUrls.push(normalizedHref);
+      // プレースホルダーdivに置換（dangerouslySetInnerHTMLで挿入後にReactコンポーネントで置換）
+      return `<div class="blogcard-placeholder" data-href="${encodeURIComponent(normalizedHref)}"></div>`;
+    }
+    
+    return match;
+  });
+
+  return [processedHtml, internalLinkUrls];
+}
+
 function checkIsInternalArticleLink(href: string, siteHost: string): boolean {
   // 相対パスで記事ページへのリンクの場合
   // /ja/articles/slug, /en/articles/slug, /articles/slug, /2024/01/10/slug/ など

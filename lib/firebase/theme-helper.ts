@@ -6,6 +6,17 @@ const themeCache = new Map<string, { theme: Theme; timestamp: number }>();
 const THEME_CACHE_TTL = 5 * 60 * 1000; // 5分
 
 /**
+ * テーマキャッシュをクリア
+ */
+export function clearThemeCache(mediaId?: string): void {
+  if (mediaId) {
+    themeCache.delete(mediaId);
+  } else {
+    themeCache.clear();
+  }
+}
+
+/**
  * mediaIdからTheme情報を取得（キャッシュ付き）
  */
 export async function getTheme(mediaId: string): Promise<Theme> {

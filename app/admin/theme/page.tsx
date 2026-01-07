@@ -41,6 +41,9 @@ export default function ThemePage() {
         snsSettings: {
           ...fetchedTheme.snsSettings,
         },
+        articleSettings: {
+          internalLinkStyle: fetchedTheme.articleSettings?.internalLinkStyle || 'text',
+        },
       });
     } catch (error) {
       console.error('テーマ設定の取得に失敗しました:', error);
