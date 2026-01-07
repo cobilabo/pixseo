@@ -537,28 +537,32 @@ if (typeof window !== 'undefined') {
       overflow-wrap: break-word !important;
     }
     /* BlogCard (not-prose) 内のスタイルをリセット */
-    .article-content .not-prose,
-    .article-content .not-prose * {
-      all: revert !important;
+    .article-content .not-prose {
+      all: unset !important;
+      display: block !important;
+      margin: 16px 0 !important;
     }
     .article-content .not-prose a {
-      text-decoration: none !important;
-      color: inherit !important;
+      all: unset !important;
+      display: flex !important;
+      cursor: pointer !important;
     }
-    .article-content .not-prose h4 {
-      border: none !important;
-      border-bottom: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
+    .article-content .not-prose h1,
+    .article-content .not-prose h2,
+    .article-content .not-prose h3,
+    .article-content .not-prose h4,
+    .article-content .not-prose h5,
+    .article-content .not-prose h6,
+    .article-content .not-prose p,
+    .article-content .not-prose span,
+    .article-content .not-prose div {
+      all: unset !important;
+      display: block !important;
     }
-    .article-content .not-prose h4::after {
+    .article-content .not-prose h4::after,
+    .article-content .not-prose h4::before {
       display: none !important;
-    }
-    .article-content .not-prose p {
-      margin: 0 !important;
-      padding: 0 !important;
-      border: none !important;
-      line-height: 1.4 !important;
+      content: none !important;
     }
   `;
   if (!document.querySelector('#article-content-styles')) {
