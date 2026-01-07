@@ -546,6 +546,7 @@ if (typeof window !== 'undefined') {
     }
     .article-content .blogcard-link {
       display: flex !important;
+      align-items: stretch !important;
       text-decoration: none !important;
       color: inherit !important;
       border: 1px solid #e5e7eb !important;
@@ -571,6 +572,17 @@ if (typeof window !== 'undefined') {
       position: relative !important;
       flex-shrink: 0 !important;
       background: #f3f4f6 !important;
+      align-self: stretch !important;
+    }
+    .article-content .blogcard-thumbnail > span,
+    .article-content .blogcard-thumbnail > div {
+      margin: 0 !important;
+      padding: 0 !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
     }
     .article-content .blogcard-thumbnail img {
       border-radius: 0 !important;
