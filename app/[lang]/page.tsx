@@ -135,11 +135,9 @@ export default async function HomePage({ params }: PageProps) {
   const userAgent = headersList.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
   
-  // homeページがあるかチェック
-  const rawHomePage = mediaId ? await getHomePage(mediaId) : null;
-  
-  // サイト設定、Theme、記事を並列取得
-  const [rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allTags] = await Promise.all([
+  // すべてのデータを並列取得（homeページチェックも含む）
+  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allTags] = await Promise.all([
+    mediaId ? getHomePage(mediaId) : Promise.resolve(null),
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),

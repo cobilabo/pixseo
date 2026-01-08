@@ -110,7 +110,7 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
   }
 };
 
-// 記事一覧を取得（サーバーサイド用）
+// 記事一覧を取得（サーバーサイド用）- 最適化版
 export const getArticlesServer = async (
   options: {
     limit?: number;
@@ -142,11 +142,15 @@ export const getArticlesServer = async (
       return cached;
     }
     
+    const limitCount = options.limit || 30;
+    const orderField = options.orderBy || 'publishedAt';
+    const orderDir = options.orderDirection || 'desc';
+    
     // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
+    let q: admin.firestore.Query = articlesRef;
     
     // プレビューモードでない場合のみ公開記事に絞る
-    let q: admin.firestore.Query = articlesRef;
     if (!isPreview) {
       q = q.where('isPublished', '==', true);
     }
@@ -156,15 +160,21 @@ export const getArticlesServer = async (
       q = q.where('mediaId', '==', options.mediaId);
     }
     
+    // カテゴリーまたはタグでフィルタリング
     if (options.categoryId) {
       q = q.where('categoryIds', 'array-contains', options.categoryId);
-    }
-    
-    if (options.tagId) {
+    } else if (options.tagId) {
       q = q.where('tagIds', 'array-contains', options.tagId);
     }
     
-    // orderByは使わず、取得後にソートする（Firestoreの複合インデックス不足を回避）
+    // Firestoreクエリでソートを適用（インデックスが必要）
+    // array-containsと組み合わせる場合は追加のソートが必要
+    if (!options.categoryId && !options.tagId) {
+      // カテゴリー・タグフィルターがない場合はFirestoreでソート
+      q = q.orderBy(orderField, orderDir);
+      q = q.limit(limitCount * 2); // 公開日フィルター用に余裕を持たせる
+    }
+    
     const snapshot = await q.get();
     
     const now = new Date();
@@ -197,27 +207,25 @@ export const getArticlesServer = async (
     // プレビューモードでない場合のみ、公開日が現在日時以下の記事に絞る
     .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
-    // 取得後にソート
-    const orderField = options.orderBy || 'publishedAt';
-    const orderDir = options.orderDirection || 'desc';
-    
-    articles.sort((a, b) => {
-      const aValue = a[orderField] || 0;
-      const bValue = b[orderField] || 0;
-      
-      if (orderField === 'publishedAt') {
-        const aTime = (aValue as Date).getTime();
-        const bTime = (bValue as Date).getTime();
-        return orderDir === 'desc' ? bTime - aTime : aTime - bTime;
-      } else {
-        return orderDir === 'desc' 
-          ? (bValue as number) - (aValue as number)
-          : (aValue as number) - (bValue as number);
-      }
-    });
+    // カテゴリー・タグフィルターがある場合のみJavaScriptでソート
+    if (options.categoryId || options.tagId) {
+      articles.sort((a, b) => {
+        const aValue = a[orderField] || 0;
+        const bValue = b[orderField] || 0;
+        
+        if (orderField === 'publishedAt') {
+          const aTime = (aValue as Date).getTime();
+          const bTime = (bValue as Date).getTime();
+          return orderDir === 'desc' ? bTime - aTime : aTime - bTime;
+        } else {
+          return orderDir === 'desc' 
+            ? (bValue as number) - (aValue as number)
+            : (aValue as number) - (bValue as number);
+        }
+      });
+    }
     
     // limit適用
-    const limitCount = options.limit || 30;
     articles = articles.slice(0, limitCount);
     
     // キャッシュに保存
@@ -685,7 +693,7 @@ async function buildAdjacentArticlesResult(
   return { previousArticle, nextArticle };
 }
 
-// ライター別の記事一覧を取得（サーバーサイド用）
+// ライター別の記事一覧を取得（サーバーサイド用）- 最適化版
 export const getArticlesByWriterServer = async (
   writerId: string,
   mediaId?: string,
@@ -701,16 +709,19 @@ export const getArticlesByWriterServer = async (
       return cached;
     }
     
-    // Firestoreから取得（orderByを削除して複合インデックス不要に）
+    // Firestoreから取得（インデックスを使用してソート）
     const articlesRef = adminDb.collection('articles');
-    let query = articlesRef
-      .where('writerId', '==', writerId)
-      .where('isPublished', '==', true);
+    let query: admin.firestore.Query = articlesRef
+      .where('isPublished', '==', true)
+      .where('writerId', '==', writerId);
     
     // mediaIdが指定されている場合はフィルタリング
     if (mediaId) {
-      query = query.where('mediaId', '==', mediaId) as any;
+      query = query.where('mediaId', '==', mediaId);
     }
+    
+    // インデックスを使用してソート
+    query = query.orderBy('publishedAt', 'desc').limit(limitCount * 2);
     
     const snapshot = await query.get();
     
@@ -730,13 +741,6 @@ export const getArticlesByWriterServer = async (
     // 公開日が現在日時以下の記事のみを表示
     .filter(article => !article.publishedAt || article.publishedAt <= nowWriter);
     
-    // 取得後にソート（新しい順）
-    articles.sort((a, b) => {
-      const aTime = a.publishedAt?.getTime() || 0;
-      const bTime = b.publishedAt?.getTime() || 0;
-      return bTime - aTime;
-    });
-    
     // limit適用
     articles = articles.slice(0, limitCount);
     
@@ -751,7 +755,8 @@ export const getArticlesByWriterServer = async (
 };
 
 /**
- * おすすめカテゴリーに属する記事を取得（サーバーサイド用）
+ * おすすめカテゴリーに属する記事を取得（サーバーサイド用）- 最適化版
+ * キャッシュを活用し、カテゴリーの取得を効率化
  */
 export const getRecommendedArticlesServer = async (
   limitCount: number = 10,
@@ -774,22 +779,31 @@ export const getRecommendedArticlesServer = async (
       return cached;
     }
     
-    // おすすめカテゴリーを取得
-    const categoriesRef = adminDb.collection('categories');
-    let categoriesQuery: admin.firestore.Query = categoriesRef.where('isRecommended', '==', true);
+    // おすすめカテゴリーを取得（キャッシュ利用）
+    const categoriesCacheKey = generateCacheKey('recommendedCategoryIds', mediaId);
+    let recommendedCategoryIds = cacheManager.get<string[]>(categoriesCacheKey, CACHE_TTL.LONG);
     
-    if (mediaId) {
-      categoriesQuery = categoriesQuery.where('mediaId', '==', mediaId);
+    if (!recommendedCategoryIds) {
+      const categoriesRef = adminDb.collection('categories');
+      let categoriesQuery: admin.firestore.Query = categoriesRef.where('isRecommended', '==', true);
+      
+      if (mediaId) {
+        categoriesQuery = categoriesQuery.where('mediaId', '==', mediaId);
+      }
+      
+      const categoriesSnapshot = await categoriesQuery.get();
+      recommendedCategoryIds = categoriesSnapshot.docs.map(doc => doc.id);
+      
+      // カテゴリーIDをキャッシュ
+      cacheManager.set(categoriesCacheKey, recommendedCategoryIds);
     }
-    
-    const categoriesSnapshot = await categoriesQuery.get();
-    const recommendedCategoryIds = categoriesSnapshot.docs.map(doc => doc.id);
     
     if (recommendedCategoryIds.length === 0) {
       return [];
     }
     
     // おすすめカテゴリーに属する記事を取得
+    // Firestoreではarray-contains-anyで複数カテゴリーを一度にクエリ可能（最大10個）
     const articlesRef = adminDb.collection('articles');
     let articlesQuery: admin.firestore.Query = articlesRef;
     
@@ -801,6 +815,11 @@ export const getRecommendedArticlesServer = async (
     if (mediaId) {
       articlesQuery = articlesQuery.where('mediaId', '==', mediaId);
     }
+    
+    // array-contains-anyで効率的にフィルタリング（最大10カテゴリー）
+    const categoryIdsToQuery = recommendedCategoryIds.slice(0, 10);
+    articlesQuery = articlesQuery.where('categoryIds', 'array-contains-any', categoryIdsToQuery);
+    articlesQuery = articlesQuery.orderBy('publishedAt', 'desc').limit(limitCount * 2);
     
     const snapshot = await articlesQuery.get();
     
@@ -832,20 +851,8 @@ export const getRecommendedArticlesServer = async (
           readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
         } as Article;
       })
-      // おすすめカテゴリーに属する記事のみをフィルタリング
-      .filter(article => {
-        const articleCategoryIds = article.categoryIds || [];
-        return articleCategoryIds.some((catId: string) => recommendedCategoryIds.includes(catId));
-      })
       // プレビューモードでない場合のみ公開日チェック
       .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
-    
-    // 公開日で降順ソート
-    articles.sort((a, b) => {
-      const aTime = a.publishedAt?.getTime() || 0;
-      const bTime = b.publishedAt?.getTime() || 0;
-      return bTime - aTime;
-    });
     
     // limit適用
     articles = articles.slice(0, limitCount);
