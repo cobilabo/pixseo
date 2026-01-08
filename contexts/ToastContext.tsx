@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -18,16 +18,35 @@ interface ToastContextType {
   showInfo: (message: string) => void;
 }
 
+const TOAST_STORAGE_KEY = 'pending_toast';
+
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // ページ読み込み時に保存されたトーストを確認
+  useEffect(() => {
+    const savedToast = sessionStorage.getItem(TOAST_STORAGE_KEY);
+    if (savedToast) {
+      try {
+        const { message, type } = JSON.parse(savedToast);
+        sessionStorage.removeItem(TOAST_STORAGE_KEY);
+        // 少し遅延させて表示（ページ遷移後のレンダリングを待つ）
+        setTimeout(() => {
+          addToast(message, type);
+        }, 100);
+      } catch (e) {
+        sessionStorage.removeItem(TOAST_STORAGE_KEY);
+      }
+    }
+  }, []);
+
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'success') => {
+  const addToast = useCallback((message: string, type: ToastType) => {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts((prev) => [...prev, { id, message, type }]);
 
@@ -36,6 +55,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       removeToast(id);
     }, 3000);
   }, [removeToast]);
+
+  const showToast = useCallback((message: string, type: ToastType = 'success') => {
+    // セッションストレージに保存（ページ遷移後も表示できるように）
+    sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type }));
+    // 即座にも表示を試みる
+    addToast(message, type);
+  }, [addToast]);
 
   const showSuccess = useCallback((message: string) => showToast(message, 'success'), [showToast]);
   const showError = useCallback((message: string) => showToast(message, 'error'), [showToast]);
