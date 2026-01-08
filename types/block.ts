@@ -120,10 +120,16 @@ export interface SpacerBlockConfig {
 
 // 記事ブロックの設定
 export interface ArticleBlockConfig {
-  articleId: string;         // 選択した記事のID
-  articleSlug?: string;      // 記事のスラッグ（表示用）
-  articleTitle?: string;     // 記事のタイトル（プレビュー用）
-  displayStyle: 'text' | 'blogcard';  // 表示形式（テキストリンク or ブログカード）
+  // 記事タイプ: single=個別記事, recent=新着記事一覧, popular=人気記事一覧
+  articleType: 'single' | 'recent' | 'popular';
+  // 個別記事選択時のフィールド
+  articleId?: string;         // 選択した記事のID
+  articleSlug?: string;       // 記事のスラッグ（表示用）
+  articleTitle?: string;      // 記事のタイトル（プレビュー用）
+  // 表示形式（テキストリンク or ブログカード）- 個別記事選択時のみ
+  displayStyle?: 'text' | 'blogcard';
+  // 新着/人気記事一覧時のフィールド
+  displayCount?: number;      // 表示件数（デフォルト: 4）
 }
 
 // ブロックの共通インターフェース

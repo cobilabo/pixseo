@@ -254,10 +254,12 @@ function getDefaultConfig(type: BlockType): any {
       };
     case 'article':
       return {
+        articleType: 'single',
         articleId: '',
         articleSlug: '',
         articleTitle: '',
         displayStyle: 'blogcard',
+        displayCount: 4,
       };
     default:
       return {};

@@ -184,8 +184,14 @@ function BlockPreview({ block }: { block: Block }) {
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;
     case 'article':
       const articleConfig = block.config as any;
-      const displayType = articleConfig.displayStyle === 'blogcard' ? 'ブログカード' : 'テキストリンク';
-      return <span>{articleConfig.articleTitle || '未選択'} ({displayType})</span>;
+      if (articleConfig.articleType === 'recent') {
+        return <span>新着記事一覧 ({articleConfig.displayCount || 4}件)</span>;
+      } else if (articleConfig.articleType === 'popular') {
+        return <span>人気記事一覧 ({articleConfig.displayCount || 4}件)</span>;
+      } else {
+        const displayType = articleConfig.displayStyle === 'blogcard' ? 'ブログカード' : 'テキストリンク';
+        return <span>{articleConfig.articleTitle || '未選択'} ({displayType})</span>;
+      }
     case 'html':
       return <span>カスタムHTML</span>;
     case 'spacer':
