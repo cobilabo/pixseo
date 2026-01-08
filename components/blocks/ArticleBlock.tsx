@@ -10,10 +10,11 @@ import BlogCard from '@/components/articles/BlogCard';
 import ArticleCard from '@/components/articles/ArticleCard';
 import Link from 'next/link';
 import { Article } from '@/types/article';
+import { Lang } from '@/types/lang';
 
 interface ArticleBlockProps {
   block: Block;
-  lang?: string;
+  lang?: Lang;
 }
 
 interface ArticleListItem {
@@ -27,7 +28,7 @@ interface ArticleListItem {
   viewCount?: number;
 }
 
-export default function ArticleBlock({ block, lang = 'ja' }: ArticleBlockProps) {
+export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBlockProps) {
   const config = block.config as ArticleBlockConfig;
   const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(false);
