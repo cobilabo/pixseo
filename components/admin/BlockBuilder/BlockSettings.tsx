@@ -11,6 +11,7 @@ import HTMLBlockSettings from './settings/HTMLBlockSettings';
 import SpacerBlockSettings from './settings/SpacerBlockSettings';
 import SpacingSettings from './settings/SpacingSettings';
 import ContentBlockSettings from './settings/ContentBlockSettings';
+import ArticleBlockSettings from './settings/ArticleBlockSettings';
 
 interface BlockSettingsProps {
   block: Block;
@@ -23,6 +24,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
   const blockTypeLabels: Record<string, string> = {
     content: 'セクションブロック',
     form: 'フォームブロック',
+    article: '記事ブロック',
     html: 'HTMLブロック',
     spacer: '空白ブロック',
   };
@@ -42,6 +44,9 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'content' && (
           <ContentBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'article' && (
+          <ArticleBlockSettings block={block} onUpdate={onUpdate} />
         )}
         
         {/* 共通の余白設定（空白ブロック以外） */}

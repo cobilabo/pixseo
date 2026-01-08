@@ -27,6 +27,12 @@ const blockTypes = [
     description: 'フォームを埋め込み',
   },
   {
+    type: 'article' as BlockType,
+    label: '記事ブロック',
+    icon: '/article.svg',
+    description: '記事リンクをテキストまたはブログカードで表示',
+  },
+  {
     type: 'html' as BlockType,
     label: 'HTMLブロック',
     icon: '/html.svg',

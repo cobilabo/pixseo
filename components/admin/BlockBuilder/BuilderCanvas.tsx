@@ -93,6 +93,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
   const blockTypeLabels: Record<string, { label: string; icon: string }> = {
     content: { label: 'セクションブロック', icon: '/dashboard.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
+    article: { label: '記事', icon: '/article.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
   };
@@ -181,6 +182,10 @@ function BlockPreview({ block }: { block: Block }) {
     case 'form':
       const formConfig = block.config as any;
       return <span>フォームID: {formConfig.formId || '未選択'}</span>;
+    case 'article':
+      const articleConfig = block.config as any;
+      const displayType = articleConfig.displayStyle === 'blogcard' ? 'ブログカード' : 'テキストリンク';
+      return <span>{articleConfig.articleTitle || '未選択'} ({displayType})</span>;
     case 'html':
       return <span>カスタムHTML</span>;
     case 'spacer':

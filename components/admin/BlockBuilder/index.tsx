@@ -252,6 +252,13 @@ function getDefaultConfig(type: BlockType): any {
         buttons: [],
         buttonLayout: 'horizontal',
       };
+    case 'article':
+      return {
+        articleId: '',
+        articleSlug: '',
+        articleTitle: '',
+        displayStyle: 'blogcard',
+      };
     default:
       return {};
   }

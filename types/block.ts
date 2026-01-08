@@ -7,7 +7,8 @@ export type BlockType =
   | 'form'      // フォーム埋め込み
   | 'html'      // カスタムHTML
   | 'spacer'    // 空白
-  | 'content';  // セクションブロック（統合ブロック）
+  | 'content'   // セクションブロック（統合ブロック）
+  | 'article';  // 記事リンクブロック
 
 // CTAボタンの設定
 export interface CTAButtonConfig {
@@ -117,12 +118,20 @@ export interface SpacerBlockConfig {
   height: number;  // 高さ（px）
 }
 
+// 記事ブロックの設定
+export interface ArticleBlockConfig {
+  articleId: string;         // 選択した記事のID
+  articleSlug?: string;      // 記事のスラッグ（表示用）
+  articleTitle?: string;     // 記事のタイトル（プレビュー用）
+  displayStyle: 'text' | 'blogcard';  // 表示形式（テキストリンク or ブログカード）
+}
+
 // ブロックの共通インターフェース
 export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig;
   
   // 余白設定（共通）
   spacing?: {
