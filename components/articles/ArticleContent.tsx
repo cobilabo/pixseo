@@ -549,15 +549,15 @@ if (typeof window !== 'undefined') {
       display: inline-flex !important;
       align-items: center !important;
       gap: 4px !important;
-      background: #22c55e !important;
+      background: #3b82f6 !important;
       color: #fff !important;
-      font-size: 12px !important;
-      font-weight: 600 !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
       padding: 4px 12px !important;
       margin: 0 !important;
       border: none !important;
       border-radius: 0 !important;
-      line-height: 1 !important;
+      line-height: 1.4 !important;
     }
     .article-content .blogcard-label-icon {
       width: 14px !important;
