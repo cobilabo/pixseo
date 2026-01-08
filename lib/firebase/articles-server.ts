@@ -110,7 +110,7 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
   }
 };
 
-// 記事一覧を取得（サーバーサイド用）- 最適化版
+// 記事一覧を取得（サーバーサイド用）- インデックス対応版（フォールバック付き）
 export const getArticlesServer = async (
   options: {
     limit?: number;
@@ -167,15 +167,24 @@ export const getArticlesServer = async (
       q = q.where('tagIds', 'array-contains', options.tagId);
     }
     
-    // Firestoreクエリでソートを適用（インデックスが必要）
-    // array-containsと組み合わせる場合は追加のソートが必要
-    if (!options.categoryId && !options.tagId) {
-      // カテゴリー・タグフィルターがない場合はFirestoreでソート
-      q = q.orderBy(orderField, orderDir);
-      q = q.limit(limitCount * 2); // 公開日フィルター用に余裕を持たせる
-    }
+    // インデックスを使用したクエリを試行、失敗時はフォールバック
+    let snapshot;
+    let useIndexSort = false;
     
-    const snapshot = await q.get();
+    if (!options.categoryId && !options.tagId) {
+      // カテゴリー・タグフィルターがない場合はFirestoreでソートを試行
+      try {
+        const indexedQuery = q.orderBy(orderField, orderDir).limit(limitCount * 2);
+        snapshot = await indexedQuery.get();
+        useIndexSort = true;
+      } catch (indexError) {
+        // インデックスがない場合はフォールバック
+        console.warn('[getArticlesServer] Index not available, using fallback:', indexError);
+        snapshot = await q.get();
+      }
+    } else {
+      snapshot = await q.get();
+    }
     
     const now = new Date();
     
@@ -207,8 +216,8 @@ export const getArticlesServer = async (
     // プレビューモードでない場合のみ、公開日が現在日時以下の記事に絞る
     .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
-    // カテゴリー・タグフィルターがある場合のみJavaScriptでソート
-    if (options.categoryId || options.tagId) {
+    // インデックスソートを使用しなかった場合、またはカテゴリー・タグフィルターがある場合はJavaScriptでソート
+    if (!useIndexSort || options.categoryId || options.tagId) {
       articles.sort((a, b) => {
         const aValue = a[orderField] || 0;
         const bValue = b[orderField] || 0;
@@ -693,7 +702,7 @@ async function buildAdjacentArticlesResult(
   return { previousArticle, nextArticle };
 }
 
-// ライター別の記事一覧を取得（サーバーサイド用）- 最適化版
+// ライター別の記事一覧を取得（サーバーサイド用）- フォールバック付き
 export const getArticlesByWriterServer = async (
   writerId: string,
   mediaId?: string,
@@ -709,7 +718,7 @@ export const getArticlesByWriterServer = async (
       return cached;
     }
     
-    // Firestoreから取得（インデックスを使用してソート）
+    // Firestoreから取得
     const articlesRef = adminDb.collection('articles');
     let query: admin.firestore.Query = articlesRef
       .where('isPublished', '==', true)
@@ -720,10 +729,18 @@ export const getArticlesByWriterServer = async (
       query = query.where('mediaId', '==', mediaId);
     }
     
-    // インデックスを使用してソート
-    query = query.orderBy('publishedAt', 'desc').limit(limitCount * 2);
+    // インデックスを使用したソートを試行、失敗時はフォールバック
+    let snapshot;
+    let useIndexSort = false;
     
-    const snapshot = await query.get();
+    try {
+      const indexedQuery = query.orderBy('publishedAt', 'desc').limit(limitCount * 2);
+      snapshot = await indexedQuery.get();
+      useIndexSort = true;
+    } catch (indexError) {
+      console.warn('[getArticlesByWriterServer] Index not available, using fallback:', indexError);
+      snapshot = await query.get();
+    }
     
     const nowWriter = new Date();
     let articles = snapshot.docs.map((doc) => {
@@ -740,6 +757,15 @@ export const getArticlesByWriterServer = async (
     })
     // 公開日が現在日時以下の記事のみを表示
     .filter(article => !article.publishedAt || article.publishedAt <= nowWriter);
+    
+    // インデックスソートを使用しなかった場合はJavaScriptでソート
+    if (!useIndexSort) {
+      articles.sort((a, b) => {
+        const aTime = a.publishedAt?.getTime() || 0;
+        const bTime = b.publishedAt?.getTime() || 0;
+        return bTime - aTime;
+      });
+    }
     
     // limit適用
     articles = articles.slice(0, limitCount);
