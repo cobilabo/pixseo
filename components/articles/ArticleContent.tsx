@@ -753,8 +753,9 @@ function processInternalLinksForBlogCard(
   let processedHtml = html;
 
   // aタグを検索して内部リンクをプレースホルダーに置換
+  // 「参照：」や「参照:」が前にある場合も含めてマッチする
   // <a href="...">...</a> の形式を検索
-  const linkRegex = /<a\s+([^>]*href=["']([^"']+)["'][^>]*)>([^<]*(?:<(?!\/a>)[^<]*)*)<\/a>/gi;
+  const linkRegex = /(?:参照[：:]?\s*)?<a\s+([^>]*href=["']([^"']+)["'][^>]*)>([^<]*(?:<(?!\/a>)[^<]*)*)<\/a>/gi;
   
   processedHtml = processedHtml.replace(linkRegex, (match, attrs, href, linkText) => {
     // the-ayumi.jp のリンクを変換
@@ -767,6 +768,7 @@ function processInternalLinksForBlogCard(
     if (checkIsInternalArticleLink(normalizedHref, siteHost)) {
       internalLinkUrls.push(normalizedHref);
       // プレースホルダーdivに置換（dangerouslySetInnerHTMLで挿入後にReactコンポーネントで置換）
+      // 「参照：」等のプレフィックスも含めて置換される
       return `<div class="blogcard-placeholder" data-href="${encodeURIComponent(normalizedHref)}"></div>`;
     }
     
