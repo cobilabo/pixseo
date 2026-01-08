@@ -79,7 +79,7 @@ export interface FooterTextLinkSection {
   title_ko?: string;
 }
 
-// メニュー項目の定義
+// メニュー項目の定義（従来形式 - 後方互換性のため保持）
 export interface MenuItem {
   // 後方互換性のため既存フィールドを保持
   label: string;
@@ -91,8 +91,29 @@ export interface MenuItem {
   label_ko?: string;
 }
 
+// ナビゲーション項目タイプの定義
+export type NavigationItemType = 'top' | 'search' | 'page';
+
+// ナビゲーション項目の定義（新形式）
+export interface NavigationItem {
+  id: string;                 // 一意のID
+  type: NavigationItemType;   // 項目タイプ
+  label: string;              // 表示ラベル
+  pageId?: string;            // 固定ページID（type='page'の場合）
+  pageSlug?: string;          // 固定ページスラッグ（type='page'の場合）
+  // 多言語フィールド
+  label_ja?: string;
+  label_en?: string;
+  label_zh?: string;
+  label_ko?: string;
+}
+
 // メニュー設定の定義
 export interface MenuSettings {
+  // 新形式: ナビゲーション項目配列
+  navigationItems?: NavigationItem[];
+  
+  // 後方互換性のため既存フィールドを保持
   topLabel: string;           // トップ
   articlesLabel: string;      // 記事一覧
   searchLabel: string;        // 検索

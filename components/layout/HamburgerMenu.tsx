@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { MenuSettings } from '@/types/theme';
+import { MenuSettings, NavigationItem } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import LanguageSelector from '@/components/common/LanguageSelector';
 
@@ -35,8 +35,25 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
     };
   }, [isOpen]);
 
-  // 有効な追加メニューのみフィルタリング
+  // 新形式のナビゲーション項目があるかチェック
+  const hasNavigationItems = menuSettings.navigationItems && menuSettings.navigationItems.length > 0;
+
+  // 有効な追加メニューのみフィルタリング（後方互換性）
   const validCustomMenus = menuSettings.customMenus?.filter(menu => menu.label && menu.url) || [];
+
+  // ナビゲーション項目のURLを生成
+  const getNavigationUrl = (item: NavigationItem): string => {
+    switch (item.type) {
+      case 'top':
+        return `/${lang}`;
+      case 'search':
+        return `/${lang}/search`;
+      case 'page':
+        return item.pageSlug === 'home' ? `/${lang}` : `/${lang}/${item.pageSlug || ''}`;
+      default:
+        return `/${lang}`;
+    }
+  };
 
   const menuPanel = (
     <>
@@ -99,60 +116,80 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
           {/* メニューリスト */}
           <nav className="flex-1 px-8 py-4">
             <ul className="space-y-6">
-              {/* トップ */}
-              <li>
-                <Link
-                  href={`/${lang}`}
-                  onClick={onClose}
-                  className="block text-lg font-medium hover:opacity-70 transition-opacity"
-                >
-                  {menuSettings.topLabel || 'トップ'}
-                </Link>
-              </li>
+              {hasNavigationItems ? (
+                // 新形式：ナビゲーション項目を使用
+                <>
+                  {menuSettings.navigationItems!.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        href={getNavigationUrl(item)}
+                        onClick={onClose}
+                        className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </>
+              ) : (
+                // 後方互換性：旧形式のメニュー設定を使用
+                <>
+                  {/* トップ */}
+                  <li>
+                    <Link
+                      href={`/${lang}`}
+                      onClick={onClose}
+                      className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                    >
+                      {menuSettings.topLabel || 'トップ'}
+                    </Link>
+                  </li>
 
-              {/* 記事一覧 */}
-              <li>
-                <Link
-                  href={`/${lang}/articles`}
-                  onClick={onClose}
-                  className="block text-lg font-medium hover:opacity-70 transition-opacity"
-                >
-                  {menuSettings.articlesLabel || '記事一覧'}
-                </Link>
-              </li>
+                  {/* 記事一覧 */}
+                  <li>
+                    <Link
+                      href={`/${lang}/articles`}
+                      onClick={onClose}
+                      className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                    >
+                      {menuSettings.articlesLabel || '記事一覧'}
+                    </Link>
+                  </li>
 
-              {/* 検索 */}
-              <li>
-                <Link
-                  href={`/${lang}/search`}
-                  onClick={onClose}
-                  className="block text-lg font-medium hover:opacity-70 transition-opacity"
-                >
-                  {menuSettings.searchLabel || '検索'}
-                </Link>
-              </li>
+                  {/* 検索 */}
+                  <li>
+                    <Link
+                      href={`/${lang}/search`}
+                      onClick={onClose}
+                      className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                    >
+                      {menuSettings.searchLabel || '検索'}
+                    </Link>
+                  </li>
 
-              {/* 区切り線 */}
-              {validCustomMenus.length > 0 && (
-                <li className="pt-4 pb-2">
-                  <div className="border-t opacity-30" style={{ borderColor: menuTextColor }} />
-                </li>
+                  {/* 区切り線 */}
+                  {validCustomMenus.length > 0 && (
+                    <li className="pt-4 pb-2">
+                      <div className="border-t opacity-30" style={{ borderColor: menuTextColor }} />
+                    </li>
+                  )}
+
+                  {/* 追加メニュー */}
+                  {validCustomMenus.map((menu, index) => (
+                    <li key={index}>
+                      <Link
+                        href={menu.url}
+                        onClick={onClose}
+                        className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                        target={menu.url.startsWith('http') ? '_blank' : undefined}
+                        rel={menu.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      >
+                        {menu.label}
+                      </Link>
+                    </li>
+                  ))}
+                </>
               )}
-
-              {/* 追加メニュー */}
-              {validCustomMenus.map((menu, index) => (
-                <li key={index}>
-                  <Link
-                    href={menu.url}
-                    onClick={onClose}
-                    className="block text-lg font-medium hover:opacity-70 transition-opacity"
-                    target={menu.url.startsWith('http') ? '_blank' : undefined}
-                    rel={menu.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  >
-                    {menu.label}
-                  </Link>
-                </li>
-              ))}
             </ul>
           </nav>
 

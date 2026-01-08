@@ -1,14 +1,126 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
+import { Page } from '@/types/page';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthGuard from '@/components/admin/AuthGuard';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, apiGet } from '@/lib/api-client';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// ソート可能なメニュー項目コンポーネント
+function SortableNavigationItem({ 
+  item, 
+  pages, 
+  onUpdate, 
+  onRemove 
+}: { 
+  item: NavigationItem; 
+  pages: Page[]; 
+  onUpdate: (id: string, updates: Partial<NavigationItem>) => void;
+  onRemove: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg"
+    >
+      {/* ドラッグハンドル */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+      >
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        </svg>
+      </div>
+
+      {/* プルダウン選択 */}
+      <select
+        value={item.type === 'page' ? `page:${item.pageId}` : item.type}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value.startsWith('page:')) {
+            const pageId = value.replace('page:', '');
+            const page = pages.find(p => p.id === pageId);
+            onUpdate(item.id, {
+              type: 'page',
+              pageId,
+              pageSlug: page?.slug,
+              label: page?.title || '',
+            });
+          } else {
+            const type = value as NavigationItemType;
+            const defaultLabels = {
+              top: 'トップ',
+              search: '検索',
+            };
+            onUpdate(item.id, {
+              type,
+              pageId: undefined,
+              pageSlug: undefined,
+              label: defaultLabels[type as keyof typeof defaultLabels] || '',
+            });
+          }
+        }}
+        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option value="top">トップ</option>
+        <option value="search">検索</option>
+        <optgroup label="固定ページ">
+          {pages.map(page => (
+            <option key={page.id} value={`page:${page.id}`}>
+              {page.title} (/{page.slug})
+            </option>
+          ))}
+        </optgroup>
+      </select>
+
+      {/* 表示ラベル入力 */}
+      <input
+        type="text"
+        value={item.label}
+        onChange={(e) => onUpdate(item.id, { label: e.target.value })}
+        placeholder="表示ラベル"
+        className="w-40 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+
+      {/* 削除ボタン */}
+      <button
+        type="button"
+        onClick={() => onRemove(item.id)}
+        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function ThemePage() {
   const { currentTenant } = useMediaTenant();
@@ -16,12 +128,34 @@ export default function ThemePage() {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode' | 'article'>('fv');
+  
+  // 固定ページ一覧
+  const [pages, setPages] = useState<Page[]>([]);
+  
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (currentTenant) {
       fetchThemeSettings();
+      fetchPages();
     }
   }, [currentTenant]);
+  
+  // 固定ページ一覧を取得
+  const fetchPages = async () => {
+    try {
+      const data: Page[] = await apiGet('/api/admin/pages');
+      setPages(data.filter(p => p.isPublished).sort((a, b) => a.order - b.order));
+    } catch (error) {
+      console.error('固定ページの取得に失敗しました:', error);
+    }
+  };
 
   const fetchThemeSettings = async () => {
     try {
@@ -36,6 +170,7 @@ export default function ThemePage() {
         menuSettings: {
           ...defaultTheme.menuSettings,
           ...fetchedTheme.menuSettings,
+          navigationItems: fetchedTheme.menuSettings?.navigationItems || [],
           customMenus: fetchedTheme.menuSettings?.customMenus || defaultTheme.menuSettings?.customMenus || [],
         },
         snsSettings: {
@@ -250,7 +385,78 @@ export default function ThemePage() {
     }
   };
 
-  // メニュー設定関連の関数
+  // メニュー設定関連の関数（新形式）
+  const addNavigationItem = () => {
+    const newItem: NavigationItem = {
+      id: `nav-${Date.now()}`,
+      type: 'top',
+      label: 'トップ',
+    };
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: [...(prev.menuSettings?.navigationItems || []), newItem],
+      },
+    }));
+  };
+
+  const updateNavigationItem = (id: string, updates: Partial<NavigationItem>) => {
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: (prev.menuSettings?.navigationItems || []).map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      },
+    }));
+  };
+
+  const removeNavigationItem = (id: string) => {
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: (prev.menuSettings?.navigationItems || []).filter(item => item.id !== id),
+      },
+    }));
+  };
+
+  const handleNavigationDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const items = theme.menuSettings?.navigationItems || [];
+      const oldIndex = items.findIndex(item => item.id === active.id);
+      const newIndex = items.findIndex(item => item.id === over.id);
+      
+      setTheme(prev => ({
+        ...prev,
+        menuSettings: {
+          ...prev.menuSettings,
+          topLabel: prev.menuSettings?.topLabel || 'トップ',
+          articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+          searchLabel: prev.menuSettings?.searchLabel || '検索',
+          customMenus: prev.menuSettings?.customMenus || [],
+          navigationItems: arrayMove(items, oldIndex, newIndex),
+        },
+      }));
+    }
+  };
+
+  // 後方互換性のための旧メニュー設定関数
   const updateMenuLabel = (field: 'topLabel' | 'articlesLabel' | 'searchLabel', value: string) => {
     setTheme(prev => ({
       ...prev,
@@ -260,6 +466,7 @@ export default function ThemePage() {
         articlesLabel: field === 'articlesLabel' ? value : prev.menuSettings?.articlesLabel || '記事一覧',
         searchLabel: field === 'searchLabel' ? value : prev.menuSettings?.searchLabel || '検索',
         customMenus: prev.menuSettings?.customMenus || Array(5).fill({ label: '', url: '' }),
+        navigationItems: prev.menuSettings?.navigationItems || [],
       },
     }));
   };
@@ -275,6 +482,7 @@ export default function ThemePage() {
         articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
         searchLabel: prev.menuSettings?.searchLabel || '検索',
         customMenus,
+        navigationItems: prev.menuSettings?.navigationItems || [],
       },
     }));
   };
@@ -917,43 +1125,64 @@ export default function ThemePage() {
 
               {/* メニュータブ */}
               {activeTab === 'menu' && (
-                <div className="space-y-4">
-                  {/* 基本メニュー */}
-                  <FloatingInput
-                    label="トップ"
-                    value={theme.menuSettings?.topLabel || 'トップ'}
-                    onChange={(value) => updateMenuLabel('topLabel', value)}
-                  />
-                  <FloatingInput
-                    label="記事一覧"
-                    value={theme.menuSettings?.articlesLabel || '記事一覧'}
-                    onChange={(value) => updateMenuLabel('articlesLabel', value)}
-                  />
-                  <FloatingInput
-                    label="検索"
-                    value={theme.menuSettings?.searchLabel || '検索'}
-                    onChange={(value) => updateMenuLabel('searchLabel', value)}
-                  />
-
-                  {/* 追加メニュー */}
-                  {[0, 1, 2, 3, 4].map((index) => {
-                    const menu = theme.menuSettings?.customMenus?.[index] || { label: '', url: '' };
-                    return (
-                      <div key={index} className="grid grid-cols-2 gap-4">
-                        <FloatingInput
-                          label={`追加メニュー ${index + 1} - 表示名`}
-                          value={menu.label}
-                          onChange={(value) => updateCustomMenu(index, 'label', value)}
-                        />
-                        <FloatingInput
-                          label={`追加メニュー ${index + 1} - URL`}
-                          value={menu.url}
-                          onChange={(value) => updateCustomMenu(index, 'url', value)}
-                          type="url"
-                        />
+                <div className="space-y-6">
+                  {/* 説明 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">ハンバーガーメニュー設定</p>
+                        <p className="text-blue-600">
+                          サイトのハンバーガーメニューに表示する項目を設定します。ドラッグ＆ドロップで順番を入れ替えられます。
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+
+                  {/* ナビゲーション項目一覧 */}
+                  <div className="space-y-3">
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleNavigationDragEnd}
+                    >
+                      <SortableContext
+                        items={(theme.menuSettings?.navigationItems || []).map(item => item.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {(theme.menuSettings?.navigationItems || []).map((item) => (
+                          <SortableNavigationItem
+                            key={item.id}
+                            item={item}
+                            pages={pages}
+                            onUpdate={updateNavigationItem}
+                            onRemove={removeNavigationItem}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+
+                    {/* 項目がない場合 */}
+                    {(!theme.menuSettings?.navigationItems || theme.menuSettings.navigationItems.length === 0) && (
+                      <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                        メニュー項目がありません。下のボタンから追加してください。
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 追加ボタン */}
+                  <button
+                    type="button"
+                    onClick={addNavigationItem}
+                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    メニュー項目を追加
+                  </button>
                 </div>
               )}
 
