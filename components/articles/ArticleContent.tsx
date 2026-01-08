@@ -649,7 +649,7 @@ if (typeof window !== 'undefined') {
       content: none !important;
     }
     .article-content .blogcard-date {
-      color: #f97316 !important;
+      color: #6b7280 !important;
       font-weight: 500 !important;
     }
     .article-content .blogcard-title {
