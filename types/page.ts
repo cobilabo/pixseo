@@ -55,5 +55,8 @@ export interface Page {
   // レイアウト設定
   showGlobalNav?: boolean;   // グローバルナビゲーション表示（カテゴリーバー）
   showSidebar?: boolean;     // サイドバー表示
+  
+  // トップページ設定
+  isHomePage?: boolean;      // トップページとして設定（slug='home'と連動）
 }
 

@@ -45,7 +45,14 @@ export default function EditPagePage() {
     customCss: '',
     showGlobalNav: false,
     showSidebar: false,
+    isHomePage: false,
   });
+  
+  // トップページ設定関連
+  const [showHomePageDialog, setShowHomePageDialog] = useState(false);
+  const [existingHomePage, setExistingHomePage] = useState<{ id: string; title: string; slug: string } | null>(null);
+  const [newSlugForExistingHome, setNewSlugForExistingHome] = useState('');
+  const [changingHomeSlug, setChangingHomeSlug] = useState(false);
 
   useEffect(() => {
     fetchPage();
@@ -76,6 +83,7 @@ export default function EditPagePage() {
         customCss: page.customCss || '',
         showGlobalNav: page.showGlobalNav || false,
         showSidebar: page.showSidebar || false,
+        isHomePage: page.isHomePage || page.slug === 'home',
       });
       
       // ブロックビルダーデータを読み込み
@@ -202,6 +210,99 @@ export default function EditPagePage() {
       console.error('Translation error:', error);
     }
     return text;
+  };
+
+  // トップページ設定のチェック
+  const handleHomePageToggle = async (checked: boolean) => {
+    if (checked) {
+      // 既存のhomeページをチェック
+      try {
+        const currentTenantId = typeof window !== 'undefined' 
+          ? localStorage.getItem('currentTenantId') 
+          : null;
+
+        const response = await fetch('/api/admin/pages/check-home', {
+          headers: {
+            'x-media-id': currentTenantId || '',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.exists && data.homePage.id !== pageId) {
+            // 既存のhomeページがある場合はダイアログを表示
+            setExistingHomePage(data.homePage);
+            setNewSlugForExistingHome('');
+            setShowHomePageDialog(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking home page:', error);
+      }
+
+      // 既存のhomeページがない場合は直接設定
+      setFormData(prev => ({ 
+        ...prev, 
+        isHomePage: true, 
+        slug: 'home' 
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        isHomePage: false 
+      }));
+    }
+  };
+
+  // 既存のhomeページのスラッグを変更
+  const handleChangeExistingHomeSlug = async () => {
+    if (!newSlugForExistingHome.trim()) {
+      alert('新しいスラッグを入力してください');
+      return;
+    }
+
+    if (!existingHomePage) return;
+
+    setChangingHomeSlug(true);
+    try {
+      const currentTenantId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentTenantId') 
+        : null;
+
+      const response = await fetch('/api/admin/pages/check-home', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-media-id': currentTenantId || '',
+        },
+        body: JSON.stringify({
+          pageId: existingHomePage.id,
+          newSlug: newSlugForExistingHome.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'スラッグの変更に失敗しました');
+        return;
+      }
+
+      // 成功したらこのページをトップページに設定
+      setFormData(prev => ({ 
+        ...prev, 
+        isHomePage: true, 
+        slug: 'home' 
+      }));
+      setShowHomePageDialog(false);
+      setExistingHomePage(null);
+    } catch (error) {
+      console.error('Error changing home slug:', error);
+      alert('スラッグの変更に失敗しました');
+    } finally {
+      setChangingHomeSlug(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -429,20 +530,33 @@ export default function EditPagePage() {
                 required
               />
 
+              {/* トップページとして設定 */}
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <CustomCheckbox
+                  label="トップページとして設定"
+                  checked={formData.isHomePage}
+                  onChange={handleHomePageToggle}
+                />
+                <p className="text-xs text-gray-500 mt-2 ml-7">
+                  チェックするとこのページがサイトのトップページとして表示されます。スラッグは自動的に「home」に設定されます。
+                </p>
+              </div>
+
               {/* スラッグ - 自動生成ボタン付き */}
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
                   <FloatingInput
                     label="スラッグ（URL）"
                     value={formData.slug}
-                    onChange={(value) => setFormData({ ...formData, slug: value })}
+                    onChange={(value) => setFormData({ ...formData, slug: value, isHomePage: value === 'home' })}
                     required
+                    disabled={formData.isHomePage}
                   />
                 </div>
                 <button
                   type="button"
                   onClick={generateSlug}
-                  disabled={generatingSlug || !formData.title}
+                  disabled={generatingSlug || !formData.title || formData.isHomePage}
                   className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 h-12 mb-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generatingSlug ? '生成中...' : '自動生成'}
@@ -669,6 +783,65 @@ export default function EditPagePage() {
             </button>
           </div>
         </div>
+
+        {/* トップページ設定ダイアログ */}
+        {showHomePageDialog && existingHomePage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">既存のトップページがあります</h3>
+              </div>
+
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">現在のトップページ:</p>
+                <p className="font-medium text-gray-900">{existingHomePage.title}</p>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                このページをトップページに設定するには、既存のトップページのスラッグを変更する必要があります。新しいスラッグを入力してください。
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  新しいスラッグ
+                </label>
+                <input
+                  type="text"
+                  value={newSlugForExistingHome}
+                  onChange={(e) => setNewSlugForExistingHome(e.target.value)}
+                  placeholder="例: old-home, top-backup"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowHomePageDialog(false);
+                    setExistingHomePage(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  onClick={handleChangeExistingHomeSlug}
+                  disabled={changingHomeSlug || !newSlugForExistingHome.trim()}
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {changingHomeSlug ? '変更中...' : 'スラッグを変更して設定'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </AdminLayout>
     </AuthGuard>
   );
