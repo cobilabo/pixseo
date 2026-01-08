@@ -25,8 +25,21 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // トーストを追加する関数（内部用）
+  const addToastInternal = useCallback((message: string, type: ToastType) => {
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+
+    // 3秒後に自動的に消える
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  }, []);
+
   // ページ読み込み時に保存されたトーストを確認
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const savedToast = sessionStorage.getItem(TOAST_STORAGE_KEY);
     if (savedToast) {
       try {
@@ -34,34 +47,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem(TOAST_STORAGE_KEY);
         // 少し遅延させて表示（ページ遷移後のレンダリングを待つ）
         setTimeout(() => {
-          addToast(message, type);
+          addToastInternal(message, type);
         }, 100);
       } catch (e) {
         sessionStorage.removeItem(TOAST_STORAGE_KEY);
       }
     }
-  }, []);
+  }, [addToastInternal]);
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const addToast = useCallback((message: string, type: ToastType) => {
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
-
-    // 3秒後に自動的に消える
-    setTimeout(() => {
-      removeToast(id);
-    }, 3000);
-  }, [removeToast]);
-
   const showToast = useCallback((message: string, type: ToastType = 'success') => {
-    // セッションストレージに保存（ページ遷移後も表示できるように）
-    sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type }));
-    // 即座にも表示を試みる
-    addToast(message, type);
-  }, [addToast]);
+    if (typeof window !== 'undefined') {
+      // セッションストレージに保存（ページ遷移後も表示できるように）
+      sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type }));
+    }
+    // 即座にも表示
+    addToastInternal(message, type);
+  }, [addToastInternal]);
 
   const showSuccess = useCallback((message: string) => showToast(message, 'success'), [showToast]);
   const showError = useCallback((message: string) => showToast(message, 'error'), [showToast]);
