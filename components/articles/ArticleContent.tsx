@@ -631,10 +631,12 @@ if (typeof window !== 'undefined') {
       font-weight: 500 !important;
     }
     .article-content .blogcard-title {
-      font-size: 13px !important;
+      font-size: 15px !important;
       font-weight: 700 !important;
       color: #111827 !important;
       margin: 0 !important;
+      margin-top: 5px !important;
+      margin-bottom: 10px !important;
       padding: 0 !important;
       border: none !important;
       border-bottom: none !important;
@@ -653,7 +655,7 @@ if (typeof window !== 'undefined') {
       color: #f97316 !important;
     }
     .article-content .blogcard-description {
-      font-size: 11px !important;
+      font-size: 13px !important;
       color: #4b5563 !important;
       margin: 0 !important;
       padding: 0 !important;
