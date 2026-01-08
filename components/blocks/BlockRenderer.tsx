@@ -4,6 +4,7 @@
  */
 
 import { Block } from '@/types/block';
+import { Lang } from '@/types/lang';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
 import SpacerBlock from './SpacerBlock';
@@ -14,10 +15,10 @@ interface BlockRendererProps {
   blocks: Block[];
   isMobile?: boolean;
   showPanel?: boolean;
-  lang?: string;
+  lang?: Lang;
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang }: BlockRendererProps) {
   // 表示するブロックをフィルタリング
   const visibleBlocks = blocks
     .filter(block => {
