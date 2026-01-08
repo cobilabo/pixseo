@@ -12,12 +12,8 @@ export const maxDuration = 300; // 5分（翻訳処理のため）
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API] 記事更新開始:', params.id);
     const { id } = params;
     const body = await request.json();
-    console.log('[API] 更新データ:', body);
-    console.log('[API] isPublished:', body.isPublished);
-
     const articleRef = adminDb.collection('articles').doc(id);
     
     // 既存の記事データを取得（公開状態の変更を検出するため）
@@ -25,10 +21,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const existingData = existingDoc.exists ? existingDoc.data() : null;
     const wasPublished = existingData?.isPublished || false;
     const statusChanged = wasPublished !== body.isPublished;
-    
-    console.log('[API] 以前の公開状態:', wasPublished, '→ 新しい公開状態:', body.isPublished);
-    console.log('[API] ステータス変更:', statusChanged);
-    
     // publishedAtがnullの場合は下書き扱い
     const isDraft = body.publishedAt === null || body.isDraft === true;
     const publishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
@@ -70,10 +62,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     // 📝 日本語版を即座に保存
-    console.log('[API] Firestore更新実行中（日本語版）...');
     await articleRef.update(updateData);
-    console.log('[API] Firestore更新完了（日本語版）');
-
     // 🎯 想定読者を履歴に追加
     if (updateData.targetAudience && (existingData?.mediaId || updateData.mediaId)) {
       try {
@@ -101,7 +90,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             });
           }
         }
-        console.log('[API] 想定読者を履歴に追加:', updateData.targetAudience);
       } catch (error) {
         console.error('[API] 想定読者履歴追加エラー:', error);
         // エラーが発生しても記事更新は成功とする
@@ -111,10 +99,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     // 🚀 公開時の翻訳処理（同期処理）
     // 条件：公開状態（常に翻訳を実行）
     if (body.isPublished === true) {
-      console.log('[API] ===== 翻訳処理開始（同期） =====');
-      console.log('[API] 記事ID:', id);
-      console.log('[API] タイトル:', updateData.title || existingData?.title);
-      
       try {
         const translationData: any = {};
 
@@ -125,15 +109,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         const metaTitleToTranslate = updateData.metaTitle || existingData?.metaTitle || titleToTranslate;
         const metaDescriptionToTranslate = updateData.metaDescription || existingData?.metaDescription || excerptToTranslate;
         const faqsToTranslate = updateData.faqs || existingData?.faqs_ja;
-
-        console.log(`[API ${id}] 翻訳対象: title="${titleToTranslate}", content length=${contentToTranslate?.length || 0}`);
-
         // AIサマリー生成（日本語）
         if (contentToTranslate) {
           try {
             const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
             translationData.aiSummary_ja = aiSummaryJa;
-            console.log(`[API ${id}] AIサマリー生成完了（ja）`);
           } catch (error) {
             console.error(`[API ${id}] AIサマリー生成エラー（ja）:`, error);
           }
@@ -141,12 +121,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
         // 他の言語への翻訳（並列処理）
         const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-        console.log(`[API ${id}] 翻訳開始（並列）: ${otherLangs.join(', ')}`);
         
         await Promise.all(otherLangs.map(async (lang) => {
           try {
-            console.log(`[API ${id}] 翻訳開始（${lang}）`);
-            
             // 記事本体を翻訳
             const translated = await translateArticle({
               title: titleToTranslate,
@@ -175,19 +152,13 @@ export async function PUT(request: Request, { params }: { params: { id: string }
               const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
               translationData[`faqs_${lang}`] = translatedFaqs;
             }
-
-            console.log(`[API ${id}] 翻訳完了（${lang}）`);
           } catch (error) {
             console.error(`[API ${id}] 翻訳エラー（${lang}）:`, error);
           }
         }));
-        
-        console.log(`[API ${id}] 全言語の翻訳完了`);
-
         // 翻訳データを保存
         if (Object.keys(translationData).length > 0) {
           await articleRef.update(translationData);
-          console.log(`[API ${id}] 翻訳データ保存完了`);
         }
 
         // Algolia同期
@@ -213,22 +184,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           } as Article;
 
           await syncArticleToAlgolia(article);
-          console.log(`[API ${id}] Algolia同期完了`);
         }
-        
-        console.log(`[API ${id}] ===== 翻訳処理完了 =====`);
       } catch (error) {
         console.error(`[API ${id}] 翻訳処理エラー:`, error);
         // エラーが発生しても記事の保存は完了しているので処理は続行
       }
     } else if (!body.isPublished) {
-      // 非公開にした場合はAlgoliaから削除（同期処理）
+      // 非公開にした場合はAlgoliaから削除
       try {
-        console.log('[API] Algoliaから削除開始 (非公開):', id);
         await deleteArticleFromAlgolia(id);
-        console.log('[API] Algoliaから削除完了:', id);
       } catch (error) {
-        console.error('[API] Algolia削除エラー:', error);
+        console.error('[API] Algolia delete error:', error);
       }
     }
 

@@ -20,9 +20,6 @@ function isFullEnglish(text: string): boolean {
 export async function GET(request: NextRequest) {
   try {
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API /admin/writers] Fetching writers...', { mediaId });
-    
     let query = adminDb.collection('writers');
     
     // mediaIdでフィルタリング
@@ -47,9 +44,6 @@ export async function GET(request: NextRequest) {
         updatedAt: data.updatedAt?.toDate?.() || new Date(),
       };
     });
-    
-    console.log(`[API /admin/writers] Found ${writers.length} writers`);
-    
     return NextResponse.json(writers);
   } catch (error: any) {
     console.error('[API /admin/writers] Error:', error);

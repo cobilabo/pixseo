@@ -142,9 +142,6 @@ ${plainContent}
       .map((tag: string) => tag.trim())
       .filter((tag: string) => tag.length > 0)
       .slice(0, 5); // 最大5個に制限
-
-    console.log('[API /admin/articles/generate-tags] 生成されたタグ候補:', suggestedTagNames);
-
     // 各タグについて、既存タグとの類似度をチェックして統合または作成
     const finalTags: Array<{ id: string; name: string; slug: string; isExisting: boolean }> = [];
 
@@ -154,7 +151,6 @@ ${plainContent}
 
       if (similarTag && similarTag.similarity > 0.7) {
         // 類似度70%以上の既存タグがある場合は既存タグを使用
-        console.log(`[類似タグ統合] "${suggestedName}" → "${similarTag.tag.name}"`);
         finalTags.push({
           id: similarTag.tag.id,
           name: similarTag.tag.name,
@@ -168,7 +164,6 @@ ${plainContent}
         // 同じスラッグのタグが既に存在しないかチェック
         const existingTagWithSlug = existingTags.find(t => t.slug === slug);
         if (existingTagWithSlug) {
-          console.log(`[既存タグ使用] "${suggestedName}" → "${existingTagWithSlug.name}"`);
           finalTags.push({
             id: existingTagWithSlug.id,
             name: existingTagWithSlug.name,
@@ -185,8 +180,6 @@ ${plainContent}
           }
 
           // 新規タグを作成
-          console.log(`[新規タグ作成] "${suggestedName}" (slug: ${finalSlug})`);
-          
           // タグデータを準備
           const tagData: any = {
             mediaId,
@@ -224,9 +217,6 @@ ${plainContent}
     const uniqueTags = Array.from(
       new Map(finalTags.map(tag => [tag.id, tag])).values()
     );
-
-    console.log('[API /admin/articles/generate-tags] 最終タグ:', uniqueTags);
-
     return NextResponse.json({
       tags: uniqueTags,
       summary: {

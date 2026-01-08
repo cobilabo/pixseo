@@ -39,20 +39,14 @@ export async function POST(request: NextRequest) {
         { error: 'Custom domain is not configured' },
         { status: 400 }
       );
-    }
-    
-    console.log(`[Domain Verify] Verifying ${domain} for service ${serviceId}`);
-    
-    // Vercelでの検証
+    }    // Vercelでの検証
     const vercelResult = await verifyVercelDomain(domain);
     let vercelVerified = false;
     let vercelConfiguredBy: 'A' | 'CNAME' | null = null;
     
     if (vercelResult.success) {
       vercelVerified = vercelResult.verified || false;
-      vercelConfiguredBy = vercelResult.configuredBy || null;
-      console.log(`[Domain Verify] Vercel: verified=${vercelVerified}, configuredBy=${vercelConfiguredBy}`);
-    } else {
+      vercelConfiguredBy = vercelResult.configuredBy || null;    } else {
       console.warn(`[Domain Verify] Vercel verification error: ${vercelResult.error}`);
     }
     
@@ -95,10 +89,7 @@ export async function POST(request: NextRequest) {
               verifiedAt: resendRecord.verified ? new Date() : undefined,
             };
           }
-        });
-        
-        console.log(`[Domain Verify] Resend: verified=${emailVerified}`);
-      } else {
+        });      } else {
         console.warn(`[Domain Verify] Resend verification error: ${resendResult.error}`);
       }
     }
@@ -126,11 +117,7 @@ export async function POST(request: NextRequest) {
     await adminDb.collection('mediaTenants').doc(serviceId).update({
       domainConfig: updatedDomainConfig,
       updatedAt: FieldValue.serverTimestamp(),
-    });
-    
-    console.log(`[Domain Verify] Verification completed: status=${status}`);
-    
-    return NextResponse.json({
+    });    return NextResponse.json({
       success: true,
       domain,
       status,

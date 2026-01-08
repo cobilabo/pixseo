@@ -38,9 +38,6 @@ export async function POST(request: NextRequest) {
       id: doc.id,
       title: doc.data().title,
     }));
-
-    console.log(`[Check Theme Duplicates] Checking ${themes.length} themes against ${existingTitles.length} existing articles`);
-
     // 各テーマをチェック
     const results = themes.map((theme: string) => {
       let maxSimilarity = 0;
@@ -78,9 +75,6 @@ export async function POST(request: NextRequest) {
 
     // 重複しているテーマを抽出
     const duplicates = results.filter(r => r.isDuplicate);
-
-    console.log(`[Check Theme Duplicates] Found ${uniqueThemes.length} unique themes, ${duplicates.length} duplicates`);
-
     return NextResponse.json({
       uniqueThemes,
       duplicates,

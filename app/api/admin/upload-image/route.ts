@@ -6,8 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    console.log('[API Upload] 画像アップロード開始');
-    
     const formData = await request.formData();
     const file = formData.get('file') as File;
     
@@ -15,13 +13,6 @@ export async function POST(request: Request) {
       console.error('[API Upload] ファイルが見つかりません');
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
-
-    console.log('[API Upload] ファイル情報:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
-
     // ArrayBufferに変換
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -34,8 +25,6 @@ export async function POST(request: Request) {
     const isImage = file.type.startsWith('image/');
 
     if (isImage) {
-      console.log('[API Upload] 画像を最適化中...');
-      
       // sharpで画像情報を取得
       const image = sharp(buffer);
       const metadata = await image.metadata();
@@ -53,14 +42,6 @@ export async function POST(request: Request) {
         .webp({ quality: 80 })
         .toBuffer();
       
-      const finalSize = optimizedBuffer.length;
-      
-      console.log('[API Upload] 最適化完了:', {
-        original: file.size,
-        optimized: finalSize,
-        reduction: `${((1 - finalSize / file.size) * 100).toFixed(1)}%`,
-      });
-
       // WebP画像をアップロード
       const fileName = `articles/${timestamp}_${randomString}.webp`;
       const fileRef = bucket.file(fileName);
@@ -70,15 +51,9 @@ export async function POST(request: Request) {
           contentType: 'image/webp',
         },
       });
-
-      console.log('[API Upload] アップロード完了、公開URL取得中...');
-
       // 公開URLを生成
       await fileRef.makePublic();
       const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-
-      console.log('[API Upload] 公開URL:', publicUrl);
-
       return NextResponse.json({ url: publicUrl });
     } else {
       // 画像以外はそのままアップロード
@@ -94,9 +69,6 @@ export async function POST(request: Request) {
 
       await fileRef.makePublic();
       const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-
-      console.log('[API Upload] 公開URL:', publicUrl);
-
       return NextResponse.json({ url: publicUrl });
     }
   } catch (error: any) {

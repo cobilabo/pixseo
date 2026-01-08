@@ -50,8 +50,6 @@ export async function POST(request: NextRequest) {
         } else {
           categoryData[`description_${lang}`] = '';
         }
-        
-        console.log(`[Category Translation] ${lang} 翻訳成功`);
       } catch (error) {
         console.error(`[Category Translation Error] ${lang}:`, error);
         // エラー時は元のテキストを使用

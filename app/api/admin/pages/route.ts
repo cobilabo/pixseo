@@ -10,8 +10,6 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const mediaId = request.headers.get('x-media-id');
-    console.log('[API] GET /api/admin/pages - mediaId:', mediaId);
-    
     let query: FirebaseFirestore.Query = adminDb.collection('pages');
     
     // mediaIdが指定されている場合はフィルタリング
@@ -20,8 +18,6 @@ export async function GET(request: NextRequest) {
     }
     
     const snapshot = await query.get();
-    console.log('[API] Pages fetched:', snapshot.size);
-    
     const pages: Page[] = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -51,8 +47,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('[API] POST /api/admin/pages - body:', body);
-    
     // undefinedフィールドを除去（Firestoreはundefinedを許可しない）
     const cleanData = Object.fromEntries(
       Object.entries(body).filter(([_, value]) => value !== undefined)
@@ -73,7 +67,6 @@ export async function POST(request: NextRequest) {
     
     // ブロックビルダー使用時は翻訳をスキップ（Phase 3で実装予定）
     if (pageData.useBlockBuilder) {
-      console.log('[API] ブロックビルダー使用のため翻訳をスキップ');
       const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
       for (const lang of otherLangs) {
         pageData[`title_${lang}`] = pageData.title;
@@ -87,7 +80,6 @@ export async function POST(request: NextRequest) {
       const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
       for (const lang of otherLangs) {
         try {
-          console.log(`[API] 翻訳開始（${lang}）`);
           const translated = await translateArticle({
             title: pageData.title,
             content: pageData.content,
@@ -101,8 +93,6 @@ export async function POST(request: NextRequest) {
           pageData[`excerpt_${lang}`] = translated.excerpt;
           pageData[`metaTitle_${lang}`] = translated.metaTitle;
           pageData[`metaDescription_${lang}`] = translated.metaDescription;
-          
-          console.log(`[API] 翻訳完了（${lang}）`);
         } catch (error) {
           console.error(`[API] 翻訳エラー（${lang}）:`, error);
           // エラーの場合は日本語をコピー
@@ -116,9 +106,6 @@ export async function POST(request: NextRequest) {
     }
     
     const docRef = await adminDb.collection('pages').add(pageData);
-    
-    console.log('[API] Page created with ID:', docRef.id);
-    
     return NextResponse.json({ id: docRef.id }, { status: 201 });
   } catch (error) {
     console.error('[API] Error creating page:', error);

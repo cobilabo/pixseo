@@ -8,8 +8,6 @@ export const dynamic = 'force-dynamic';
 // メディアアップロード
 export async function POST(request: Request) {
   try {
-    console.log('[API Media Upload] アップロード開始');
-    
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const mediaId = formData.get('mediaId') as string | null;
@@ -22,12 +20,6 @@ export async function POST(request: Request) {
     if (!mediaId) {
       return NextResponse.json({ error: 'Media ID is required' }, { status: 400 });
     }
-
-    console.log('[API Media Upload] ファイル名:', file.name);
-    console.log('[API Media Upload] MIMEタイプ:', file.type);
-    console.log('[API Media Upload] サイズ:', file.size);
-    console.log('[API Media Upload] Media ID:', mediaId);
-
     const buffer = Buffer.from(await file.arrayBuffer());
     const bucket = adminStorage.bucket();
     const timestamp = Date.now();
@@ -43,8 +35,6 @@ export async function POST(request: Request) {
 
     if (isImage) {
       // 画像の場合：最適化処理
-      console.log('[API Media Upload] 画像を最適化中...');
-      
       const image = sharp(buffer);
       const metadata = await image.metadata();
       width = metadata.width || 0;
@@ -62,12 +52,6 @@ export async function POST(request: Request) {
         .toBuffer();
       
       finalSize = optimizedBuffer.length;
-      
-      console.log('[API Media Upload] 最適化完了:', {
-        original: file.size,
-        optimized: finalSize,
-        reduction: `${((1 - finalSize / file.size) * 100).toFixed(1)}%`,
-      });
 
       // メイン画像をアップロード
       const mainPath = `media/images/${timestamp}_${sanitizedName.replace(/\.[^.]+$/, '.webp')}`;
@@ -92,8 +76,6 @@ export async function POST(request: Request) {
 
     } else if (isVideo) {
       // 動画の場合：そのままアップロード
-      console.log('[API Media Upload] 動画をアップロード中...');
-      
       const videoPath = `media/videos/${timestamp}_${sanitizedName}`;
       const videoFile = bucket.file(videoPath);
       await videoFile.save(buffer, {
@@ -127,8 +109,6 @@ export async function POST(request: Request) {
     };
 
     const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
-    console.log('[API Media Upload] アップロード成功:', docRef.id);
-
     return NextResponse.json({ 
       id: docRef.id,
       url: uploadUrl,

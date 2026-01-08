@@ -18,8 +18,6 @@ export async function DELETE(
 ) {
   try {
     const { id } = params;
-    console.log(`[API DELETE /admin/articles/${id}] Deleting article...`);
-    
     // Firestoreから削除
     const articleRef = adminDb.collection('articles').doc(id);
     const doc = await articleRef.get();
@@ -32,12 +30,9 @@ export async function DELETE(
     }
 
     await articleRef.delete();
-    console.log(`[API DELETE /admin/articles/${id}] Deleted from Firestore`);
-    
     // Algoliaから削除
     try {
       await deleteArticleFromAlgolia(id);
-      console.log(`[API DELETE /admin/articles/${id}] Deleted from Algolia`);
     } catch (algoliaError) {
       console.error(`[API DELETE /admin/articles/${id}] Algolia delete error:`, algoliaError);
       // Algoliaの削除エラーは致命的ではないので処理は続行
@@ -69,8 +64,6 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    console.log(`[API /admin/articles/${id}] Fetching article...`);
-    
     const articleRef = adminDb.collection('articles').doc(id);
     const doc = await articleRef.get();
 
@@ -92,12 +85,6 @@ export async function GET(
       publishedAt: data.publishedAt ? convertToDate(data.publishedAt) : null,
       updatedAt: convertToDate(data.updatedAt) || new Date(),
     } as Article;
-
-    console.log(`[API /admin/articles/${id}] Found article:`, article.title);
-    console.log(`[API /admin/articles/${id}] featuredImage:`, data.featuredImage);
-    console.log(`[API /admin/articles/${id}] featuredImageAlt:`, data.featuredImageAlt);
-    console.log(`[API /admin/articles/${id}] article object featuredImageAlt:`, article.featuredImageAlt);
-    console.log(`[API /admin/articles/${id}] FAQs count:`, article.faqs?.length || 0);
     return NextResponse.json(article);
   } catch (error) {
     console.error(`[API /admin/articles] Error:`, error);
@@ -116,9 +103,6 @@ export async function PUT(
   
   try {
     const body = await request.json();
-    console.log(`[API /admin/articles/${id}] Updating article with:`, body);
-    console.log(`[API /admin/articles/${id}] isPublished:`, body.isPublished);
-    
     const articleRef = adminDb.collection('articles').doc(id);
     const doc = await articleRef.get();
 
@@ -154,18 +138,11 @@ export async function PUT(
 
     // Firestoreを即座に更新
     await articleRef.update(updateData);
-    console.log(`[API /admin/articles/${id}] Firestore updated`);
-
     // 公開ステータスが変更された場合
     const statusChanged = wasPublished !== body.isPublished;
     
     // 🚀 公開に切り替えた場合、翻訳とAlgolia登録を実行（同期的に実行）
     if (body.isPublished === true && statusChanged) {
-      console.log(`[API] ===== 翻訳処理開始（同期） =====`);
-      console.log(`[API] 記事ID: ${id}`);
-      console.log(`[API] タイトル: ${existingData?.title}`);
-      console.log(`[API] wasPublished: ${wasPublished}, isPublished: ${body.isPublished}, statusChanged: ${statusChanged}`);
-      
       try {
         const translationData: any = {};
 
@@ -176,15 +153,11 @@ export async function PUT(
         const metaTitleToTranslate = existingData?.metaTitle || titleToTranslate;
         const metaDescriptionToTranslate = existingData?.metaDescription || excerptToTranslate;
         const faqsToTranslate = existingData?.faqs_ja;
-
-        console.log(`[API ${id}] 翻訳対象: title="${titleToTranslate}", content length=${contentToTranslate.length}`);
-
         // AIサマリー生成（日本語）
         if (contentToTranslate) {
           try {
             const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
             translationData.aiSummary_ja = aiSummaryJa;
-            console.log(`[API ${id}] AIサマリー生成完了（ja）`);
           } catch (error) {
             console.error(`[API ${id}] AIサマリー生成エラー（ja）:`, error);
           }
@@ -192,12 +165,9 @@ export async function PUT(
 
         // 他の言語への翻訳（並列処理）
         const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-        console.log(`[API ${id}] 翻訳開始（並列）: ${otherLangs.join(', ')}`);
         
         await Promise.all(otherLangs.map(async (lang) => {
           try {
-            console.log(`[API ${id}] 翻訳開始（${lang}）`);
-            
             // 記事本体を翻訳
             const translated = await translateArticle({
               title: titleToTranslate,
@@ -226,19 +196,13 @@ export async function PUT(
               const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
               translationData[`faqs_${lang}`] = translatedFaqs;
             }
-
-            console.log(`[API ${id}] 翻訳完了（${lang}）`);
           } catch (error) {
             console.error(`[API ${id}] 翻訳エラー（${lang}）:`, error);
           }
         }));
-        
-        console.log(`[API ${id}] 全言語の翻訳完了`);
-
         // 翻訳データを保存
         if (Object.keys(translationData).length > 0) {
           await articleRef.update(translationData);
-          console.log(`[API ${id}] 翻訳データ保存完了`);
         }
 
         // Algolia同期（翻訳データを含む最新データを取得）
@@ -253,10 +217,7 @@ export async function PUT(
           } as Article;
 
           await syncArticleToAlgolia(article);
-          console.log(`[API ${id}] Algolia同期完了（全4言語）`);
         }
-        
-        console.log(`[API ${id}] ===== 翻訳処理完了 =====`);
       } catch (translationError) {
         console.error(`[API ${id}] 翻訳処理エラー:`, translationError);
         // エラーが発生しても記事の公開状態は更新済みなので処理は続行
@@ -265,9 +226,8 @@ export async function PUT(
       // 非公開にした場合は同期的にAlgoliaから削除
       try {
         await deleteArticleFromAlgolia(id);
-        console.log(`[API /admin/articles/${id}] Removed from Algolia (unpublished)`);
       } catch (algoliaError) {
-        console.error(`[API /admin/articles/${id}] Algolia delete error:`, algoliaError);
+        console.error('[API] Algolia delete error:', algoliaError);
       }
     } else if (body.isPublished && !statusChanged) {
       // 既に公開済みの場合は、Algoliaに同期（翻訳なし）
@@ -283,7 +243,6 @@ export async function PUT(
         } as Article;
 
         await syncArticleToAlgolia(article);
-        console.log(`[API /admin/articles/${id}] Synced to Algolia`);
       } catch (algoliaError) {
         console.error(`[API /admin/articles/${id}] Algolia sync error:`, algoliaError);
       }

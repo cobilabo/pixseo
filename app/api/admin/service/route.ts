@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
 // メディアテナント一覧取得
 export async function GET() {
   try {
-    console.log('[API Tenants] メディアテナント一覧取得開始');
-    
     const snapshot = await adminDb.collection('mediaTenants').orderBy('createdAt', 'desc').get();
     
     const tenants = snapshot.docs.map((doc) => {
@@ -20,9 +18,6 @@ export async function GET() {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       };
     });
-
-    console.log('[API Tenants] 取得したメディア数:', tenants.length);
-    
     return NextResponse.json(tenants);
   } catch (error: any) {
     console.error('[API Tenants] エラー:', error);
@@ -33,8 +28,6 @@ export async function GET() {
 // サービス作成
 export async function POST(request: Request) {
   try {
-    console.log('[API Service] サービス作成開始');
-    
     const body = await request.json();
     const { 
       name, 
@@ -115,9 +108,6 @@ export async function POST(request: Request) {
         }
       }
     }
-    
-    console.log('[API Service] サービス作成成功:', docRef.id);
-    
     return NextResponse.json({ id: docRef.id });
   } catch (error: any) {
     console.error('[API Service] エラー:', error);

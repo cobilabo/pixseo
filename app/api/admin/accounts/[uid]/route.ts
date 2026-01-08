@@ -7,12 +7,7 @@ export const dynamic = 'force-dynamic';
 // アカウント削除
 export async function DELETE(request: Request, { params }: { params: { uid: string } }) {
   try {
-    console.log('[API Account Delete] 削除開始:', params.uid);
-    
     await adminAuth.deleteUser(params.uid);
-    
-    console.log('[API Account Delete] 削除成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Account Delete] エラー:', error);
@@ -23,8 +18,6 @@ export async function DELETE(request: Request, { params }: { params: { uid: stri
 // アカウント更新
 export async function PUT(request: Request, { params }: { params: { uid: string } }) {
   try {
-    console.log('[API Account Update] 更新開始:', params.uid);
-    
     const body = await request.json();
     const { email, password, displayName, logoUrl } = body;
 
@@ -35,8 +28,6 @@ export async function PUT(request: Request, { params }: { params: { uid: string 
     if (displayName !== undefined) authUpdateData.displayName = displayName;
 
     await adminAuth.updateUser(params.uid, authUpdateData);
-    console.log('[API Account Update] Firebase Auth更新成功');
-
     // Firestoreのusersコレクションを更新
     const firestoreUpdateData: any = {
       updatedAt: FieldValue.serverTimestamp(),
@@ -46,8 +37,6 @@ export async function PUT(request: Request, { params }: { params: { uid: string 
     if (logoUrl !== undefined) firestoreUpdateData.logoUrl = logoUrl;
 
     await adminDb.collection('users').doc(params.uid).set(firestoreUpdateData, { merge: true });
-    console.log('[API Account Update] Firestore更新成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Account Update] エラー:', error);
@@ -58,8 +47,6 @@ export async function PUT(request: Request, { params }: { params: { uid: string 
 // アカウント取得
 export async function GET(request: Request, { params }: { params: { uid: string } }) {
   try {
-    console.log('[API Account Get] 取得開始:', params.uid);
-    
     const userRecord = await adminAuth.getUser(params.uid);
     
     // Firestoreからlogoを取得
@@ -74,9 +61,6 @@ export async function GET(request: Request, { params }: { params: { uid: string 
       createdAt: userRecord.metadata.creationTime,
       lastSignInTime: userRecord.metadata.lastSignInTime,
     };
-    
-    console.log('[API Account Get] 取得成功');
-    
     return NextResponse.json(user);
   } catch (error: any) {
     console.error('[API Account Get] エラー:', error);

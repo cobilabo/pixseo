@@ -39,19 +39,13 @@ export async function POST(request: NextRequest) {
         { error: 'No custom domain configured' },
         { status: 400 }
       );
-    }
-    
-    console.log(`[Domain Remove] Removing ${domain} from service ${serviceId}`);
-    
-    // Vercelからドメインを削除
+    }    // Vercelからドメインを削除
     if (domainConfig?.vercelConfigured) {
       const vercelResult = await removeDomainFromVercel(domain);
       if (!vercelResult.success) {
         console.warn(`[Domain Remove] Vercel removal warning: ${vercelResult.error}`);
         // エラーでも続行（Firestore側は削除する）
-      } else {
-        console.log(`[Domain Remove] Removed from Vercel`);
-      }
+      } else {      }
     }
     
     // Resendからドメインを削除
@@ -60,9 +54,7 @@ export async function POST(request: NextRequest) {
       if (!resendResult.success) {
         console.warn(`[Domain Remove] Resend removal warning: ${resendResult.error}`);
         // エラーでも続行
-      } else {
-        console.log(`[Domain Remove] Removed from Resend`);
-      }
+      } else {      }
     }
     
     // Firestoreから削除
@@ -70,11 +62,7 @@ export async function POST(request: NextRequest) {
       customDomain: FieldValue.delete(),
       domainConfig: FieldValue.delete(),
       updatedAt: FieldValue.serverTimestamp(),
-    });
-    
-    console.log(`[Domain Remove] Removal completed for ${domain}`);
-    
-    return NextResponse.json({
+    });    return NextResponse.json({
       success: true,
       message: 'Domain removed successfully',
     });

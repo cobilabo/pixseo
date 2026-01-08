@@ -9,8 +9,6 @@ export const dynamic = 'force-dynamic';
 // サイト設定取得
 export async function GET(request: NextRequest) {
   try {
-    console.log('[API Site] サイト設定取得開始');
-    
     const mediaId = request.headers.get('x-media-id');
     
     if (!mediaId) {
@@ -24,8 +22,6 @@ export async function GET(request: NextRequest) {
     }
     
     const data = doc.data();
-    console.log('[API Site] 設定取得成功');
-    
     return NextResponse.json({
       siteName: data?.name || '',
       siteDescription: data?.siteDescription || '', // トップレベルから取得
@@ -41,8 +37,6 @@ export async function GET(request: NextRequest) {
 // サイト設定更新
 export async function PUT(request: NextRequest) {
   try {
-    console.log('[API Site] サイト設定更新開始');
-    
     const mediaId = request.headers.get('x-media-id');
     
     if (!mediaId) {
@@ -65,10 +59,8 @@ export async function PUT(request: NextRequest) {
     const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
     for (const lang of otherLangs) {
       try {
-        console.log(`[Site Translation] ${lang} 翻訳開始...`);
         updateData[`name_${lang}`] = await translateText(siteName, lang, 'サイト名');
         updateData[`siteDescription_${lang}`] = await translateText(siteDescription, lang, 'サイト説明文'); // トップレベルに保存
-        console.log(`[Site Translation] ${lang} 翻訳成功`);
       } catch (error) {
         console.error(`[Site Translation Error] ${lang}:`, error);
         updateData[`name_${lang}`] = siteName;
@@ -77,9 +69,6 @@ export async function PUT(request: NextRequest) {
     }
 
     await adminDb.collection('mediaTenants').doc(mediaId).update(updateData);
-    
-    console.log('[API Site] 設定更新成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Site] エラー:', error);

@@ -100,9 +100,6 @@ ${categoryDescription ? `カテゴリー説明: ${categoryDescription}` : ''}${e
     if (!targetAudience) {
       throw new Error('Failed to generate target audience');
     }
-
-    console.log(`[Generate Target Audience] → Audience: ${targetAudience}`);
-
     return NextResponse.json({ targetAudience });
   } catch (error) {
     console.error('[Generate Target Audience] Error:', error);

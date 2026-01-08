@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
     for (const lang of otherLangs) {
       try {
         tagData[`name_${lang}`] = await translateText(name, lang, 'タグ名');
-        console.log(`[Tag Translation] ${lang} 翻訳成功`);
       } catch (error) {
         console.error(`[Tag Translation Error] ${lang}:`, error);
         // エラー時は元のテキストを使用

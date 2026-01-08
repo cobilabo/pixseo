@@ -25,11 +25,7 @@ export async function POST(request: NextRequest) {
 
     if (!mediaItems || !Array.isArray(mediaItems) || mediaItems.length === 0) {
       return NextResponse.json({ error: 'mediaItems is required' }, { status: 400 });
-    }
-
-    console.log('[API Media Usage] 使用状況計算開始', { count: mediaItems.length });
-
-    // 共通データを一度だけ取得（テナント情報）
+    }    // 共通データを一度だけ取得（テナント情報）
     const tenantsSnapshot = await adminDb.collection('mediaTenants').get();
 
     // 各メディアの使用状況を並列で計算
@@ -173,11 +169,7 @@ export async function POST(request: NextRequest) {
           usageDetails,
         };
       })
-    );
-
-    console.log('[API Media Usage] 使用状況計算完了', { count: usageResults.length });
-    
-    return NextResponse.json(usageResults);
+    );    return NextResponse.json(usageResults);
   } catch (error: any) {
     console.error('[API Media Usage] エラー:', error);
     return NextResponse.json({ error: 'Failed to calculate media usage' }, { status: 500 });

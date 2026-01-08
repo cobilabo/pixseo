@@ -40,9 +40,6 @@ export async function POST(request: NextRequest) {
     }
 
     const openai = new OpenAI({ apiKey: openaiApiKey });
-
-    console.log('[AI Page Generate] Starting generation with prompt:', prompt);
-
     // Step 1: ページ構造を生成
     const structurePrompt = `以下のリクエストに基づいて、Webページの構造を設計してください。
 
@@ -89,9 +86,6 @@ export async function POST(request: NextRequest) {
     });
 
     const structure = JSON.parse(structureResponse.choices[0].message.content || '{}');
-    
-    console.log('[AI Page Generate] Structure generated:', structure);
-
     // Step 2: 各ブロックの詳細コンテンツを生成
     const blocks: Block[] = [];
     
@@ -220,9 +214,6 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-
-    console.log('[AI Page Generate] Generated', blocks.length, 'blocks');
-
     // Step 3: ページを保存
     const pageData: any = {
       title: structure.title,
@@ -259,9 +250,6 @@ export async function POST(request: NextRequest) {
     }
 
     const docRef = await adminDb.collection('pages').add(pageData);
-
-    console.log('[AI Page Generate] Page created with ID:', docRef.id);
-
     return NextResponse.json({
       success: true,
       pageId: docRef.id,

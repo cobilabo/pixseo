@@ -7,9 +7,6 @@ export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API /admin/stats] Fetching stats...', { mediaId });
-    
     // クエリを作成
     let articlesQuery: FirebaseFirestore.Query = adminDb.collection('articles');
     let categoriesQuery: FirebaseFirestore.Query = adminDb.collection('categories');
@@ -33,9 +30,6 @@ export async function GET(request: NextRequest) {
       categoriesCount: categoriesSnap.size,
       tagsCount: tagsSnap.size,
     };
-    
-    console.log('[API /admin/stats] Stats:', stats);
-
     return NextResponse.json(stats);
   } catch (error) {
     console.error('Error fetching admin stats:', error);

@@ -142,9 +142,7 @@ export const getPages = async (mediaId?: string): Promise<Page[]> => {
       q = pagesRef;
     }
     
-    console.log('[getPages] Querying pages with mediaId:', mediaId);
     const querySnapshot = await getDocs(q);
-    console.log('[getPages] Found', querySnapshot.docs.length, 'pages');
     
     const pages = querySnapshot.docs.map((doc) => {
       const data = doc.data();
@@ -159,9 +157,7 @@ export const getPages = async (mediaId?: string): Promise<Page[]> => {
     // クライアント側でソート（複合インデックス不要）
     return pages.sort((a, b) => (a.order || 0) - (b.order || 0));
   } catch (error) {
-    console.error('[getPages] Error:', error);
-    console.error('[getPages] Error message:', error instanceof Error ? error.message : String(error));
-    // エラー時は空配列を返す
+    console.error('[getPages] Error:', error instanceof Error ? error.message : String(error));
     return [];
   }
 };

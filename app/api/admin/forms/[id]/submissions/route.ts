@@ -10,16 +10,11 @@ export async function GET(
 ) {
   try {
     const formId = params.id;
-    console.log('[API] Fetching submissions for formId:', formId);
-
     // orderByを使用せずに取得（インデックス不要）
     const submissionsSnapshot = await adminDb
       .collection('formSubmissions')
       .where('formId', '==', formId)
       .get();
-
-    console.log('[API] Found submissions:', submissionsSnapshot.size);
-
     const submissions = submissionsSnapshot.docs.map(doc => {
       const data = doc.data();
       return {

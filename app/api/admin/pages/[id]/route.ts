@@ -76,7 +76,6 @@ export async function PUT(
       
       // ブロックビルダー使用時は翻訳をスキップ（Phase 3で実装予定）
       if (body.useBlockBuilder) {
-        console.log('[API] ブロックビルダー使用のため翻訳をスキップ');
         const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
         for (const lang of otherLangs) {
           if (body.title) updateData[`title_${lang}`] = body.title;

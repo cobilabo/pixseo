@@ -51,8 +51,6 @@ function initializeFirebase() {
 // エクスポート時に初期化を試みる
 if (typeof window !== 'undefined') {
   initializeFirebase();
-  console.log('[Firebase Config] Initialized with projectId:', firebaseConfig.projectId);
-  console.log('[Firebase Config] Auth domain:', firebaseConfig.authDomain);
 }
 
 export { app, db, storage, auth, initializeFirebase };

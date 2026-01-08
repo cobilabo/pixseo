@@ -8,9 +8,6 @@ export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API Media] メディア一覧取得開始', { mediaId });
-    
     // 両方のコレクションから取得（media と mediaLibrary）
     let query1: FirebaseFirestore.Query = adminDb.collection('media');
     let query2: FirebaseFirestore.Query = adminDb.collection('mediaLibrary');
@@ -29,12 +26,6 @@ export async function GET(request: NextRequest) {
     
     // 両方のスナップショットをマージ
     const allDocs = [...snapshot1.docs, ...snapshot2.docs];
-    console.log('[API Media] 取得したドキュメント数:', {
-      media: snapshot1.docs.length,
-      mediaLibrary: snapshot2.docs.length,
-      total: allDocs.length,
-    });
-    
     // メディアデータをマッピング（使用状況は別APIで取得するため省略）
     const mediaList = allDocs.map((doc) => {
       const data = doc.data();
@@ -48,9 +39,6 @@ export async function GET(request: NextRequest) {
 
     // 作成日時で降順ソート
     mediaList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    console.log('[API Media] 取得したメディア数:', mediaList.length);
-    
     return NextResponse.json(mediaList);
   } catch (error: any) {
     console.error('[API Media] エラー:', error);

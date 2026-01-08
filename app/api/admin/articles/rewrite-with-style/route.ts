@@ -62,9 +62,6 @@ ${plainContent}
 5. タイトルは変更せず、本文のみをリライトしてください
 
 リライトした本文のみを出力してください:`;
-
-    console.log('[Rewrite With Style] Calling Grok API...');
-
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -107,9 +104,6 @@ ${plainContent}
         { status: 500 }
       );
     }
-
-    console.log('[Rewrite With Style] Rewrite completed');
-
     // リライトされたコンテンツを段落ごとに<p>タグで囲む
     const paragraphs = rewrittenContent
       .split('\n')

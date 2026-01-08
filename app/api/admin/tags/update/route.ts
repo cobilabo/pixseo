@@ -47,7 +47,6 @@ export async function PUT(request: NextRequest) {
       for (const lang of otherLangs) {
         try {
           updateData[`name_${lang}`] = await translateText(name, lang, 'タグ名');
-          console.log(`[Tag Name Translation] ${lang} 翻訳成功`);
         } catch (error) {
           console.error(`[Tag Name Translation Error] ${lang}:`, error);
           updateData[`name_${lang}`] = name;

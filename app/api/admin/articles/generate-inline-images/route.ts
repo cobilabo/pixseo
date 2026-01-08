@@ -47,14 +47,8 @@ export async function POST(request: NextRequest) {
     // 見出しを抽出（H2タグ）
     const headings = content.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
     const headingTexts = headings.map((h: string) => h.replace(/<[^>]*>/g, '').trim());
-
-    console.log(`[Generate Inline Images] Found ${headingTexts.length} headings`);
-
     // 生成する画像の数を決定（最大3つ、見出しの数に応じて）
     const targetImageCount = Math.min(imageCount, 3, Math.max(1, Math.floor(headingTexts.length / 2)));
-
-    console.log(`[Generate Inline Images] Generating ${targetImageCount} images`);
-
     const generatedImages: Array<{
       url: string;
       position: number; // 挿入位置（H2タグのインデックス）
@@ -84,9 +78,6 @@ export async function POST(request: NextRequest) {
         
         // 画像生成プロンプトを構築
         const imagePrompt = `${basePrompt}\n\nContext: This image is for an article titled "${title}". The image should represent the following section: "${headingContext}". ${plainContent.substring(0, 200)}`;
-
-        console.log(`[Generate Inline Images] Generating image ${i + 1}/${targetImageCount} for position ${position}`);
-
         // DALL-E 3で画像を生成
         const response = await openai.images.generate({
           model: 'dall-e-3',
@@ -101,9 +92,6 @@ export async function POST(request: NextRequest) {
           console.error(`[Generate Inline Images] No image URL returned for image ${i + 1}`);
           continue;
         }
-
-        console.log(`[Generate Inline Images] Image ${i + 1} generated, downloading...`);
-
         // 画像をダウンロード
         const imageResponse = await fetch(imageUrl);
         const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
@@ -134,9 +122,6 @@ export async function POST(request: NextRequest) {
 
         await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${fileName}`;
-
-        console.log(`[Generate Inline Images] Image ${i + 1} uploaded to ${publicUrl}`);
-
         // メディアライブラリに登録
         await adminDb.collection('mediaLibrary').add({
           name: fileName,
@@ -160,9 +145,6 @@ export async function POST(request: NextRequest) {
         // 個別の画像生成エラーは無視して続行
       }
     }
-
-    console.log(`[Generate Inline Images] Generated ${generatedImages.length} images`);
-
     // 画像を記事内に挿入
     let updatedContent = content;
     const headingMatches = Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)) as RegExpMatchArray[];

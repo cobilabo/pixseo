@@ -61,7 +61,6 @@ A: [回答]`;
     });
 
     const faqText = faqResponse.choices[0]?.message?.content || '';
-    console.log('[FAQ Generation] Raw response:', faqText.substring(0, 200));
     
     // より柔軟な正規表現でマッチング
     const faqMatches = Array.from(faqText.matchAll(/Q:\s*([^\n]+)\s*\n\s*A:\s*([^\n]+(?:\n(?!Q:)[^\n]+)*)/gi));
@@ -74,11 +73,6 @@ A: [回答]`;
           answer: match[2].trim().replace(/\n+/g, ' '),
         });
       }
-    }
-
-    console.log(`[FAQ Generation] Generated ${faqs.length} FAQs`);
-    if (faqs.length > 0) {
-      console.log('[FAQ Generation] First FAQ:', JSON.stringify(faqs[0]));
     }
 
     return NextResponse.json({ faqs });

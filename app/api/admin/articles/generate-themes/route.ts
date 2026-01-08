@@ -75,9 +75,6 @@ ${patternPrompt}
 テーマ3: [記事テーマ]
 テーマ4: [記事テーマ]
 テーマ5: [記事テーマ]`;
-
-    console.log('[Generate Themes] Calling Grok API...');
-
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -120,9 +117,6 @@ ${patternPrompt}
         { status: 500 }
       );
     }
-
-    console.log('[Generate Themes] Generated content:', generatedContent);
-
     // テーマを抽出
     const themeMatches = generatedContent.match(/テーマ\d+[：:]\s*(.+)/g);
     const themes: string[] = [];
@@ -142,9 +136,6 @@ ${patternPrompt}
       const lines = generatedContent.split('\n').filter((line: string) => line.trim());
       themes.push(...lines.slice(0, 5));
     }
-
-    console.log('[Generate Themes] Extracted themes:', themes);
-
     return NextResponse.json({
       themes: themes.slice(0, 5), // 最大5つまで
       categoryId,

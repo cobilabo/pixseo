@@ -9,8 +9,6 @@ export const dynamic = 'force-dynamic';
 // メディアテナント取得
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Tenant Get] 取得開始:', params.id);
-    
     const doc = await adminDb.collection('mediaTenants').doc(params.id).get();
     
     if (!doc.exists) {
@@ -24,9 +22,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
       createdAt: data?.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       updatedAt: data?.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
     };
-    
-    console.log('[API Tenant Get] 取得成功');
-    
     return NextResponse.json(tenant);
   } catch (error: any) {
     console.error('[API Tenant Get] エラー:', error);
@@ -37,8 +32,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 // メディアテナント更新
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Service Update] 更新開始:', params.id);
-    
     const body = await request.json();
     const { 
       name, 
@@ -115,16 +108,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       try {
         // サイト名の翻訳
         if (name !== undefined) {
-          console.log(`[Service Translation] ${lang} サイト名翻訳開始...`);
           updateData[`name_${lang}`] = await translateText(name, lang, 'サイト名');
-          console.log(`[Service Translation] ${lang} サイト名翻訳成功`);
         }
         
         // サイト説明文の翻訳
         if (siteDescription !== undefined) {
-          console.log(`[Service Translation] ${lang} サイト説明文翻訳開始...`);
           updateData[`siteDescription_${lang}`] = await translateText(siteDescription, lang, 'サイト説明文');
-          console.log(`[Service Translation] ${lang} サイト説明文翻訳成功`);
         }
       } catch (error) {
         console.error(`[Service Translation Error] ${lang}:`, error);
@@ -174,9 +163,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     await adminDb.collection('mediaTenants').doc(params.id).update(updateData);
-    
-    console.log('[API Service Update] 更新成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Service Update] エラー:', error);
@@ -187,15 +173,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // メディアテナント削除
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Tenant Delete] 削除開始:', params.id);
-    
     // TODO: 関連する記事・バナー・メディアファイルも削除するか確認
     // 今回は論理削除（isActive: false）を推奨
     
     await adminDb.collection('mediaTenants').doc(params.id).delete();
-    
-    console.log('[API Tenant Delete] 削除成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Tenant Delete] エラー:', error);

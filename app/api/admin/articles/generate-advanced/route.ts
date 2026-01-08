@@ -16,14 +16,6 @@ export async function POST(request: NextRequest) {
       writerId,
       imagePromptPatternId,
     } = body;
-
-    console.log('[API /admin/articles/generate-advanced] Request:', {
-      mediaId,
-      categoryId,
-      writerId,
-      imagePromptPatternId,
-    });
-
     if (!mediaId || !categoryId || !writerId || !imagePromptPatternId) {
       console.error('[API /admin/articles/generate-advanced] Missing parameters');
       return NextResponse.json(
@@ -39,8 +31,6 @@ export async function POST(request: NextRequest) {
       writerId,
       imagePromptPatternId,
     });
-
-    console.log('[API /admin/articles/generate-advanced] Success:', result.articleId);
     return NextResponse.json(result);
   } catch (error) {
     console.error('[API /admin/articles/generate-advanced] Error:', error);

@@ -94,9 +94,6 @@ export async function POST(request: NextRequest) {
     const existingSlugs = existingPagesSnapshot.docs
       .filter(doc => doc.id !== currentPageId) // 編集時は現在のページを除外
       .map(doc => doc.data().slug);
-
-    console.log('[API /admin/pages/generate-slug] 既存スラッグ数:', existingSlugs.length);
-
     // 重複チェックと連番追加
     let finalSlug = slug;
     let counter = 2;
@@ -104,11 +101,9 @@ export async function POST(request: NextRequest) {
     while (existingSlugs.includes(finalSlug)) {
       finalSlug = `${slug}-${counter}`;
       counter++;
-      console.log('[API /admin/pages/generate-slug] スラッグ重複、連番追加:', finalSlug);
     }
 
     if (finalSlug !== slug) {
-      console.log('[API /admin/pages/generate-slug] 最終スラッグ:', slug, '→', finalSlug);
     }
 
     return NextResponse.json({ slug: finalSlug });

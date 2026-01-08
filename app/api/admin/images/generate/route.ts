@@ -158,8 +158,6 @@ export async function POST(request: NextRequest) {
     };
 
     const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
-    console.log('[API /admin/images/generate] メディアライブラリに登録:', docRef.id);
-
     return NextResponse.json({
       url: publicUrl,
       mediaId: docRef.id,

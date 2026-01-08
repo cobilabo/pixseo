@@ -601,23 +601,14 @@ export const getAdjacentArticlesServer = async (
   mediaId?: string
 ): Promise<{ previousArticle: Article | null; nextArticle: Article | null }> => {
   try {
-    console.log('[getAdjacentArticlesServer] Starting...');
-    console.log('[getAdjacentArticlesServer] Current article:', currentArticle.id, currentArticle.title);
-    console.log('[getAdjacentArticlesServer] Current publishedAt:', currentArticle.publishedAt);
-    console.log('[getAdjacentArticlesServer] Current publishedAt type:', typeof currentArticle.publishedAt, currentArticle.publishedAt instanceof Date);
-    console.log('[getAdjacentArticlesServer] mediaId:', mediaId);
-    
     // Date を Firestore Timestamp に変換
     const currentPublishedAt = currentArticle.publishedAt instanceof Date 
       ? admin.firestore.Timestamp.fromDate(currentArticle.publishedAt)
       : currentArticle.publishedAt;
     
-    console.log('[getAdjacentArticlesServer] Converted publishedAt:', currentPublishedAt);
-    
     const articlesRef = adminDb.collection('articles');
     
     // 前の記事を取得
-    console.log('[getAdjacentArticlesServer] Querying for previous article...');
     const prevQueryBuilder = articlesRef
       .where('isPublished', '==', true)
       .where('publishedAt', '<', currentPublishedAt)

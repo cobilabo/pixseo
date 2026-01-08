@@ -23,16 +23,10 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log('[Generate Sample Image] Improving prompt with GPT-4o...');
-
     const openai = new OpenAI({ apiKey: openaiApiKey });
 
     // GPT-4o でプロンプトを改善（ChatGPT UI と同じ動作）
     const improvedPrompt = await improveImagePrompt(prompt, openai);
-
-    console.log('[Generate Sample Image] Generating image with DALL-E 3...');
-
     const response = await openai.images.generate({
       model: 'dall-e-3',
       prompt: improvedPrompt,
@@ -48,9 +42,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log('[Generate Sample Image] Image generated successfully');
-
     // 画像URLをそのまま返す（アップロードはしない）
     return NextResponse.json({ imageUrl });
   } catch (error) {

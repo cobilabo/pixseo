@@ -6,8 +6,6 @@ export const dynamic = 'force-dynamic';
 // メディア削除
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[API Media Delete] 削除開始:', params.id);
-    
     // Firestoreからメタデータ取得
     const doc = await adminDb.collection('mediaLibrary').doc(params.id).get();
     
@@ -26,7 +24,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         if (mainPath) {
           const mainFile = bucket.file(mainPath);
           await mainFile.delete().catch(() => {
-            console.log('[API Media Delete] メインファイル削除スキップ（存在しない可能性）');
           });
         }
       }
@@ -37,7 +34,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         if (thumbnailPath) {
           const thumbnailFile = bucket.file(thumbnailPath);
           await thumbnailFile.delete().catch(() => {
-            console.log('[API Media Delete] サムネイル削除スキップ（存在しない可能性）');
           });
         }
       }
@@ -47,9 +43,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     // Firestoreから削除
     await adminDb.collection('mediaLibrary').doc(params.id).delete();
-    
-    console.log('[API Media Delete] 削除成功');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Media Delete] エラー:', error);

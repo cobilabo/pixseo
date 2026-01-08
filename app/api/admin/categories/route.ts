@@ -10,9 +10,6 @@ export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API /admin/categories] Fetching categories...', { mediaId });
-    
     let categoriesRef = adminDb.collection('categories');
     
     // mediaIdが指定されている場合はフィルタリング
@@ -35,9 +32,6 @@ export async function GET(request: NextRequest) {
       isRecommended: doc.data().isRecommended || false,
       order: doc.data().order || 0,
     }));
-
-    console.log(`[API /admin/categories] Found ${categories.length} categories`);
-
     return NextResponse.json(categories);
   } catch (error: any) {
     console.error('[API /admin/categories] Error:', error);

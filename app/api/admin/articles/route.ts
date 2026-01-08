@@ -13,9 +13,6 @@ export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API /admin/articles] Fetching articles...', { mediaId });
-    
     let articlesRef = adminDb.collection('articles');
     
     // mediaIdが指定されている場合はフィルタリング
@@ -25,9 +22,6 @@ export async function GET(request: NextRequest) {
     }
     
     const snapshot = await query.get();
-
-    console.log(`[API /admin/articles] Found ${snapshot.size} articles`);
-
     // Timestampまたは文字列をDateに変換するヘルパー
     const convertToDate = (value: any): Date | undefined => {
       if (!value) return undefined; // 値がない場合はundefinedを返す
@@ -68,11 +62,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('[API] 記事作成開始');
     const body = await request.json();
-    console.log('[API] 作成データ:', body);
-    console.log('[API] isPublished:', body.isPublished);
-
     // undefinedフィールドを除去（Firestoreはundefinedを許可しない）
     const cleanData = Object.fromEntries(
       Object.entries(body).filter(([_, value]) => value !== undefined)
@@ -113,8 +103,6 @@ export async function POST(request: NextRequest) {
 
     // 📝 日本語版を即座に保存
     const docRef = await adminDb.collection('articles').add(articleData);
-    console.log('[API] Firestore作成完了（日本語版）:', docRef.id);
-
     // 🎯 想定読者を履歴に追加
     if (articleData.targetAudience && articleData.mediaId) {
       try {
@@ -140,7 +128,6 @@ export async function POST(request: NextRequest) {
             });
           }
         }
-        console.log('[API] 想定読者を履歴に追加:', articleData.targetAudience);
       } catch (error) {
         console.error('[API] 想定読者履歴追加エラー:', error);
         // エラーが発生しても記事作成は成功とする
@@ -149,33 +136,22 @@ export async function POST(request: NextRequest) {
 
     // 🚀 公開時の翻訳処理（同期処理）
     if (articleData.isPublished === true) {
-      console.log('[API] ===== 翻訳処理開始（同期） =====');
-      console.log('[API] 記事ID:', docRef.id);
-      console.log('[API] タイトル:', articleData.title);
-      
       try {
         const translationData: any = {};
         const articleRef = adminDb.collection('articles').doc(docRef.id);
-
-        console.log(`[API ${docRef.id}] 翻訳対象: title="${articleData.title}", content length=${articleData.content?.length || 0}`);
-
         // AIサマリー生成（日本語）
         try {
           const aiSummaryJa = await generateAISummary(articleData.content, 'ja');
           translationData.aiSummary_ja = aiSummaryJa;
-          console.log(`[API ${docRef.id}] AIサマリー生成完了（ja）`);
         } catch (error) {
           console.error(`[API ${docRef.id}] AIサマリー生成エラー（ja）:`, error);
         }
 
         // 他の言語への翻訳（並列処理）
         const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-        console.log(`[API ${docRef.id}] 翻訳開始（並列）: ${otherLangs.join(', ')}`);
         
         await Promise.all(otherLangs.map(async (lang) => {
           try {
-            console.log(`[API ${docRef.id}] 翻訳開始（${lang}）`);
-            
             // 記事本体を翻訳
             const translated = await translateArticle({
               title: articleData.title,
@@ -204,19 +180,13 @@ export async function POST(request: NextRequest) {
               const translatedFaqs = await translateFAQs(articleData.faqs, lang);
               translationData[`faqs_${lang}`] = translatedFaqs;
             }
-
-            console.log(`[API ${docRef.id}] 翻訳完了（${lang}）`);
           } catch (error) {
             console.error(`[API ${docRef.id}] 翻訳エラー（${lang}）:`, error);
           }
         }));
-        
-        console.log(`[API ${docRef.id}] 全言語の翻訳完了`);
-
         // 翻訳データを保存
         if (Object.keys(translationData).length > 0) {
           await articleRef.update(translationData);
-          console.log(`[API ${docRef.id}] 翻訳データ保存完了`);
         }
 
         // Algolia同期
@@ -229,8 +199,6 @@ export async function POST(request: NextRequest) {
         } as Article;
 
         await syncArticleToAlgolia(article);
-        console.log(`[API ${docRef.id}] Algolia同期完了`);
-        console.log(`[API ${docRef.id}] ===== 翻訳処理完了 =====`);
       } catch (error) {
         console.error(`[API ${docRef.id}] 翻訳処理エラー:`, error);
         // エラーが発生しても記事の作成は完了しているので処理は続行

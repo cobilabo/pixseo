@@ -8,9 +8,6 @@ export async function GET(request: NextRequest) {
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    
-    console.log('[API /admin/tags] Fetching tags...', { mediaId });
-    
     let tagsRef = adminDb.collection('tags');
     
     // mediaIdが指定されている場合はフィルタリング
@@ -28,9 +25,6 @@ export async function GET(request: NextRequest) {
       slug: doc.data().slug,
       mediaId: doc.data().mediaId,
     }));
-
-    console.log(`[API /admin/tags] Found ${tags.length} tags`);
-
     return NextResponse.json(tags);
   } catch (error: any) {
     console.error('[API /admin/tags] Error:', error);

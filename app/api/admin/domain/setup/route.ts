@@ -30,8 +30,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log(`[Domain Setup] Starting setup for ${domain} (service: ${serviceId})`);
-    
     // サービスの存在確認
     const serviceDoc = await adminDb.collection('mediaTenants').doc(serviceId).get();
     if (!serviceDoc.exists) {
@@ -68,7 +66,6 @@ export async function POST(request: NextRequest) {
     }));
     
     // Vercelにドメインを追加
-    console.log(`[Domain Setup] Adding domain to Vercel...`);
     const vercelResult = await addDomainToVercel(domain);
     
     if (!vercelResult.success) {
@@ -78,15 +75,11 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    
-    console.log(`[Domain Setup] Vercel domain added: ${vercelResult.domainId}`);
-    
     // メール機能が有効な場合、Resendにもドメインを追加
     let emailDomainId: string | undefined;
     let emailRecords: DnsRecord[] = [];
     
     if (enableEmail) {
-      console.log(`[Domain Setup] Adding domain to Resend for email...`);
       const resendResult = await addDomainToResend(domain);
       
       if (resendResult.success && resendResult.records) {
@@ -99,7 +92,6 @@ export async function POST(request: NextRequest) {
           purpose: 'email' as const,
           verified: false,
         }));
-        console.log(`[Domain Setup] Resend domain added: ${emailDomainId}`);
       } else {
         console.warn(`[Domain Setup] Resend warning: ${resendResult.error}`);
         // メール設定失敗はエラーにしない（Web設定は成功しているため）
@@ -126,9 +118,6 @@ export async function POST(request: NextRequest) {
       domainConfig,
       updatedAt: FieldValue.serverTimestamp(),
     });
-    
-    console.log(`[Domain Setup] Setup completed for ${domain}`);
-    
     return NextResponse.json({
       success: true,
       domain,

@@ -40,9 +40,6 @@ export async function POST(request: NextRequest) {
     }
 
     const openai = new OpenAI({ apiKey: openaiApiKey });
-
-    console.log('[AI Form Generate] Starting generation with prompt:', prompt);
-
     // フォーム構造を生成
     const structurePrompt = `以下のリクエストに基づいて、フォームの構造を設計してください。
 
@@ -112,9 +109,6 @@ config設定例：
     });
 
     const structure = JSON.parse(structureResponse.choices[0].message.content || '{}');
-    
-    console.log('[AI Form Generate] Structure generated:', structure);
-
     // フィールドを整形
     const fields: FormField[] = structure.fields.map((field: any, index: number) => ({
       id: `field-${index}`,
@@ -124,9 +118,6 @@ config設定例：
       order: index,
       config: field.config || {},
     }));
-
-    console.log('[AI Form Generate] Generated', fields.length, 'fields');
-
     // フォームを保存
     const formData: any = {
       name: structure.name,
@@ -149,9 +140,6 @@ config設定例：
     };
 
     const docRef = await adminDb.collection('forms').add(formData);
-
-    console.log('[AI Form Generate] Form created with ID:', docRef.id);
-
     return NextResponse.json({
       success: true,
       formId: docRef.id,

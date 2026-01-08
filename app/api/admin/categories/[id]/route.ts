@@ -12,9 +12,6 @@ export async function PUT(
   try {
     const { id } = params;
     const body = await request.json();
-    
-    console.log('[API PUT /admin/categories/:id] Updating category:', { id, body });
-    
     // Firestoreのカテゴリーを取得
     const categoryRef = adminDb.collection('categories').doc(id);
     const categoryDoc = await categoryRef.get();
@@ -65,9 +62,6 @@ export async function PUT(
     
     // Firestoreを更新
     await categoryRef.update(updateData);
-    
-    console.log('[API PUT /admin/categories/:id] Category updated successfully');
-    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API PUT /admin/categories/:id] Error:', error);
