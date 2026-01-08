@@ -585,6 +585,19 @@ if (typeof window !== 'undefined') {
       height: 100% !important;
     }
     .article-content .blogcard-thumbnail img {
+      margin: 0 !important;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+    .article-content .blogcard-thumbnail img {
       border-radius: 0 !important;
       object-fit: cover !important;
     }
