@@ -5,23 +5,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
-
-interface MediaTenant {
-  id: string;
-  name: string;
-  slug: string;
-  customDomain?: string;
-  subdomain?: string;
-  ownerId: string;
-  memberIds: string[];
-  isActive: boolean;
-  createdAt: string;
-  previewAuth?: {
-    enabled: boolean;
-    username: string;
-    password: string;
-  };
-}
+import { FloatingAddButton, Toggle, EmptyState } from '@/components/admin/common';
 
 export default function TenantsPage() {
   const { tenants: contextTenants, refreshTenants } = useMediaTenant();
@@ -83,12 +67,9 @@ export default function TenantsPage() {
       <AdminLayout>
         {loading ? null : (
           <div className="max-w-6xl animate-fadeIn">
-          {(
             <div className="bg-white rounded-xl overflow-hidden">
               {contextTenants.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  サービスがまだありません
-                </div>
+                <EmptyState hasSearch={false} entityName="サービス" />
               ) : (
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -153,29 +134,13 @@ export default function TenantsPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <label className="cursor-pointer">
-                            <div className="relative inline-block w-14 h-8">
-                              <input
-                                type="checkbox"
-                                checked={tenant.isActive}
-                                onChange={() => handleToggleActive(tenant.id, tenant.isActive)}
-                                className="sr-only"
-                              />
-                              <div 
-                                className={`absolute inset-0 rounded-full transition-colors pointer-events-none ${
-                                  tenant.isActive ? 'bg-blue-600' : 'bg-gray-400'
-                                }`}
-                              >
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                                  tenant.isActive ? 'translate-x-6' : 'translate-x-0'
-                                }`}></div>
-                              </div>
-                            </div>
-                          </label>
+                          <Toggle
+                            checked={tenant.isActive}
+                            onChange={() => handleToggleActive(tenant.id, tenant.isActive)}
+                          />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
-                            {/* 編集ボタン */}
                             <Link
                               href={`/service/${tenant.id}/edit`}
                               className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors"
@@ -185,8 +150,6 @@ export default function TenantsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </Link>
-                            
-                            {/* プレビューボタン */}
                             <a
                               href={`https://${tenant.slug}.pixseo-preview.cloud`}
                               target="_blank"
@@ -199,8 +162,6 @@ export default function TenantsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                             </a>
-
-                            {/* 削除ボタン */}
                             <button
                               onClick={() => handleDelete(tenant.id, tenant.name)}
                               className="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors"
@@ -218,23 +179,11 @@ export default function TenantsPage() {
                 </table>
               )}
             </div>
-          )}
-
-        </div>
+          </div>
         )}
 
-        {/* フローティング追加ボタン */}
-        <Link
-          href="/service/new"
-          className="fixed bottom-8 right-8 bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50 shadow-custom"
-          title="新規サービス作成"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </Link>
+        <FloatingAddButton href="/service/new" title="新規サービス作成" />
       </AdminLayout>
     </AuthGuard>
   );
 }
-

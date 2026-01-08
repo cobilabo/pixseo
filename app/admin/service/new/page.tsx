@@ -10,6 +10,7 @@ import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Client } from '@/types/client';
+import { FormActions } from '@/components/admin/common';
 
 export default function NewServicePage() {
   const router = useRouter();
@@ -31,7 +32,6 @@ export default function NewServicePage() {
   });
 
   useEffect(() => {
-    // クライアント一覧を取得
     const fetchClients = async () => {
       try {
         const response = await fetch('/api/admin/clients');
@@ -46,8 +46,8 @@ export default function NewServicePage() {
     fetchClients();
   }, []);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
 
     if (!formData.name || !formData.slug) {
       alert('サービス名とスラッグは必須です');
@@ -103,38 +103,25 @@ export default function NewServicePage() {
       <AdminLayout>
         <div className="max-w-4xl pb-32 animate-fadeIn">
           <form onSubmit={handleSubmit}>
-            <div className="bg-white rounded-lg p-6 space-y-6">
-              {/* ロゴ3種類（横並び） */}
+            <div className="bg-white rounded-xl p-6 space-y-6">
               <div className="grid grid-cols-3 gap-4">
-                {/* 横長ロゴ */}
-                <div>
-                  <FeaturedImageUpload
-                    value={formData.logoLandscape}
-                    onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
-                    label="ロゴタイプ画像"
-                  />
-                </div>
-
-                {/* 正方形ロゴ */}
-                <div>
-                  <FeaturedImageUpload
-                    value={formData.logoSquare}
-                    onChange={(url) => setFormData({ ...formData, logoSquare: url })}
-                    label="シンボルマーク画像"
-                  />
-                </div>
-
-                {/* 縦長ロゴ */}
-                <div>
-                  <FeaturedImageUpload
-                    value={formData.logoPortrait}
-                    onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
-                    label="ファビコン画像"
-                  />
-                </div>
+                <FeaturedImageUpload
+                  value={formData.logoLandscape}
+                  onChange={(url) => setFormData({ ...formData, logoLandscape: url })}
+                  label="ロゴタイプ画像"
+                />
+                <FeaturedImageUpload
+                  value={formData.logoSquare}
+                  onChange={(url) => setFormData({ ...formData, logoSquare: url })}
+                  label="シンボルマーク画像"
+                />
+                <FeaturedImageUpload
+                  value={formData.logoPortrait}
+                  onChange={(url) => setFormData({ ...formData, logoPortrait: url })}
+                  label="ファビコン画像"
+                />
               </div>
 
-              {/* サービス名 */}
               <FloatingInput
                 label="サービス名 *"
                 value={formData.name}
@@ -142,7 +129,6 @@ export default function NewServicePage() {
                 required
               />
 
-              {/* スラッグ（サブドメイン） */}
               <FloatingInput
                 label="スラッグ（英数字とハイフンのみ）*"
                 value={formData.slug}
@@ -150,7 +136,6 @@ export default function NewServicePage() {
                 required
               />
 
-              {/* クライアント選択 */}
               <FloatingSelect
                 label="クライアント選択"
                 value={formData.clientId}
@@ -164,14 +149,12 @@ export default function NewServicePage() {
                 ]}
               />
 
-              {/* カスタムドメイン */}
               <FloatingInput
                 label="カスタムドメイン"
                 value={formData.customDomain}
                 onChange={(value) => setFormData({ ...formData, customDomain: value })}
               />
 
-              {/* サービス説明 */}
               <FloatingInput
                 label="サービス説明（SEO用メタディスクリプション）"
                 value={formData.siteDescription}
@@ -182,37 +165,11 @@ export default function NewServicePage() {
             </div>
           </form>
 
-          {/* フローティングボタン */}
-          <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
-            {/* キャンセルボタン */}
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="bg-gray-500 text-white w-14 h-14 rounded-full hover:bg-gray-600 transition-all hover:scale-110 flex items-center justify-center shadow-custom"
-              title="キャンセル"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* 作成ボタン */}
-            <button
-              type="submit"
-              disabled={loading}
-              onClick={handleSubmit}
-              className="bg-blue-600 text-white w-14 h-14 rounded-full hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-custom"
-              title="サービス作成"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </button>
-          </div>
+          <FormActions
+            loading={loading}
+            onSubmit={handleSubmit}
+            submitTitle="サービス作成"
+          />
         </div>
       </AdminLayout>
     </AuthGuard>
