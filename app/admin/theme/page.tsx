@@ -124,7 +124,8 @@ function SortableNavigationItem({
 }
 
 export default function ThemePage() {
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);

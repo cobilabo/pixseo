@@ -12,7 +12,8 @@ import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 
 export default function FormsListPage() {
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);

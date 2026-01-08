@@ -13,7 +13,8 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function PagesListPage() {
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);

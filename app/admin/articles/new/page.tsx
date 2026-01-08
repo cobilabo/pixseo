@@ -24,7 +24,8 @@ import { FAQItem } from '@/types/article';
 function NewArticlePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);

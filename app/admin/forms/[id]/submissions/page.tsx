@@ -12,7 +12,8 @@ export default function FormSubmissionsPage() {
   const params = useParams();
   const router = useRouter();
   const formId = params.id as string;
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [formName, setFormName] = useState('');

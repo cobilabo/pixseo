@@ -18,7 +18,8 @@ import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 
 export default function NewPagePage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');

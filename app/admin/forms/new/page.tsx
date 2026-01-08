@@ -12,7 +12,8 @@ import { useToast } from '@/contexts/ToastContext';
 
 export default function NewFormPage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState<FormField[]>([]);

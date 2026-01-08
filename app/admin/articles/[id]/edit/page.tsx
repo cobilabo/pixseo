@@ -23,7 +23,8 @@ import { FAQItem } from '@/types/article';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);

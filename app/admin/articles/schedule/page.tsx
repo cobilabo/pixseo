@@ -39,7 +39,8 @@ const defaultSchedule: ScheduleFormData = {
 
 function ScheduledGenerationPageContent() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);

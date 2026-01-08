@@ -15,7 +15,8 @@ export default function EditFormPage() {
   const router = useRouter();
   const params = useParams();
   const formId = params.id as string;
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);

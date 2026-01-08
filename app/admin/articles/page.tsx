@@ -24,7 +24,8 @@ type PublishStatus = 'published' | 'unpublished' | 'draft' | 'scheduled';
 
 export default function ArticlesPage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+  const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
