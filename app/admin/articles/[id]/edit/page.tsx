@@ -15,6 +15,7 @@ import { Category, Tag, Article } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 import FAQManager from '@/components/admin/FAQManager';
@@ -22,7 +23,8 @@ import { FAQItem } from '@/types/article';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -140,7 +142,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setAudienceHistory(audienceHistoryData.history || []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        alert('記事の読み込みに失敗しました');
+        showError('記事の読み込みに失敗しました');
         router.push('/articles');
       } finally {
         setFetchLoading(false);
@@ -203,7 +205,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setSlugError('');
     } catch (error) {
       console.error('Error generating slug:', error);
-      alert('スラッグの生成に失敗しました');
+      showError('スラッグの生成に失敗しました');
     } finally {
       setGeneratingSlug(false);
     }
@@ -222,7 +224,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
   const generateTargetAudience = async () => {
     if (!formData.title) {
-      alert('タイトルを先に入力してください');
+      showError('タイトルを先に入力してください');
       return;
     }
 
@@ -266,7 +268,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       }
     } catch (error) {
       console.error('Error generating target audience:', error);
-      alert('想定読者の生成に失敗しました');
+      showError('想定読者の生成に失敗しました');
     } finally {
       setGeneratingAudience(false);
     }
@@ -293,13 +295,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setAudienceHistory(data.history || []);
     } catch (error) {
       console.error('Error deleting audience history:', error);
-      alert('履歴の削除に失敗しました');
+      showError('履歴の削除に失敗しました');
     }
   };
 
   const generateTagsFromContent = async () => {
     if (!formData.title && !formData.content) {
-      alert('タイトルまたは本文を入力してください');
+      showError('タイトルまたは本文を入力してください');
       return;
     }
 
@@ -342,15 +344,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         }))]);
       }
 
-      alert(
-        `タグを生成しました！\n` +
-        `合計: ${data.summary.total}個\n` +
-        `既存タグ: ${data.summary.existing}個\n` +
-        `新規タグ: ${data.summary.new}個`
-      );
+      showSuccess(`タグを生成しました（合計: ${data.summary.total}個）`);
     } catch (error) {
       console.error('Error generating tags:', error);
-      alert('タグの生成に失敗しました');
+      showError('タグの生成に失敗しました');
     } finally {
       setGeneratingTags(false);
     }
@@ -378,7 +375,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       const data = await response.json();
       setFormData(prev => ({ ...prev, metaTitle: data.metaTitle }));
       
-      alert('メタタイトルを生成しました！');
+      showSuccess('メタタイトルを生成しました');
     } catch (error) {
       console.error('Error generating meta title:', error);
       // エラー時はフォールバック（タイトルをそのまま使用し、70文字にトリミング）
@@ -386,7 +383,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         ? formData.title.substring(0, 67) + '...'
         : formData.title;
       setFormData(prev => ({ ...prev, metaTitle: fallbackMetaTitle }));
-      alert('メタタイトルをフォールバック生成しました');
+      showSuccess('メタタイトルをしました');
     } finally {
       setGeneratingMetaTitle(false);
     }
@@ -400,24 +397,24 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     console.log('[ArticleEdit] featuredImageAlt:', featuredImageAlt);
     
     if (!formData.title || !formData.content || !formData.slug || !formData.writerId) {
-      alert('タイトル、本文、スラッグ、ライターは必須です');
+      showError('タイトル、本文、スラッグ、ライターは必須です');
       return;
     }
 
     if (slugError) {
-      alert('スラッグが重複しています。別のスラッグを使用してください。');
+      showError('スラッグが重複しています。別のスラッグを使用してください。');
       return;
     }
 
     if (!article) {
-      alert('記事データの読み込みに失敗しました');
+      showError('記事データの読み込みに失敗しました');
       return;
     }
 
     // ライター名を取得
     const selectedWriter = writers.find(w => w.id === formData.writerId);
     if (!selectedWriter) {
-      alert('選択されたライターが見つかりません');
+      showError('選択されたライターが見つかりません');
       return;
     }
 
@@ -472,11 +469,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       console.log('[handleSubmit] 更新成功');
 
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
-      alert('記事を保存しました');
+      showSuccess('記事をしました');
       window.location.href = '/articles';
     } catch (error) {
       console.error('[handleSubmit] エラー:', error);
-      alert('記事の保存に失敗しました');
+      showError('記事の保存に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -484,7 +481,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
   const handlePreview = () => {
     if (!currentTenant || !formData.slug) {
-      alert('プレビューにはサービスとスラッグが必要です');
+      showError('プレビューにはサービスとスラッグが必要です');
       return;
     }
     

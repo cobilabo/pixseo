@@ -12,6 +12,7 @@ import { Category } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { ImagePromptPattern } from '@/types/image-prompt-pattern';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 
 interface ScheduleFormData {
@@ -38,7 +39,8 @@ const defaultSchedule: ScheduleFormData = {
 
 function ScheduledGenerationPageContent() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
   const [imagePromptPatterns, setImagePromptPatterns] = useState<ImagePromptPattern[]>([]);
@@ -224,7 +226,7 @@ function ScheduledGenerationPageContent() {
       });
 
       await Promise.all(savePromises);
-      alert('全ての設定を保存しました');
+      showSuccess('全ての設定をしました');
     } catch (err: any) {
       console.error('Error saving schedules:', err);
       setError(err.message || '設定の保存中にエラーが発生しました。');

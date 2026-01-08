@@ -8,10 +8,12 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AIFormGeneratorModal from '@/components/admin/AIFormGeneratorModal';
 import { Form } from '@/types/form';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 
 export default function FormsListPage() {
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,7 +37,7 @@ export default function FormsListPage() {
       setForms(sortedData);
     } catch (error) {
       console.error('Error fetching forms:', error);
-      alert('フォームの取得に失敗しました');
+      showError('フォームの取得に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -56,13 +58,13 @@ export default function FormsListPage() {
 
       if (response.ok) {
         setForms(forms.filter((form) => form.id !== id));
-        alert('フォームを削除しました');
+        showSuccess('フォームをしました');
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting form:', error);
-      alert('フォームの削除に失敗しました');
+      showError('フォームの削除に失敗しました');
     }
   };
 
@@ -84,7 +86,7 @@ export default function FormsListPage() {
       }
     } catch (error) {
       console.error('Error toggling form status:', error);
-      alert('ステータスの更新に失敗しました');
+      showError('ステータスの更新に失敗しました');
     }
   };
 

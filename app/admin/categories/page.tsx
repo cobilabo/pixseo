@@ -6,6 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteCategory } from '@/lib/firebase/categories-admin';
 import { Category, Article } from '@/types/article';
 import { apiGet } from '@/lib/api-client';
+import { useToast } from '@/contexts/ToastContext';
 import {
   SortIcon,
   Pagination,
@@ -23,6 +24,7 @@ type SortDirection = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 20;
 
 export default function CategoriesPage() {
+  const { showSuccess, showError } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,9 +65,10 @@ export default function CategoriesPage() {
     try {
       await deleteCategory(id);
       setCategories(categories.filter((category) => category.id !== id));
+      showSuccess('カテゴリーを削除しました');
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('カテゴリーの削除に失敗しました');
+      showError('カテゴリーの削除に失敗しました');
     }
   };
 
@@ -86,7 +89,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error('Error toggling category recommended:', error);
-      alert('おすすめ状態の更新に失敗しました');
+      showError('おすすめ状態の更新に失敗しました');
     }
   };
 

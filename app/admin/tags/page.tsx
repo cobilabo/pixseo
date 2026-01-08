@@ -6,6 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteTag } from '@/lib/firebase/tags-admin';
 import { Tag, Article } from '@/types/article';
 import { apiGet } from '@/lib/api-client';
+import { useToast } from '@/contexts/ToastContext';
 import {
   SortIcon,
   Pagination,
@@ -22,6 +23,7 @@ type SortDirection = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 20;
 
 export default function TagsPage() {
+  const { showSuccess, showError } = useToast();
   const [tags, setTags] = useState<Tag[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,9 +64,10 @@ export default function TagsPage() {
     try {
       await deleteTag(id);
       setTags(tags.filter((tag) => tag.id !== id));
+      showSuccess('タグを削除しました');
     } catch (error) {
       console.error('Error deleting tag:', error);
-      alert('タグの削除に失敗しました');
+      showError('タグの削除に失敗しました');
     }
   };
 

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { apiGet, apiPostFormData } from '@/lib/api-client';
 import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
 
+import { useToast } from '@/contexts/ToastContext';
 const ITEMS_PER_LOAD = 50;
 
 interface MediaFile {
@@ -32,7 +33,8 @@ interface UsageData {
   usageDetails: string[];
 }
 
-export default function MediaPage() {
+export default function MediaPage() {  const { showSuccess, showError } = useToast();
+
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -124,11 +126,11 @@ export default function MediaPage() {
         await apiPostFormData('/api/admin/media/upload', formData);
       }
 
-      alert(`${files.length}個のファイルをアップロードしました`);
+      showSuccess(`${files.length}個のファイルをアップロードしました`);
       fetchMedia();
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('ファイルのアップロードに失敗しました');
+      showError('ファイルのアップロードに失敗しました');
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -150,19 +152,19 @@ export default function MediaPage() {
       if (response.ok) {
         // ステートから削除して即座にUIを更新
         setMediaFiles(prev => prev.filter(media => media.id !== id));
-        alert('メディアを削除しました');
+        showSuccess('メディアをしました');
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting media:', error);
-      alert('メディアの削除に失敗しました');
+      showError('メディアの削除に失敗しました');
     }
   };
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    alert('URLをコピーしました');
+    showSuccess('URLをしました');
   };
 
   // フィルタリング

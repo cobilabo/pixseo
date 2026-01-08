@@ -10,8 +10,10 @@ import {
   ActionButtons,
   EmptyState,
 } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function ClientsPage() {
+  const { showSuccess, showError } = useToast();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,14 +46,14 @@ export default function ClientsPage() {
       });
 
       if (response.ok) {
-        alert('クライアントを削除しました');
+        showSuccess('クライアントを削除しました');
         fetchClients();
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting client:', error);
-      alert('クライアントの削除に失敗しました');
+      showError('クライアントの削除に失敗しました');
     }
   };
 

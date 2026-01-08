@@ -8,10 +8,12 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewAccountPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     logoUrl: '',
@@ -24,17 +26,17 @@ export default function NewAccountPage() {
     e?.preventDefault();
 
     if (!formData.email || !formData.password || !formData.displayName) {
-      alert('メールアドレス、パスワード、表示名は必須です');
+      showError('メールアドレス、パスワード、表示名は必須です');
       return;
     }
 
     if (formData.password.length < 6) {
-      alert('パスワードは6文字以上で入力してください');
+      showError('パスワードは6文字以上で入力してください');
       return;
     }
 
     if (!currentTenant) {
-      alert('サービスが選択されていません');
+      showError('サービスが選択されていません');
       return;
     }
 
@@ -56,7 +58,7 @@ export default function NewAccountPage() {
       });
 
       if (response.ok) {
-        alert('アカウントを作成しました');
+        showSuccess('アカウントを作成しました');
         router.push('/accounts');
       } else {
         const error = await response.json();
@@ -64,7 +66,7 @@ export default function NewAccountPage() {
       }
     } catch (error: any) {
       console.error('Error creating account:', error);
-      alert(error.message || 'アカウントの作成に失敗しました');
+      showError(error.message || 'アカウントの作成に失敗しました');
     } finally {
       setLoading(false);
     }

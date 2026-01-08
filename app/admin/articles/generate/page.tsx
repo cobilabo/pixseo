@@ -11,11 +11,13 @@ import { Category } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { ImagePromptPattern } from '@/types/image-prompt-pattern';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 
 function AdvancedArticleGeneratePageContent() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
   const [imagePromptPatterns, setImagePromptPatterns] = useState<ImagePromptPattern[]>([]);
@@ -103,7 +105,7 @@ function AdvancedArticleGeneratePageContent() {
     router.push('/admin/articles');
     
     // トースト通知を表示
-    alert('AI記事生成を開始しました。\n\n数分後に記事一覧に自動的に追加されます。\n他の作業を続けても問題ありません。');
+    showSuccess('AI記事生成を開始しました。数分後に記事一覧に追加されます。');
 
     try {
       // バックグラウンドで実行（await しない）
@@ -120,11 +122,11 @@ function AdvancedArticleGeneratePageContent() {
         } else {
           const errorData = await response.json();
           console.error('[Advanced Generate] Article generation failed:', errorData);
-          alert(`記事生成エラー: ${errorData.details || errorData.error}`);
+          showError(`記事生成エラー: ${errorData.details || errorData.error}`);
         }
       }).catch(err => {
         console.error('[Advanced Generate] Error:', err);
-        alert(`記事生成エラー: ${err.message}`);
+        showError(`記事生成エラー: ${err.message}`);
       });
     } catch (err) {
       console.error('Error starting article generation:', err);

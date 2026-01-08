@@ -12,12 +12,14 @@ import { createPage } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { Block } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 
 export default function NewPagePage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
   const [generatingSlug, setGeneratingSlug] = useState(false);
@@ -220,7 +222,7 @@ export default function NewPagePage() {
   // 既存のhomeページのスラッグを変更
   const handleChangeExistingHomeSlug = async () => {
     if (!newSlugForExistingHome.trim()) {
-      alert('新しいスラッグを入力してください');
+      showError('新しいスラッグを入力してください');
       return;
     }
 
@@ -247,7 +249,7 @@ export default function NewPagePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'スラッグの変更に失敗しました');
+        showError(data.message || 'スラッグの変更に失敗しました');
         return;
       }
 
@@ -261,7 +263,7 @@ export default function NewPagePage() {
       setExistingHomePage(null);
     } catch (error) {
       console.error('Error changing home slug:', error);
-      alert('スラッグの変更に失敗しました');
+      showError('スラッグの変更に失敗しました');
     } finally {
       setChangingHomeSlug(false);
     }
@@ -271,7 +273,7 @@ export default function NewPagePage() {
     e.preventDefault();
     
     if (!formData.title || !formData.slug) {
-      alert('タイトルとスラッグは必須です');
+      showError('タイトルとスラッグは必須です');
       return;
     }
     
@@ -280,7 +282,7 @@ export default function NewPagePage() {
     const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || blocks;
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -411,11 +413,11 @@ export default function NewPagePage() {
       
       await createPage(pageData);
       
-      alert('固定ページを作成しました');
+      showSuccess('固定ページをしました');
       router.push('/pages');
     } catch (error) {
       console.error('Error creating page:', error);
-      alert('固定ページの作成に失敗しました');
+      showError('固定ページの作成に失敗しました');
     } finally {
       setLoading(false);
     }

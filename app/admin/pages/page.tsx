@@ -10,9 +10,11 @@ import { deletePage } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function PagesListPage() {
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +45,7 @@ export default function PagesListPage() {
       setLoading(false);
     } catch (error) {
       console.error('[PagesListPage] Error fetching pages:', error);
-      alert('固定ページの取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+      showError('固定ページの取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
       setLoading(false);
     }
   };
@@ -58,7 +60,7 @@ export default function PagesListPage() {
       setPages(pages.filter((page) => page.id !== id));
     } catch (error) {
       console.error('Error deleting page:', error);
-      alert('固定ページの削除に失敗しました');
+      showError('固定ページの削除に失敗しました');
     }
   };
 
@@ -79,7 +81,7 @@ export default function PagesListPage() {
       }
     } catch (error) {
       console.error('Error toggling page published:', error);
-      alert('ステータスの更新に失敗しました');
+      showError('ステータスの更新に失敗しました');
     }
   };
 

@@ -8,9 +8,11 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import { getTagById } from '@/lib/firebase/tags-admin';
 import { Tag } from '@/types/article';
 import { FormActions, SlugInput } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditTagPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [tag, setTag] = useState<Tag | null>(null);
@@ -26,7 +28,7 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
         const tagData = await getTagById(params.id);
         
         if (!tagData) {
-          alert('タグが見つかりません');
+          showError('タグが見つかりません');
           router.push('/tags');
           return;
         }
@@ -43,18 +45,18 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
       }
     };
     fetchData();
-  }, [params.id, router]);
+  }, [params.id, router, showError]);
 
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
     
     if (!formData.name || !formData.slug) {
-      alert('タグ名とスラッグは必須です');
+      showError('タグ名とスラッグは必須です');
       return;
     }
 
     if (!tag) {
-      alert('タグデータの読み込みに失敗しました');
+      showError('タグデータの読み込みに失敗しました');
       return;
     }
 
@@ -77,11 +79,11 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
         throw new Error(errorData.error || 'Failed to update tag');
       }
       
-      alert('タグを更新しました');
+      showSuccess('タグを更新しました');
       router.push('/tags');
     } catch (error) {
       console.error('Error updating tag:', error);
-      alert('タグの更新に失敗しました');
+      showError('タグの更新に失敗しました');
     } finally {
       setLoading(false);
     }

@@ -7,9 +7,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditClientPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -38,7 +40,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
         }
       } catch (error) {
         console.error('Error fetching client:', error);
-        alert('クライアント情報の取得に失敗しました');
+        showError('クライアント情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -51,7 +53,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
     e?.preventDefault();
 
     if (!formData.email || !formData.clientName) {
-      alert('メールアドレス、クライアント名は必須です');
+      showError('メールアドレス、クライアント名は必須です');
       return;
     }
 
@@ -67,7 +69,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        alert('クライアントを更新しました');
+        showSuccess('クライアントを更新しました');
         router.push('/clients');
       } else {
         const error = await response.json();
@@ -75,7 +77,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
       }
     } catch (error: any) {
       console.error('Error updating client:', error);
-      alert(error.message || 'クライアントの更新に失敗しました');
+      showError(error.message || 'クライアントの更新に失敗しました');
     } finally {
       setLoading(false);
     }

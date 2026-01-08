@@ -12,6 +12,7 @@ import { updatePage, getPageById } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
 import { Block } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 
@@ -19,7 +20,8 @@ export default function EditPagePage() {
   const router = useRouter();
   const params = useParams();
   const pageId = params.id as string;
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
@@ -62,7 +64,7 @@ export default function EditPagePage() {
     try {
       const page = await getPageById(pageId);
       if (!page) {
-        alert('固定ページが見つかりません');
+        showError('固定ページが見つかりません');
         router.push('/pages');
         return;
       }
@@ -92,7 +94,7 @@ export default function EditPagePage() {
       setFetchLoading(false);
     } catch (error) {
       console.error('Error fetching page:', error);
-      alert('固定ページの取得に失敗しました');
+      showError('固定ページの取得に失敗しました');
       setFetchLoading(false);
     }
   };
@@ -258,7 +260,7 @@ export default function EditPagePage() {
   // 既存のhomeページのスラッグを変更
   const handleChangeExistingHomeSlug = async () => {
     if (!newSlugForExistingHome.trim()) {
-      alert('新しいスラッグを入力してください');
+      showError('新しいスラッグを入力してください');
       return;
     }
 
@@ -285,7 +287,7 @@ export default function EditPagePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'スラッグの変更に失敗しました');
+        showError(data.message || 'スラッグの変更に失敗しました');
         return;
       }
 
@@ -299,7 +301,7 @@ export default function EditPagePage() {
       setExistingHomePage(null);
     } catch (error) {
       console.error('Error changing home slug:', error);
-      alert('スラッグの変更に失敗しました');
+      showError('スラッグの変更に失敗しました');
     } finally {
       setChangingHomeSlug(false);
     }
@@ -309,7 +311,7 @@ export default function EditPagePage() {
     e.preventDefault();
     
     if (!formData.title || !formData.slug) {
-      alert('タイトルとスラッグは必須です');
+      showError('タイトルとスラッグは必須です');
       return;
     }
     
@@ -318,7 +320,7 @@ export default function EditPagePage() {
     const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || blocks;
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -448,11 +450,11 @@ export default function EditPagePage() {
       
       await updatePage(pageId, updateData);
       
-      alert('固定ページを更新しました');
+      showSuccess('固定ページをしました');
       router.push('/pages');
     } catch (error) {
       console.error('Error updating page:', error);
-      alert('固定ページの更新に失敗しました');
+      showError('固定ページの更新に失敗しました');
     } finally {
       setLoading(false);
     }

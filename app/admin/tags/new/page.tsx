@@ -7,10 +7,12 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { FormActions, SlugInput } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewTagPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -22,12 +24,12 @@ export default function NewTagPage() {
     e?.preventDefault();
     
     if (!formData.name || !formData.slug) {
-      alert('タグ名とスラッグは必須です');
+      showError('タグ名とスラッグは必須です');
       return;
     }
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -49,11 +51,11 @@ export default function NewTagPage() {
         throw new Error(errorData.error || 'Failed to create tag');
       }
       
-      alert('タグを作成しました');
+      showSuccess('タグを作成しました');
       router.push('/tags');
     } catch (error) {
       console.error('Error creating tag:', error);
-      alert('タグの作成に失敗しました');
+      showError('タグの作成に失敗しました');
     } finally {
       setLoading(false);
     }

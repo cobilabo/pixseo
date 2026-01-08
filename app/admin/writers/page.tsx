@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { apiGet } from '@/lib/api-client';
 import { Writer } from '@/types/writer';
 import { Article } from '@/types/article';
+import { useToast } from '@/contexts/ToastContext';
 import {
   SortIcon,
   Pagination,
@@ -23,6 +24,7 @@ type SortDirection = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 20;
 
 export default function WritersPage() {
+  const { showSuccess, showError } = useToast();
   const [writers, setWriters] = useState<Writer[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +67,14 @@ export default function WritersPage() {
       });
 
       if (response.ok) {
-        alert('ライターを削除しました');
+        showSuccess('ライターを削除しました');
         fetchWriters();
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting writer:', error);
-      alert('ライターの削除に失敗しました');
+      showError('ライターの削除に失敗しました');
     }
   };
 

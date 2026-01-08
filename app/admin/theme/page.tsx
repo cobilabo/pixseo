@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
 import { Page } from '@/types/page';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -123,7 +124,8 @@ function SortableNavigationItem({
 }
 
 export default function ThemePage() {
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -190,7 +192,7 @@ export default function ThemePage() {
 
   const handleSave = async () => {
     if (!currentTenant) {
-      alert('サービスが選択されていません');
+      showError('サービスが選択されていません');
       return;
     }
 
@@ -212,14 +214,14 @@ export default function ThemePage() {
       if (response.ok) {
         // 保存成功時に state も更新
         setTheme(themeToSave);
-        alert('デザイン設定を保存しました');
+        showSuccess('デザイン設定をしました');
       } else {
         const error = await response.json();
-        alert(`エラー: ${error.error || '保存に失敗しました'}`);
+        showError(`エラー: ${error.error || '保存に失敗しました'}`);
       }
     } catch (error) {
       console.error('デザイン設定の保存に失敗しました:', error);
-      alert('保存に失敗しました');
+      showError('保存に失敗しました');
     } finally {
       setLoading(false);
     }

@@ -7,9 +7,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditAccountPage({ params }: { params: { uid: string } }) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -34,7 +36,7 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
         }
       } catch (error) {
         console.error('Error fetching account:', error);
-        alert('アカウント情報の取得に失敗しました');
+        showError('アカウント情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -47,12 +49,12 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
     e?.preventDefault();
 
     if (!formData.email || !formData.displayName) {
-      alert('メールアドレス、表示名は必須です');
+      showError('メールアドレス、表示名は必須です');
       return;
     }
 
     if (formData.password && formData.password.length < 6) {
-      alert('パスワードは6文字以上で入力してください');
+      showError('パスワードは6文字以上で入力してください');
       return;
     }
 
@@ -73,7 +75,7 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
       });
 
       if (response.ok) {
-        alert('アカウントを更新しました');
+        showSuccess('アカウントを更新しました');
         router.push('/accounts');
       } else {
         const error = await response.json();
@@ -81,7 +83,7 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
       }
     } catch (error: any) {
       console.error('Error updating account:', error);
-      alert(error.message || 'アカウントの更新に失敗しました');
+      showError(error.message || 'アカウントの更新に失敗しました');
     } finally {
       setLoading(false);
     }

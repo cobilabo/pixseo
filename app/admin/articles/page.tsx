@@ -10,6 +10,7 @@ import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { useRouter } from 'next/navigation';
 
 // ソート可能なカラム
@@ -23,7 +24,8 @@ type PublishStatus = 'published' | 'unpublished' | 'draft' | 'scheduled';
 
 export default function ArticlesPage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [articles, setArticles] = useState<Article[]>([]);
   const [writers, setWriters] = useState<Writer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -75,7 +77,7 @@ export default function ArticlesPage() {
       setLoading(false);
     } catch (error) {
       console.error('[ArticlesPage] Error fetching articles:', error);
-      alert('記事の取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+      showError('記事の取得に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
       setLoading(false);
     }
   };
@@ -124,10 +126,10 @@ export default function ArticlesPage() {
       }
 
       setArticles(articles.filter((article) => article.id !== id));
-      alert('記事を削除しました');
+      showSuccess('記事をしました');
     } catch (error) {
       console.error('Error deleting article:', error);
-      alert('記事の削除に失敗しました');
+      showError('記事の削除に失敗しました');
     }
   };
 
@@ -161,7 +163,7 @@ export default function ArticlesPage() {
         setArticles(prev => prev.map(a => 
           a.id === id ? { ...a, isPublished: currentStatus } : a
         ));
-        alert('ステータスの更新に失敗しました');
+        showError('ステータスの更新に失敗しました');
       }
     }).catch((error) => {
       console.error('Error toggling article published:', error);
@@ -169,7 +171,7 @@ export default function ArticlesPage() {
       setArticles(prev => prev.map(a => 
         a.id === id ? { ...a, isPublished: currentStatus } : a
       ));
-      alert('ステータスの更新に失敗しました');
+      showError('ステータスの更新に失敗しました');
     });
   };
 

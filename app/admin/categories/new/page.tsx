@@ -8,10 +8,12 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { FormActions, SlugInput, AITextareaInput, Toggle } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewCategoryPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -28,12 +30,12 @@ export default function NewCategoryPage() {
     e?.preventDefault();
     
     if (!formData.name || !formData.slug) {
-      alert('カテゴリー名とスラッグは必須です');
+      showError('カテゴリー名とスラッグは必須です');
       return;
     }
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -55,11 +57,11 @@ export default function NewCategoryPage() {
         throw new Error(errorData.error || 'Failed to create category');
       }
       
-      alert('カテゴリーを作成しました');
+      showSuccess('カテゴリーを作成しました');
       router.push('/categories');
     } catch (error) {
       console.error('Error creating category:', error);
-      alert('カテゴリーの作成に失敗しました');
+      showError('カテゴリーの作成に失敗しました');
     } finally {
       setLoading(false);
     }

@@ -9,12 +9,14 @@ import FormBuilder from '@/components/admin/FormBuilder';
 import { FormField } from '@/types/block';
 import { Form } from '@/types/form';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditFormPage() {
   const router = useRouter();
   const params = useParams();
   const formId = params.id as string;
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [fields, setFields] = useState<FormField[]>([]);
@@ -90,7 +92,7 @@ export default function EditFormPage() {
       setFetchLoading(false);
     } catch (error) {
       console.error('Error fetching form:', error);
-      alert('フォームの取得に失敗しました');
+      showError('フォームの取得に失敗しました');
       router.push('/admin/forms');
     }
   };
@@ -99,17 +101,17 @@ export default function EditFormPage() {
     e.preventDefault();
     
     if (!formData.name) {
-      alert('フォーム名は必須です');
+      showError('フォーム名は必須です');
       return;
     }
     
     if (fields.length === 0) {
-      alert('フィールドを少なくとも1つ追加してください');
+      showError('フィールドを少なくとも1つ追加してください');
       return;
     }
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -131,11 +133,11 @@ export default function EditFormPage() {
         throw new Error('フォームの更新に失敗しました');
       }
 
-      alert('フォームを更新しました');
+      showSuccess('フォームをしました');
       router.push('/admin/forms');
     } catch (error) {
       console.error('Error updating form:', error);
-      alert('フォームの更新に失敗しました');
+      showError('フォームの更新に失敗しました');
     } finally {
       setLoading(false);
     }

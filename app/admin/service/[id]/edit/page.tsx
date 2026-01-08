@@ -12,10 +12,12 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Client } from '@/types/client';
 import { DomainConfig, PreviewAuth } from '@/types/media-tenant';
 import { FormActions, Toggle } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditServicePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { refreshTenants } = useMediaTenant();
+  const { showSuccess, showError, showInfo } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
@@ -74,7 +76,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
         }
       } catch (error) {
         console.error('Error fetching service:', error);
-        alert('サービス情報の取得に失敗しました');
+        showError('サービス情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -88,7 +90,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     e?.preventDefault();
 
     if (!formData.name || !formData.slug) {
-      alert('サービス名とスラッグは必須です');
+      showError('サービス名とスラッグは必須です');
       return;
     }
 
@@ -116,7 +118,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
       });
 
       if (response.ok) {
-        alert('サービスを更新しました');
+        showSuccess('サービスを更新しました');
         await refreshTenants();
         router.push('/service');
       } else {
@@ -125,7 +127,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
       }
     } catch (error: any) {
       console.error('Error updating service:', error);
-      alert(error.message || 'サービスの更新に失敗しました');
+      showError(error.message || 'サービスの更新に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -213,7 +215,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(`https://${formData.slug}.pixseo-preview.cloud`);
-                      alert('URLをコピーしました');
+                      showSuccess('URLをしました');
                     }}
                     className="p-1 text-gray-500 hover:text-gray-700"
                     title="URLをコピー"

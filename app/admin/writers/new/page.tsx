@@ -8,10 +8,12 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewWriterPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     iconUrl: '',
@@ -26,7 +28,7 @@ export default function NewWriterPage() {
     e?.preventDefault();
 
     if (!currentTenant) {
-      alert('サービスが選択されていません。ライターを作成できません。');
+      showError('サービスが選択されていません。ライターを作成できません。');
       return;
     }
 
@@ -50,7 +52,7 @@ export default function NewWriterPage() {
       });
 
       if (response.ok) {
-        alert('ライターを作成しました');
+        showSuccess('ライターを作成しました');
         router.push('/writers');
       } else {
         const error = await response.json();
@@ -58,7 +60,7 @@ export default function NewWriterPage() {
       }
     } catch (error: any) {
       console.error('Error creating writer:', error);
-      alert(error.message || 'ライターの作成に失敗しました');
+      showError(error.message || 'ライターの作成に失敗しました');
     } finally {
       setLoading(false);
     }

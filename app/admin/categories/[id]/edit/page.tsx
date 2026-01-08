@@ -9,9 +9,11 @@ import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { getCategoryById } from '@/lib/firebase/categories-admin';
 import { Category } from '@/types/article';
 import { FormActions, SlugInput, AITextareaInput, Toggle } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditCategoryPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [category, setCategory] = useState<Category | null>(null);
@@ -32,7 +34,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
         const categoryData = await getCategoryById(params.id);
         
         if (!categoryData) {
-          alert('カテゴリーが見つかりません');
+          showError('カテゴリーが見つかりません');
           router.push('/categories');
           return;
         }
@@ -54,18 +56,18 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
       }
     };
     fetchData();
-  }, [params.id, router]);
+  }, [params.id, router, showError]);
 
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
     
     if (!formData.name || !formData.slug) {
-      alert('カテゴリー名とスラッグは必須です');
+      showError('カテゴリー名とスラッグは必須です');
       return;
     }
 
     if (!category) {
-      alert('カテゴリーデータの読み込みに失敗しました');
+      showError('カテゴリーデータの読み込みに失敗しました');
       return;
     }
 
@@ -88,11 +90,11 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
         throw new Error(errorData.error || 'Failed to update category');
       }
       
-      alert('カテゴリーを更新しました');
+      showSuccess('カテゴリーを更新しました');
       router.push('/categories');
     } catch (error) {
       console.error('Error updating category:', error);
-      alert('カテゴリーの更新に失敗しました');
+      showError('カテゴリーの更新に失敗しました');
     } finally {
       setLoading(false);
     }

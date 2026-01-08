@@ -6,8 +6,10 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import Link from 'next/link';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { FloatingAddButton, Toggle, EmptyState } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function TenantsPage() {
+  const { showSuccess, showError } = useToast();
   const { tenants: contextTenants, refreshTenants } = useMediaTenant();
   const [loading, setLoading] = useState(true);
 
@@ -30,14 +32,14 @@ export default function TenantsPage() {
       });
 
       if (response.ok) {
-        alert('サービスを削除しました');
+        showSuccess('サービスを削除しました');
         refreshTenants();
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting service:', error);
-      alert('サービスの削除に失敗しました');
+      showError('サービスの削除に失敗しました');
     }
   };
 
@@ -58,7 +60,7 @@ export default function TenantsPage() {
       }
     } catch (error) {
       console.error('Error toggling service active:', error);
-      alert('有効化の更新に失敗しました');
+      showError('有効化の更新に失敗しました');
     }
   };
 

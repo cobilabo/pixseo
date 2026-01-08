@@ -6,12 +6,14 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { FormSubmission } from '@/types/form';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function FormSubmissionsPage() {
   const params = useParams();
   const router = useRouter();
   const formId = params.id as string;
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [formName, setFormName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function FormSubmissionsPage() {
       }
     } catch (error) {
       console.error('Error fetching submissions:', error);
-      alert('送信データの取得に失敗しました');
+      showError('送信データの取得に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -69,13 +71,13 @@ export default function FormSubmissionsPage() {
 
       if (response.ok) {
         setSubmissions(submissions.filter(s => s.id !== submissionId));
-        alert('送信データを削除しました');
+        showSuccess('送信データをしました');
       } else {
         throw new Error('削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting submission:', error);
-      alert('送信データの削除に失敗しました');
+      showError('送信データの削除に失敗しました');
     }
   };
 

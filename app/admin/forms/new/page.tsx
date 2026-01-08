@@ -8,10 +8,12 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FormBuilder from '@/components/admin/FormBuilder';
 import { FormField } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewFormPage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState<FormField[]>([]);
   const [activeTab, setActiveTab] = useState<'fields' | 'settings'>('fields');
@@ -50,17 +52,17 @@ export default function NewFormPage() {
     e.preventDefault();
     
     if (!formData.name) {
-      alert('フォーム名は必須です');
+      showError('フォーム名は必須です');
       return;
     }
     
     if (fields.length === 0) {
-      alert('フィールドを少なくとも1つ追加してください');
+      showError('フィールドを少なくとも1つ追加してください');
       return;
     }
 
     if (!currentTenant) {
-      alert('メディアテナントが選択されていません');
+      showError('メディアテナントが選択されていません');
       return;
     }
 
@@ -84,11 +86,11 @@ export default function NewFormPage() {
       }
 
       const data = await response.json();
-      alert('フォームを作成しました');
+      showSuccess('フォームをしました');
       router.push('/admin/forms');
     } catch (error) {
       console.error('Error creating form:', error);
-      alert('フォームの作成に失敗しました');
+      showError('フォームの作成に失敗しました');
     } finally {
       setLoading(false);
     }

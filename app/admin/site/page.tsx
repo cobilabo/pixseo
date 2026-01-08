@@ -6,6 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { useToast } from '@/contexts/ToastContext';
 import { useRouter } from 'next/navigation';
 
 interface SiteSettings {
@@ -19,7 +20,8 @@ interface SiteSettings {
 
 export default function SitePage() {
   const router = useRouter();
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant } = useMediaTenant();  const { showSuccess, showError } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState<SiteSettings>({
@@ -81,7 +83,7 @@ export default function SitePage() {
     e.preventDefault();
 
     if (!currentTenant) {
-      alert('サービスが選択されていません');
+      showError('サービスが選択されていません');
       return;
     }
 
@@ -104,14 +106,14 @@ export default function SitePage() {
       });
 
       if (response.ok) {
-        alert('サイト設定を更新しました');
+        showSuccess('サイト設定をしました');
         fetchSettings();
       } else {
         throw new Error('更新に失敗しました');
       }
     } catch (error) {
       console.error('Error updating site settings:', error);
-      alert('サイト設定の更新に失敗しました');
+      showError('サイト設定の更新に失敗しました');
     } finally {
       setLoading(false);
     }

@@ -11,11 +11,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Client } from '@/types/client';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewServicePage() {
   const router = useRouter();
   const { user } = useAuth();
   const { refreshTenants } = useMediaTenant();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [formData, setFormData] = useState({
@@ -50,12 +52,12 @@ export default function NewServicePage() {
     e?.preventDefault();
 
     if (!formData.name || !formData.slug) {
-      alert('サービス名とスラッグは必須です');
+      showError('サービス名とスラッグは必須です');
       return;
     }
 
     if (!user) {
-      alert('ログインしてください');
+      showError('ログインしてください');
       return;
     }
 
@@ -83,7 +85,7 @@ export default function NewServicePage() {
       });
 
       if (response.ok) {
-        alert('サービスを作成しました');
+        showSuccess('サービスを作成しました');
         await refreshTenants();
         router.push('/service');
       } else {
@@ -92,7 +94,7 @@ export default function NewServicePage() {
       }
     } catch (error: any) {
       console.error('Error creating service:', error);
-      alert(error.message || 'サービスの作成に失敗しました');
+      showError(error.message || 'サービスの作成に失敗しました');
     } finally {
       setLoading(false);
     }

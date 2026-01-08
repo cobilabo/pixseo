@@ -8,9 +8,11 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { Writer } from '@/types/writer';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function EditWriterPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -39,7 +41,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
         }
       } catch (error) {
         console.error('Error fetching writer:', error);
-        alert('ライター情報の取得に失敗しました');
+        showError('ライター情報の取得に失敗しました');
       } finally {
         setFetchLoading(false);
       }
@@ -70,7 +72,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        alert('ライターを更新しました');
+        showSuccess('ライターを更新しました');
         router.push('/writers');
       } else {
         const error = await response.json();
@@ -78,7 +80,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
       }
     } catch (error: any) {
       console.error('Error updating writer:', error);
-      alert(error.message || 'ライターの更新に失敗しました');
+      showError(error.message || 'ライターの更新に失敗しました');
     } finally {
       setLoading(false);
     }

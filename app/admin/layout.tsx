@@ -2,6 +2,7 @@
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { MediaTenantProvider } from '@/contexts/MediaTenantContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 export default function AdminRootLayout({
   children,
@@ -11,7 +12,9 @@ export default function AdminRootLayout({
   return (
     <AuthProvider>
       <MediaTenantProvider>
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </MediaTenantProvider>
     </AuthProvider>
   );

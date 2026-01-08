@@ -7,9 +7,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { FormActions } from '@/components/admin/common';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NewClientPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     logoUrl: '',
@@ -24,7 +26,7 @@ export default function NewClientPage() {
     e?.preventDefault();
 
     if (!formData.email || !formData.password || !formData.clientName) {
-      alert('メールアドレス、パスワード、クライアント名は必須です');
+      showError('メールアドレス、パスワード、クライアント名は必須です');
       return;
     }
 
@@ -40,7 +42,7 @@ export default function NewClientPage() {
       });
 
       if (response.ok) {
-        alert('クライアントを作成しました');
+        showSuccess('クライアントを作成しました');
         router.push('/clients');
       } else {
         const error = await response.json();
@@ -48,7 +50,7 @@ export default function NewClientPage() {
       }
     } catch (error: any) {
       console.error('Error creating client:', error);
-      alert(error.message || 'クライアントの作成に失敗しました');
+      showError(error.message || 'クライアントの作成に失敗しました');
     } finally {
       setLoading(false);
     }
