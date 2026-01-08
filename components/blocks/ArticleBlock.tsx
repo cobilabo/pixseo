@@ -11,6 +11,7 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import Link from 'next/link';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 
 interface ArticleBlockProps {
   block: Block;
@@ -88,9 +89,18 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
 
   // 新着/人気記事一覧の場合
   if (config.articleType === 'recent' || config.articleType === 'popular') {
+    // 見出しの翻訳キー
+    const titleKey = config.articleType === 'recent' ? 'section.recentArticles' : 'section.popularArticles';
+    const titleEnKey = config.articleType === 'recent' ? 'section.recentArticlesEn' : 'section.popularArticlesEn';
+
     if (loading) {
       return (
-        <div className="article-block-list">
+        <section className="article-block-list">
+          {/* 見出し */}
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
+            <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: config.displayCount || 4 }).map((_, index) => (
               <div key={index} className="animate-pulse">
@@ -100,20 +110,32 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
               </div>
             ))}
           </div>
-        </div>
+        </section>
       );
     }
 
     if (articles.length === 0) {
       return (
-        <div className="article-block-list text-center py-8 text-gray-500">
-          {config.articleType === 'recent' ? '新着記事がありません' : '人気記事がありません'}
-        </div>
+        <section className="article-block-list">
+          {/* 見出し */}
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
+            <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+          </div>
+          <p className="text-gray-500 text-center py-8">
+            {t('message.noArticles', lang)}
+          </p>
+        </section>
       );
     }
 
     return (
-      <div className="article-block-list">
+      <section className="article-block-list">
+        {/* 見出し */}
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
+          <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {articles.map((article) => (
             <ArticleCard 
@@ -123,7 +145,7 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
             />
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
