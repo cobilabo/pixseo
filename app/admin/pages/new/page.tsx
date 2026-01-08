@@ -40,6 +40,8 @@ export default function NewPagePage() {
     showPanel: true,
     panelColor: '#ffffff',
     customCss: '',
+    showGlobalNav: false,
+    showSidebar: false,
   });
 
   // タイトルが変更されたら自動的にスラッグを生成
@@ -429,6 +431,20 @@ export default function NewPagePage() {
                 label="テキストカラー"
                 value={formData.textColor}
                 onChange={(value) => setFormData({ ...formData, textColor: value })}
+              />
+
+              {/* グローバルナビゲーション表示 */}
+              <CustomCheckbox
+                label="グローバルナビゲーション表示（カテゴリーバー）"
+                checked={formData.showGlobalNav}
+                onChange={(checked) => setFormData({ ...formData, showGlobalNav: checked })}
+              />
+
+              {/* サイドバー表示 */}
+              <CustomCheckbox
+                label="サイドバー表示（人気記事・おすすめ記事など）"
+                checked={formData.showSidebar}
+                onChange={(checked) => setFormData({ ...formData, showSidebar: checked })}
               />
 
               {/* パネル表示 */}
