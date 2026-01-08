@@ -543,6 +543,27 @@ if (typeof window !== 'undefined') {
       padding: 0 !important;
       border: none !important;
       background: transparent !important;
+      position: relative !important;
+    }
+    .article-content .blogcard-label {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      background: #22c55e !important;
+      color: #fff !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 4px 12px !important;
+      margin: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      line-height: 1 !important;
+    }
+    .article-content .blogcard-label-icon {
+      width: 14px !important;
+      height: 14px !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     .article-content .blogcard-link {
       display: flex !important;

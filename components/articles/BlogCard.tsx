@@ -96,6 +96,13 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
   // ブログカード表示（専用クラス名を使用してproseスタイルをオーバーライド）
   return (
     <div className="blogcard-wrapper">
+      {/* ラベル */}
+      <div className="blogcard-label">
+        <svg className="blogcard-label-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+        </svg>
+        <span>関連記事</span>
+      </div>
       <Link href={href} className="blogcard-link">
         {/* サムネイル（正方形 150x150） */}
         <div className="blogcard-thumbnail">
