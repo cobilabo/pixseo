@@ -594,6 +594,7 @@ if (typeof window !== 'undefined') {
       flex-shrink: 0 !important;
       background: #f3f4f6 !important;
       align-self: stretch !important;
+      overflow: hidden !important;
     }
     .article-content .blogcard-thumbnail > span,
     .article-content .blogcard-thumbnail > div {
@@ -617,10 +618,10 @@ if (typeof window !== 'undefined') {
       width: 100% !important;
       height: 100% !important;
       object-fit: cover !important;
+      transition: transform 0.3s ease !important;
     }
-    .article-content .blogcard-thumbnail img {
-      border-radius: 0 !important;
-      object-fit: cover !important;
+    .article-content .blogcard-link:hover .blogcard-thumbnail img {
+      transform: scale(1.1) !important;
     }
     .article-content .blogcard-content {
       flex: 1 !important;
