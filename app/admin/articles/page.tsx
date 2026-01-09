@@ -858,3 +858,10 @@ function ArticlesPageContent() {
   );
 }
 
+export default function ArticlesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="text-gray-500">読み込み中...</div></div>}>
+      <ArticlesPageContent />
+    </Suspense>
+  );
+}
