@@ -165,6 +165,28 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return srcMatch ? srcMatch[1] : null;
   };
 
+  // <script>タグから全ての属性を抽出（src以外）
+  const extractAttributes = (code: string): Record<string, string> => {
+    const attrs: Record<string, string> = {};
+    // <script ... > の部分を取得
+    const tagMatch = code.match(/<script([^>]*)>/i);
+    if (!tagMatch) return attrs;
+    
+    const attrString = tagMatch[1];
+    // 属性を抽出（name="value" または name='value' 形式）
+    const attrRegex = /([a-zA-Z0-9_-]+)=["']([^"']*)["']/g;
+    let match;
+    while ((match = attrRegex.exec(attrString)) !== null) {
+      const attrName = match[1];
+      const attrValue = match[2];
+      // srcは別途処理するので除外
+      if (attrName.toLowerCase() !== 'src') {
+        attrs[attrName] = attrValue;
+      }
+    }
+    return attrs;
+  };
+
   // <script>タグの中身を抽出
   const extractInlineScript = (code: string): string => {
     const match = code.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
@@ -201,12 +223,15 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
         if (isScriptTag(code)) {
           const src = extractSrc(code);
           if (src) {
+            // data-* などの追加属性を抽出
+            const additionalAttrs = extractAttributes(code);
             return (
               <Script
                 key={`${script.id}-${position}`}
                 id={`${script.id}-${position}`}
                 src={src}
                 strategy={strategy}
+                {...additionalAttrs}
               />
             );
           }
