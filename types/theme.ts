@@ -420,6 +420,24 @@ export const defaultTheme: Theme = {
     ],
   },
   
+  // 検索設定（デフォルト）
+  searchSettings: {
+    displayPages: {
+      topPage: false,
+      staticPages: false,
+      articlePages: false,
+      sidebar: true,
+    },
+    searchTypes: {
+      keywordSearch: true,
+      tagSearch: false,
+      popularTags: false,
+    },
+    popularTagsSettings: {
+      displayCount: 10,
+    },
+  },
+  
   // 基本カラー
   primaryColor: '#3b82f6',          // blue-500（メインカラー）
   secondaryColor: '#6b7280',        // gray-500（サブカラー）

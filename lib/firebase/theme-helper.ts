@@ -41,9 +41,30 @@ export async function getTheme(mediaId: string): Promise<Theme> {
     }
 
     const data = tenantDoc.data();
+    const savedTheme = data?.theme || {};
+    
+    // searchSettingsを深くマージ
+    const mergedSearchSettings = {
+      ...defaultTheme.searchSettings,
+      ...savedTheme.searchSettings,
+      displayPages: {
+        ...defaultTheme.searchSettings?.displayPages,
+        ...savedTheme.searchSettings?.displayPages,
+      },
+      searchTypes: {
+        ...defaultTheme.searchSettings?.searchTypes,
+        ...savedTheme.searchSettings?.searchTypes,
+      },
+      popularTagsSettings: {
+        ...defaultTheme.searchSettings?.popularTagsSettings,
+        ...savedTheme.searchSettings?.popularTagsSettings,
+      },
+    };
+    
     const theme: Theme = {
       ...defaultTheme,
-      ...(data?.theme || {}),
+      ...savedTheme,
+      searchSettings: mergedSearchSettings,
     };
 
     // キャッシュに保存
