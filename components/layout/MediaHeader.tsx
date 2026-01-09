@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { MenuSettings } from '@/types/theme';
+import { MenuSettings, NavigationItem } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import HamburgerMenu from './HamburgerMenu';
 import SearchPanel from './SearchPanel';
@@ -17,6 +17,26 @@ interface MediaHeaderProps {
   menuTextColor?: string;
   lang?: Lang;
 }
+
+// グローバルメニュー項目のURLを生成
+const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
+  switch (item.type) {
+    case 'top':
+      return `/${lang}`;
+    case 'search':
+      return `/${lang}/search`;
+    case 'page':
+      return item.pageSlug ? `/${lang}/${item.pageSlug}` : `/${lang}`;
+    default:
+      return `/${lang}`;
+  }
+};
+
+// 言語に応じたラベルを取得
+const getNavItemLabel = (item: NavigationItem, lang: Lang): string => {
+  const langKey = `label_${lang}` as keyof NavigationItem;
+  return (item[langKey] as string) || item.label || '';
+};
 
 export default function MediaHeader({ 
   siteName, 
@@ -42,17 +62,19 @@ export default function MediaHeader({
     setIsSearchOpen(!isSearchOpen);
   };
 
+  const globalNavItems = menuSettings?.globalNavItems || [];
+
   return (
     <>
       <header className="fixed top-4 left-0 right-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-full shadow-lg backdrop-blur-md bg-white/80 px-6 py-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
-            {/* ハンバーガー、ロゴ、検索を左・中央・右に配置 */}
+            {/* ハンバーガー、ロゴ、グローバルメニュー、検索を配置 */}
             <div className="flex items-center justify-between">
               {/* 左：ハンバーガーメニュー */}
               <button
                 onClick={toggleMenu}
-                className="relative w-12 h-12 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
                 aria-label="メニュー"
               >
                 <Image
@@ -64,42 +86,60 @@ export default function MediaHeader({
                 />
               </button>
 
-              {/* 中央：ロゴ */}
-              <Link href={`/${lang}`} className="absolute left-1/2 -translate-x-1/2 flex items-center">
-                <div className="flex items-center gap-3">
-                  {siteInfo?.faviconUrl && (
-                    <Image
-                      src={siteInfo.faviconUrl}
-                      alt={`${siteName} アイコン`}
-                      width={32}
-                      height={32}
-                      className="w-8 h-8"
-                      priority
-                      unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
-                    />
-                  )}
-                  {siteInfo?.logoUrl ? (
-                    <Image
-                      src={siteInfo.logoUrl}
-                      alt={siteName}
-                      width={120}
-                      height={32}
-                      className="h-8 w-auto"
-                      priority
-                      unoptimized={siteInfo.logoUrl.endsWith('.svg')}
-                    />
-                  ) : (
-                    <span className="text-xl font-bold text-gray-900">
-                      {siteName}
-                    </span>
-                  )}
-                </div>
-              </Link>
+              {/* 中央：ロゴ + グローバルメニュー */}
+              <div className="flex items-center gap-8 flex-1 justify-center">
+                {/* ロゴ */}
+                <Link href={`/${lang}`} className="flex items-center flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    {siteInfo?.faviconUrl && (
+                      <Image
+                        src={siteInfo.faviconUrl}
+                        alt={`${siteName} アイコン`}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8"
+                        priority
+                        unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
+                      />
+                    )}
+                    {siteInfo?.logoUrl ? (
+                      <Image
+                        src={siteInfo.logoUrl}
+                        alt={siteName}
+                        width={120}
+                        height={32}
+                        className="h-8 w-auto"
+                        priority
+                        unoptimized={siteInfo.logoUrl.endsWith('.svg')}
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-gray-900">
+                        {siteName}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+
+                {/* グローバルメニュー（PC表示のみ） */}
+                {globalNavItems.length > 0 && (
+                  <nav className="hidden md:flex items-center gap-6">
+                    {globalNavItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={getNavItemUrl(item, lang)}
+                        className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors whitespace-nowrap"
+                      >
+                        {getNavItemLabel(item, lang)}
+                      </Link>
+                    ))}
+                  </nav>
+                )}
+              </div>
 
               {/* 右：検索アイコン */}
               <button
                 onClick={toggleSearch}
-                className="relative w-12 h-12 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
                 aria-label="検索"
               >
                 <Image

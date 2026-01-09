@@ -110,8 +110,11 @@ export interface NavigationItem {
 
 // メニュー設定の定義
 export interface MenuSettings {
-  // 新形式: ナビゲーション項目配列
+  // 新形式: ハンバーガーメニューのナビゲーション項目配列
   navigationItems?: NavigationItem[];
+  
+  // グローバルメニュー（ヘッダー表示用）のナビゲーション項目配列
+  globalNavItems?: NavigationItem[];
   
   // 後方互換性のため既存フィールドを保持
   topLabel: string;           // トップ

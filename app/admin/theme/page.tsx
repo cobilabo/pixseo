@@ -174,6 +174,7 @@ export default function ThemePage() {
           ...defaultTheme.menuSettings,
           ...fetchedTheme.menuSettings,
           navigationItems: fetchedTheme.menuSettings?.navigationItems || [],
+          globalNavItems: fetchedTheme.menuSettings?.globalNavItems || [],
           customMenus: fetchedTheme.menuSettings?.customMenus || defaultTheme.menuSettings?.customMenus || [],
         },
         snsSettings: {
@@ -454,6 +455,81 @@ export default function ThemePage() {
           searchLabel: prev.menuSettings?.searchLabel || '検索',
           customMenus: prev.menuSettings?.customMenus || [],
           navigationItems: arrayMove(items, oldIndex, newIndex),
+        },
+      }));
+    }
+  };
+
+  // グローバルメニュー設定関連の関数
+  const addGlobalNavItem = () => {
+    const newItem: NavigationItem = {
+      id: `global-nav-${Date.now()}`,
+      type: 'top',
+      label: 'トップ',
+    };
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: prev.menuSettings?.navigationItems || [],
+        globalNavItems: [...(prev.menuSettings?.globalNavItems || []), newItem],
+      },
+    }));
+  };
+
+  const updateGlobalNavItem = (id: string, updates: Partial<NavigationItem>) => {
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: prev.menuSettings?.navigationItems || [],
+        globalNavItems: (prev.menuSettings?.globalNavItems || []).map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      },
+    }));
+  };
+
+  const removeGlobalNavItem = (id: string) => {
+    setTheme(prev => ({
+      ...prev,
+      menuSettings: {
+        ...prev.menuSettings,
+        topLabel: prev.menuSettings?.topLabel || 'トップ',
+        articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+        searchLabel: prev.menuSettings?.searchLabel || '検索',
+        customMenus: prev.menuSettings?.customMenus || [],
+        navigationItems: prev.menuSettings?.navigationItems || [],
+        globalNavItems: (prev.menuSettings?.globalNavItems || []).filter(item => item.id !== id),
+      },
+    }));
+  };
+
+  const handleGlobalNavDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const items = theme.menuSettings?.globalNavItems || [];
+      const oldIndex = items.findIndex(item => item.id === active.id);
+      const newIndex = items.findIndex(item => item.id === over.id);
+      
+      setTheme(prev => ({
+        ...prev,
+        menuSettings: {
+          ...prev.menuSettings,
+          topLabel: prev.menuSettings?.topLabel || 'トップ',
+          articlesLabel: prev.menuSettings?.articlesLabel || '記事一覧',
+          searchLabel: prev.menuSettings?.searchLabel || '検索',
+          customMenus: prev.menuSettings?.customMenus || [],
+          navigationItems: prev.menuSettings?.navigationItems || [],
+          globalNavItems: arrayMove(items, oldIndex, newIndex),
         },
       }));
     }
@@ -1186,6 +1262,67 @@ export default function ThemePage() {
                     </svg>
                     メニュー項目を追加
                   </button>
+
+                  {/* グローバルメニュー設定 */}
+                  <div className="mt-12 pt-8 border-t border-gray-200">
+                    {/* 説明 */}
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="text-sm text-green-700">
+                          <p className="font-medium mb-1">グローバルメニュー設定</p>
+                          <p className="text-green-600">
+                            ヘッダーに常時表示されるグローバルメニューの項目を設定します。ドラッグ＆ドロップで順番を入れ替えられます。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* グローバルナビゲーション項目一覧 */}
+                    <div className="space-y-3">
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleGlobalNavDragEnd}
+                      >
+                        <SortableContext
+                          items={(theme.menuSettings?.globalNavItems || []).map(item => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {(theme.menuSettings?.globalNavItems || []).map((item) => (
+                            <SortableNavigationItem
+                              key={item.id}
+                              item={item}
+                              pages={pages}
+                              onUpdate={updateGlobalNavItem}
+                              onRemove={removeGlobalNavItem}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
+
+                      {/* 項目がない場合 */}
+                      {(!theme.menuSettings?.globalNavItems || theme.menuSettings.globalNavItems.length === 0) && (
+                        <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                          グローバルメニュー項目がありません。下のボタンから追加してください。
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 追加ボタン */}
+                    <button
+                      type="button"
+                      onClick={addGlobalNavItem}
+                      className="w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      グローバルメニュー項目を追加
+                    </button>
+                  </div>
                 </div>
               )}
 
