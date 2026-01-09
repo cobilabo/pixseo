@@ -11,7 +11,7 @@ import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // ソート可能なカラム
 type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
@@ -24,6 +24,7 @@ type PublishStatus = 'published' | 'unpublished' | 'draft' | 'scheduled';
 
 export default function ArticlesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
   const { showSuccess, showError } = useToast();
 
@@ -34,10 +35,10 @@ export default function ArticlesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // フィルター
-  const [filterWriter, setFilterWriter] = useState<string>('');
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterTag, setFilterTag] = useState<string>('');
+  // フィルター（URLクエリパラメータから初期化）
+  const [filterWriter, setFilterWriter] = useState<string>(searchParams.get('writer') || '');
+  const [filterCategory, setFilterCategory] = useState<string>(searchParams.get('category') || '');
+  const [filterTag, setFilterTag] = useState<string>(searchParams.get('tag') || '');
   const [filterStatus, setFilterStatus] = useState<PublishStatus[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   

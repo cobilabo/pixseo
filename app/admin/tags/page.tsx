@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { deleteTag } from '@/lib/firebase/tags-admin';
@@ -186,9 +187,12 @@ export default function TagsPage() {
                             {tag.slug}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <Link 
+                              href={`/articles?tag=${tag.id}`}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer"
+                            >
                               {getTagUsageCount(tag.id)} 記事
-                            </span>
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <ActionButtons

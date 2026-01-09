@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
@@ -216,9 +217,12 @@ export default function WritersPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <Link 
+                              href={`/articles?writer=${writer.id}`}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer"
+                            >
                               {getWriterArticleCount(writer.id)} 記事
-                            </span>
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <ActionButtons
