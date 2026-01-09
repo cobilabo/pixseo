@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import AuthGuard from '@/components/admin/AuthGuard';
@@ -22,7 +22,7 @@ const ITEMS_PER_PAGE = 20;
 // 公開ステータスのオプション
 type PublishStatus = 'published' | 'unpublished' | 'draft' | 'scheduled';
 
-export default function ArticlesPage() {
+function ArticlesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
