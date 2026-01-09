@@ -384,7 +384,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         ? formData.title.substring(0, 67) + '...'
         : formData.title;
       setFormData(prev => ({ ...prev, metaTitle: fallbackMetaTitle }));
-      showSuccess('メタタイトルをしました');
+      showSuccess('メタタイトルを生成しました');
     } finally {
       setGeneratingMetaTitle(false);
     }
@@ -470,7 +470,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       console.log('[handleSubmit] 更新成功');
 
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
-      showSuccess('記事をしました');
+      showSuccess('記事を更新しました');
       window.location.href = '/articles';
     } catch (error) {
       console.error('[handleSubmit] エラー:', error);

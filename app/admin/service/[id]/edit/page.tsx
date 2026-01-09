@@ -215,7 +215,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(`https://${formData.slug}.pixseo-preview.cloud`);
-                      showSuccess('URLをしました');
+                      showSuccess('URLをコピーしました');
                     }}
                     className="p-1 text-gray-500 hover:text-gray-700"
                     title="URLをコピー"

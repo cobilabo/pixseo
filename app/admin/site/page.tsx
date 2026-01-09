@@ -107,7 +107,7 @@ export default function SitePage() {
       });
 
       if (response.ok) {
-        showSuccess('サイト設定をしました');
+        showSuccess('サイト設定を保存しました');
         fetchSettings();
       } else {
         throw new Error('更新に失敗しました');

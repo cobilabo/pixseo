@@ -59,7 +59,7 @@ export default function FormsListPage() {
 
       if (response.ok) {
         setForms(forms.filter((form) => form.id !== id));
-        showSuccess('フォームをしました');
+        showSuccess('フォームを削除しました');
       } else {
         throw new Error('削除に失敗しました');
       }

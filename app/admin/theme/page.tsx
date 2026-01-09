@@ -215,7 +215,7 @@ export default function ThemePage() {
       if (response.ok) {
         // 保存成功時に state も更新
         setTheme(themeToSave);
-        showSuccess('デザイン設定をしました');
+        showSuccess('デザイン設定を保存しました');
       } else {
         const error = await response.json();
         showError(`エラー: ${error.error || '保存に失敗しました'}`);

@@ -72,7 +72,7 @@ export default function FormSubmissionsPage() {
 
       if (response.ok) {
         setSubmissions(submissions.filter(s => s.id !== submissionId));
-        showSuccess('送信データをしました');
+        showSuccess('送信データを削除しました');
       } else {
         throw new Error('削除に失敗しました');
       }

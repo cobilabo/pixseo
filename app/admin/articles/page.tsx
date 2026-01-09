@@ -127,7 +127,7 @@ export default function ArticlesPage() {
       }
 
       setArticles(articles.filter((article) => article.id !== id));
-      showSuccess('記事をしました');
+      showSuccess('記事を削除しました');
     } catch (error) {
       console.error('Error deleting article:', error);
       showError('記事の削除に失敗しました');

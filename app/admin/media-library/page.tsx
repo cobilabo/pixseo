@@ -152,7 +152,7 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
       if (response.ok) {
         // ステートから削除して即座にUIを更新
         setMediaFiles(prev => prev.filter(media => media.id !== id));
-        showSuccess('メディアをしました');
+        showSuccess('メディアを削除しました');
       } else {
         throw new Error('削除に失敗しました');
       }
@@ -164,7 +164,7 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    showSuccess('URLをしました');
+    showSuccess('URLをコピーしました');
   };
 
   // フィルタリング

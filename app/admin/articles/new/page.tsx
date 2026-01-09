@@ -324,7 +324,7 @@ function NewArticlePageContent() {
       console.log('[handleSubmit] 作成成功');
       
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
-      showSuccess('記事をしました');
+      showSuccess('記事を作成しました');
       window.location.href = '/articles';
     } catch (error) {
       console.error('Error:', error);

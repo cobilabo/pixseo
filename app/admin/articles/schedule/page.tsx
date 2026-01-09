@@ -227,7 +227,7 @@ function ScheduledGenerationPageContent() {
       });
 
       await Promise.all(savePromises);
-      showSuccess('全ての設定をしました');
+      showSuccess('全ての設定を保存しました');
     } catch (err: any) {
       console.error('Error saving schedules:', err);
       setError(err.message || '設定の保存中にエラーが発生しました。');
