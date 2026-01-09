@@ -1736,10 +1736,10 @@ export default function ThemePage() {
                               <select
                                 value={item.displayCount || 5}
                                 onChange={(e) => updateSideContentItem(item.id, { displayCount: parseInt(e.target.value) })}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                               >
                                 {[3, 5, 10, 15, 20].map(num => (
-                                  <option key={num} value={num}>{num}件</option>
+                                  <option key={num} value={num} className="text-gray-900">{num}件</option>
                                 ))}
                               </select>
                             </div>
