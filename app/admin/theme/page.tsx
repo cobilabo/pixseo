@@ -166,6 +166,27 @@ export default function ThemePage() {
       const response = await apiClient.get('/api/admin/theme');
       const data = await response.json();
       const fetchedTheme = data.theme || {};
+      
+      // 既存のsideContentHtmlItemsを新形式sideContentItemsに移行
+      let migratedSideContentItems = fetchedTheme.sideContentItems || [];
+      if (migratedSideContentItems.length === 0 && fetchedTheme.sideContentHtmlItems?.length > 0) {
+        // 新形式が空で、旧形式にデータがある場合は移行
+        const defaultItems: SideContentItem[] = [
+          { id: 'default-popular', type: 'popularArticles', isEnabled: true, order: 0, displayCount: 5 },
+          { id: 'default-recommended', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: 5 },
+        ];
+        // 旧形式のHTMLアイテムを新形式に変換
+        const migratedHtmlItems: SideContentItem[] = fetchedTheme.sideContentHtmlItems.map((item: SideContentHtmlItem, index: number) => ({
+          id: item.id || `migrated-html-${index}`,
+          type: 'html' as const,
+          isEnabled: item.isEnabled,
+          order: defaultItems.length + index,
+          title: item.title,
+          htmlCode: item.htmlCode,
+        }));
+        migratedSideContentItems = [...defaultItems, ...migratedHtmlItems];
+      }
+      
       // デフォルト値とマージ
       setTheme({
         ...defaultTheme,
@@ -183,6 +204,7 @@ export default function ThemePage() {
         articleSettings: {
           internalLinkStyle: fetchedTheme.articleSettings?.internalLinkStyle || 'text',
         },
+        sideContentItems: migratedSideContentItems,
       });
     } catch (error) {
       console.error('テーマ設定の取得に失敗しました:', error);
