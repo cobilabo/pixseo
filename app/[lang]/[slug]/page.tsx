@@ -147,7 +147,10 @@ export default async function FixedPage({ params }: PageProps) {
   
   // ローカライズ
   const localizedPopularArticles = popularArticles.map(article => localizeArticle(article, lang));
-  const localizedRecommendedArticles = recommendedArticles.map(article => localizeArticle(article, lang));
+  // おすすめ記事（なければ人気記事をフォールバック）
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(article => localizeArticle(article, lang))
+    : localizedPopularArticles;
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
