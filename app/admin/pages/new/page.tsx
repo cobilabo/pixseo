@@ -19,7 +19,7 @@ import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 export default function NewPagePage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [serpPreviewDevice, setSerpPreviewDevice] = useState<'pc' | 'sp'>('pc');
@@ -414,8 +414,7 @@ export default function NewPagePage() {
       
       await createPage(pageData);
       
-      showSuccess('固定ページをしました');
-      router.push('/pages');
+      showSuccessAndNavigate('固定ページを作成しました', '/admin/pages');
     } catch (error) {
       console.error('Error creating page:', error);
       showError('固定ページの作成に失敗しました');

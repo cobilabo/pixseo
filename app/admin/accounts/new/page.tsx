@@ -11,9 +11,8 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NewAccountPage() {
-  const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     logoUrl: '',
@@ -58,8 +57,7 @@ export default function NewAccountPage() {
       });
 
       if (response.ok) {
-        showSuccess('アカウントを作成しました');
-        router.push('/accounts');
+        showSuccessAndNavigate('アカウントを作成しました', '/admin/accounts');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'アカウント作成に失敗しました');

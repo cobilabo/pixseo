@@ -13,7 +13,7 @@ import { useToast } from '@/contexts/ToastContext';
 export default function NewFormPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState<FormField[]>([]);
@@ -87,8 +87,7 @@ export default function NewFormPage() {
       }
 
       const data = await response.json();
-      showSuccess('フォームをしました');
-      router.push('/admin/forms');
+      showSuccessAndNavigate('フォームを作成しました', '/admin/forms');
     } catch (error) {
       console.error('Error creating form:', error);
       showError('フォームの作成に失敗しました');

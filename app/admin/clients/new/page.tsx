@@ -10,8 +10,7 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NewClientPage() {
-  const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     logoUrl: '',
@@ -42,8 +41,7 @@ export default function NewClientPage() {
       });
 
       if (response.ok) {
-        showSuccess('クライアントを作成しました');
-        router.push('/clients');
+        showSuccessAndNavigate('クライアントを作成しました', '/admin/clients');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'クライアント作成に失敗しました');

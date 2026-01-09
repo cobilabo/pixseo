@@ -13,7 +13,7 @@ import { useToast } from '@/contexts/ToastContext';
 
 export default function EditCategoryPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [category, setCategory] = useState<Category | null>(null);
@@ -90,8 +90,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
         throw new Error(errorData.error || 'Failed to update category');
       }
       
-      showSuccess('カテゴリーを更新しました');
-      router.push('/categories');
+      showSuccessAndNavigate('カテゴリーを更新しました', '/admin/categories');
     } catch (error) {
       console.error('Error updating category:', error);
       showError('カテゴリーの更新に失敗しました');

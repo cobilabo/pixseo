@@ -16,7 +16,7 @@ export default function EditFormPage() {
   const params = useParams();
   const formId = params.id as string;
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -134,8 +134,7 @@ export default function EditFormPage() {
         throw new Error('フォームの更新に失敗しました');
       }
 
-      showSuccess('フォームをしました');
-      router.push('/admin/forms');
+      showSuccessAndNavigate('フォームを更新しました', '/admin/forms');
     } catch (error) {
       console.error('Error updating form:', error);
       showError('フォームの更新に失敗しました');

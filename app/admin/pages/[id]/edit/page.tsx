@@ -21,7 +21,7 @@ export default function EditPagePage() {
   const params = useParams();
   const pageId = params.id as string;
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -451,8 +451,7 @@ export default function EditPagePage() {
       
       await updatePage(pageId, updateData);
       
-      showSuccess('固定ページをしました');
-      router.push('/pages');
+      showSuccessAndNavigate('固定ページを更新しました', '/admin/pages');
     } catch (error) {
       console.error('Error updating page:', error);
       showError('固定ページの更新に失敗しました');

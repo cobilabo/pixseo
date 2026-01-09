@@ -12,7 +12,7 @@ import { useToast } from '@/contexts/ToastContext';
 
 export default function EditTagPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [tag, setTag] = useState<Tag | null>(null);
@@ -79,8 +79,7 @@ export default function EditTagPage({ params }: { params: { id: string } }) {
         throw new Error(errorData.error || 'Failed to update tag');
       }
       
-      showSuccess('タグを更新しました');
-      router.push('/tags');
+      showSuccessAndNavigate('タグを更新しました', '/admin/tags');
     } catch (error) {
       console.error('Error updating tag:', error);
       showError('タグの更新に失敗しました');

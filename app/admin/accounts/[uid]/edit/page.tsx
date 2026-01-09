@@ -10,8 +10,7 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function EditAccountPage({ params }: { params: { uid: string } }) {
-  const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -75,8 +74,7 @@ export default function EditAccountPage({ params }: { params: { uid: string } })
       });
 
       if (response.ok) {
-        showSuccess('アカウントを更新しました');
-        router.push('/accounts');
+        showSuccessAndNavigate('アカウントを更新しました', '/admin/accounts');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'アカウント更新に失敗しました');

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -16,6 +17,7 @@ interface ToastContextType {
   showError: (message: string) => void;
   showWarning: (message: string) => void;
   showInfo: (message: string) => void;
+  showSuccessAndNavigate: (message: string, path: string) => void;
 }
 
 const TOAST_STORAGE_KEY = 'pending_toast';
@@ -23,6 +25,7 @@ const TOAST_STORAGE_KEY = 'pending_toast';
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // トーストを追加する関数（内部用）
@@ -73,8 +76,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showWarning = useCallback((message: string) => showToast(message, 'warning'), [showToast]);
   const showInfo = useCallback((message: string) => showToast(message, 'info'), [showToast]);
 
+  // 成功トーストを表示してからページ遷移
+  const showSuccessAndNavigate = useCallback((message: string, path: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type: 'success' }));
+    }
+    router.push(path);
+  }, [router]);
+
   return (
-    <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo }}>
+    <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo, showSuccessAndNavigate }}>
       {children}
       
       {/* トースト表示エリア */}

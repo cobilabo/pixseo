@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
@@ -10,9 +9,8 @@ import { FormActions, SlugInput } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NewTagPage() {
-  const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -51,8 +49,7 @@ export default function NewTagPage() {
         throw new Error(errorData.error || 'Failed to create tag');
       }
       
-      showSuccess('タグを作成しました');
-      router.push('/tags');
+      showSuccessAndNavigate('タグを作成しました', '/admin/tags');
     } catch (error) {
       console.error('Error creating tag:', error);
       showError('タグの作成に失敗しました');

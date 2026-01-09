@@ -11,9 +11,8 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NewWriterPage() {
-  const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     iconUrl: '',
@@ -52,8 +51,7 @@ export default function NewWriterPage() {
       });
 
       if (response.ok) {
-        showSuccess('ライターを作成しました');
-        router.push('/writers');
+        showSuccessAndNavigate('ライターを作成しました', '/admin/writers');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'ライター作成に失敗しました');
