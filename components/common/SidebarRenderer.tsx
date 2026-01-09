@@ -48,9 +48,11 @@ export default function SidebarRenderer({
     // 新形式が存在する場合はそれを使用
     items = [...sideContentItems].sort((a, b) => a.order - b.order);
     
-    // 新形式にHTML項目が含まれていない場合、旧形式のHTMLアイテムを追加
-    const hasHtmlInNewFormat = items.some(item => item.type === 'html');
-    if (!hasHtmlInNewFormat && validLegacyHtmlItems.length > 0) {
+    // 新形式にHTML項目が含まれていない、または空のhtmlCodeのみの場合、旧形式のHTMLアイテムを追加
+    const validHtmlInNewFormat = items.filter(item => item.type === 'html' && item.htmlCode?.trim());
+    if (validHtmlInNewFormat.length === 0 && validLegacyHtmlItems.length > 0) {
+      // 空のHTML項目を除去
+      items = items.filter(item => item.type !== 'html' || item.htmlCode?.trim());
       const maxOrder = Math.max(...items.map(item => item.order), -1);
       const migratedHtmlItems: SideContentItem[] = validLegacyHtmlItems.map((item, index) => ({
         id: item.id || `legacy-html-${index}`,
