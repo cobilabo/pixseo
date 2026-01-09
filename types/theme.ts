@@ -145,7 +145,27 @@ export interface SearchSettings {
   searchBoxType: SearchBoxType;      // 検索ボックスの種類
 }
 
-// サイドコンテンツHTMLアイテムの定義（ふらっとテーマ専用）
+// サイドコンテンツ項目タイプの定義
+export type SideContentItemType = 
+  | 'popularArticles'    // 人気記事
+  | 'recommendedArticles' // おすすめ記事
+  | 'categories'          // カテゴリー一覧
+  | 'html';               // HTMLコード
+
+// サイドコンテンツ項目の定義（統合型）
+export interface SideContentItem {
+  id: string;                       // 一意のID
+  type: SideContentItemType;        // 項目タイプ
+  isEnabled: boolean;               // 有効/無効
+  order: number;                    // 表示順
+  // 人気記事・おすすめ記事用
+  displayCount?: number;            // 表示件数
+  // HTML用
+  title?: string;                   // 管理用タイトル
+  htmlCode?: string;                // HTMLコード
+}
+
+// サイドコンテンツHTMLアイテムの定義（ふらっとテーマ専用）※後方互換性のため保持
 export interface SideContentHtmlItem {
   id: string;                 // 一意のID
   title: string;              // 管理用タイトル
@@ -239,8 +259,11 @@ export interface ThemeLayoutSettings {
   // 検索設定（ふらっとテーマ専用）
   searchSettings?: SearchSettings;
   
-  // サイドコンテンツHTML（ふらっとテーマ専用）
+  // サイドコンテンツHTML（ふらっとテーマ専用）※後方互換性のため保持
   sideContentHtmlItems?: SideContentHtmlItem[];
+  
+  // サイドコンテンツ項目（ふらっとテーマ専用）※新形式
+  sideContentItems?: SideContentItem[];
   
   // HTMLショートコード（ふらっとテーマ専用）
   htmlShortcodes?: HtmlShortcodeItem[];
@@ -306,8 +329,11 @@ export interface Theme {
   // 検索設定（ふらっとテーマ専用）
   searchSettings?: SearchSettings;
   
-  // サイドコンテンツHTML（ふらっとテーマ専用）
+  // サイドコンテンツHTML（ふらっとテーマ専用）※後方互換性のため保持
   sideContentHtmlItems?: SideContentHtmlItem[];
+  
+  // サイドコンテンツ項目（ふらっとテーマ専用）※新形式
+  sideContentItems?: SideContentItem[];
   
   // HTMLショートコード（ふらっとテーマ専用）
   htmlShortcodes?: HtmlShortcodeItem[];

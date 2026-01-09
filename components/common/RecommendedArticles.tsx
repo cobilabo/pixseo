@@ -31,7 +31,7 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
         {t('section.recommendedArticles', lang)}
       </h2>
       <div className="space-y-4">
-        {articles.slice(0, 5).map((article) => {
+        {articles.map((article) => {
           const articleCategories = getArticleCategories(article.categoryIds || []);
           
           return (

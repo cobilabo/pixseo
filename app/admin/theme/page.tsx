@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
 import { Page } from '@/types/page';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
@@ -787,6 +787,89 @@ export default function ThemePage() {
     setTheme(prev => ({ ...prev, sideContentHtmlItems: items }));
   };
 
+  // サイドコンテンツ項目（新形式）関連の関数
+  const getDefaultSideContentItems = (): SideContentItem[] => {
+    return [
+      { id: 'popular-articles', type: 'popularArticles', isEnabled: true, order: 0, displayCount: 5 },
+      { id: 'recommended-articles', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: 5 },
+    ];
+  };
+
+  const getSideContentItems = (): SideContentItem[] => {
+    // 既存の設定があればそれを使用、なければデフォルト
+    if (theme.sideContentItems && theme.sideContentItems.length > 0) {
+      return [...theme.sideContentItems].sort((a, b) => a.order - b.order);
+    }
+    return getDefaultSideContentItems();
+  };
+
+  const addSideContentItem = (type: SideContentItemType) => {
+    const currentItems = getSideContentItems();
+    const newItem: SideContentItem = {
+      id: `side-${type}-${Date.now()}`,
+      type,
+      isEnabled: true,
+      order: currentItems.length,
+      ...(type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: 5 } : {}),
+      ...(type === 'html' ? { title: '', htmlCode: '' } : {}),
+    };
+    setTheme(prev => ({
+      ...prev,
+      sideContentItems: [...currentItems, newItem],
+    }));
+  };
+
+  const updateSideContentItem = (id: string, updates: Partial<SideContentItem>) => {
+    const items = getSideContentItems().map(item =>
+      item.id === id ? { ...item, ...updates } : item
+    );
+    setTheme(prev => ({ ...prev, sideContentItems: items }));
+  };
+
+  const removeSideContentItem = (id: string) => {
+    const items = getSideContentItems().filter(item => item.id !== id);
+    // orderを再設定
+    items.forEach((item, i) => item.order = i);
+    setTheme(prev => ({ ...prev, sideContentItems: items }));
+  };
+
+  const moveSideContentItem = (index: number, direction: 'up' | 'down') => {
+    const items = getSideContentItems();
+    if (direction === 'up' && index > 0) {
+      [items[index - 1], items[index]] = [items[index], items[index - 1]];
+    } else if (direction === 'down' && index < items.length - 1) {
+      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+    }
+    // orderを再設定
+    items.forEach((item, i) => item.order = i);
+    setTheme(prev => ({ ...prev, sideContentItems: items }));
+  };
+
+  const getSideContentItemLabel = (type: SideContentItemType): string => {
+    switch (type) {
+      case 'popularArticles': return '人気記事';
+      case 'recommendedArticles': return 'おすすめ記事';
+      case 'categories': return 'カテゴリー一覧';
+      case 'html': return 'HTMLコード';
+      default: return '不明';
+    }
+  };
+
+  const getSideContentItemIcon = (type: SideContentItemType): React.ReactNode => {
+    switch (type) {
+      case 'popularArticles':
+        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;
+      case 'recommendedArticles':
+        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
+      case 'categories':
+        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>;
+      case 'html':
+        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>;
+      default:
+        return null;
+    }
+  };
+
   // HTMLショートコード関連の関数
   const addHtmlShortcode = () => {
     const newItem: HtmlShortcodeItem = {
@@ -1550,140 +1633,174 @@ export default function ThemePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div className="text-sm text-blue-700">
-                        <p className="font-medium mb-1">サイドコンテンツHTML設定</p>
+                        <p className="font-medium mb-1">サイドコンテンツ設定</p>
                         <ul className="list-disc list-inside space-y-1 text-blue-600">
-                          <li>サイドバーの最下部に任意のHTMLコードを表示できます</li>
-                          <li>複数のHTMLブロックを追加し、順番を変更できます</li>
-                          <li>広告コードやウィジェットの埋め込みに利用できます</li>
+                          <li>サイドバーに表示するコンテンツを設定できます</li>
+                          <li>人気記事、おすすめ記事、カテゴリー一覧、HTMLコードを追加できます</li>
+                          <li>項目の順番を変更して表示順を制御できます</li>
                         </ul>
                       </div>
                     </div>
                   </div>
 
-                  {/* HTMLアイテム一覧 */}
-                  {(theme.sideContentHtmlItems || []).length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                      </svg>
-                      <p className="text-gray-500 mb-4">HTMLコードが設定されていません</p>
-                      <button
-                        type="button"
-                        onClick={addSideContentHtml}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        HTMLコードを追加
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {(theme.sideContentHtmlItems || []).map((item, index) => (
-                        <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                          {/* ヘッダー */}
-                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">
-                                {index + 1}
-                              </span>
-                              <span className="text-gray-900 font-medium">
-                                {item.title || '名称未設定'}
-                              </span>
-                              {!item.isEnabled && (
-                                <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">無効</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => moveSideContentHtml(index, 'up')}
-                                disabled={index === 0}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="上に移動"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveSideContentHtml(index, 'down')}
-                                disabled={index === (theme.sideContentHtmlItems?.length || 0) - 1}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="下に移動"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (confirm('このHTMLコードを削除しますか？')) {
-                                    removeSideContentHtml(index);
-                                  }
-                                }}
-                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="削除"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
+                  {/* サイドコンテンツ項目一覧 */}
+                  <div className="space-y-4">
+                    {getSideContentItems().map((item, index) => (
+                      <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        {/* ヘッダー */}
+                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                              item.type === 'popularArticles' ? 'bg-orange-100 text-orange-600' :
+                              item.type === 'recommendedArticles' ? 'bg-yellow-100 text-yellow-600' :
+                              item.type === 'categories' ? 'bg-green-100 text-green-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {getSideContentItemIcon(item.type)}
+                            </span>
+                            <span className="text-gray-900 font-medium">
+                              {item.type === 'html' ? (item.title || 'HTMLコード') : getSideContentItemLabel(item.type)}
+                            </span>
+                            {!item.isEnabled && (
+                              <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">無効</span>
+                            )}
                           </div>
-
-                          {/* コンテンツ */}
-                          <div className="p-6 space-y-4">
-                            {/* タイトル */}
-                            <FloatingInput
-                              label="管理用タイトル"
-                              value={item.title}
-                              onChange={(value) => updateSideContentHtml(index, 'title', value)}
-                            />
-
-                            {/* HTMLコード */}
-                            <FloatingInput
-                              label="HTMLコード"
-                              value={item.htmlCode}
-                              onChange={(value) => updateSideContentHtml(index, 'htmlCode', value)}
-                              multiline
-                              rows={8}
-                            />
-
-                            {/* 有効/無効トグル */}
-                            <label className="flex items-center gap-3 cursor-pointer bg-gray-50 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors w-fit">
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  checked={item.isEnabled}
-                                  onChange={(e) => updateSideContentHtml(index, 'isEnabled', e.target.checked)}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
-                                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"></div>
-                              </div>
-                              <span className="text-sm text-gray-700 font-medium">有効</span>
-                            </label>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveSideContentItem(index, 'up')}
+                              disabled={index === 0}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="上に移動"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveSideContentItem(index, 'down')}
+                              disabled={index === getSideContentItems().length - 1}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="下に移動"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm('このコンテンツを削除しますか？')) {
+                                  removeSideContentItem(item.id);
+                                }
+                              }}
+                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="削除"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
-                      ))}
 
-                      {/* 追加ボタン */}
+                        {/* コンテンツ */}
+                        <div className="p-6 space-y-4">
+                          {/* 人気記事・おすすめ記事の場合：表示件数 */}
+                          {(item.type === 'popularArticles' || item.type === 'recommendedArticles') && (
+                            <div className="flex items-center gap-4">
+                              <label className="text-sm font-medium text-gray-700">表示件数</label>
+                              <select
+                                value={item.displayCount || 5}
+                                onChange={(e) => updateSideContentItem(item.id, { displayCount: parseInt(e.target.value) })}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                {[3, 5, 10, 15, 20].map(num => (
+                                  <option key={num} value={num}>{num}件</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* HTMLの場合：タイトルとコード */}
+                          {item.type === 'html' && (
+                            <>
+                              <FloatingInput
+                                label="管理用タイトル"
+                                value={item.title || ''}
+                                onChange={(value) => updateSideContentItem(item.id, { title: value })}
+                              />
+                              <FloatingInput
+                                label="HTMLコード"
+                                value={item.htmlCode || ''}
+                                onChange={(value) => updateSideContentItem(item.id, { htmlCode: value })}
+                                multiline
+                                rows={8}
+                              />
+                            </>
+                          )}
+
+                          {/* 有効/無効トグル */}
+                          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors w-fit">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={item.isEnabled}
+                                onChange={(e) => updateSideContentItem(item.id, { isEnabled: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"></div>
+                            </div>
+                            <span className="text-sm text-gray-700 font-medium">有効</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 追加ボタン群 */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {!getSideContentItems().some(item => item.type === 'popularArticles') && (
                       <button
                         type="button"
-                        onClick={addSideContentHtml}
-                        className="w-full py-5 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 font-medium"
+                        onClick={() => addSideContentItem('popularArticles')}
+                        className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50 transition-all"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        HTMLコードを追加
+                        {getSideContentItemIcon('popularArticles')}
+                        <span className="text-sm font-medium">人気記事</span>
                       </button>
-                    </div>
-                  )}
+                    )}
+                    {!getSideContentItems().some(item => item.type === 'recommendedArticles') && (
+                      <button
+                        type="button"
+                        onClick={() => addSideContentItem('recommendedArticles')}
+                        className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-yellow-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all"
+                      >
+                        {getSideContentItemIcon('recommendedArticles')}
+                        <span className="text-sm font-medium">おすすめ記事</span>
+                      </button>
+                    )}
+                    {!getSideContentItems().some(item => item.type === 'categories') && (
+                      <button
+                        type="button"
+                        onClick={() => addSideContentItem('categories')}
+                        className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition-all"
+                      >
+                        {getSideContentItemIcon('categories')}
+                        <span className="text-sm font-medium">カテゴリー一覧</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => addSideContentItem('html')}
+                      className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                    >
+                      {getSideContentItemIcon('html')}
+                      <span className="text-sm font-medium">HTMLコード</span>
+                    </button>
+                  </div>
                 </div>
               )}
 

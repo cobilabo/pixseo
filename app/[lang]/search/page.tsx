@@ -12,7 +12,7 @@ import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
@@ -21,6 +21,7 @@ import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag } from '@/lib/i18n/localize';
@@ -92,10 +93,11 @@ export default async function SearchPage({ params }: PageProps) {
   const mediaId = await getMediaIdFromHost();
   
   // サイト設定、Theme、カテゴリー、タグを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, allTags, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
@@ -108,6 +110,9 @@ export default async function SearchPage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const tags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
@@ -193,11 +198,15 @@ export default async function SearchPage({ params }: PageProps) {
                 />
               )}
 
-              {/* 人気記事 */}
-              <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
-
-              {/* おすすめ記事 */}
-              <RecommendedArticles articles={localizedRecommendedArticles} categories={allCategories} lang={lang} />
+              {/* サイドコンテンツ（設定に基づく） */}
+              <SidebarRenderer
+                sideContentItems={rawTheme.sideContentItems}
+                sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+                popularArticles={localizedPopularArticles}
+                recommendedArticles={localizedRecommendedArticles}
+                categories={categoriesWithCount}
+                lang={lang}
+              />
 
               {/* バナーエリア */}
               {footerBlocks.length > 0 && (
@@ -206,11 +215,6 @@ export default async function SearchPage({ params }: PageProps) {
 
               {/* Xタイムライン */}
               {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
-
-              {/* カスタムHTML（ふらっとテーマ専用） */}
-              {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
-                <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
-              )}
             </aside>
           </div>
         </main>

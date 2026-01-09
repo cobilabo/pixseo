@@ -11,7 +11,7 @@ import {
   getAdjacentArticlesServer,
   getPopularArticlesServer 
 } from '@/lib/firebase/articles-server';
-import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
+import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
@@ -47,6 +47,7 @@ import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
 
@@ -224,13 +225,14 @@ export default async function ArticlePage({ params }: PageProps) {
   const theme = localizeTheme(rawTheme, lang);
 
   // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、全タグ、人気記事を並行取得
-  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allTags, rawPopularArticles] = await Promise.all([
+  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
     rawArticle.writerId ? getWriterServer(rawArticle.writerId).catch(() => null) : Promise.resolve(null),
     getAdjacentArticlesServer(rawArticle, mediaId || undefined).catch(() => ({ previousArticle: null, nextArticle: null })),
     getRelatedArticlesServer(rawArticle, 6, mediaId || undefined).catch(() => []),
     getAllCategoriesServer().catch(() => []),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }).catch(() => []),
     getAllTagsServer().catch(() => []),
     getPopularArticlesServer(10, mediaId || undefined).catch(() => []),
   ]);
@@ -241,6 +243,10 @@ export default async function ArticlePage({ params }: PageProps) {
   const writer = rawWriter ? localizeWriter(rawWriter, lang) : null;
   const relatedArticles = rawRelatedArticles.map(art => localizeArticle(art, lang));
   const popularArticles = rawPopularArticles.map(art => localizeArticle(art, lang));
+  // サイドバー用カテゴリー（記事数付き）
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   // サイドバー検索用のタグ一覧（メディアIDでフィルタリング）
   const sidebarTags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
@@ -499,11 +505,15 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* 著者プロフィール */}
             {writer && <AuthorProfile writer={writer} lang={lang} />}
 
-            {/* 人気記事 */}
-            <PopularArticles articles={popularArticles} categories={allCategories} lang={lang} />
-
-            {/* おすすめ記事 */}
-            <RecommendedArticles articles={relatedArticles} categories={allCategories} lang={lang} />
+            {/* サイドコンテンツ（設定に基づく） */}
+            <SidebarRenderer
+              sideContentItems={rawTheme.sideContentItems}
+              sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              popularArticles={popularArticles}
+              recommendedArticles={relatedArticles}
+              categories={categoriesWithCount}
+              lang={lang}
+            />
 
             {/* バナーエリア */}
             {footerBlocks.length > 0 && (
@@ -513,11 +523,6 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* Xタイムライン */}
             {rawTheme.snsSettings?.xUserId && (
               <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />
-            )}
-
-            {/* カスタムHTML（ふらっとテーマ専用） */}
-            {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
-              <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
             )}
           </aside>
         </div>

@@ -48,6 +48,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.popularArticlesEn': 'Popular Articles',
     'section.recommendedArticles': 'おすすめ記事',
     'section.recommendedArticlesEn': 'Recommended Articles',
+    'section.categories': 'カテゴリー',
+    'section.categoriesEn': 'Categories',
     'section.searchResults': '件の記事が見つかりました',
     'section.searchResultsEn': 'Search Results',
     
@@ -124,6 +126,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.popularArticlesEn': 'Popular Articles',
     'section.recommendedArticles': 'Recommended Articles',
     'section.recommendedArticlesEn': 'Recommended Articles',
+    'section.categories': 'Categories',
+    'section.categoriesEn': 'Categories',
     'section.searchResults': ' articles found',
     'section.searchResultsEn': 'Search Results',
     
@@ -200,6 +204,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.popularArticlesEn': 'Popular Articles',
     'section.recommendedArticles': '推荐文章',
     'section.recommendedArticlesEn': 'Recommended Articles',
+    'section.categories': '分类',
+    'section.categoriesEn': 'Categories',
     'section.searchResults': '篇文章',
     'section.searchResultsEn': 'Search Results',
     
@@ -276,6 +282,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'section.popularArticlesEn': 'Popular Articles',
     'section.recommendedArticles': '추천 기사',
     'section.recommendedArticlesEn': 'Recommended Articles',
+    'section.categories': '카테고리',
+    'section.categoriesEn': 'Categories',
     'section.searchResults': '개의 기사를 찾았습니다',
     'section.searchResultsEn': 'Search Results',
     

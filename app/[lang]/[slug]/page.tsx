@@ -5,7 +5,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizePage, localizeTag, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
@@ -22,6 +22,7 @@ import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 
 interface PageProps {
   params: {
@@ -135,10 +136,12 @@ export default async function FixedPage({ params }: PageProps) {
   // サイドバー表示時のみ記事データを取得
   let popularArticles: any[] = [];
   let recommendedArticles: any[] = [];
+  let allCategoriesWithCount: any[] = [];
   if (showSidebar) {
-    [popularArticles, recommendedArticles] = await Promise.all([
+    [popularArticles, recommendedArticles, allCategoriesWithCount] = await Promise.all([
       getPopularArticlesServer(5, mediaId),
       getRecommendedArticlesServer(5, mediaId),
+      getCategoriesWithCountServer({ mediaId }),
     ]);
   }
   
@@ -148,6 +151,9 @@ export default async function FixedPage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   
   // サイドバー検索用のタグ一覧（メディアIDでフィルタリング）
   const sidebarTags = allTags
@@ -256,11 +262,15 @@ export default async function FixedPage({ params }: PageProps) {
                   />
                 )}
 
-                {/* 人気記事 */}
-                <PopularArticles articles={localizedPopularArticles} categories={categories} lang={lang} />
-
-                {/* おすすめ記事 */}
-                <RecommendedArticles articles={localizedRecommendedArticles} categories={categories} lang={lang} />
+                {/* サイドコンテンツ（設定に基づく） */}
+                <SidebarRenderer
+                  sideContentItems={rawTheme.sideContentItems}
+                  sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+                  popularArticles={localizedPopularArticles}
+                  recommendedArticles={localizedRecommendedArticles}
+                  categories={categoriesWithCount}
+                  lang={lang}
+                />
 
                 {/* バナーエリア */}
                 {footerBlocks.length > 0 && (
@@ -269,11 +279,6 @@ export default async function FixedPage({ params }: PageProps) {
 
                 {/* Xリンク */}
                 {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
-
-                {/* カスタムHTML（ふらっとテーマ専用） */}
-                {rawTheme.layoutTheme === 'furatto' && rawTheme.sideContentHtmlItems && rawTheme.sideContentHtmlItems.length > 0 && (
-                  <SidebarCustomHtml items={rawTheme.sideContentHtmlItems} />
-                )}
               </aside>
             </div>
           </main>

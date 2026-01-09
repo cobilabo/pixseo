@@ -49,6 +49,66 @@ export const getCategoriesServer = async (
   }
 };
 
+// カテゴリーの記事数を取得
+export interface CategoryWithCount extends Category {
+  articleCount: number;
+}
+
+export const getCategoriesWithCountServer = async (
+  options: {
+    mediaId?: string;
+  } = {}
+): Promise<CategoryWithCount[]> => {
+  try {
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey('categories-with-count', options.mediaId || 'all');
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<CategoryWithCount[]>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) {
+      return cached;
+    }
+    
+    // カテゴリーを取得
+    const categories = await getCategoriesServer({ mediaId: options.mediaId });
+    
+    // 各カテゴリーの記事数を取得
+    const articlesRef = adminDb.collection('articles');
+    let articlesQuery: FirebaseFirestore.Query = articlesRef
+      .where('status', '==', 'published');
+    
+    if (options.mediaId) {
+      articlesQuery = articlesQuery.where('mediaId', '==', options.mediaId);
+    }
+    
+    const articlesSnapshot = await articlesQuery.get();
+    
+    // カテゴリーIDごとの記事数をカウント
+    const countByCategory: Record<string, number> = {};
+    articlesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const categoryIds = data.categoryIds || [];
+      categoryIds.forEach((catId: string) => {
+        countByCategory[catId] = (countByCategory[catId] || 0) + 1;
+      });
+    });
+    
+    // カテゴリーに記事数を追加
+    const categoriesWithCount: CategoryWithCount[] = categories.map(cat => ({
+      ...cat,
+      articleCount: countByCategory[cat.id] || 0,
+    }));
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, categoriesWithCount);
+    
+    return categoriesWithCount;
+  } catch (error) {
+    console.error('Error getting categories with count:', error);
+    return [];
+  }
+};
+
 export const getCategoryServer = async (slug: string, mediaId?: string): Promise<Category | null> => {
   try {
     // キャッシュキー生成
