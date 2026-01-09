@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
+import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -19,6 +20,7 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
+import SearchWidget from '@/components/search/SearchWidget';
 
 interface PageProps {
   params: {
@@ -82,8 +84,8 @@ export default async function ArticlesPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
   
-  // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
+  // サイト設定、Theme、記事、カテゴリー、タグを並列取得
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
@@ -91,6 +93,7 @@ export default async function ArticlesPage({ params }: PageProps) {
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
+    getTagsServer(),
   ]);
   
   // 多言語化
@@ -102,6 +105,7 @@ export default async function ArticlesPage({ params }: PageProps) {
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
+  const sidebarTags = allTags.filter(tag => !mediaId || tag.mediaId === mediaId);
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   // おすすめ記事（おすすめカテゴリーに属する記事、なければ一覧の記事をフォールバック）
@@ -199,6 +203,17 @@ export default async function ArticlesPage({ params }: PageProps) {
 
           {/* サイドバー（30%） */}
           <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 検索ウィジェット */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+              <SearchWidget
+                searchSettings={rawTheme.searchSettings}
+                mediaId={mediaId || undefined}
+                lang={lang}
+                tags={sidebarTags}
+                variant="compact"
+              />
+            )}
+
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}

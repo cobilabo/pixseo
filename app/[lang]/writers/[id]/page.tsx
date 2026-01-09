@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import { getWriterServer, getArticlesByWriterServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
+import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -19,6 +20,7 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
+import SearchWidget from '@/components/search/SearchWidget';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -84,7 +86,7 @@ export default async function WriterPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles, allTags] = await Promise.all([
     mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
     getArticlesByWriterServer(params.id, mediaId || undefined),
@@ -92,6 +94,7 @@ export default async function WriterPage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
+    getTagsServer(),
   ]);
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -100,6 +103,7 @@ export default async function WriterPage({ params }: PageProps) {
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
+  const sidebarTags = allTags.filter(tag => !mediaId || tag.mediaId === mediaId);
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedRecommendedArticles = recommendedArticles.length > 0
@@ -165,6 +169,17 @@ export default async function WriterPage({ params }: PageProps) {
             </section>
           </div>
           <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 検索ウィジェット */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+              <SearchWidget
+                searchSettings={rawTheme.searchSettings}
+                mediaId={mediaId || undefined}
+                lang={lang}
+                tags={sidebarTags}
+                variant="compact"
+              />
+            )}
+
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
