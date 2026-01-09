@@ -1360,49 +1360,49 @@ export default function ThemePage() {
               {/* メニュータブ */}
               {activeTab === 'menu' && (
                 <div className="space-y-6">
-                  {/* 説明 */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  {/* グローバルメニュー設定 */}
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <div className="text-sm text-blue-700">
-                        <p className="font-medium mb-1">ハンバーガーメニュー設定</p>
-                        <p className="text-blue-600">
-                          サイトのハンバーガーメニューに表示する項目を設定します。ドラッグ＆ドロップで順番を入れ替えられます。
+                      <div className="text-sm text-green-700">
+                        <p className="font-medium mb-1">グローバルメニュー設定</p>
+                        <p className="text-green-600">
+                          ヘッダー下のカテゴリーバー位置に表示される項目を設定します。設定すると、カテゴリー一覧の代わりにこのメニューが表示されます。ドラッグ＆ドロップで順番を入れ替えられます。
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* ナビゲーション項目一覧 */}
+                  {/* グローバルナビゲーション項目一覧 */}
                   <div className="space-y-3">
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
-                      onDragEnd={handleNavigationDragEnd}
+                      onDragEnd={handleGlobalNavDragEnd}
                     >
                       <SortableContext
-                        items={(theme.menuSettings?.navigationItems || []).map(item => item.id)}
+                        items={(theme.menuSettings?.globalNavItems || []).map(item => item.id)}
                         strategy={verticalListSortingStrategy}
                       >
-                        {(theme.menuSettings?.navigationItems || []).map((item) => (
+                        {(theme.menuSettings?.globalNavItems || []).map((item) => (
                           <SortableNavigationItem
                             key={item.id}
                             item={item}
                             pages={pages}
                             categories={categories}
-                            onUpdate={updateNavigationItem}
-                            onRemove={removeNavigationItem}
+                            onUpdate={updateGlobalNavItem}
+                            onRemove={removeGlobalNavItem}
                           />
                         ))}
                       </SortableContext>
                     </DndContext>
 
                     {/* 項目がない場合 */}
-                    {(!theme.menuSettings?.navigationItems || theme.menuSettings.navigationItems.length === 0) && (
+                    {(!theme.menuSettings?.globalNavItems || theme.menuSettings.globalNavItems.length === 0) && (
                       <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
-                        メニュー項目がありません。下のボタンから追加してください。
+                        グローバルメニュー項目がありません。下のボタンから追加してください。
                       </div>
                     )}
                   </div>
@@ -1410,60 +1410,59 @@ export default function ThemePage() {
                   {/* 追加ボタン */}
                   <button
                     type="button"
-                    onClick={addNavigationItem}
-                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                    onClick={addGlobalNavItem}
+                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    メニュー項目を追加
+                    グローバルメニュー項目を追加
                   </button>
 
-                  {/* グローバルメニュー設定 */}
+                  {/* ハンバーガーメニュー設定 */}
                   <div className="mt-12 pt-8 border-t border-gray-200">
-                    {/* 説明 */}
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                       <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <div className="text-sm text-green-700">
-                          <p className="font-medium mb-1">グローバルメニュー設定</p>
-                          <p className="text-green-600">
-                            ヘッダー下のカテゴリーバー位置に表示される項目を設定します。設定すると、カテゴリー一覧の代わりにこのメニューが表示されます。ドラッグ＆ドロップで順番を入れ替えられます。
+                        <div className="text-sm text-blue-700">
+                          <p className="font-medium mb-1">ハンバーガーメニュー設定</p>
+                          <p className="text-blue-600">
+                            サイトのハンバーガーメニューに表示する項目を設定します。ドラッグ＆ドロップで順番を入れ替えられます。
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* グローバルナビゲーション項目一覧 */}
+                    {/* ナビゲーション項目一覧 */}
                     <div className="space-y-3">
                       <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
-                        onDragEnd={handleGlobalNavDragEnd}
+                        onDragEnd={handleNavigationDragEnd}
                       >
                         <SortableContext
-                          items={(theme.menuSettings?.globalNavItems || []).map(item => item.id)}
+                          items={(theme.menuSettings?.navigationItems || []).map(item => item.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {(theme.menuSettings?.globalNavItems || []).map((item) => (
+                          {(theme.menuSettings?.navigationItems || []).map((item) => (
                             <SortableNavigationItem
                               key={item.id}
                               item={item}
                               pages={pages}
                               categories={categories}
-                              onUpdate={updateGlobalNavItem}
-                              onRemove={removeGlobalNavItem}
+                              onUpdate={updateNavigationItem}
+                              onRemove={removeNavigationItem}
                             />
                           ))}
                         </SortableContext>
                       </DndContext>
 
                       {/* 項目がない場合 */}
-                      {(!theme.menuSettings?.globalNavItems || theme.menuSettings.globalNavItems.length === 0) && (
+                      {(!theme.menuSettings?.navigationItems || theme.menuSettings.navigationItems.length === 0) && (
                         <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
-                          グローバルメニュー項目がありません。下のボタンから追加してください。
+                          メニュー項目がありません。下のボタンから追加してください。
                         </div>
                       )}
                     </div>
@@ -1471,13 +1470,13 @@ export default function ThemePage() {
                     {/* 追加ボタン */}
                     <button
                       type="button"
-                      onClick={addGlobalNavItem}
-                      className="w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2"
+                      onClick={addNavigationItem}
+                      className="w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      グローバルメニュー項目を追加
+                      ハンバーガーメニュー項目を追加
                     </button>
                   </div>
                 </div>

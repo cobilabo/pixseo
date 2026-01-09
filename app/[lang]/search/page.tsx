@@ -170,8 +170,13 @@ export default async function SearchPage({ params }: PageProps) {
           lang={lang}
         />
 
-      {/* カテゴリーバー（透明背景・上半分） */}
-      <CategoryBar categories={categories} variant="half" lang={lang} />
+      {/* カテゴリーバー / グローバルメニュー */}
+      <CategoryBar 
+        categories={categories} 
+        variant="half" 
+        lang={lang} 
+        globalNavItems={rawTheme.menuSettings?.globalNavItems}
+      />
 
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
       <div className="relative -mt-24 pt-16 md:pt-32" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
