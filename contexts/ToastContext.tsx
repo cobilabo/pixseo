@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -26,6 +26,7 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // トーストを追加する関数（内部用）
@@ -39,7 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }, 3000);
   }, []);
 
-  // ページ読み込み時に保存されたトーストを確認
+  // ページ遷移時に保存されたトーストを確認（pathname が変わるたびに実行）
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
@@ -56,7 +57,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem(TOAST_STORAGE_KEY);
       }
     }
-  }, [addToastInternal]);
+  }, [pathname, addToastInternal]);
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
