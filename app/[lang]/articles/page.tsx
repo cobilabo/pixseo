@@ -19,6 +19,9 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
+import SearchWidget from '@/components/search/SearchWidget';
+import { getTagsServer } from '@/lib/firebase/tags-server';
+import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 
 interface PageProps {
   params: {
@@ -82,8 +85,8 @@ export default async function ArticlesPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
   
-  // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
+  // サイト設定、Theme、記事、カテゴリー、タグ、人気タグを並列取得
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
@@ -91,6 +94,8 @@ export default async function ArticlesPage({ params }: PageProps) {
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
+    getTagsServer(),
+    mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
   ]);
   
   // 多言語化
@@ -104,10 +109,19 @@ export default async function ArticlesPage({ params }: PageProps) {
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
-  // おすすめ記事（おすすめカテゴリーに属する記事、なければ一覧の記事をフォールバック）
+  // おすすめ記事（おすすめカテゴリーに属する記事、なければ人気記事をフォールバック）
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
-    : localizedArticles;
+    : localizedPopularArticles;
+  
+  // タグのローカライズ（SearchWidget用）
+  const sidebarTags = allTags
+    .filter(tag => !mediaId || tag.mediaId === mediaId)
+    .map(tag => ({
+      id: tag.id,
+      name: (tag as any)[`name_${lang}`] || tag.name,
+      slug: tag.slug,
+    }));
   
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -199,6 +213,18 @@ export default async function ArticlesPage({ params }: PageProps) {
 
           {/* サイドバー（30%） */}
           <aside className="w-full lg:w-[30%] space-y-6">
+            {/* 検索ウィジェット（ふらっとテーマ専用・サイドバー表示の場合） */}
+            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
+              <SearchWidget
+                searchSettings={rawTheme.searchSettings}
+                mediaId={mediaId || undefined}
+                lang={lang}
+                tags={sidebarTags}
+                popularTags={popularSearchTags}
+                variant="compact"
+              />
+            )}
+
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
