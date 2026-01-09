@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getTagServer, getTagsServer } from '@/lib/firebase/tags-server';
+import { getTagServer } from '@/lib/firebase/tags-server';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
@@ -21,7 +21,6 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
-import SearchWidget from '@/components/search/SearchWidget';
 
 export const revalidate = 60;
 
@@ -85,7 +84,7 @@ export default async function TagPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ tagId: rawTag.id, limit: 30 }),
@@ -93,7 +92,6 @@ export default async function TagPage({ params }: PageProps) {
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
-    getTagsServer(),
   ]);
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -102,7 +100,6 @@ export default async function TagPage({ params }: PageProps) {
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
-  const sidebarTags = allTags.filter(tag => !mediaId || tag.mediaId === mediaId);
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedRecommendedArticles = recommendedArticles.length > 0
@@ -184,17 +181,6 @@ export default async function TagPage({ params }: PageProps) {
             </section>
           </div>
           <aside className="w-full lg:w-[30%] space-y-6">
-            {/* 検索ウィジェット */}
-            {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
-              <SearchWidget
-                searchSettings={rawTheme.searchSettings}
-                mediaId={mediaId || undefined}
-                lang={lang}
-                tags={sidebarTags}
-                variant="compact"
-              />
-            )}
-
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
