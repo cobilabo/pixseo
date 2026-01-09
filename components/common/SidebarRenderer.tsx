@@ -36,19 +36,39 @@ export default function SidebarRenderer({
   categories,
   lang = 'ja',
 }: SidebarRendererProps) {
-  // 設定がない場合はデフォルト設定を使用
-  // 新形式が空でも、旧形式があればそれを使用
+  // 有効なHTMLアイテム（旧形式）があるか確認
+  const validLegacyHtmlItems = (sideContentHtmlItems || []).filter(
+    item => item.isEnabled && item.htmlCode?.trim()
+  );
+  
+  // 新形式のアイテムを取得
   let items: SideContentItem[];
   
   if (sideContentItems && sideContentItems.length > 0) {
+    // 新形式が存在する場合はそれを使用
     items = [...sideContentItems].sort((a, b) => a.order - b.order);
-  } else if (sideContentHtmlItems && sideContentHtmlItems.length > 0) {
-    // 旧形式のみがある場合、デフォルト + 旧形式を組み合わせ
+    
+    // 新形式にHTML項目が含まれていない場合、旧形式のHTMLアイテムを追加
+    const hasHtmlInNewFormat = items.some(item => item.type === 'html');
+    if (!hasHtmlInNewFormat && validLegacyHtmlItems.length > 0) {
+      const maxOrder = Math.max(...items.map(item => item.order), -1);
+      const migratedHtmlItems: SideContentItem[] = validLegacyHtmlItems.map((item, index) => ({
+        id: item.id || `legacy-html-${index}`,
+        type: 'html' as const,
+        isEnabled: true,
+        order: maxOrder + 1 + index,
+        title: item.title,
+        htmlCode: item.htmlCode,
+      }));
+      items = [...items, ...migratedHtmlItems];
+    }
+  } else if (validLegacyHtmlItems.length > 0) {
+    // 新形式がなく、旧形式のみがある場合、デフォルト + 旧形式を組み合わせ
     const defaultItems = getDefaultSideContentItems();
-    const migratedHtmlItems: SideContentItem[] = sideContentHtmlItems.map((item, index) => ({
+    const migratedHtmlItems: SideContentItem[] = validLegacyHtmlItems.map((item, index) => ({
       id: item.id || `legacy-html-${index}`,
       type: 'html' as const,
-      isEnabled: item.isEnabled,
+      isEnabled: true,
       order: defaultItems.length + index,
       title: item.title,
       htmlCode: item.htmlCode,
