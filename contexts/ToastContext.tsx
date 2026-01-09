@@ -32,7 +32,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   // トーストを追加する関数（内部用）
   const addToastInternal = useCallback((message: string, type: ToastType) => {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    console.log('[Toast] addToastInternal - id:', id, 'message:', message, 'type:', type);
+    setToasts((prev) => {
+      const newToasts = [...prev, { id, message, type }];
+      console.log('[Toast] New toasts state:', newToasts);
+      return newToasts;
+    });
 
     // 3秒後に自動的に消える
     setTimeout(() => {
@@ -44,16 +49,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    console.log('[Toast] Checking sessionStorage, pathname:', pathname);
     const savedToast = sessionStorage.getItem(TOAST_STORAGE_KEY);
+    console.log('[Toast] Saved toast:', savedToast);
     if (savedToast) {
       try {
         const { message, type } = JSON.parse(savedToast);
+        console.log('[Toast] Parsed toast - message:', message, 'type:', type);
         sessionStorage.removeItem(TOAST_STORAGE_KEY);
         // 少し遅延させて表示（ページ遷移後のレンダリングを待つ）
         setTimeout(() => {
+          console.log('[Toast] Adding toast to state');
           addToastInternal(message, type);
         }, 100);
       } catch (e) {
+        console.error('[Toast] Parse error:', e);
         sessionStorage.removeItem(TOAST_STORAGE_KEY);
       }
     }
@@ -79,8 +89,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   // 成功トーストを表示してからページ遷移
   const showSuccessAndNavigate = useCallback((message: string, path: string) => {
+    console.log('[Toast] showSuccessAndNavigate called - message:', message, 'path:', path);
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type: 'success' }));
+      console.log('[Toast] Saved to sessionStorage:', sessionStorage.getItem(TOAST_STORAGE_KEY));
     }
     router.push(path);
   }, [router]);
