@@ -204,7 +204,7 @@ export default function ThemePage() {
   const fetchCategories = async () => {
     try {
       const data: Category[] = await apiGet('/api/admin/categories');
-      setCategories(data.sort((a, b) => a.order - b.order));
+      setCategories(data.sort((a, b) => (a.order || 0) - (b.order || 0)));
     } catch (error) {
       console.error('カテゴリーの取得に失敗しました:', error);
     }
