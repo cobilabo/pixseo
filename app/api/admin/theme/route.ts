@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { defaultTheme } from '@/types/theme';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { clearThemeCache } from '@/lib/firebase/theme-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -239,6 +240,9 @@ export async function PUT(request: NextRequest) {
       theme,
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // テーマキャッシュをクリア
+    clearThemeCache(mediaId);
 
     return NextResponse.json({ 
       message: 'デザイン設定を更新しました',

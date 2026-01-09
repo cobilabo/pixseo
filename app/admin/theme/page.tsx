@@ -251,6 +251,22 @@ export default function ThemePage() {
         snsSettings: {
           ...fetchedTheme.snsSettings,
         },
+        searchSettings: {
+          ...defaultSearchSettings,
+          ...fetchedTheme.searchSettings,
+          displayPages: {
+            ...defaultSearchSettings.displayPages,
+            ...fetchedTheme.searchSettings?.displayPages,
+          },
+          searchTypes: {
+            ...defaultSearchSettings.searchTypes,
+            ...fetchedTheme.searchSettings?.searchTypes,
+          },
+          popularTagsSettings: {
+            ...defaultSearchSettings.popularTagsSettings,
+            ...fetchedTheme.searchSettings?.popularTagsSettings,
+          },
+        },
         articleSettings: {
           internalLinkStyle: fetchedTheme.articleSettings?.internalLinkStyle || 'text',
         },
