@@ -4,8 +4,8 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTagServer } from '@/lib/firebase/tags-server';
-import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
-import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -18,10 +18,9 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import PopularArticles from '@/components/common/PopularArticles';
-import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 
 export const revalidate = 60;
 
@@ -85,19 +84,27 @@ export default async function TagPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, popularArticles, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ tagId: rawTag.id, limit: 30 }),
     getPopularArticlesServer(10, mediaId || undefined),
+    getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
   ]);
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
   const categories = allCategories.filter(cat => !mediaId || cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(art => localizeArticle(art, lang))
+    : localizedArticles;
   
   const combinedStyles = getCombinedStyles(rawTheme);
   const footerBlocks = rawTheme.footerBlocks?.filter((block: any) => block.imageUrl) || [];
@@ -174,8 +181,15 @@ export default async function TagPage({ params }: PageProps) {
             </section>
           </div>
           <aside className="w-full lg:w-[30%] space-y-6">
-            <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
-            <RecommendedArticles articles={localizedArticles} categories={allCategories} lang={lang} />
+            {/* サイドコンテンツ（設定に基づく） */}
+            <SidebarRenderer
+              sideContentItems={rawTheme.sideContentItems}
+              sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              popularArticles={localizedPopularArticles}
+              recommendedArticles={localizedRecommendedArticles}
+              categories={categoriesWithCount}
+              lang={lang}
+            />
             {footerBlocks.length > 0 && <SidebarBanners blocks={footerBlocks} />}
             {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
           </aside>

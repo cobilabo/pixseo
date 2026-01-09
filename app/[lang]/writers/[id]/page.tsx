@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { getWriterServer, getArticlesByWriterServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
-import { getCategoriesServer as getAllCategoriesServer } from '@/lib/firebase/categories-server';
+import { getWriterServer, getArticlesByWriterServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -16,10 +16,9 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import PopularArticles from '@/components/common/PopularArticles';
-import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -85,19 +84,27 @@ export default async function WriterPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, allCategories, popularArticles] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles] = await Promise.all([
     mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
     getArticlesByWriterServer(params.id, mediaId || undefined),
     getAllCategoriesServer(),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
+    getRecommendedArticlesServer(10, mediaId || undefined),
   ]);
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
   const headerCategories = mediaId ? allCategories.filter(cat => cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang)) : allCategories.map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(art => localizeArticle(art, lang))
+    : localizedArticles;
 
   const combinedStyles = getCombinedStyles(rawTheme);
   const footerBlocks = rawTheme.footerBlocks?.filter((block: any) => block.imageUrl) || [];
@@ -158,8 +165,15 @@ export default async function WriterPage({ params }: PageProps) {
             </section>
           </div>
           <aside className="w-full lg:w-[30%] space-y-6">
-            <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
-            <RecommendedArticles articles={localizedArticles} categories={allCategories} lang={lang} />
+            {/* サイドコンテンツ（設定に基づく） */}
+            <SidebarRenderer
+              sideContentItems={rawTheme.sideContentItems}
+              sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              popularArticles={localizedPopularArticles}
+              recommendedArticles={localizedRecommendedArticles}
+              categories={categoriesWithCount}
+              lang={lang}
+            />
             {footerBlocks.length > 0 && <SidebarBanners blocks={footerBlocks} />}
             {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
           </aside>

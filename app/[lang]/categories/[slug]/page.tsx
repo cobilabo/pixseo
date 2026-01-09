@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getCategoryServer, getCategoriesServer } from '@/lib/firebase/categories-server';
-import { getArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import { getCategoryServer, getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
+import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -17,10 +17,9 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import PopularArticles from '@/components/common/PopularArticles';
-import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 
 // ISR: 60秒ごとに再生成
 export const revalidate = 60;
@@ -97,12 +96,14 @@ export default async function CategoryPage({ params }: PageProps) {
   const host = headersList.get('host') || '';
 
   // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ categoryId: rawCategory.id, limit: 30 }),
     getPopularArticlesServer(10, mediaId || undefined),
+    getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
   ]);
   
   // 多言語化
@@ -111,8 +112,14 @@ export default async function CategoryPage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecommendedArticles = recommendedArticles.length > 0
+    ? recommendedArticles.map(art => localizeArticle(art, lang))
+    : localizedArticles;
   
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -229,8 +236,15 @@ export default async function CategoryPage({ params }: PageProps) {
           </div>
 
           <aside className="w-full lg:w-[30%] space-y-6">
-            <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
-            <RecommendedArticles articles={localizedArticles} categories={allCategories} lang={lang} />
+            {/* サイドコンテンツ（設定に基づく） */}
+            <SidebarRenderer
+              sideContentItems={rawTheme.sideContentItems}
+              sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              popularArticles={localizedPopularArticles}
+              recommendedArticles={localizedRecommendedArticles}
+              categories={categoriesWithCount}
+              lang={lang}
+            />
             {footerBlocks.length > 0 && <SidebarBanners blocks={footerBlocks} />}
             {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
           </aside>

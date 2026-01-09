@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
-import { getCategoriesServer } from '@/lib/firebase/categories-server';
+import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -16,10 +16,9 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import PopularArticles from '@/components/common/PopularArticles';
-import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
 import SidebarBanners from '@/components/common/SidebarBanners';
+import SidebarRenderer from '@/components/common/SidebarRenderer';
 
 interface PageProps {
   params: {
@@ -84,13 +83,14 @@ export default async function ArticlesPage({ params }: PageProps) {
   const host = headersList.get('host') || '';
   
   // サイト設定、Theme、記事、カテゴリーを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
+    getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
   ]);
   
   // 多言語化
@@ -99,6 +99,9 @@ export default async function ArticlesPage({ params }: PageProps) {
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
+  const categoriesWithCount = allCategoriesWithCount
+    .filter(cat => !mediaId || cat.mediaId === mediaId)
+    .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   // おすすめ記事（おすすめカテゴリーに属する記事、なければ一覧の記事をフォールバック）
@@ -196,11 +199,15 @@ export default async function ArticlesPage({ params }: PageProps) {
 
           {/* サイドバー（30%） */}
           <aside className="w-full lg:w-[30%] space-y-6">
-            {/* 人気記事 */}
-            <PopularArticles articles={localizedPopularArticles} categories={allCategories} lang={lang} />
-
-            {/* おすすめ記事 */}
-            <RecommendedArticles articles={localizedRecommendedArticles} categories={allCategories} lang={lang} />
+            {/* サイドコンテンツ（設定に基づく） */}
+            <SidebarRenderer
+              sideContentItems={rawTheme.sideContentItems}
+              sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              popularArticles={localizedPopularArticles}
+              recommendedArticles={localizedRecommendedArticles}
+              categories={categoriesWithCount}
+              lang={lang}
+            />
 
             {/* バナーエリア */}
             {footerBlocks.length > 0 && (
