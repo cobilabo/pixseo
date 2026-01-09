@@ -24,7 +24,7 @@ import { FAQItem } from '@/types/article';
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showSuccessAndRedirect } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -470,8 +470,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       console.log('[handleSubmit] 更新成功');
 
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
-      showSuccess('記事を更新しました');
-      window.location.href = '/articles';
+      showSuccessAndRedirect('記事を更新しました', '/admin/articles');
     } catch (error) {
       console.error('[handleSubmit] エラー:', error);
       showError('記事の保存に失敗しました');

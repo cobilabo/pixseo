@@ -18,6 +18,7 @@ interface ToastContextType {
   showWarning: (message: string) => void;
   showInfo: (message: string) => void;
   showSuccessAndNavigate: (message: string, path: string) => void;
+  showSuccessAndRedirect: (message: string, path: string) => void;
 }
 
 const TOAST_STORAGE_KEY = 'pending_toast';
@@ -73,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showWarning = useCallback((message: string) => showToast(message, 'warning'), [showToast]);
   const showInfo = useCallback((message: string) => showToast(message, 'info'), [showToast]);
 
-  // 成功トーストを表示してからページ遷移
+  // 成功トーストを表示してからページ遷移（router.push）
   const showSuccessAndNavigate = useCallback((message: string, path: string) => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type: 'success' }));
@@ -81,8 +82,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     router.push(path);
   }, [router]);
 
+  // 成功トーストを表示してからページ遷移（完全リロード）
+  const showSuccessAndRedirect = useCallback((message: string, path: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify({ message, type: 'success' }));
+      window.location.href = path;
+    }
+  }, []);
+
   return (
-    <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo, showSuccessAndNavigate }}>
+    <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo, showSuccessAndNavigate, showSuccessAndRedirect }}>
       {children}
       
       {/* トースト表示エリア */}

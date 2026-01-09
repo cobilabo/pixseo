@@ -25,7 +25,7 @@ function NewArticlePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showSuccessAndRedirect } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -324,8 +324,7 @@ function NewArticlePageContent() {
       console.log('[handleSubmit] 作成成功');
       
       // 一覧ページにリダイレクト（完全リロードでデータを再取得）
-      showSuccess('記事を作成しました');
-      window.location.href = '/articles';
+      showSuccessAndRedirect('記事を作成しました', '/admin/articles');
     } catch (error) {
       console.error('Error:', error);
       showError('記事の保存に失敗しました');
