@@ -13,6 +13,7 @@ import {
 } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
+import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
@@ -224,8 +225,8 @@ export default async function ArticlePage({ params }: PageProps) {
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
 
-  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、全タグ、人気記事を並行取得
-  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles] = await Promise.all([
+  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、全タグ、人気記事、よく検索されているタグを並行取得
+  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, popularSearchTags] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
     rawArticle.writerId ? getWriterServer(rawArticle.writerId).catch(() => null) : Promise.resolve(null),
@@ -235,6 +236,7 @@ export default async function ArticlePage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }).catch(() => []),
     getAllTagsServer().catch(() => []),
     getPopularArticlesServer(10, mediaId || undefined).catch(() => []),
+    mediaId ? getPopularSearchTagsServer(mediaId, 30, 20).catch(() => []) : Promise.resolve([]),
   ]);
   
   // 多言語化
@@ -427,6 +429,7 @@ export default async function ArticlePage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={sidebarTags}
+                  popularTags={popularSearchTags}
                 />
               </div>
             )}
@@ -503,6 +506,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 mediaId={mediaId || undefined}
                 lang={lang}
                 tags={sidebarTags}
+                popularTags={popularSearchTags}
                 variant="compact"
               />
             )}

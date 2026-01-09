@@ -6,6 +6,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getRecentArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
+import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
@@ -137,7 +138,7 @@ export default async function HomePage({ params }: PageProps) {
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
   
   // すべてのデータを並列取得（homeページチェックも含む）
-  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags] = await Promise.all([
+  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     mediaId ? getHomePage(mediaId) : Promise.resolve(null),
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
@@ -147,6 +148,7 @@ export default async function HomePage({ params }: PageProps) {
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
+    mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
   ]);
   
   // 多言語化
@@ -277,6 +279,7 @@ export default async function HomePage({ params }: PageProps) {
                         mediaId={mediaId || undefined}
                         lang={lang}
                         tags={tags}
+                        popularTags={popularSearchTags}
                       />
                     </div>
                   )}
@@ -292,6 +295,7 @@ export default async function HomePage({ params }: PageProps) {
                       mediaId={mediaId || undefined}
                       lang={lang}
                       tags={tags}
+                      popularTags={popularSearchTags}
                       variant="compact"
                     />
                   )}

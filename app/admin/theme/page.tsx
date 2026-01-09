@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -788,29 +788,61 @@ export default function ThemePage() {
       articlePages: false,
       sidebar: true,
     },
-    searchBoxType: 'keyword',
+    searchTypes: {
+      keywordSearch: true,
+      tagSearch: false,
+      popularTags: false,
+    },
+    popularTagsSettings: {
+      displayCount: 10,
+    },
   };
 
-  // 検索設定の更新
-  const updateSearchSettings = (field: keyof SearchSettings['displayPages'] | 'searchBoxType', value: boolean | SearchBoxType) => {
+  // 検索設定の更新（表示ページ）
+  const updateSearchDisplayPages = (field: keyof SearchSettings['displayPages'], value: boolean) => {
     setTheme(prev => {
       const currentSettings = prev.searchSettings || defaultSearchSettings;
-      if (field === 'searchBoxType') {
-        return {
-          ...prev,
-          searchSettings: {
-            ...currentSettings,
-            searchBoxType: value as SearchBoxType,
-          },
-        };
-      }
       return {
         ...prev,
         searchSettings: {
           ...currentSettings,
           displayPages: {
             ...currentSettings.displayPages,
-            [field]: value as boolean,
+            [field]: value,
+          },
+        },
+      };
+    });
+  };
+
+  // 検索設定の更新（検索の種類）
+  const updateSearchTypes = (field: keyof SearchSettings['searchTypes'], value: boolean) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          searchTypes: {
+            ...(currentSettings.searchTypes || defaultSearchSettings.searchTypes),
+            [field]: value,
+          },
+        },
+      };
+    });
+  };
+
+  // よく検索されているタグの表示件数を更新
+  const updatePopularTagsDisplayCount = (count: number) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          popularTagsSettings: {
+            ...(currentSettings.popularTagsSettings || defaultSearchSettings.popularTagsSettings),
+            displayCount: count,
           },
         },
       };
@@ -1636,7 +1668,7 @@ export default function ThemePage() {
                           <input
                             type="checkbox"
                             checked={theme.searchSettings?.displayPages?.[key as keyof SearchSettings['displayPages']] ?? (key === 'sidebar')}
-                            onChange={(e) => updateSearchSettings(key as keyof SearchSettings['displayPages'], e.target.checked)}
+                            onChange={(e) => updateSearchDisplayPages(key as keyof SearchSettings['displayPages'], e.target.checked)}
                             className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                           />
                           <div>
@@ -1648,34 +1680,58 @@ export default function ThemePage() {
                     </div>
                   </div>
 
-                  {/* 検索ボックスの種類 */}
+                  {/* 検索の種類 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4">検索ボックスの種類</label>
-                    <div className="flex flex-wrap gap-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">検索の種類</label>
+                    <p className="text-sm text-gray-500 mb-4">表示する検索機能を選択してください（複数選択可）</p>
+                    <div className="space-y-3">
                       {[
-                        { value: 'keyword', label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
-                        { value: 'tag', label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
-                        { value: 'both', label: '両方表示', icon: '📑', description: 'キーワード検索とタグ検索を両方表示' },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => updateSearchSettings('searchBoxType', option.value as SearchBoxType)}
-                          className={`flex-1 min-w-[200px] p-4 rounded-xl border-2 transition-all text-left ${
-                            (theme.searchSettings?.searchBoxType || 'keyword') === option.value
-                              ? 'bg-blue-50 text-blue-700 border-blue-500'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                          }`}
+                        { key: 'keywordSearch', label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
+                        { key: 'tagSearch', label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
+                        { key: 'popularTags', label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
+                      ].map(({ key, label, icon, description }) => (
+                        <label
+                          key={key}
+                          className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                         >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg">{option.icon}</span>
-                            <span className="font-medium">{option.label}</span>
+                          <input
+                            type="checkbox"
+                            checked={theme.searchSettings?.searchTypes?.[key as keyof SearchSettings['searchTypes']] ?? (key === 'keywordSearch')}
+                            onChange={(e) => updateSearchTypes(key as keyof SearchSettings['searchTypes'], e.target.checked)}
+                            className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{icon}</span>
+                              <span className="font-medium text-gray-900">{label}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">{description}</p>
                           </div>
-                          <p className="text-xs text-gray-500">{option.description}</p>
-                        </button>
+                        </label>
                       ))}
                     </div>
                   </div>
+
+                  {/* よく検索されているタグの表示件数 */}
+                  {theme.searchSettings?.searchTypes?.popularTags && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                      <label className="block text-sm font-medium text-orange-700 mb-3">
+                        よく検索されているタグの表示件数
+                      </label>
+                      <select
+                        value={theme.searchSettings?.popularTagsSettings?.displayCount || 10}
+                        onChange={(e) => updatePopularTagsDisplayCount(parseInt(e.target.value))}
+                        className="w-full px-4 py-2 border border-orange-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        {[5, 10, 15, 20, 30].map(num => (
+                          <option key={num} value={num}>{num}件</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-orange-600 mt-2">
+                        直近1ヶ月の検索履歴から、検索回数が多いタグを上位から表示します
+                      </p>
+                    </div>
+                  )}
 
                   {/* 検索ログについての説明 */}
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">

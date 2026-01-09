@@ -138,13 +138,25 @@ export interface SearchDisplayPages {
   sidebar: boolean;           // サイドコンテンツ内
 }
 
-// 検索ボックスの種類
-export type SearchBoxType = 'keyword' | 'tag' | 'both';
+// 検索の種類（チェックボックス形式）
+export interface SearchTypes {
+  keywordSearch: boolean;      // キーワード検索
+  tagSearch: boolean;          // タグ検索（プルダウン）
+  popularTags: boolean;        // よく検索されているタグ
+}
+
+// よく検索されているタグの設定
+export interface PopularTagsSettings {
+  displayCount: number;        // 表示件数（デフォルト: 10）
+}
 
 // 検索設定の定義（ふらっとテーマ専用）
 export interface SearchSettings {
-  displayPages: SearchDisplayPages;  // 表示対象ページ
-  searchBoxType: SearchBoxType;      // 検索ボックスの種類
+  displayPages: SearchDisplayPages;    // 表示対象ページ
+  searchTypes: SearchTypes;            // 検索の種類
+  popularTagsSettings: PopularTagsSettings;  // よく検索されているタグの設定
+  // 後方互換性のため残す（廃止予定）
+  searchBoxType?: 'keyword' | 'tag' | 'both';
 }
 
 // サイドコンテンツ項目タイプの定義

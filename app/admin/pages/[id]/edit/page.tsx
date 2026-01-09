@@ -600,14 +600,14 @@ export default function EditPagePage() {
 
               {/* グローバルナビゲーション表示 */}
               <CustomCheckbox
-                label="グローバルナビゲーション表示（カテゴリーバー）"
+                label="グローバルナビゲーション表示"
                 checked={formData.showGlobalNav}
                 onChange={(checked) => setFormData({ ...formData, showGlobalNav: checked })}
               />
 
               {/* サイドバー表示 */}
               <CustomCheckbox
-                label="サイドバー表示（人気記事・おすすめ記事など）"
+                label="サイドバー表示"
                 checked={formData.showSidebar}
                 onChange={(checked) => setFormData({ ...formData, showSidebar: checked })}
               />

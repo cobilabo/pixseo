@@ -2,16 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SearchSettings, SearchBoxType } from '@/types/theme';
+import { SearchSettings } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import TagSearchDropdown from './TagSearchDropdown';
+
+interface PopularTag {
+  value: string;
+  displayName?: string;
+  count: number;
+}
 
 interface SearchWidgetProps {
   searchSettings?: SearchSettings;
   mediaId?: string;
   lang?: Lang;
   tags?: Array<{ id: string; name: string; slug: string }>;
+  popularTags?: PopularTag[];
   variant?: 'default' | 'compact';
 }
 
@@ -20,13 +27,29 @@ export default function SearchWidget({
   mediaId, 
   lang = 'ja',
   tags = [],
+  popularTags = [],
   variant = 'default'
 }: SearchWidgetProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const searchBoxType: SearchBoxType = searchSettings?.searchBoxType || 'keyword';
+  // 新形式の検索タイプを取得（後方互換性対応）
+  const getSearchTypes = () => {
+    if (searchSettings?.searchTypes) {
+      return searchSettings.searchTypes;
+    }
+    // 後方互換性: searchBoxType から変換
+    const oldType = searchSettings?.searchBoxType || 'keyword';
+    return {
+      keywordSearch: oldType === 'keyword' || oldType === 'both',
+      tagSearch: oldType === 'tag' || oldType === 'both',
+      popularTags: false,
+    };
+  };
+
+  const searchTypes = getSearchTypes();
+  const popularTagsCount = searchSettings?.popularTagsSettings?.displayCount || 10;
 
   // キーワード検索 - 検索ページへ遷移
   const handleKeywordSearch = async (e: React.FormEvent) => {
@@ -51,7 +74,17 @@ export default function SearchWidget({
     setIsSubmitting(false);
   };
 
+  // よく検索されているタグをクリック
+  const handlePopularTagClick = (tagName: string) => {
+    setIsSubmitting(true);
+    router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
+    setIsSubmitting(false);
+  };
+
   const isCompact = variant === 'compact';
+
+  // 表示するよく検索されているタグ
+  const displayPopularTags = popularTags.slice(0, popularTagsCount);
 
   return (
     <div className={`bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`}>
@@ -61,7 +94,7 @@ export default function SearchWidget({
 
       <div className="space-y-4">
         {/* キーワード検索 */}
-        {(searchBoxType === 'keyword' || searchBoxType === 'both') && (
+        {searchTypes.keywordSearch && (
           <form onSubmit={handleKeywordSearch}>
             <div className="relative">
               <input
@@ -92,8 +125,8 @@ export default function SearchWidget({
           </form>
         )}
 
-        {/* タグ検索 */}
-        {(searchBoxType === 'tag' || searchBoxType === 'both') && tags.length > 0 && (
+        {/* タグ検索（プルダウン） */}
+        {searchTypes.tagSearch && tags.length > 0 && (
           <TagSearchDropdown
             tags={tags}
             onSelect={handleTagSearch}
@@ -101,6 +134,30 @@ export default function SearchWidget({
             lang={lang}
             isCompact={isCompact}
           />
+        )}
+
+        {/* よく検索されているタグ */}
+        {searchTypes.popularTags && displayPopularTags.length > 0 && (
+          <div>
+            <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`}>
+              {t('search.popularTags', lang)}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {displayPopularTags.map((tag, index) => (
+                <button
+                  key={`${tag.value}-${index}`}
+                  onClick={() => handlePopularTagClick(tag.displayName || tag.value)}
+                  disabled={isSubmitting}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-full hover:bg-orange-100 transition-colors disabled:opacity-50 ${
+                    isCompact ? 'text-xs' : 'text-sm'
+                  }`}
+                >
+                  <span className="text-orange-500">🔥</span>
+                  <span>{tag.displayName || tag.value}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
+import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -126,11 +127,12 @@ export default async function FixedPage({ params }: PageProps) {
   const showSidebar = rawPage.showSidebar || false;
   
   // 基本データの取得
-  const [rawSiteInfo, rawTheme, allTags, allCategories] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId),
     getTheme(mediaId),
     getTagsServer(),
     getCategoriesServer(),
+    getPopularSearchTagsServer(mediaId, 30, 20),
   ]);
   
   // サイドバー表示時のみ記事データを取得
@@ -250,6 +252,7 @@ export default async function FixedPage({ params }: PageProps) {
                       mediaId={mediaId || undefined}
                       lang={lang}
                       tags={sidebarTags}
+                      popularTags={popularSearchTags}
                     />
                   </div>
                 )}
@@ -265,6 +268,7 @@ export default async function FixedPage({ params }: PageProps) {
                     mediaId={mediaId || undefined}
                     lang={lang}
                     tags={sidebarTags}
+                    popularTags={popularSearchTags}
                     variant="compact"
                   />
                 )}

@@ -60,6 +60,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.noTags': 'タグがありません',
     'search.tagSearchResults': 'タグ検索結果',
     'search.categorySearchResults': 'カテゴリー検索結果',
+    'search.popularTags': 'よく検索されているタグ',
     
     // メッセージ
     'message.noArticles': '記事がまだありません',
@@ -138,6 +139,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.noTags': 'No tags available',
     'search.tagSearchResults': 'Tag search results',
     'search.categorySearchResults': 'Category search results',
+    'search.popularTags': 'Popular Tags',
     
     // Messages
     'message.noArticles': 'No articles yet',
@@ -216,6 +218,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.noTags': '暂无标签',
     'search.tagSearchResults': '标签搜索结果',
     'search.categorySearchResults': '分类搜索结果',
+    'search.popularTags': '热门标签',
     
     // 消息
     'message.noArticles': '暂无文章',
@@ -294,6 +297,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.noTags': '태그가 없습니다',
     'search.tagSearchResults': '태그 검색 결과',
     'search.categorySearchResults': '카테고리 검색 결과',
+    'search.popularTags': '인기 태그',
     
     // 메시지
     'message.noArticles': '아직 기사가 없습니다',

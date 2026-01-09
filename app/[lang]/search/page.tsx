@@ -14,6 +14,7 @@ import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-hel
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
+import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
@@ -92,8 +93,8 @@ export default async function SearchPage({ params }: PageProps) {
   // サーバーサイドでデータを取得
   const mediaId = await getMediaIdFromHost();
   
-  // サイト設定、Theme、カテゴリー、タグを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, recentArticles] = await Promise.all([
+  // サイト設定、Theme、カテゴリー、タグ、よく検索されているタグを並列取得
+  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, recentArticles, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
@@ -102,6 +103,7 @@ export default async function SearchPage({ params }: PageProps) {
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
+    mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
   ]);
 
   // 多言語化
@@ -199,6 +201,7 @@ export default async function SearchPage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={tags}
+                  popularTags={popularSearchTags}
                   variant="compact"
                 />
               )}
