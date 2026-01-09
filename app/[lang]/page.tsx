@@ -246,9 +246,13 @@ export default async function HomePage({ params }: PageProps) {
           lang={lang}
         />
 
-        {/* カテゴリーバー（グローバルナビゲーション表示時） */}
+        {/* カテゴリーバー / グローバルメニュー */}
         {showGlobalNav && (
-          <CategoryBar categories={categories} lang={lang} />
+          <CategoryBar 
+            categories={categories} 
+            lang={lang} 
+            globalNavItems={rawTheme.menuSettings?.globalNavItems}
+          />
         )}
 
         {/* メインコンテンツエリア */}
@@ -398,8 +402,12 @@ export default async function HomePage({ params }: PageProps) {
         lang={lang}
       />
 
-      {/* カテゴリーバー（透明背景・上半分） */}
-      <CategoryBar categories={categories} lang={lang} />
+      {/* カテゴリーバー / グローバルメニュー */}
+      <CategoryBar 
+        categories={categories} 
+        lang={lang} 
+        globalNavItems={rawTheme.menuSettings?.globalNavItems}
+      />
 
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
       <div className="relative -mt-24 pt-16 md:pt-32" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>

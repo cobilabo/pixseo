@@ -5,6 +5,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchBoxType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
 import { Page } from '@/types/page';
+import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -19,11 +20,13 @@ import { CSS } from '@dnd-kit/utilities';
 function SortableNavigationItem({ 
   item, 
   pages, 
+  categories,
   onUpdate, 
   onRemove 
 }: { 
   item: NavigationItem; 
   pages: Page[]; 
+  categories: Category[];
   onUpdate: (id: string, updates: Partial<NavigationItem>) => void;
   onRemove: (id: string) => void;
 }) {
@@ -40,6 +43,17 @@ function SortableNavigationItem({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  // 現在の選択値を決定
+  const getCurrentValue = () => {
+    if (item.type === 'page' && item.pageId) {
+      return `page:${item.pageId}`;
+    }
+    if (item.type === 'category' && item.categoryId) {
+      return `category:${item.categoryId}`;
+    }
+    return item.type;
   };
 
   return (
@@ -61,7 +75,7 @@ function SortableNavigationItem({
 
       {/* プルダウン選択 */}
       <select
-        value={item.type === 'page' ? `page:${item.pageId}` : item.type}
+        value={getCurrentValue()}
         onChange={(e) => {
           const value = e.target.value;
           if (value.startsWith('page:')) {
@@ -71,7 +85,20 @@ function SortableNavigationItem({
               type: 'page',
               pageId,
               pageSlug: page?.slug,
+              categoryId: undefined,
+              categorySlug: undefined,
               label: page?.title || '',
+            });
+          } else if (value.startsWith('category:')) {
+            const categoryId = value.replace('category:', '');
+            const category = categories.find(c => c.id === categoryId);
+            onUpdate(item.id, {
+              type: 'category',
+              categoryId,
+              categorySlug: category?.slug,
+              pageId: undefined,
+              pageSlug: undefined,
+              label: category?.name || '',
             });
           } else {
             const type = value as NavigationItemType;
@@ -83,6 +110,8 @@ function SortableNavigationItem({
               type,
               pageId: undefined,
               pageSlug: undefined,
+              categoryId: undefined,
+              categorySlug: undefined,
               label: defaultLabels[type as keyof typeof defaultLabels] || '',
             });
           }
@@ -95,6 +124,13 @@ function SortableNavigationItem({
           {pages.map(page => (
             <option key={page.id} value={`page:${page.id}`}>
               {page.title} (/{page.slug})
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="カテゴリー">
+          {categories.map(category => (
+            <option key={category.id} value={`category:${category.id}`}>
+              {category.name}
             </option>
           ))}
         </optgroup>
@@ -135,6 +171,9 @@ export default function ThemePage() {
   // 固定ページ一覧
   const [pages, setPages] = useState<Page[]>([]);
   
+  // カテゴリー一覧
+  const [categories, setCategories] = useState<Category[]>([]);
+  
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -147,6 +186,7 @@ export default function ThemePage() {
     if (currentTenant) {
       fetchThemeSettings();
       fetchPages();
+      fetchCategories();
     }
   }, [currentTenant]);
   
@@ -157,6 +197,16 @@ export default function ThemePage() {
       setPages(data.filter(p => p.isPublished).sort((a, b) => a.order - b.order));
     } catch (error) {
       console.error('固定ページの取得に失敗しました:', error);
+    }
+  };
+  
+  // カテゴリー一覧を取得
+  const fetchCategories = async () => {
+    try {
+      const data: Category[] = await apiGet('/api/admin/categories');
+      setCategories(data.sort((a, b) => a.order - b.order));
+    } catch (error) {
+      console.error('カテゴリーの取得に失敗しました:', error);
     }
   };
 
@@ -1341,6 +1391,7 @@ export default function ThemePage() {
                             key={item.id}
                             item={item}
                             pages={pages}
+                            categories={categories}
                             onUpdate={updateNavigationItem}
                             onRemove={removeNavigationItem}
                           />
@@ -1379,7 +1430,7 @@ export default function ThemePage() {
                         <div className="text-sm text-green-700">
                           <p className="font-medium mb-1">グローバルメニュー設定</p>
                           <p className="text-green-600">
-                            ヘッダーに常時表示されるグローバルメニューの項目を設定します。ドラッグ＆ドロップで順番を入れ替えられます。
+                            ヘッダー下のカテゴリーバー位置に表示される項目を設定します。設定すると、カテゴリー一覧の代わりにこのメニューが表示されます。ドラッグ＆ドロップで順番を入れ替えられます。
                           </p>
                         </div>
                       </div>
@@ -1401,6 +1452,7 @@ export default function ThemePage() {
                               key={item.id}
                               item={item}
                               pages={pages}
+                              categories={categories}
                               onUpdate={updateGlobalNavItem}
                               onRemove={removeGlobalNavItem}
                             />

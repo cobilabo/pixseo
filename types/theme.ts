@@ -92,7 +92,7 @@ export interface MenuItem {
 }
 
 // ナビゲーション項目タイプの定義
-export type NavigationItemType = 'top' | 'search' | 'page';
+export type NavigationItemType = 'top' | 'search' | 'page' | 'category';
 
 // ナビゲーション項目の定義（新形式）
 export interface NavigationItem {
@@ -101,6 +101,8 @@ export interface NavigationItem {
   label: string;              // 表示ラベル
   pageId?: string;            // 固定ページID（type='page'の場合）
   pageSlug?: string;          // 固定ページスラッグ（type='page'の場合）
+  categoryId?: string;        // カテゴリーID（type='category'の場合）
+  categorySlug?: string;      // カテゴリースラッグ（type='category'の場合）
   // 多言語フィールド
   label_ja?: string;
   label_en?: string;
