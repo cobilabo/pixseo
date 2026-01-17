@@ -573,14 +573,12 @@ export default function NewPagePage() {
                   label="カスタムロゴURL"
                   value={formData.customLogoUrl}
                   onChange={(value) => setFormData({ ...formData, customLogoUrl: value })}
-                  placeholder="https://example.com/custom-logo.png"
                 />
                 
                 <FloatingInput
                   label="カスタムサイト名"
                   value={formData.customSiteName}
                   onChange={(value) => setFormData({ ...formData, customSiteName: value })}
-                  placeholder="例: メディアページ"
                 />
               </div>
 
