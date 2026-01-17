@@ -80,6 +80,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}件の記事',
+    
+    // ページネーション
+    'pagination.previous': '前へ',
+    'pagination.next': '次へ',
   },
   en: {
     // Common
@@ -159,6 +163,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count} articles',
+    
+    // Pagination
+    'pagination.previous': 'Previous',
+    'pagination.next': 'Next',
   },
   zh: {
     // 共通
@@ -238,6 +246,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}篇文章',
+    
+    // 分页
+    'pagination.previous': '上一页',
+    'pagination.next': '下一页',
   },
   ko: {
     // 공통
@@ -317,6 +329,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}개의 기사',
+    
+    // ページネーション
+    'pagination.previous': '이전',
+    'pagination.next': '다음',
   },
 };
 

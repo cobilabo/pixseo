@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer, getArticlesCountServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
@@ -26,6 +26,9 @@ import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 interface PageProps {
   params: {
     lang: string;
+  };
+  searchParams: {
+    page?: string;
   };
 }
 
@@ -77,7 +80,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ArticlesPage({ params }: PageProps) {
+export default async function ArticlesPage({ params, searchParams }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   
   // mediaIdとhostを取得
@@ -85,11 +88,17 @@ export default async function ArticlesPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
   
-  // サイト設定、Theme、記事、カテゴリー、タグ、人気タグを並列取得
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  // ページネーション設定
+  const currentPage = parseInt(searchParams.page || '1', 10);
+  const articlesPerPage = 30;
+  const offset = (currentPage - 1) * articlesPerPage;
+  
+  // サイト設定、Theme、記事、総記事数、カテゴリー、タグ、人気タグを並列取得
+  const [rawSiteInfo, rawTheme, articles, totalArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
-    getArticlesServer({ limit: 30, mediaId: mediaId || undefined }),
+    getArticlesServer({ limit: articlesPerPage, offset, mediaId: mediaId || undefined }),
+    getArticlesCountServer(mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
@@ -113,6 +122,9 @@ export default async function ArticlesPage({ params }: PageProps) {
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
     : localizedPopularArticles;
+  
+  // ページネーション計算
+  const totalPages = Math.ceil(totalArticles / articlesPerPage);
   
   // タグのローカライズ（SearchWidget用）
   const sidebarTags = allTags
@@ -198,11 +210,70 @@ export default async function ArticlesPage({ params }: PageProps) {
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
               </div>
               {localizedArticles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {localizedArticles.map((article) => (
-                    <ArticleCard key={article.id} article={article} lang={lang} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {localizedArticles.map((article) => (
+                      <ArticleCard key={article.id} article={article} lang={lang} />
+                    ))}
+                  </div>
+                  
+                  {/* ページネーション */}
+                  {totalPages > 1 && (
+                    <div className="mt-12 flex justify-center items-center gap-2">
+                      {/* 前へボタン */}
+                      {currentPage > 1 && (
+                        <Link
+                          href={`/${lang}/articles?page=${currentPage - 1}`}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          ← {t('pagination.previous', lang)}
+                        </Link>
+                      )}
+                      
+                      {/* ページ番号 */}
+                      <div className="flex gap-2">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                          // 最初の3ページ、現在のページ周辺、最後の3ページのみ表示
+                          if (
+                            pageNum <= 3 ||
+                            pageNum >= totalPages - 2 ||
+                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                          ) {
+                            return (
+                              <Link
+                                key={pageNum}
+                                href={`/${lang}/articles?page=${pageNum}`}
+                                className={`px-4 py-2 rounded-lg transition-colors ${
+                                  pageNum === currentPage
+                                    ? 'bg-blue-600 text-white font-semibold'
+                                    : 'bg-white border border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                {pageNum}
+                              </Link>
+                            );
+                          } else if (
+                            pageNum === 4 ||
+                            pageNum === totalPages - 3
+                          ) {
+                            return <span key={pageNum} className="px-2 py-2">...</span>;
+                          }
+                          return null;
+                        })}
+                      </div>
+                      
+                      {/* 次へボタン */}
+                      {currentPage < totalPages && (
+                        <Link
+                          href={`/${lang}/articles?page=${currentPage + 1}`}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          {t('pagination.next', lang)} →
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <p className="text-gray-600">{t('message.noArticles', lang)}</p>

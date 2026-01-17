@@ -114,6 +114,7 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
 export const getArticlesServer = async (
   options: {
     limit?: number;
+    offset?: number;
     categoryId?: string;
     tagId?: string;
     mediaId?: string;
@@ -133,6 +134,7 @@ export const getArticlesServer = async (
       options.orderBy,
       options.orderDirection,
       options.limit,
+      options.offset,
       isPreview ? 'preview' : 'live'
     );
     
@@ -143,6 +145,7 @@ export const getArticlesServer = async (
     }
     
     const limitCount = options.limit || 30;
+    const offsetCount = options.offset || 0;
     const orderField = options.orderBy || 'publishedAt';
     const orderDir = options.orderDirection || 'desc';
     
@@ -174,7 +177,11 @@ export const getArticlesServer = async (
     if (!options.categoryId && !options.tagId) {
       // カテゴリー・タグフィルターがない場合はFirestoreでソートを試行
       try {
-        const indexedQuery = q.orderBy(orderField, orderDir).limit(limitCount * 2);
+        let indexedQuery = q.orderBy(orderField, orderDir);
+        if (offsetCount > 0) {
+          indexedQuery = indexedQuery.offset(offsetCount);
+        }
+        indexedQuery = indexedQuery.limit(limitCount * 2);
         snapshot = await indexedQuery.get();
         useIndexSort = true;
       } catch (indexError) {
@@ -884,3 +891,60 @@ export const getRecommendedArticlesServer = async (
   }
 };
 
+
+// 総記事数を取得（ページネーション用）
+export const getArticlesCountServer = async (
+  mediaId?: string
+): Promise<number> => {
+  try {
+    const isPreview = isPreviewMode();
+    
+    // キャッシュキー生成
+    const cacheKey = generateCacheKey(
+      'articles-count',
+      mediaId,
+      isPreview ? 'preview' : 'live'
+    );
+    
+    // キャッシュから取得
+    const cached = cacheManager.get<number>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached !== undefined) {
+      return cached;
+    }
+    
+    // Firestoreから取得
+    const articlesRef = adminDb.collection('articles');
+    let q: admin.firestore.Query = articlesRef;
+    
+    // プレビューモードでない場合のみ公開記事に絞る
+    if (!isPreview) {
+      q = q.where('isPublished', '==', true);
+    }
+    
+    // mediaIdが指定されている場合はフィルタリング
+    if (mediaId) {
+      q = q.where('mediaId', '==', mediaId);
+    }
+    
+    const snapshot = await q.get();
+    
+    // プレビューモードでない場合は公開日チェック
+    let count = snapshot.size;
+    if (!isPreview) {
+      const now = new Date();
+      count = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        const publishedAt = convertTimestamp(data.publishedAt);
+        return !publishedAt || publishedAt <= now;
+      }).length;
+    }
+    
+    // キャッシュに保存
+    cacheManager.set(cacheKey, count);
+    
+    return count;
+  } catch (error) {
+    console.error('[getArticlesCountServer] Error:', error);
+    return 0;
+  }
+};
