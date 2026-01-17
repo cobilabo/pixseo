@@ -433,48 +433,53 @@ export default async function HomePage({ params }: PageProps) {
               </div>
             )}
 
-            {/* 新着記事 */}
-            <section className="mb-12">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {localizedRecentArticles.length > 0 ? (
-                  localizedRecentArticles.map((article) => (
-                    <ArticleCard key={article.id} article={article} lang={lang} />
-                  ))
-                ) : (
-                  <p className="text-gray-500 col-span-full text-center py-8">
-                    {t('message.noArticles', lang)}
-                  </p>
-                )}
-              </div>
-            </section>
+            {/* 記事一覧（Cobiテーマのみ表示） */}
+            {rawTheme.layoutTheme !== 'furatto' && (
+              <>
+                {/* 新着記事 */}
+                <section className="mb-12">
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {localizedRecentArticles.length > 0 ? (
+                      localizedRecentArticles.map((article) => (
+                        <ArticleCard key={article.id} article={article} lang={lang} />
+                      ))
+                    ) : (
+                      <p className="text-gray-500 col-span-full text-center py-8">
+                        {t('message.noArticles', lang)}
+                      </p>
+                    )}
+                  </div>
+                </section>
 
-            {/* 人気記事ランキング */}
-            <section className="mb-12">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.popularArticles', lang)}</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.popularArticlesEn', lang)}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {localizedPopularArticles.length > 0 ? (
-                  localizedPopularArticles.map((article, index) => (
-                    <div key={article.id} className="relative">
-                      <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
-                        {index + 1}
-                      </span>
-                      <ArticleCard article={article} lang={lang} />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 col-span-full text-center py-8">
-                    {t('message.noArticles', lang)}
-                  </p>
-                )}
-              </div>
-            </section>
+                {/* 人気記事ランキング */}
+                <section className="mb-12">
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.popularArticles', lang)}</h2>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.popularArticlesEn', lang)}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {localizedPopularArticles.length > 0 ? (
+                      localizedPopularArticles.map((article, index) => (
+                        <div key={article.id} className="relative">
+                          <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
+                            {index + 1}
+                          </span>
+                          <ArticleCard article={article} lang={lang} />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 col-span-full text-center py-8">
+                        {t('message.noArticles', lang)}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
           </div>
 
           {/* サイドバー（30%） */}
