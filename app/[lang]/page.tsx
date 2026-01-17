@@ -501,7 +501,7 @@ export default async function HomePage({ params }: PageProps) {
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
               popularArticles={localizedPopularArticles}
               recommendedArticles={localizedRecommendedArticles}
-              categories={categoriesWithCount}
+              categories={rawTheme.layoutTheme === 'furatto' ? [] : categoriesWithCount}
               lang={lang}
             />
 
