@@ -58,5 +58,9 @@ export interface Page {
   
   // トップページ設定
   isHomePage?: boolean;      // トップページとして設定（slug='home'と連動）
+  
+  // ページ固有のヘッダー設定（オプショナル）
+  customLogoUrl?: string;    // カスタムロゴURL（未設定時はサイト設定のロゴを使用）
+  customSiteName?: string;   // カスタムサイト名（未設定時はサイト設定の名前を使用）
 }
 

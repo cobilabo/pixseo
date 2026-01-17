@@ -46,6 +46,8 @@ export default function NewPagePage() {
     showGlobalNav: false,
     showSidebar: false,
     isHomePage: false,
+    customLogoUrl: '',
+    customSiteName: '',
   });
   
   // トップページ設定関連
@@ -561,6 +563,26 @@ export default function NewPagePage() {
                 checked={formData.showSidebar}
                 onChange={(checked) => setFormData({ ...formData, showSidebar: checked })}
               />
+
+              {/* カスタムヘッダー設定 */}
+              <div className="p-4 bg-purple-50 rounded-xl border border-purple-200 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-900">カスタムヘッダー設定</h3>
+                <p className="text-xs text-gray-500">このページ専用のロゴやサイト名を設定できます（未設定時はデフォルト設定を使用）</p>
+                
+                <FloatingInput
+                  label="カスタムロゴURL"
+                  value={formData.customLogoUrl}
+                  onChange={(value) => setFormData({ ...formData, customLogoUrl: value })}
+                  placeholder="https://example.com/custom-logo.png"
+                />
+                
+                <FloatingInput
+                  label="カスタムサイト名"
+                  value={formData.customSiteName}
+                  onChange={(value) => setFormData({ ...formData, customSiteName: value })}
+                  placeholder="例: メディアページ"
+                />
+              </div>
 
               {/* パネル表示 */}
               <CustomCheckbox

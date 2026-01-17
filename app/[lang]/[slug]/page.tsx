@@ -213,8 +213,11 @@ export default async function FixedPage({ params }: PageProps) {
       )}
 
       <MediaHeader
-        siteName={siteInfo.name}
-        siteInfo={rawSiteInfo}
+        siteName={rawPage.customSiteName || siteInfo.name}
+        siteInfo={{
+          ...rawSiteInfo,
+          logoUrl: rawPage.customLogoUrl || rawSiteInfo.logoUrl,
+        }}
         menuSettings={theme.menuSettings}
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
