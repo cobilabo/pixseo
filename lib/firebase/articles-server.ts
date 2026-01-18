@@ -891,7 +891,6 @@ export const getRecommendedArticlesServer = async (
   }
 };
 
-
 // 総記事数を取得（ページネーション用）
 export const getArticlesCountServer = async (
   mediaId?: string
@@ -908,7 +907,7 @@ export const getArticlesCountServer = async (
     
     // キャッシュから取得
     const cached = cacheManager.get<number>(cacheKey, CACHE_TTL.MEDIUM);
-    if (cached !== undefined) {
+    if (typeof cached === 'number') {
       return cached;
     }
     
