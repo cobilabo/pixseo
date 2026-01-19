@@ -123,6 +123,7 @@ export default async function FixedPage({ params }: PageProps) {
   }
 
   const page = localizePage(rawPage, lang);
+  const layoutMode = rawPage.layoutMode || 'default';
   const showGlobalNav = rawPage.showGlobalNav || false;
   const showSidebar = rawPage.showSidebar || false;
   
@@ -173,13 +174,51 @@ export default async function FixedPage({ params }: PageProps) {
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
   const footerBlocks = rawTheme.footerBlocks || [];
 
+  // カスタムメニューのローカライズ
+  const customMenu = rawPage.customMenu?.map((item: any) => ({
+    label: item[`label_${lang}`] || item.label,
+    url: item.url,
+    openInNewTab: item.openInNewTab,
+  }));
+
   // カスタムCSS
   const customCss = rawPage.customCss || '';
 
   // モバイル判定（user-agentから）
-  const headersList = headers();
-  const userAgent = headersList.get('user-agent') || '';
+  const headersList2 = headers();
+  const userAgent = headersList2.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
+
+  // 完全白紙モードの場合は、ヘッダー/フッター/テーマCSSなしで表示
+  if (layoutMode === 'blank') {
+    return (
+      <html lang={lang}>
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          {customCss && (
+            <style dangerouslySetInnerHTML={{ __html: customCss }} />
+          )}
+        </head>
+        <body>
+          {/* SEO用のh1タグ（視覚的には非表示） */}
+          <h1 className="sr-only">{page.title}</h1>
+          
+          {/* BlockBuilderのみでレンダリング */}
+          {rawPage.useBlockBuilder && rawPage.blocks ? (
+            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
+          ) : (
+            <div 
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+          )}
+          
+          <ScrollToTopButton />
+        </body>
+      </html>
+    );
+  }
 
   // メインコンテンツのレンダリング
   const renderMainContent = () => (
@@ -221,6 +260,7 @@ export default async function FixedPage({ params }: PageProps) {
         menuSettings={theme.menuSettings}
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
+        customMenu={customMenu}
         lang={lang}
       />
 

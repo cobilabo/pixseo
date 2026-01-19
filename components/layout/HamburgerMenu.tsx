@@ -7,16 +7,23 @@ import { MenuSettings, NavigationItem } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import LanguageSelector from '@/components/common/LanguageSelector';
 
+interface CustomMenuItem {
+  label: string;
+  url: string;
+  openInNewTab?: boolean;
+}
+
 interface HamburgerMenuProps {
   isOpen: boolean;
   onClose: () => void;
   menuSettings: MenuSettings;
   menuBackgroundColor: string;
   menuTextColor: string;
+  customMenu?: CustomMenuItem[];
   lang?: Lang;
 }
 
-export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackgroundColor, menuTextColor, lang = 'ja' }: HamburgerMenuProps) {
+export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackgroundColor, menuTextColor, customMenu, lang = 'ja' }: HamburgerMenuProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -35,8 +42,9 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
     };
   }, [isOpen]);
 
-  // 新形式のナビゲーション項目があるかチェック
-  const hasNavigationItems = menuSettings.navigationItems && menuSettings.navigationItems.length > 0;
+  // カスタムメニュー（ページ固有）が優先、なければnavigationItems、さらになければ旧形式
+  const hasCustomMenu = customMenu && customMenu.length > 0;
+  const hasNavigationItems = !hasCustomMenu && menuSettings.navigationItems && menuSettings.navigationItems.length > 0;
 
   // 有効な追加メニューのみフィルタリング（後方互換性）
   const validCustomMenus = menuSettings.customMenus?.filter(menu => menu.label && menu.url) || [];
@@ -116,7 +124,24 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
           {/* メニューリスト */}
           <nav className="flex-1 px-8 py-4">
             <ul className="space-y-6">
-              {hasNavigationItems ? (
+              {hasCustomMenu ? (
+                // カスタムメニュー（ページ固有）を最優先
+                <>
+                  {customMenu!.map((item, index) => (
+                    <li key={index}>
+                      <Link
+                        href={item.url}
+                        onClick={onClose}
+                        className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                        target={item.openInNewTab ? '_blank' : undefined}
+                        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </>
+              ) : hasNavigationItems ? (
                 // 新形式：ナビゲーション項目を使用
                 <>
                   {menuSettings.navigationItems!.map((item) => (

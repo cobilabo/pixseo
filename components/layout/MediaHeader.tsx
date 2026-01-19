@@ -9,12 +9,19 @@ import { Lang } from '@/types/lang';
 import HamburgerMenu from './HamburgerMenu';
 import SearchPanel from './SearchPanel';
 
+interface CustomMenuItem {
+  label: string;
+  url: string;
+  openInNewTab?: boolean;
+}
+
 interface MediaHeaderProps {
   siteName: string;
   siteInfo?: SiteInfo;
   menuSettings?: MenuSettings;
   menuBackgroundColor?: string;
   menuTextColor?: string;
+  customMenu?: CustomMenuItem[];
   lang?: Lang;
 }
 
@@ -29,6 +36,7 @@ export default function MediaHeader({
   },
   menuBackgroundColor = '#1f2937',
   menuTextColor = '#ffffff',
+  customMenu,
   lang = 'ja',
 }: MediaHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -122,6 +130,7 @@ export default function MediaHeader({
         menuSettings={menuSettings}
         menuBackgroundColor={menuBackgroundColor}
         menuTextColor={menuTextColor}
+        customMenu={customMenu}
         lang={lang}
       />
 
