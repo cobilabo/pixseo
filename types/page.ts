@@ -1,16 +1,5 @@
 import { Block } from './block';
 
-// カスタムメニュー項目
-export interface CustomMenuItem {
-  label: string;
-  label_ja?: string;
-  label_en?: string;
-  label_zh?: string;
-  label_ko?: string;
-  url: string;
-  openInNewTab?: boolean;
-}
-
 // レイアウトモード
 export type LayoutMode = 'default' | 'blank';
 
@@ -70,13 +59,8 @@ export interface Page {
   layoutMode?: LayoutMode;   // レイアウトモード（default: 通常, blank: 完全白紙）
   showGlobalNav?: boolean;   // グローバルナビゲーション表示（カテゴリーバー）
   showSidebar?: boolean;     // サイドバー表示
-  customMenu?: CustomMenuItem[]; // カスタムメニュー項目
   
   // トップページ設定
   isHomePage?: boolean;      // トップページとして設定（slug='home'と連動）
-  
-  // ページ固有のヘッダー設定（オプショナル）
-  customLogoUrl?: string;    // カスタムロゴURL（未設定時はサイト設定のロゴを使用）
-  customSiteName?: string;   // カスタムサイト名（未設定時はサイト設定の名前を使用）
 }
 

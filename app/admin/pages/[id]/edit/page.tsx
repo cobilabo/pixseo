@@ -9,7 +9,7 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import ColorPicker from '@/components/admin/ColorPicker';
 import CustomCheckbox from '@/components/admin/CustomCheckbox';
 import { updatePage, getPageById } from '@/lib/firebase/pages-admin';
-import { Page, CustomMenuItem, LayoutMode } from '@/types/page';
+import { Page, LayoutMode } from '@/types/page';
 import { Block } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -49,10 +49,7 @@ export default function EditPagePage() {
     layoutMode: 'default' as LayoutMode,
     showGlobalNav: false,
     showSidebar: false,
-    customMenu: [] as CustomMenuItem[],
     isHomePage: false,
-    customLogoUrl: '',
-    customSiteName: '',
   });
   
   // トップページ設定関連
@@ -91,10 +88,7 @@ export default function EditPagePage() {
         layoutMode: (page.layoutMode || 'default') as LayoutMode,
         showGlobalNav: page.showGlobalNav || false,
         showSidebar: page.showSidebar || false,
-        customMenu: page.customMenu || [],
         isHomePage: page.isHomePage || page.slug === 'home',
-        customLogoUrl: page.customLogoUrl || '',
-        customSiteName: page.customSiteName || '',
       });
       
       // ブロックビルダーデータを読み込み
@@ -376,26 +370,6 @@ export default function EditPagePage() {
               currentTenantId
             );
           }
-        }
-
-        // カスタムメニューの翻訳
-        if (formData.customMenu && formData.customMenu.length > 0) {
-          updateData.customMenu = await Promise.all(
-            formData.customMenu.map(async (menuItem) => {
-              if (menuItem.label) {
-                const translatedItem: any = { ...menuItem };
-                for (const lang of targetLangs) {
-                  translatedItem[`label_${lang}`] = await translateOrKeep(
-                    menuItem.label,
-                    lang,
-                    currentTenantId
-                  );
-                }
-                return translatedItem;
-              }
-              return menuItem;
-            })
-          );
         }
 
         // セクションブロックの翻訳
@@ -682,91 +656,6 @@ export default function EditPagePage() {
                   />
                 </>
               )}
-
-              {/* カスタムヘッダー設定 */}
-              <div className="p-4 bg-purple-50 rounded-xl border border-purple-200 space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900">カスタムヘッダー設定</h3>
-                <p className="text-xs text-gray-500">このページ専用のロゴやサイト名を設定できます（未設定時はデフォルト設定を使用）</p>
-                
-                <FloatingInput
-                  label="カスタムロゴURL"
-                  value={formData.customLogoUrl}
-                  onChange={(value) => setFormData({ ...formData, customLogoUrl: value })}
-                />
-                
-                <FloatingInput
-                  label="カスタムサイト名"
-                  value={formData.customSiteName}
-                  onChange={(value) => setFormData({ ...formData, customSiteName: value })}
-                />
-              </div>
-
-              {/* カスタムメニュー設定 */}
-              <div className="p-4 bg-green-50 rounded-xl border border-green-200 space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900">カスタムメニュー</h3>
-                <p className="text-xs text-gray-500">このページ専用のメニューを設定できます（ラベルは保存時に自動翻訳）</p>
-                
-                {formData.customMenu.map((menuItem, index) => (
-                  <div key={index} className="p-3 bg-white rounded-lg border border-gray-200 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">メニュー項目 {index + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newMenu = formData.customMenu.filter((_, i) => i !== index);
-                          setFormData({ ...formData, customMenu: newMenu });
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        削除
-                      </button>
-                    </div>
-                    
-                    <FloatingInput
-                      label="ラベル"
-                      value={menuItem.label}
-                      onChange={(value) => {
-                        const newMenu = [...formData.customMenu];
-                        newMenu[index] = { ...newMenu[index], label: value };
-                        setFormData({ ...formData, customMenu: newMenu });
-                      }}
-                    />
-                    
-                    <FloatingInput
-                      label="URL"
-                      value={menuItem.url}
-                      onChange={(value) => {
-                        const newMenu = [...formData.customMenu];
-                        newMenu[index] = { ...newMenu[index], url: value };
-                        setFormData({ ...formData, customMenu: newMenu });
-                      }}
-                    />
-                    
-                    <CustomCheckbox
-                      label="新しいタブで開く"
-                      checked={menuItem.openInNewTab || false}
-                      onChange={(checked) => {
-                        const newMenu = [...formData.customMenu];
-                        newMenu[index] = { ...newMenu[index], openInNewTab: checked };
-                        setFormData({ ...formData, customMenu: newMenu });
-                      }}
-                    />
-                  </div>
-                ))}
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData({
-                      ...formData,
-                      customMenu: [...formData.customMenu, { label: '', url: '', openInNewTab: false }]
-                    });
-                  }}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  + メニュー項目を追加
-                </button>
-              </div>
 
               {/* パネル表示 */}
               <CustomCheckbox

@@ -174,13 +174,6 @@ export default async function FixedPage({ params }: PageProps) {
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
   const footerBlocks = rawTheme.footerBlocks || [];
 
-  // カスタムメニューのローカライズ
-  const customMenu = rawPage.customMenu?.map((item: any) => ({
-    label: item[`label_${lang}`] || item.label,
-    url: item.url,
-    openInNewTab: item.openInNewTab,
-  }));
-
   // カスタムCSS
   const customCss = rawPage.customCss || '';
 
@@ -252,15 +245,11 @@ export default async function FixedPage({ params }: PageProps) {
       )}
 
       <MediaHeader
-        siteName={rawPage.customSiteName || siteInfo.name}
-        siteInfo={{
-          ...rawSiteInfo,
-          logoUrl: rawPage.customLogoUrl || rawSiteInfo.logoUrl,
-        }}
+        siteName={siteInfo.name}
+        siteInfo={rawSiteInfo}
         menuSettings={theme.menuSettings}
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
-        customMenu={customMenu}
         lang={lang}
       />
 

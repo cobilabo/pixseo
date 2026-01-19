@@ -8,7 +8,8 @@ export type BlockType =
   | 'html'      // カスタムHTML
   | 'spacer'    // 空白
   | 'content'   // セクションブロック（統合ブロック）
-  | 'article';  // 記事リンクブロック
+  | 'article'   // 記事リンクブロック
+  | 'custom';   // カスタムブロック
 
 // CTAボタンの設定
 export interface CTAButtonConfig {
@@ -132,12 +133,17 @@ export interface ArticleBlockConfig {
   displayCount?: number;      // 表示件数（デフォルト: 4）
 }
 
+// カスタムブロックの設定
+export interface CustomBlockConfig {
+  customBlockId: string;      // カスタムブロックのID
+}
+
 // ブロックの共通インターフェース
 export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | CustomBlockConfig;
   
   // 余白設定（共通）
   spacing?: {
