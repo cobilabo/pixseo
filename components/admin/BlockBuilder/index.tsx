@@ -41,12 +41,16 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
   const selectedBlock = localBlocks.find(b => b.id === selectedBlockId);
 
   // ブロック追加
-  const handleAddBlock = (type: BlockType) => {
+  const handleAddBlock = (type: BlockType, customBlockId?: string) => {
+    const config = type === 'custom' && customBlockId 
+      ? { customBlockId }
+      : getDefaultConfig(type);
+      
     const newBlock: Block = {
       id: uuidv4(),
       type,
       order: localBlocks.length,
-      config: getDefaultConfig(type),
+      config: config as any,
     };
     const newBlocks = [...localBlocks, newBlock];
     setLocalBlocks(newBlocks);
@@ -260,6 +264,10 @@ function getDefaultConfig(type: BlockType): any {
         articleTitle: '',
         displayStyle: 'blogcard',
         displayCount: 4,
+      };
+    case 'custom':
+      return {
+        customBlockId: '',
       };
     default:
       return {};

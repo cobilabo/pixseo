@@ -5,12 +5,16 @@
  * 使用可能なブロックのリストを表示
  */
 
+import { useState, useEffect } from 'react';
 import { BlockType } from '@/types/block';
+import { CustomBlock } from '@/types/custom-block';
 import Image from 'next/image';
 import { useDraggable } from '@dnd-kit/core';
+import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { getCustomBlocksByMediaId } from '@/lib/firebase/custom-blocks-admin';
 
 interface BlockPaletteProps {
-  onAddBlock: (type: BlockType) => void;
+  onAddBlock: (type: BlockType, customBlockId?: string) => void;
 }
 
 const blockTypes = [
@@ -93,11 +97,77 @@ function DraggableBlockType({ blockType }: { blockType: typeof blockTypes[0] }) 
 }
 
 export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
+  const { currentTenant } = useMediaTenant();
+  const [customBlocks, setCustomBlocks] = useState<CustomBlock[]>([]);
+
+  useEffect(() => {
+    if (currentTenant?.id) {
+      fetchCustomBlocks();
+    }
+  }, [currentTenant]);
+
+  const fetchCustomBlocks = async () => {
+    if (!currentTenant?.id) return;
+    try {
+      const blocks = await getCustomBlocksByMediaId(currentTenant.id);
+      setCustomBlocks(blocks);
+    } catch (error) {
+      console.error('Error fetching custom blocks:', error);
+    }
+  };
+
   return (
-    <div className="space-y-2">
-      {blockTypes.map((blockType) => (
-        <DraggableBlockType key={blockType.type} blockType={blockType} />
-      ))}
+    <div className="space-y-4">
+      {/* 標準ブロック */}
+      <div>
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">
+          標準ブロック
+        </h3>
+        <div className="space-y-2">
+          {blockTypes.map((blockType) => (
+            <DraggableBlockType key={blockType.type} blockType={blockType} />
+          ))}
+        </div>
+      </div>
+
+      {/* カスタムブロック */}
+      {customBlocks.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">
+            カスタムブロック
+          </h3>
+          <div className="space-y-2">
+            {customBlocks.map((customBlock) => (
+              <button
+                key={customBlock.id}
+                onClick={() => onAddBlock('custom', customBlock.id)}
+                className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 flex-shrink-0">
+                    <Image 
+                      src="/block.svg" 
+                      alt="カスタムブロック" 
+                      width={16} 
+                      height={16} 
+                      className="opacity-60 group-hover:opacity-100"
+                      style={{ filter: 'grayscale(30%)' }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 group-hover:text-green-600">
+                      {customBlock.name}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      カスタムブロック
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

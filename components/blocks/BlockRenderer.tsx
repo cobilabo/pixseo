@@ -10,6 +10,7 @@ import HTMLBlock from './HTMLBlock';
 import SpacerBlock from './SpacerBlock';
 import ContentBlock from './ContentBlock';
 import ArticleBlock from './ArticleBlock';
+import CustomBlock from './CustomBlock';
 
 interface BlockRendererProps {
   blocks: Block[];
@@ -62,6 +63,9 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             break;
           case 'article':
             blockContent = <ArticleBlock block={block} lang={lang} />;
+            break;
+          case 'custom':
+            blockContent = <CustomBlock config={block.config as any} showPanel={showPanel} />;
             break;
           default:
             blockContent = null;
