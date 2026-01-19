@@ -1,9 +1,18 @@
 import { collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
-import { db } from './client';
+import { db, initializeFirebase } from './config';
 import { CustomBlock } from '@/types/custom-block';
+
+// クライアント側でFirebaseを初期化
+if (typeof window !== 'undefined') {
+  initializeFirebase();
+}
 
 // カスタムブロックを作成
 export const createCustomBlock = async (data: Omit<CustomBlock, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
   const customBlocksRef = collection(db, 'customBlocks');
   const newCustomBlock = {
     ...data,
@@ -17,6 +26,10 @@ export const createCustomBlock = async (data: Omit<CustomBlock, 'id' | 'createdA
 
 // カスタムブロックを取得（ID指定）
 export const getCustomBlockById = async (id: string): Promise<CustomBlock | null> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
   const customBlockRef = doc(db, 'customBlocks', id);
   const customBlockSnap = await getDoc(customBlockRef);
   
@@ -35,6 +48,10 @@ export const getCustomBlockById = async (id: string): Promise<CustomBlock | null
 
 // カスタムブロック一覧を取得（mediaId指定）
 export const getCustomBlocksByMediaId = async (mediaId: string): Promise<CustomBlock[]> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
   const customBlocksRef = collection(db, 'customBlocks');
   const q = query(
     customBlocksRef,
@@ -53,6 +70,10 @@ export const getCustomBlocksByMediaId = async (mediaId: string): Promise<CustomB
 
 // カスタムブロックを更新
 export const updateCustomBlock = async (id: string, data: Partial<Omit<CustomBlock, 'id' | 'createdAt' | 'updatedAt'>>): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
   const customBlockRef = doc(db, 'customBlocks', id);
   await updateDoc(customBlockRef, {
     ...data,
@@ -62,6 +83,10 @@ export const updateCustomBlock = async (id: string, data: Partial<Omit<CustomBlo
 
 // カスタムブロックを削除
 export const deleteCustomBlock = async (id: string): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  
   const customBlockRef = doc(db, 'customBlocks', id);
   await deleteDoc(customBlockRef);
 };
