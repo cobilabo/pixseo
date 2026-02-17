@@ -182,10 +182,11 @@ export default async function FixedPage({ params }: PageProps) {
   const userAgent = headersList2.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
 
-  // 完全白紙モードの場合は、ヘッダー/フッター/テーマCSSなしで表示
+  // 完全白紙モードの場合は、ヘッダー/フッターなしで表示
   if (layoutMode === 'blank') {
     return (
       <>
+        <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
         {customCss && (
           <style dangerouslySetInnerHTML={{ __html: customCss }} />
         )}
