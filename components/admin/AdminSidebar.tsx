@@ -178,6 +178,19 @@ const AdminSidebar = memo(function AdminSidebar({
       )
     },
     { 
+      name: 'カスタムブロック', 
+      href: '/custom-blocks',
+      icon: (
+        <Image 
+          src="/block.svg" 
+          alt="カスタムブロック" 
+          width={20}
+          height={20}
+          priority
+        />
+      )
+    },
+    { 
       name: 'テーマ', 
       href: '/theme',
       icon: (
