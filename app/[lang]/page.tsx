@@ -201,6 +201,40 @@ export default async function HomePage({ params }: PageProps) {
     const showGlobalNav = rawHomePage.showGlobalNav || false;
     const showSidebar = rawHomePage.showSidebar || false;
     const customCss = rawHomePage.customCss || '';
+    const layoutMode = rawHomePage.layoutMode || 'default';
+
+    // 完全白紙モードの場合は、ヘッダー/フッターなしで表示（[slug]/page.tsxと同一の処理）
+    if (layoutMode === 'blank') {
+      return (
+        <>
+          <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
+          {customCss && (
+            <style dangerouslySetInnerHTML={{ __html: customCss }} />
+          )}
+
+          {/* JSON-LD構造化データ */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+
+          {/* SEO用のh1タグ（視覚的には非表示） */}
+          <h1 className="sr-only">{homePage.title}</h1>
+
+          {/* BlockBuilderのみでレンダリング */}
+          {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
+          ) : (
+            <div
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: homePage.content }}
+            />
+          )}
+
+          <ScrollToTopButton />
+        </>
+      );
+    }
 
     // メインコンテンツのレンダリング
     const renderMainContent = () => (
