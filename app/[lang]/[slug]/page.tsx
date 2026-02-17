@@ -185,31 +185,25 @@ export default async function FixedPage({ params }: PageProps) {
   // 完全白紙モードの場合は、ヘッダー/フッター/テーマCSSなしで表示
   if (layoutMode === 'blank') {
     return (
-      <html lang={lang}>
-        <head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          {customCss && (
-            <style dangerouslySetInnerHTML={{ __html: customCss }} />
-          )}
-        </head>
-        <body>
-          {/* SEO用のh1タグ（視覚的には非表示） */}
-          <h1 className="sr-only">{page.title}</h1>
-          
-          {/* BlockBuilderのみでレンダリング */}
-          {rawPage.useBlockBuilder && rawPage.blocks ? (
-            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
-          ) : (
-            <div 
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.content }}
-            />
-          )}
-          
-          <ScrollToTopButton />
-        </body>
-      </html>
+      <>
+        {customCss && (
+          <style dangerouslySetInnerHTML={{ __html: customCss }} />
+        )}
+        {/* SEO用のh1タグ（視覚的には非表示） */}
+        <h1 className="sr-only">{page.title}</h1>
+        
+        {/* BlockBuilderのみでレンダリング */}
+        {rawPage.useBlockBuilder && rawPage.blocks ? (
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
+        ) : (
+          <div 
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: page.content }}
+          />
+        )}
+        
+        <ScrollToTopButton />
+      </>
     );
   }
 
