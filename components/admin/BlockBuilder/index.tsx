@@ -41,9 +41,9 @@ const BlockBuilder = forwardRef<BlockBuilderRef, BlockBuilderProps>(({ blocks, o
   const selectedBlock = localBlocks.find(b => b.id === selectedBlockId);
 
   // ブロック追加
-  const handleAddBlock = (type: BlockType, customBlockId?: string) => {
+  const handleAddBlock = (type: BlockType, customBlockId?: string, customBlockName?: string) => {
     const config = type === 'custom' && customBlockId 
-      ? { customBlockId }
+      ? { customBlockId, customBlockName: customBlockName || '' }
       : getDefaultConfig(type);
       
     const newBlock: Block = {

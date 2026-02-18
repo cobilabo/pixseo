@@ -96,7 +96,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     article: { label: '記事', icon: '/article.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
-    custom: { label: 'カスタムブロック', icon: '/block.svg' },
+    custom: { label: (block.config as any)?.customBlockName || 'カスタムブロック', icon: '/block.svg' },
   };
 
   const blockInfo = blockTypeLabels[block.type] || { label: block.type, icon: '/text.svg' };
@@ -199,8 +199,7 @@ function BlockPreview({ block }: { block: Block }) {
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;
     case 'custom':
-      const customConfig = block.config as any;
-      return <span>ID: {customConfig.customBlockId || '未設定'}</span>;
+      return <span>カスタムブロック</span>;
     default:
       return <span>不明なブロック</span>;
   }

@@ -136,6 +136,7 @@ export interface ArticleBlockConfig {
 // カスタムブロックの設定
 export interface CustomBlockConfig {
   customBlockId: string;      // カスタムブロックのID
+  customBlockName?: string;   // カスタムブロック名（管理画面表示用）
 }
 
 // ブロックの共通インターフェース

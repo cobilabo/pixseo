@@ -14,7 +14,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { getCustomBlocksByMediaId } from '@/lib/firebase/custom-blocks-admin';
 
 interface BlockPaletteProps {
-  onAddBlock: (type: BlockType, customBlockId?: string) => void;
+  onAddBlock: (type: BlockType, customBlockId?: string, customBlockName?: string) => void;
 }
 
 const blockTypes = [
@@ -141,7 +141,7 @@ export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
               <button
                 type="button"
                 key={customBlock.id}
-                onClick={() => onAddBlock('custom', customBlock.id)}
+                onClick={() => onAddBlock('custom', customBlock.id, customBlock.name)}
                 className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"
               >
                 <div className="flex items-center gap-3">
