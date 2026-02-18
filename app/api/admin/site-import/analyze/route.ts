@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
           message: `${crawlResult.pages.length}ページをクロール完了。AI解析中...`,
         });
 
-        const analysis = await analyzeWithGemini(crawlResult);
+        const onProgress = (message: string) => {
+          send({ status: 'analyzing', message });
+        };
+
+        const analysis = await analyzeWithGemini(crawlResult, onProgress);
 
         send({ status: 'done', data: analysis });
         controller.close();
