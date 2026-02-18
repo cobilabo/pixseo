@@ -176,7 +176,7 @@ export async function crawlSite(
   options: CrawlOptions = {}
 ): Promise<CrawlResult> {
   const {
-    maxPages = 30,
+    maxPages = 50,
     maxDepth = 3,
     excludePatterns = ['wp-admin', 'wp-login', 'wp-json', '/feed', '.xml', '.pdf', '.zip', '/tag/', '/page/'],
   } = options;

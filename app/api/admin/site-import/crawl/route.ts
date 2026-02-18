@@ -7,7 +7,7 @@ export const maxDuration = 120;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, maxPages = 20, maxDepth = 3 } = body;
+    const { url, maxPages = 50, maxDepth = 3, excludePaths = [] } = body;
 
     if (!url) {
       return NextResponse.json({ error: 'URLは必須です' }, { status: 400 });
@@ -19,7 +19,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '有効なURLを入力してください' }, { status: 400 });
     }
 
-    const result = await crawlSite(url, { maxPages, maxDepth });
+    const result = await crawlSite(url, {
+      maxPages,
+      maxDepth,
+      excludePatterns: [
+        'wp-admin', 'wp-login', 'wp-json', '/feed', '.xml', '.pdf', '.zip',
+        ...excludePaths.filter((p: string) => p.trim()),
+      ],
+    });
 
     return NextResponse.json({
       success: true,
@@ -32,9 +39,8 @@ export async function POST(request: NextRequest) {
           title: p.title,
           metaDescription: p.metaDescription,
           imageCount: p.images.length,
+          htmlLength: p.html.length,
         })),
-        // Full crawl result for next step (stored on client)
-        crawlResult: result,
       },
     });
   } catch (error: any) {

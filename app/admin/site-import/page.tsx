@@ -12,6 +12,7 @@ interface CrawlPageSummary {
   title: string;
   metaDescription: string;
   imageCount: number;
+  htmlLength: number;
 }
 
 interface AnalyzedCommonBlock {
@@ -51,8 +52,8 @@ export default function SiteImportPage() {
 
   const [step, setStep] = useState<Step>('input');
   const [url, setUrl] = useState('');
-  const [maxPages, setMaxPages] = useState(20);
-  const [crawlResult, setCrawlResult] = useState<any>(null);
+  const [maxPages, setMaxPages] = useState(50);
+  const [excludePathsText, setExcludePathsText] = useState('');
   const [crawlSummary, setCrawlSummary] = useState<CrawlPageSummary[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [importResult, setImportResult] = useState<ImportResultData | null>(null);
@@ -60,6 +61,13 @@ export default function SiteImportPage() {
   const [isPublished, setIsPublished] = useState(false);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
+
+  const getExcludePaths = (): string[] => {
+    return excludePathsText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+  };
 
   const handleCrawl = async () => {
     if (!url) {
@@ -74,13 +82,12 @@ export default function SiteImportPage() {
       const response = await fetch('/api/admin/site-import/crawl', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, maxPages }),
+        body: JSON.stringify({ url, maxPages, excludePaths: getExcludePaths() }),
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      setCrawlResult(data.data.crawlResult);
       setCrawlSummary(data.data.pages);
       setStep('crawled');
     } catch (err: any) {
@@ -90,8 +97,6 @@ export default function SiteImportPage() {
   };
 
   const handleAnalyze = async () => {
-    if (!crawlResult) return;
-
     setStep('analyzing');
     setError('');
 
@@ -99,7 +104,7 @@ export default function SiteImportPage() {
       const response = await fetch('/api/admin/site-import/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crawlResult }),
+        body: JSON.stringify({ url, maxPages, excludePaths: getExcludePaths() }),
       });
 
       const data = await response.json();
@@ -250,7 +255,7 @@ export default function SiteImportPage() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://example.com/"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={step === 'crawling'}
                   />
                 </div>
@@ -262,10 +267,27 @@ export default function SiteImportPage() {
                     value={maxPages}
                     onChange={(e) => setMaxPages(Number(e.target.value))}
                     min={1}
-                    max={50}
-                    className="w-32 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    max={100}
+                    className="w-32 px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={step === 'crawling'}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    除外パス（1行に1パス）
+                  </label>
+                  <textarea
+                    value={excludePathsText}
+                    onChange={(e) => setExcludePathsText(e.target.value)}
+                    placeholder={"/blog\n/news\n/tag/\n/category/"}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                    disabled={step === 'crawling'}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    指定したパスを含むURLはクロール対象外になります。wp-admin、wp-login等は自動で除外されます。
+                  </p>
                 </div>
 
                 <button
@@ -315,7 +337,7 @@ export default function SiteImportPage() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setStep('input'); setCrawlResult(null); setCrawlSummary([]); }}
+                  onClick={() => { setStep('input'); setCrawlSummary([]); }}
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
                   disabled={step === 'analyzing'}
                 >
@@ -329,7 +351,7 @@ export default function SiteImportPage() {
                   {step === 'analyzing' ? (
                     <span className="flex items-center gap-2">
                       <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      AI解析中...（数十秒かかります）
+                      AI解析中...（クロール＋解析で数十秒〜数分かかります）
                     </span>
                   ) : 'AI解析を実行'}
                 </button>
@@ -396,7 +418,7 @@ export default function SiteImportPage() {
                                 type="text"
                                 value={page.title}
                                 onChange={(e) => updatePageTitle(i, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                             </div>
                             <div className="w-48">
@@ -405,7 +427,7 @@ export default function SiteImportPage() {
                                 type="text"
                                 value={page.slug}
                                 onChange={(e) => updatePageSlug(i, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                             </div>
                           </div>
@@ -437,7 +459,7 @@ export default function SiteImportPage() {
                     <select
                       value={layoutMode}
                       onChange={(e) => setLayoutMode(e.target.value as LayoutMode)}
-                      className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="blank">完全白紙（ヘッダー/フッターなし）</option>
                       <option value="default">通常（システムヘッダー/フッター付き）</option>
@@ -561,7 +583,6 @@ export default function SiteImportPage() {
                   onClick={() => {
                     setStep('input');
                     setUrl('');
-                    setCrawlResult(null);
                     setCrawlSummary([]);
                     setAnalysis(null);
                     setImportResult(null);
