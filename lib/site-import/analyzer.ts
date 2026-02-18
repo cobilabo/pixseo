@@ -99,7 +99,6 @@ ${pagesSummary}
 
 function cleanJsonResponse(text: string): string {
   let cleaned = text.trim();
-  // Remove markdown code block markers
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.slice(7);
   } else if (cleaned.startsWith('```')) {
@@ -111,15 +110,37 @@ function cleanJsonResponse(text: string): string {
   return cleaned.trim();
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function extractRetryDelay(error: any): number | null {
+  const message = error?.message || String(error);
+  const match = message.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
+  if (match) return Math.ceil(parseFloat(match[1]) * 1000);
+
+  const retryMatch = message.match(/retryDelay.*?(\d+)s/i);
+  if (retryMatch) return parseInt(retryMatch[1]) * 1000;
+
+  return null;
+}
+
+function isRateLimitError(error: any): boolean {
+  const message = error?.message || String(error);
+  return message.includes('429') || message.includes('Too Many Requests') || message.includes('quota');
+}
+
 export async function analyzeWithGemini(crawlResult: CrawlResult): Promise<AnalysisResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured');
   }
 
+  const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: modelName,
     generationConfig: {
       temperature: 0.1,
       maxOutputTokens: 65536,
@@ -129,36 +150,67 @@ export async function analyzeWithGemini(crawlResult: CrawlResult): Promise<Analy
 
   const prompt = buildPrompt(crawlResult);
 
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text = response.text();
+  const maxRetries = 3;
+  let lastError: any;
 
-  const cleaned = cleanJsonResponse(text);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`[Analyzer] Retry attempt ${attempt}/${maxRetries}`);
+      }
 
-  try {
-    const parsed = JSON.parse(cleaned) as AnalysisResult;
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      const cleaned = cleanJsonResponse(text);
 
-    if (!parsed.commonBlocks || !Array.isArray(parsed.commonBlocks)) {
-      parsed.commonBlocks = [];
-    }
-    if (!parsed.pages || !Array.isArray(parsed.pages)) {
-      parsed.pages = [];
-    }
-    if (!parsed.sharedCss) {
-      parsed.sharedCss = '';
-    }
+      try {
+        const parsed = JSON.parse(cleaned) as AnalysisResult;
 
-    // Merge images from crawl result into analyzed pages
-    for (const analyzedPage of parsed.pages) {
-      const crawledPage = crawlResult.pages.find(p => p.url === analyzedPage.url);
-      if (crawledPage && (!analyzedPage.images || analyzedPage.images.length === 0)) {
-        analyzedPage.images = crawledPage.images;
+        if (!parsed.commonBlocks || !Array.isArray(parsed.commonBlocks)) {
+          parsed.commonBlocks = [];
+        }
+        if (!parsed.pages || !Array.isArray(parsed.pages)) {
+          parsed.pages = [];
+        }
+        if (!parsed.sharedCss) {
+          parsed.sharedCss = '';
+        }
+
+        for (const analyzedPage of parsed.pages) {
+          const crawledPage = crawlResult.pages.find(p => p.url === analyzedPage.url);
+          if (crawledPage && (!analyzedPage.images || analyzedPage.images.length === 0)) {
+            analyzedPage.images = crawledPage.images;
+          }
+        }
+
+        return parsed;
+      } catch (e) {
+        console.error('[Analyzer] Failed to parse Gemini response:', cleaned.substring(0, 500));
+        throw new Error('AI解析結果のパースに失敗しました。再度お試しください。');
+      }
+    } catch (error: any) {
+      lastError = error;
+
+      if (isRateLimitError(error) && attempt < maxRetries) {
+        const retryDelay = extractRetryDelay(error) || (10000 * (attempt + 1));
+        console.log(`[Analyzer] Rate limited. Waiting ${retryDelay}ms before retry...`);
+        await sleep(retryDelay);
+        continue;
+      }
+
+      if (!isRateLimitError(error)) {
+        throw error;
       }
     }
-
-    return parsed;
-  } catch (e) {
-    console.error('[Analyzer] Failed to parse Gemini response:', cleaned.substring(0, 500));
-    throw new Error('AI解析結果のパースに失敗しました。再度お試しください。');
   }
+
+  if (isRateLimitError(lastError)) {
+    throw new Error(
+      'Gemini APIのレート制限に達しました。しばらく（1〜2分）待ってから再度お試しください。' +
+      '繰り返し発生する場合は、Google AI Studioでクォータ設定を確認してください。'
+    );
+  }
+
+  throw lastError;
 }
