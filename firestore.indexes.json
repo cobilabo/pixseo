@@ -105,6 +105,14 @@
         { "fieldPath": "slug", "order": "ASCENDING" },
         { "fieldPath": "isPublished", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "customBlocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mediaId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
