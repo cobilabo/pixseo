@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import * as cheerio from 'cheerio';
 import { CrawlResult, CrawledPage } from './crawler';
 
 export interface AnalyzedCommonBlock {
@@ -23,132 +24,106 @@ export interface AnalysisResult {
   sharedCss: string;
 }
 
-const MAX_TOTAL_HTML_CHARS = 200000;
-const MAX_PAGES_FOR_AI = 10;
+interface AICommonBlock {
+  name: string;
+  selector: string;
+  position: 'header' | 'footer' | 'navigation' | 'other';
+}
 
-function stripHtml(html: string): string {
-  let stripped = html;
-  stripped = stripped.replace(/<!--[\s\S]*?-->/g, '');
-  stripped = stripped.replace(/<svg[\s\S]*?<\/svg>/gi, '<svg/>');
-  stripped = stripped.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
-  stripped = stripped.replace(/\sdata-[a-z-]+="[^"]*"/gi, '');
-  stripped = stripped.replace(/\s(aria-[a-z-]+|role|tabindex|draggable)="[^"]*"/gi, '');
-  stripped = stripped.replace(/\sstyle="[^"]*"/gi, '');
-  stripped = stripped.replace(/[ \t]+/g, ' ');
-  stripped = stripped.replace(/\n\s*\n/g, '\n');
-  return stripped.trim();
+interface AIPageMeta {
+  url: string;
+  title: string;
+  slug: string;
+  metaDescription: string;
+}
+
+interface AIResponse {
+  commonBlocks: AICommonBlock[];
+  pages: AIPageMeta[];
+}
+
+function stripForAI(html: string): string {
+  let s = html;
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+  s = s.replace(/<svg[\s\S]*?<\/svg>/gi, '<svg/>');
+  s = s.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
+  s = s.replace(/\sdata-[a-z-]+="[^"]*"/gi, '');
+  s = s.replace(/\s(aria-[a-z-]+|role|tabindex|draggable)="[^"]*"/gi, '');
+  s = s.replace(/\sstyle="[^"]*"/gi, '');
+  s = s.replace(/[ \t]+/g, ' ');
+  s = s.replace(/\n\s*\n/g, '\n');
+  return s.trim();
 }
 
 function extractBody(html: string): string {
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  return bodyMatch ? bodyMatch[1] : html;
+  const m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  return m ? m[1] : html;
 }
 
-function selectPagesForAI(pages: CrawledPage[]): CrawledPage[] {
-  if (pages.length <= MAX_PAGES_FOR_AI) return pages;
-
-  const selected: CrawledPage[] = [pages[0]];
-  const step = Math.floor((pages.length - 1) / (MAX_PAGES_FOR_AI - 1));
-  for (let i = step; i < pages.length && selected.length < MAX_PAGES_FOR_AI; i += step) {
-    selected.push(pages[i]);
-  }
-  if (selected[selected.length - 1] !== pages[pages.length - 1]) {
-    selected.push(pages[pages.length - 1]);
-  }
-  return selected;
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.substring(0, max) + '\n<!-- truncated -->';
 }
 
-function buildPrompt(crawlResult: CrawlResult): string {
-  const selectedPages = selectPagesForAI(crawlResult.pages);
-  const perPageLimit = Math.floor(MAX_TOTAL_HTML_CHARS / selectedPages.length);
+function inferSlugFromUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/$/, '').replace(/^\//, '');
+    if (!path) return 'home';
+    const last = path.split('/').pop() || 'home';
+    return last.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+  } catch {
+    return 'page';
+  }
+}
 
-  const pagesSummary = selectedPages.map((p, i) => {
-    let bodyHtml = stripHtml(extractBody(p.html));
-    if (bodyHtml.length > perPageLimit) {
-      bodyHtml = bodyHtml.substring(0, perPageLimit) + '\n<!-- ... truncated ... -->';
-    }
-    return `=== PAGE ${i + 1}: ${p.url} ===
-TITLE: ${p.title}
-BODY HTML:
-${bodyHtml}
-`;
+function buildPhase1Prompt(crawlResult: CrawlResult): string {
+  const samples = crawlResult.pages.slice(0, 3);
+  const perPage = Math.floor(60000 / samples.length);
+
+  const pagesHtml = samples.map((p, i) => {
+    const body = truncate(stripForAI(extractBody(p.html)), perPage);
+    return `=== PAGE ${i + 1}: ${p.url} ===\n${body}`;
   }).join('\n\n');
 
-  const allPagesList = crawlResult.pages.map((p, i) =>
+  const allPages = crawlResult.pages.map((p, i) =>
     `${i + 1}. ${p.url} (title: ${p.title})`
   ).join('\n');
 
-  return `あなたはHTML解析の専門家です。以下の複数ページのHTMLを分析し、共通要素とページ固有コンテンツを分離してください。
+  return `HTMLを分析し、共通要素のCSSセレクタとページのメタ情報を返してください。
+
+## 代表ページのHTML（${samples.length}ページ）
+${pagesHtml}
 
 ## 全ページ一覧（${crawlResult.pages.length}ページ）
-${allPagesList}
-
-## 解析対象ページHTML（代表${selectedPages.length}ページ分）
-${pagesSummary}
+${allPages}
 
 ## タスク
+1. 共通要素（ヘッダー、フッター、ナビゲーション等）を検出し、それぞれのCSSセレクタを返してください。
+   - セレクタは具体的に（例: "header.site-header", "footer#footer", "nav.global-nav"）
+   - タグ名だけでなくクラスやIDを含めてください
 
-1. **共通要素の検出**: 全ページ（または大半のページ）に共通するHTML部分を特定してください。
-   - 共通ヘッダー（ロゴ、ナビゲーションメニュー等）
-   - 共通フッター（フッターリンク、コピーライト等）
-   - その他の共通要素があれば
+2. 全ページのメタ情報を推定してください。
 
-2. **ページ固有コンテンツの抽出**: HTMLが提供されたページについて、固有コンテンツ（共通要素を除いた部分）を抽出してください。
-
-3. **全ページのメタ情報推定**: 上記「全ページ一覧」の全ページについて、以下を推定してください（HTMLが無いページはURLとタイトルから推定）：
-   - title: ページタイトル
-   - slug: URL用スラッグ（英数字とハイフン、先頭ページは "home"）
-   - metaDescription: SEO用の説明文（120文字以内）
-
-## 重要な注意事項
-- 共通要素のHTMLは、元のHTML構造（クラス名、属性等）をそのまま維持してください
-- 画像のsrc属性はそのまま維持してください（後工程で書き換えます）
-- CSSクラス名は変更しないでください
-- ページ固有コンテンツは<div>等で適切にラップしてください
-- 先頭ページ（ルートURL）のslugは "home" にしてください
-- HTMLが提供されていないページのcontentHtmlは空文字("")にしてください
-
-## 出力形式（JSON）
+## 出力JSON形式
 
 {
   "commonBlocks": [
-    {
-      "name": "共通ヘッダー",
-      "html": "<header>...</header>",
-      "css": "",
-      "position": "header"
-    },
-    {
-      "name": "共通フッター",
-      "html": "<footer>...</footer>",
-      "css": "",
-      "position": "footer"
-    }
+    { "name": "共通ヘッダー", "selector": "header.site-header", "position": "header" },
+    { "name": "共通フッター", "selector": "footer.site-footer", "position": "footer" }
   ],
   "pages": [
-    {
-      "url": "https://example.com/",
-      "title": "ページタイトル",
-      "slug": "home",
-      "metaDescription": "ページの説明文",
-      "contentHtml": "<div>ページ固有コンテンツ</div>",
-      "images": ["https://example.com/image1.jpg"]
-    }
-  ],
-  "sharedCss": ""
+    { "url": "https://example.com/", "title": "ホーム", "slug": "home", "metaDescription": "説明文" }
+  ]
 }`;
 }
 
 function cleanJsonResponse(text: string): string {
   let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
+  if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
+  else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
+  if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
   return cleaned.trim();
 }
 
@@ -157,32 +132,43 @@ function sleep(ms: number): Promise<void> {
 }
 
 function isRateLimitError(error: any): boolean {
-  const message = error?.message || String(error);
+  const msg = error?.message || String(error);
   const status = error?.status || error?.statusCode;
-  return status === 429 || message.includes('429') || message.includes('Too Many Requests') || message.includes('rate_limit');
+  return status === 429 || msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('rate_limit');
 }
 
-function parseResponse(cleaned: string, crawlResult: CrawlResult): AnalysisResult {
-  const parsed = JSON.parse(cleaned) as AnalysisResult;
+function extractCommonBlockHtml(page: CrawledPage, selector: string): string {
+  try {
+    const $ = cheerio.load(page.html);
+    const el = $(selector).first();
+    if (el.length === 0) return '';
+    return $.html(el) || '';
+  } catch {
+    return '';
+  }
+}
 
-  if (!parsed.commonBlocks || !Array.isArray(parsed.commonBlocks)) {
-    parsed.commonBlocks = [];
-  }
-  if (!parsed.pages || !Array.isArray(parsed.pages)) {
-    parsed.pages = [];
-  }
-  if (!parsed.sharedCss) {
-    parsed.sharedCss = '';
-  }
+function extractPageContent(page: CrawledPage, selectors: string[]): string {
+  try {
+    const $ = cheerio.load(page.html);
+    $('script').remove();
+    $('link[rel="stylesheet"]').remove();
+    $('meta').remove();
+    $('title').remove();
 
-  for (const analyzedPage of parsed.pages) {
-    const crawledPage = crawlResult.pages.find(p => p.url === analyzedPage.url);
-    if (crawledPage && (!analyzedPage.images || analyzedPage.images.length === 0)) {
-      analyzedPage.images = crawledPage.images;
+    for (const sel of selectors) {
+      try { $(sel).remove(); } catch { /* skip invalid selector */ }
     }
-  }
 
-  return parsed;
+    const body = $('body');
+    if (body.length === 0) return $.html() || '';
+
+    let html = body.html() || '';
+    html = html.replace(/^\s+|\s+$/g, '');
+    return html;
+  } catch {
+    return extractBody(page.html);
+  }
 }
 
 export async function analyzeWithGemini(
@@ -195,11 +181,15 @@ export async function analyzeWithGemini(
   }
 
   const modelName = process.env.OPENAI_SITE_IMPORT_MODEL || 'gpt-4o';
-
   const openai = new OpenAI({ apiKey });
-  const prompt = buildPrompt(crawlResult);
 
-  console.log(`[Analyzer] Prompt length: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
+  // Phase 1: AI detects common block selectors + page metadata
+  onProgress?.(`AI解析中...（共通要素の検出 - ${modelName}）`);
+
+  const prompt = buildPhase1Prompt(crawlResult);
+  console.log(`[Analyzer] Phase 1 prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
+
+  let aiResult: AIResponse;
 
   const maxRetries = 3;
   let lastError: any;
@@ -207,11 +197,8 @@ export async function analyzeWithGemini(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`[Analyzer] Retry attempt ${attempt}/${maxRetries}`);
+        console.log(`[Analyzer] Retry ${attempt}/${maxRetries}`);
         onProgress?.(`リトライ中...（${attempt}/${maxRetries}）`);
-      } else {
-        console.log(`[Analyzer] Using model: ${modelName}`);
-        onProgress?.(`AI解析中...（モデル: ${modelName}）`);
       }
 
       const response = await openai.chat.completions.create({
@@ -219,52 +206,97 @@ export async function analyzeWithGemini(
         messages: [
           {
             role: 'system',
-            content: 'あなたはHTML解析の専門家です。指示に従いJSON形式で回答してください。',
+            content: 'あなたはHTML解析の専門家です。指示に従い正確なJSON形式で回答してください。',
           },
-          {
-            role: 'user',
-            content: prompt,
-          },
+          { role: 'user', content: prompt },
         ],
         temperature: 0.1,
+        max_tokens: 4096,
         response_format: { type: 'json_object' },
       });
 
       const text = response.choices[0]?.message?.content;
-      if (!text) {
-        throw new Error('OpenAI APIから空のレスポンスが返されました');
-      }
+      if (!text) throw new Error('OpenAI APIから空のレスポンスが返されました');
 
       const cleaned = cleanJsonResponse(text);
-
-      try {
-        return parseResponse(cleaned, crawlResult);
-      } catch (e) {
-        console.error('[Analyzer] Failed to parse response:', cleaned.substring(0, 500));
-        throw new Error('AI解析結果のパースに失敗しました。再度お試しください。');
-      }
+      aiResult = JSON.parse(cleaned) as AIResponse;
+      break;
     } catch (error: any) {
       lastError = error;
-
       if (isRateLimitError(error) && attempt < maxRetries) {
         const waitMs = 10000 * (attempt + 1);
-        console.log(`[Analyzer] Rate limited. Waiting ${waitMs}ms...`);
-        onProgress?.(`レート制限中。${waitMs / 1000}秒後にリトライします...`);
+        onProgress?.(`レート制限中。${waitMs / 1000}秒後にリトライ...`);
         await sleep(waitMs);
         continue;
       }
+      if (!isRateLimitError(error)) throw error;
+    }
+  }
 
-      if (!isRateLimitError(error)) {
-        throw error;
+  if (!aiResult!) {
+    if (isRateLimitError(lastError)) {
+      throw new Error('OpenAI APIのレート制限に達しました。しばらく待ってから再度お試しください。');
+    }
+    throw lastError;
+  }
+
+  // Phase 2: Extract common blocks using selectors (code-based)
+  onProgress?.('共通ブロックのHTML抽出中...');
+
+  const commonBlocks: AnalyzedCommonBlock[] = [];
+  const selectors: string[] = [];
+
+  if (aiResult.commonBlocks && Array.isArray(aiResult.commonBlocks)) {
+    for (const block of aiResult.commonBlocks) {
+      if (!block.selector) continue;
+      selectors.push(block.selector);
+
+      let html = '';
+      for (const page of crawlResult.pages) {
+        html = extractCommonBlockHtml(page, block.selector);
+        if (html) break;
+      }
+
+      if (html) {
+        commonBlocks.push({
+          name: block.name || block.selector,
+          html,
+          css: '',
+          position: block.position || 'other',
+        });
       }
     }
   }
 
-  if (isRateLimitError(lastError)) {
-    throw new Error(
-      'OpenAI APIのレート制限に達しました。しばらく待ってから再度お試しください。'
-    );
+  // Phase 3: Extract page-specific content by removing common blocks (code-based)
+  onProgress?.('ページ固有コンテンツの抽出中...');
+
+  const aiPageMap = new Map<string, AIPageMeta>();
+  if (aiResult.pages && Array.isArray(aiResult.pages)) {
+    for (const p of aiResult.pages) {
+      if (p.url) aiPageMap.set(p.url, p);
+    }
   }
 
-  throw lastError;
+  const pages: AnalyzedPage[] = crawlResult.pages.map(page => {
+    const meta = aiPageMap.get(page.url);
+    const contentHtml = extractPageContent(page, selectors);
+
+    return {
+      url: page.url,
+      title: meta?.title || page.title || '',
+      slug: meta?.slug || inferSlugFromUrl(page.url),
+      metaDescription: meta?.metaDescription || page.metaDescription || '',
+      contentHtml,
+      images: page.images,
+    };
+  });
+
+  console.log(`[Analyzer] Done: ${commonBlocks.length} common blocks, ${pages.length} pages`);
+
+  return {
+    commonBlocks,
+    pages,
+    sharedCss: '',
+  };
 }
