@@ -9,9 +9,11 @@ export interface ImportOptions {
   layoutMode: 'blank' | 'default';
   isPublished: boolean;
   customCss: string;
+  siteImportBatchId?: string;
 }
 
 export interface ImportResult {
+  siteImportBatchId: string;
   createdCustomBlocks: { id: string; name: string }[];
   createdPages: { id: string; title: string; slug: string }[];
   uploadedImages: number;
@@ -55,6 +57,7 @@ async function uploadImageToStorage(
   buffer: Buffer,
   originalUrl: string,
   mediaId: string,
+  siteImportBatchId: string,
 ): Promise<string | null> {
   try {
     const bucket = adminStorage.bucket();
@@ -91,6 +94,7 @@ async function uploadImageToStorage(
         height: metadata.height || 0,
         alt: sanitizedName.replace(/\.[^.]+$/, ''),
         usageContext: 'site-import',
+        siteImportBatchId,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -141,6 +145,7 @@ async function uploadImageToStorage(
       height: metadata.height || 0,
       alt: sanitizedName.replace(/\.[^.]+$/, ''),
       usageContext: 'site-import',
+      siteImportBatchId,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
@@ -163,6 +168,7 @@ function replaceImageUrls(html: string, urlMap: Map<string, string>): string {
 async function uploadAllImages(
   analysis: AnalysisResult,
   mediaId: string,
+  siteImportBatchId: string,
 ): Promise<{ urlMap: Map<string, string>; count: number; errors: string[] }> {
   const urlMap = new Map<string, string>();
   const errors: string[] = [];
@@ -187,7 +193,7 @@ async function uploadAllImages(
           errors.push(`画像のダウンロードに失敗: ${imgUrl}`);
           return;
         }
-        const newUrl = await uploadImageToStorage(buffer, imgUrl, mediaId);
+        const newUrl = await uploadImageToStorage(buffer, imgUrl, mediaId, siteImportBatchId);
         if (newUrl) {
           urlMap.set(imgUrl, newUrl);
           count++;
@@ -206,6 +212,7 @@ export async function executeImport(
   options: ImportOptions,
 ): Promise<ImportResult> {
   const result: ImportResult = {
+    siteImportBatchId,
     createdCustomBlocks: [],
     createdPages: [],
     uploadedImages: 0,
@@ -213,9 +220,10 @@ export async function executeImport(
   };
 
   const { mediaId, layoutMode, isPublished, customCss } = options;
+  const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
 
   // 1. Upload images and build URL map
-  const { urlMap, count, errors: imageErrors } = await uploadAllImages(analysis, mediaId);
+  const { urlMap, count, errors: imageErrors } = await uploadAllImages(analysis, mediaId, siteImportBatchId);
   result.uploadedImages = count;
   result.errors.push(...imageErrors);
 
@@ -233,6 +241,7 @@ export async function executeImport(
         name: block.name,
         html,
         css,
+        siteImportBatchId,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -347,6 +356,7 @@ export async function executeImport(
         showPanel: false,
         customCss: customCss || '',
         isHomePage: isHome,
+        siteImportBatchId,
       };
 
       const docRef = await adminDb.collection('pages').add(pageData);

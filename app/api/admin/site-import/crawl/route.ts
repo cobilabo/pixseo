@@ -27,6 +27,23 @@ function compactHtml(html: string): string {
   return body.trim();
 }
 
+async function fetchCss(url: string): Promise<string> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PixSEO SiteImporter/1.0)' },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return '';
+    const text = await res.text();
+    return text;
+  } catch {
+    return '';
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -51,12 +68,24 @@ export async function POST(request: NextRequest) {
       ],
     });
 
+    // Fetch external CSS files
+    const cssContents: string[] = [];
+    for (const cssUrl of result.allCssUrls) {
+      const css = await fetchCss(cssUrl);
+      if (css) cssContents.push(`/* Source: ${cssUrl} */\n${css}`);
+    }
+    // Include inline CSS
+    if (result.inlineCss.length > 0) {
+      cssContents.push(`/* Inline CSS */\n${result.inlineCss.join('\n')}`);
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         pageCount: result.pages.length,
         imageCount: result.allImages.length,
         cssCount: result.allCssUrls.length,
+        collectedCss: cssContents.join('\n\n'),
         pages: result.pages.map(p => ({
           url: p.url,
           title: p.title,

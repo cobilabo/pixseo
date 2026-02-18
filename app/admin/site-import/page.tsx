@@ -17,6 +17,7 @@ interface CrawlPageData {
 
 interface CrawlData {
   pages: CrawlPageData[];
+  collectedCss: string;
 }
 
 interface AnalyzedCommonBlock {
@@ -93,7 +94,7 @@ export default function SiteImportPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      setCrawlData({ pages: data.data.pages });
+      setCrawlData({ pages: data.data.pages, collectedCss: data.data.collectedCss || '' });
       setStep('crawled');
     } catch (err: any) {
       setError(err.message || 'クロールに失敗しました');
@@ -185,7 +186,7 @@ export default function SiteImportPage() {
             mediaId: currentTenant.id,
             layoutMode,
             isPublished,
-            customCss: analysis.sharedCss || '',
+            customCss: crawlData?.collectedCss || analysis.sharedCss || '',
           },
         }),
       });

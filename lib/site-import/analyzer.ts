@@ -92,9 +92,15 @@ ${pagesHtml}
 ${allPages}
 
 ## タスク
-1. 共通要素（ヘッダー、フッター、ナビゲーション等）を検出し、それぞれのCSSセレクタを返してください。
-   - セレクタは具体的に（例: "header.site-header", "footer#footer", "nav.global-nav"）
-   - タグ名だけでなくクラスやIDを含めてください
+1. **共通要素を可能な限りすべて検出**してください。特に以下の要素は必ず確認してください：
+   - **ヘッダー**: サイトロゴ、グローバルナビゲーション等（<header>タグやクラス名で判定）
+   - **フッター**: フッターリンク、コピーライト、会社情報等（<footer>タグやクラス名で判定）
+   - **ナビゲーション**: ヘッダーと別のナビゲーションがあれば
+   - その他全ページに共通する要素
+   
+   セレクタは具体的に指定してください（例: "header.site-header", "footer#footer", "footer", "nav.global-nav"）
+   タグ名だけでもOKです（例: "header", "footer"）。クラスやIDがあればそれも含めてください。
+   **ヘッダーとフッターは必ず両方検出してください。**
 
 2. 全ページのメタ情報を推定してください。
 
@@ -102,8 +108,8 @@ ${allPages}
 
 {
   "commonBlocks": [
-    { "name": "共通ヘッダー", "selector": "header.site-header", "position": "header" },
-    { "name": "共通フッター", "selector": "footer.site-footer", "position": "footer" }
+    { "name": "共通ヘッダー", "selector": "header", "position": "header" },
+    { "name": "共通フッター", "selector": "footer", "position": "footer" }
   ],
   "pages": [
     { "url": "https://example.com/", "title": "ホーム", "slug": "home", "metaDescription": "説明文" }
@@ -220,11 +226,12 @@ export async function analyzeWithGemini(
     throw lastError;
   }
 
-  // Phase 2: Extract common blocks HTML using selectors
+  // Phase 2: Extract common blocks HTML using selectors + fallback detection
   onProgress?.('共通ブロックのHTML抽出中...');
 
   const commonBlocks: AnalyzedCommonBlock[] = [];
   const selectors: string[] = [];
+  const detectedPositions = new Set<string>();
 
   if (aiResult.commonBlocks && Array.isArray(aiResult.commonBlocks)) {
     for (const block of aiResult.commonBlocks) {
@@ -244,6 +251,33 @@ export async function analyzeWithGemini(
           css: '',
           position: block.position || 'other',
         });
+        detectedPositions.add(block.position);
+      }
+    }
+  }
+
+  // Fallback: detect header/footer by HTML tags if AI missed them
+  const fallbackSelectors: { selector: string; position: 'header' | 'footer'; name: string }[] = [
+    { selector: 'header', position: 'header', name: '共通ヘッダー' },
+    { selector: 'footer', position: 'footer', name: '共通フッター' },
+  ];
+
+  for (const fb of fallbackSelectors) {
+    if (detectedPositions.has(fb.position)) continue;
+
+    for (const page of crawlData.pages) {
+      const html = extractCommonBlockHtml(page.bodyHtml, fb.selector);
+      if (html && html.length > 20) {
+        selectors.push(fb.selector);
+        commonBlocks.push({
+          name: fb.name,
+          html,
+          css: '',
+          position: fb.position,
+        });
+        detectedPositions.add(fb.position);
+        console.log(`[Analyzer] Fallback detected <${fb.selector}> as ${fb.position}`);
+        break;
       }
     }
   }

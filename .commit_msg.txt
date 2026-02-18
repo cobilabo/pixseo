@@ -1,0 +1,6 @@
+fix: AI解析の再クロールを廃止しタイムアウトを解消
+
+- crawlエンドポイントで圧縮済みbodyHtmlを返すように変更
+- analyzeエンドポイントは再クロールせずcrawlDataを直接受け取る
+- HTML圧縮: script/noscript/SVG内容/data属性/aria属性を除去
+- analyzerをCrawlResult依存からCompactCrawlData依存に変更
