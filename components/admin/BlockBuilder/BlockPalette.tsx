@@ -139,6 +139,7 @@ export default function BlockPalette({ onAddBlock }: BlockPaletteProps) {
           <div className="space-y-2">
             {customBlocks.map((customBlock) => (
               <button
+                type="button"
                 key={customBlock.id}
                 onClick={() => onAddBlock('custom', customBlock.id)}
                 className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"

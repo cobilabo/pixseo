@@ -36,7 +36,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
     });
 
   return (
-    <div className="space-y-6">
+    <div>
       {visibleBlocks.map((block) => {
         // padding設定を適用
         const paddingStyle: React.CSSProperties = {};

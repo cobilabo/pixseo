@@ -27,6 +27,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     article: '記事ブロック',
     html: 'HTMLブロック',
     spacer: '空白ブロック',
+    custom: 'カスタムブロック',
   };
 
   return (
