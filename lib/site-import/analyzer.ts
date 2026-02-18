@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { CrawlResult } from './crawler';
+import { CrawlResult, CrawledPage } from './crawler';
 
 export interface AnalyzedCommonBlock {
   name: string;
@@ -23,25 +23,67 @@ export interface AnalysisResult {
   sharedCss: string;
 }
 
-function truncateHtml(html: string, maxLength: number = 15000): string {
-  if (html.length <= maxLength) return html;
-  return html.substring(0, maxLength) + '\n<!-- ... truncated ... -->';
+const MAX_TOTAL_HTML_CHARS = 200000;
+const MAX_PAGES_FOR_AI = 10;
+
+function stripHtml(html: string): string {
+  let stripped = html;
+  stripped = stripped.replace(/<!--[\s\S]*?-->/g, '');
+  stripped = stripped.replace(/<svg[\s\S]*?<\/svg>/gi, '<svg/>');
+  stripped = stripped.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
+  stripped = stripped.replace(/\sdata-[a-z-]+="[^"]*"/gi, '');
+  stripped = stripped.replace(/\s(aria-[a-z-]+|role|tabindex|draggable)="[^"]*"/gi, '');
+  stripped = stripped.replace(/\sstyle="[^"]*"/gi, '');
+  stripped = stripped.replace(/[ \t]+/g, ' ');
+  stripped = stripped.replace(/\n\s*\n/g, '\n');
+  return stripped.trim();
+}
+
+function extractBody(html: string): string {
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  return bodyMatch ? bodyMatch[1] : html;
+}
+
+function selectPagesForAI(pages: CrawledPage[]): CrawledPage[] {
+  if (pages.length <= MAX_PAGES_FOR_AI) return pages;
+
+  const selected: CrawledPage[] = [pages[0]];
+  const step = Math.floor((pages.length - 1) / (MAX_PAGES_FOR_AI - 1));
+  for (let i = step; i < pages.length && selected.length < MAX_PAGES_FOR_AI; i += step) {
+    selected.push(pages[i]);
+  }
+  if (selected[selected.length - 1] !== pages[pages.length - 1]) {
+    selected.push(pages[pages.length - 1]);
+  }
+  return selected;
 }
 
 function buildPrompt(crawlResult: CrawlResult): string {
-  const pagesSummary = crawlResult.pages.map((p, i) => {
-    const bodyMatch = p.html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    const bodyHtml = bodyMatch ? bodyMatch[1] : p.html;
+  const selectedPages = selectPagesForAI(crawlResult.pages);
+  const perPageLimit = Math.floor(MAX_TOTAL_HTML_CHARS / selectedPages.length);
+
+  const pagesSummary = selectedPages.map((p, i) => {
+    let bodyHtml = stripHtml(extractBody(p.html));
+    if (bodyHtml.length > perPageLimit) {
+      bodyHtml = bodyHtml.substring(0, perPageLimit) + '\n<!-- ... truncated ... -->';
+    }
     return `=== PAGE ${i + 1}: ${p.url} ===
 TITLE: ${p.title}
 BODY HTML:
-${truncateHtml(bodyHtml)}
+${bodyHtml}
 `;
   }).join('\n\n');
 
+  const allPagesList = crawlResult.pages.map((p, i) =>
+    `${i + 1}. ${p.url} (title: ${p.title})`
+  ).join('\n');
+
   return `あなたはHTML解析の専門家です。以下の複数ページのHTMLを分析し、共通要素とページ固有コンテンツを分離してください。
 
-## 解析対象ページ一覧
+## 全ページ一覧（${crawlResult.pages.length}ページ）
+${allPagesList}
+
+## 解析対象ページHTML（代表${selectedPages.length}ページ分）
 ${pagesSummary}
 
 ## タスク
@@ -51,9 +93,9 @@ ${pagesSummary}
    - 共通フッター（フッターリンク、コピーライト等）
    - その他の共通要素があれば
 
-2. **ページ固有コンテンツの抽出**: 各ページの固有コンテンツ（共通要素を除いた部分）を抽出してください。
+2. **ページ固有コンテンツの抽出**: HTMLが提供されたページについて、固有コンテンツ（共通要素を除いた部分）を抽出してください。
 
-3. **メタ情報の推定**: 各ページについて以下を推定してください：
+3. **全ページのメタ情報推定**: 上記「全ページ一覧」の全ページについて、以下を推定してください（HTMLが無いページはURLとタイトルから推定）：
    - title: ページタイトル
    - slug: URL用スラッグ（英数字とハイフン、先頭ページは "home"）
    - metaDescription: SEO用の説明文（120文字以内）
@@ -64,9 +106,9 @@ ${pagesSummary}
 - CSSクラス名は変更しないでください
 - ページ固有コンテンツは<div>等で適切にラップしてください
 - 先頭ページ（ルートURL）のslugは "home" にしてください
+- HTMLが提供されていないページのcontentHtmlは空文字("")にしてください
 
-## 出力形式
-以下のJSON形式で出力してください。JSONのみを出力し、マークダウンのコードブロック記号は不要です。
+## 出力形式（JSON）
 
 {
   "commonBlocks": [
@@ -156,6 +198,8 @@ export async function analyzeWithGemini(
 
   const openai = new OpenAI({ apiKey });
   const prompt = buildPrompt(crawlResult);
+
+  console.log(`[Analyzer] Prompt length: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
 
   const maxRetries = 3;
   let lastError: any;

@@ -1,5 +1,0 @@
-fix: Gemini APIレート制限時にモデル自動フォールバックを追加
-
-- gemini-2.0-flash → gemini-1.5-flash → gemini-2.0-flash-lite の順で自動切替
-- フォールバック時の進捗をSSEでリアルタイム通知
-- GEMINI_MODEL環境変数で固定モデル指定も可能
