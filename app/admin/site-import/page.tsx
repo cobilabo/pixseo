@@ -7,12 +7,16 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { LayoutMode } from '@/types/page';
 
-interface CrawlPageSummary {
+interface CrawlPageData {
   url: string;
   title: string;
   metaDescription: string;
-  imageCount: number;
-  htmlLength: number;
+  images: string[];
+  bodyHtml: string;
+}
+
+interface CrawlData {
+  pages: CrawlPageData[];
 }
 
 interface AnalyzedCommonBlock {
@@ -54,7 +58,7 @@ export default function SiteImportPage() {
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
   const [excludePathsText, setExcludePathsText] = useState('');
-  const [crawlSummary, setCrawlSummary] = useState<CrawlPageSummary[]>([]);
+  const [crawlData, setCrawlData] = useState<CrawlData | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [importResult, setImportResult] = useState<ImportResultData | null>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('blank');
@@ -89,7 +93,7 @@ export default function SiteImportPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      setCrawlSummary(data.data.pages);
+      setCrawlData({ pages: data.data.pages });
       setStep('crawled');
     } catch (err: any) {
       setError(err.message || 'クロールに失敗しました');
@@ -98,6 +102,8 @@ export default function SiteImportPage() {
   };
 
   const handleAnalyze = async () => {
+    if (!crawlData) return;
+
     setStep('analyzing');
     setError('');
     setAnalyzeProgress('サーバーに接続中...');
@@ -106,7 +112,7 @@ export default function SiteImportPage() {
       const response = await fetch('/api/admin/site-import/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, maxPages, excludePaths: getExcludePaths() }),
+        body: JSON.stringify({ crawlData }),
       });
 
       if (!response.ok) {
@@ -356,7 +362,7 @@ export default function SiteImportPage() {
             <div className="bg-white rounded-[1.75rem] p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4">クロール結果</h2>
               <p className="text-sm text-gray-500 mb-6">
-                {crawlSummary.length}ページを検出しました。AI解析を実行して共通要素を検出します。
+                {crawlData?.pages.length || 0}ページを検出しました。AI解析を実行して共通要素を検出します。
               </p>
 
               <div className="border border-gray-200 rounded-xl overflow-hidden mb-6">
@@ -369,11 +375,11 @@ export default function SiteImportPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {crawlSummary.map((page, i) => (
+                    {crawlData?.pages.map((page, i) => (
                       <tr key={i} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">{page.url}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{page.title || '(タイトルなし)'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{page.imageCount}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{page.images.length}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,7 +388,7 @@ export default function SiteImportPage() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setStep('input'); setCrawlSummary([]); }}
+                  onClick={() => { setStep('input'); setCrawlData(null); }}
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
                   disabled={step === 'analyzing'}
                 >
@@ -628,7 +634,7 @@ export default function SiteImportPage() {
                   onClick={() => {
                     setStep('input');
                     setUrl('');
-                    setCrawlSummary([]);
+                    setCrawlData(null);
                     setAnalysis(null);
                     setImportResult(null);
                     setError('');

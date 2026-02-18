@@ -1,13 +1,20 @@
 import { NextRequest } from 'next/server';
-import { crawlSite } from '@/lib/site-import/crawler';
 import { analyzeWithGemini } from '@/lib/site-import/analyzer';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+export const maxDuration = 120;
+
+interface CrawlDataPage {
+  url: string;
+  title: string;
+  metaDescription: string;
+  images: string[];
+  bodyHtml: string;
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { url, maxPages = 50, maxDepth = 3, excludePaths = [] } = body;
+  const { crawlData } = body as { crawlData: { pages: CrawlDataPage[] } };
 
   const encoder = new TextEncoder();
 
@@ -18,47 +25,22 @@ export async function POST(request: NextRequest) {
       };
 
       try {
-        if (!url) {
-          send({ status: 'error', error: 'URLは必須です' });
-          controller.close();
-          return;
-        }
-
-        try {
-          new URL(url);
-        } catch {
-          send({ status: 'error', error: '有効なURLを入力してください' });
-          controller.close();
-          return;
-        }
-
-        send({ status: 'crawling', message: 'サイトをクロール中...' });
-
-        const crawlResult = await crawlSite(url, {
-          maxPages,
-          maxDepth,
-          excludePatterns: [
-            'wp-admin', 'wp-login', 'wp-json', '/feed', '.xml', '.pdf', '.zip',
-            ...excludePaths.filter((p: string) => p.trim()),
-          ],
-        });
-
-        if (crawlResult.pages.length === 0) {
-          send({ status: 'error', error: 'クロール結果が0ページです。URLを確認してください。' });
+        if (!crawlData?.pages || crawlData.pages.length === 0) {
+          send({ status: 'error', error: 'クロールデータが必要です。先にクロールを実行してください。' });
           controller.close();
           return;
         }
 
         send({
           status: 'analyzing',
-          message: `${crawlResult.pages.length}ページをクロール完了。AI解析中...`,
+          message: `${crawlData.pages.length}ページのAI解析を開始...`,
         });
 
         const onProgress = (message: string) => {
           send({ status: 'analyzing', message });
         };
 
-        const analysis = await analyzeWithGemini(crawlResult, onProgress);
+        const analysis = await analyzeWithGemini(crawlData, onProgress);
 
         send({ status: 'done', data: analysis });
         controller.close();

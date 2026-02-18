@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import * as cheerio from 'cheerio';
-import { CrawlResult, CrawledPage } from './crawler';
 
 export interface AnalyzedCommonBlock {
   name: string;
@@ -24,6 +23,18 @@ export interface AnalysisResult {
   sharedCss: string;
 }
 
+export interface CompactPage {
+  url: string;
+  title: string;
+  metaDescription: string;
+  images: string[];
+  bodyHtml: string;
+}
+
+export interface CompactCrawlData {
+  pages: CompactPage[];
+}
+
 interface AICommonBlock {
   name: string;
   selector: string;
@@ -40,25 +51,6 @@ interface AIPageMeta {
 interface AIResponse {
   commonBlocks: AICommonBlock[];
   pages: AIPageMeta[];
-}
-
-function stripForAI(html: string): string {
-  let s = html;
-  s = s.replace(/<!--[\s\S]*?-->/g, '');
-  s = s.replace(/<svg[\s\S]*?<\/svg>/gi, '<svg/>');
-  s = s.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
-  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
-  s = s.replace(/\sdata-[a-z-]+="[^"]*"/gi, '');
-  s = s.replace(/\s(aria-[a-z-]+|role|tabindex|draggable)="[^"]*"/gi, '');
-  s = s.replace(/\sstyle="[^"]*"/gi, '');
-  s = s.replace(/[ \t]+/g, ' ');
-  s = s.replace(/\n\s*\n/g, '\n');
-  return s.trim();
-}
-
-function extractBody(html: string): string {
-  const m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  return m ? m[1] : html;
 }
 
 function truncate(text: string, max: number): string {
@@ -78,16 +70,16 @@ function inferSlugFromUrl(url: string): string {
   }
 }
 
-function buildPhase1Prompt(crawlResult: CrawlResult): string {
-  const samples = crawlResult.pages.slice(0, 3);
+function buildPrompt(data: CompactCrawlData): string {
+  const samples = data.pages.slice(0, 3);
   const perPage = Math.floor(60000 / samples.length);
 
   const pagesHtml = samples.map((p, i) => {
-    const body = truncate(stripForAI(extractBody(p.html)), perPage);
+    const body = truncate(p.bodyHtml, perPage);
     return `=== PAGE ${i + 1}: ${p.url} ===\n${body}`;
   }).join('\n\n');
 
-  const allPages = crawlResult.pages.map((p, i) =>
+  const allPages = data.pages.map((p, i) =>
     `${i + 1}. ${p.url} (title: ${p.title})`
   ).join('\n');
 
@@ -96,7 +88,7 @@ function buildPhase1Prompt(crawlResult: CrawlResult): string {
 ## 代表ページのHTML（${samples.length}ページ）
 ${pagesHtml}
 
-## 全ページ一覧（${crawlResult.pages.length}ページ）
+## 全ページ一覧（${data.pages.length}ページ）
 ${allPages}
 
 ## タスク
@@ -137,9 +129,9 @@ function isRateLimitError(error: any): boolean {
   return status === 429 || msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('rate_limit');
 }
 
-function extractCommonBlockHtml(page: CrawledPage, selector: string): string {
+function extractCommonBlockHtml(bodyHtml: string, selector: string): string {
   try {
-    const $ = cheerio.load(page.html);
+    const $ = cheerio.load(`<body>${bodyHtml}</body>`);
     const el = $(selector).first();
     if (el.length === 0) return '';
     return $.html(el) || '';
@@ -148,31 +140,21 @@ function extractCommonBlockHtml(page: CrawledPage, selector: string): string {
   }
 }
 
-function extractPageContent(page: CrawledPage, selectors: string[]): string {
+function extractPageContent(bodyHtml: string, selectors: string[]): string {
   try {
-    const $ = cheerio.load(page.html);
-    $('script').remove();
-    $('link[rel="stylesheet"]').remove();
-    $('meta').remove();
-    $('title').remove();
-
+    const $ = cheerio.load(`<body>${bodyHtml}</body>`);
     for (const sel of selectors) {
-      try { $(sel).remove(); } catch { /* skip invalid selector */ }
+      try { $(sel).remove(); } catch { /* skip */ }
     }
-
-    const body = $('body');
-    if (body.length === 0) return $.html() || '';
-
-    let html = body.html() || '';
-    html = html.replace(/^\s+|\s+$/g, '');
-    return html;
+    let html = $('body').html() || '';
+    return html.replace(/^\s+|\s+$/g, '');
   } catch {
-    return extractBody(page.html);
+    return bodyHtml;
   }
 }
 
 export async function analyzeWithGemini(
-  crawlResult: CrawlResult,
+  crawlData: CompactCrawlData,
   onProgress?: (message: string) => void,
 ): Promise<AnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -186,11 +168,10 @@ export async function analyzeWithGemini(
   // Phase 1: AI detects common block selectors + page metadata
   onProgress?.(`AI解析中...（共通要素の検出 - ${modelName}）`);
 
-  const prompt = buildPhase1Prompt(crawlResult);
-  console.log(`[Analyzer] Phase 1 prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
+  const prompt = buildPrompt(crawlData);
+  console.log(`[Analyzer] Prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
 
-  let aiResult: AIResponse;
-
+  let aiResult: AIResponse | undefined;
   const maxRetries = 3;
   let lastError: any;
 
@@ -218,8 +199,7 @@ export async function analyzeWithGemini(
       const text = response.choices[0]?.message?.content;
       if (!text) throw new Error('OpenAI APIから空のレスポンスが返されました');
 
-      const cleaned = cleanJsonResponse(text);
-      aiResult = JSON.parse(cleaned) as AIResponse;
+      aiResult = JSON.parse(cleanJsonResponse(text)) as AIResponse;
       break;
     } catch (error: any) {
       lastError = error;
@@ -233,14 +213,14 @@ export async function analyzeWithGemini(
     }
   }
 
-  if (!aiResult!) {
+  if (!aiResult) {
     if (isRateLimitError(lastError)) {
       throw new Error('OpenAI APIのレート制限に達しました。しばらく待ってから再度お試しください。');
     }
     throw lastError;
   }
 
-  // Phase 2: Extract common blocks using selectors (code-based)
+  // Phase 2: Extract common blocks HTML using selectors
   onProgress?.('共通ブロックのHTML抽出中...');
 
   const commonBlocks: AnalyzedCommonBlock[] = [];
@@ -252,8 +232,8 @@ export async function analyzeWithGemini(
       selectors.push(block.selector);
 
       let html = '';
-      for (const page of crawlResult.pages) {
-        html = extractCommonBlockHtml(page, block.selector);
+      for (const page of crawlData.pages) {
+        html = extractCommonBlockHtml(page.bodyHtml, block.selector);
         if (html) break;
       }
 
@@ -268,7 +248,7 @@ export async function analyzeWithGemini(
     }
   }
 
-  // Phase 3: Extract page-specific content by removing common blocks (code-based)
+  // Phase 3: Extract page-specific content by removing common blocks
   onProgress?.('ページ固有コンテンツの抽出中...');
 
   const aiPageMap = new Map<string, AIPageMeta>();
@@ -278,9 +258,9 @@ export async function analyzeWithGemini(
     }
   }
 
-  const pages: AnalyzedPage[] = crawlResult.pages.map(page => {
+  const pages: AnalyzedPage[] = crawlData.pages.map(page => {
     const meta = aiPageMap.get(page.url);
-    const contentHtml = extractPageContent(page, selectors);
+    const contentHtml = extractPageContent(page.bodyHtml, selectors);
 
     return {
       url: page.url,
@@ -294,9 +274,5 @@ export async function analyzeWithGemini(
 
   console.log(`[Analyzer] Done: ${commonBlocks.length} common blocks, ${pages.length} pages`);
 
-  return {
-    commonBlocks,
-    pages,
-    sharedCss: '',
-  };
+  return { commonBlocks, pages, sharedCss: '' };
 }

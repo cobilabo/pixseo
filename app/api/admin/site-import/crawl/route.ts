@@ -1,8 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { crawlSite } from '@/lib/site-import/crawler';
+import * as cheerio from 'cheerio';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
+
+function compactHtml(html: string): string {
+  const $ = cheerio.load(html);
+  $('script').remove();
+  $('noscript').remove();
+  $('svg').html('');
+  $('*').each((_, el) => {
+    const node = $(el);
+    const attribs = (el as any).attribs || {};
+    for (const attr of Object.keys(attribs)) {
+      if (attr.startsWith('data-') || attr.startsWith('aria-') || attr === 'role' || attr === 'tabindex') {
+        node.removeAttr(attr);
+      }
+    }
+  });
+
+  let body = $('body').html() || $.html();
+  body = body.replace(/<!--[\s\S]*?-->/g, '');
+  body = body.replace(/[ \t]+/g, ' ');
+  body = body.replace(/\n\s*\n/g, '\n');
+  return body.trim();
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,8 +61,8 @@ export async function POST(request: NextRequest) {
           url: p.url,
           title: p.title,
           metaDescription: p.metaDescription,
-          imageCount: p.images.length,
-          htmlLength: p.html.length,
+          images: p.images,
+          bodyHtml: compactHtml(p.html),
         })),
       },
     });
