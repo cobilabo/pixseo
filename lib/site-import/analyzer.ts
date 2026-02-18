@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { CrawlResult } from './crawler';
 
 export interface AnalyzedCommonBlock {
@@ -114,27 +114,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function extractRetryDelay(error: any): number | null {
-  const message = error?.message || String(error);
-  const match = message.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
-  if (match) return Math.ceil(parseFloat(match[1]) * 1000);
-
-  const retryMatch = message.match(/retryDelay.*?(\d+)s/i);
-  if (retryMatch) return parseInt(retryMatch[1]) * 1000;
-
-  return null;
-}
-
 function isRateLimitError(error: any): boolean {
   const message = error?.message || String(error);
-  return message.includes('429') || message.includes('Too Many Requests') || message.includes('quota');
+  const status = error?.status || error?.statusCode;
+  return status === 429 || message.includes('429') || message.includes('Too Many Requests') || message.includes('rate_limit');
 }
-
-const MODEL_FALLBACK_CHAIN = [
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-2.0-flash-lite',
-];
 
 function parseResponse(cleaned: string, crawlResult: CrawlResult): AnalysisResult {
   const parsed = JSON.parse(cleaned) as AnalysisResult;
@@ -159,85 +143,70 @@ function parseResponse(cleaned: string, crawlResult: CrawlResult): AnalysisResul
   return parsed;
 }
 
-async function tryGenerateWithRetry(
-  model: GenerativeModel,
-  modelName: string,
-  prompt: string,
+export async function analyzeWithGemini(
   crawlResult: CrawlResult,
+  onProgress?: (message: string) => void,
 ): Promise<AnalysisResult> {
-  const maxRetries = 2;
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  const modelName = process.env.OPENAI_SITE_IMPORT_MODEL || 'gpt-4o';
+
+  const openai = new OpenAI({ apiKey });
+  const prompt = buildPrompt(crawlResult);
+
+  const maxRetries = 3;
+  let lastError: any;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`[Analyzer] Retry attempt ${attempt}/${maxRetries} for ${modelName}`);
+        console.log(`[Analyzer] Retry attempt ${attempt}/${maxRetries}`);
+        onProgress?.(`リトライ中...（${attempt}/${maxRetries}）`);
+      } else {
+        console.log(`[Analyzer] Using model: ${modelName}`);
+        onProgress?.(`AI解析中...（モデル: ${modelName}）`);
       }
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const response = await openai.chat.completions.create({
+        model: modelName,
+        messages: [
+          {
+            role: 'system',
+            content: 'あなたはHTML解析の専門家です。指示に従いJSON形式で回答してください。',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.1,
+        response_format: { type: 'json_object' },
+      });
+
+      const text = response.choices[0]?.message?.content;
+      if (!text) {
+        throw new Error('OpenAI APIから空のレスポンスが返されました');
+      }
+
       const cleaned = cleanJsonResponse(text);
 
       try {
         return parseResponse(cleaned, crawlResult);
       } catch (e) {
-        console.error(`[Analyzer] Failed to parse response from ${modelName}:`, cleaned.substring(0, 500));
+        console.error('[Analyzer] Failed to parse response:', cleaned.substring(0, 500));
         throw new Error('AI解析結果のパースに失敗しました。再度お試しください。');
       }
     } catch (error: any) {
-      if (isRateLimitError(error) && attempt < maxRetries) {
-        const retryDelay = extractRetryDelay(error) || (10000 * (attempt + 1));
-        console.log(`[Analyzer] ${modelName} rate limited. Waiting ${retryDelay}ms...`);
-        await sleep(retryDelay);
-        continue;
-      }
-      throw error;
-    }
-  }
-
-  throw new Error(`${modelName} のリトライ上限に達しました`);
-}
-
-export async function analyzeWithGemini(
-  crawlResult: CrawlResult,
-  onProgress?: (message: string) => void,
-): Promise<AnalysisResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-
-  const envModel = process.env.GEMINI_MODEL;
-  const models = envModel ? [envModel] : MODEL_FALLBACK_CHAIN;
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const prompt = buildPrompt(crawlResult);
-
-  let lastError: any;
-
-  for (const modelName of models) {
-    try {
-      console.log(`[Analyzer] Trying model: ${modelName}`);
-      onProgress?.(`AI解析中...（モデル: ${modelName}）`);
-
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 65536,
-          responseMimeType: 'application/json',
-        },
-      });
-
-      return await tryGenerateWithRetry(model, modelName, prompt, crawlResult);
-    } catch (error: any) {
       lastError = error;
-      console.warn(`[Analyzer] ${modelName} failed:`, error.message?.substring(0, 200));
 
-      if (isRateLimitError(error) && models.indexOf(modelName) < models.length - 1) {
-        const nextModel = models[models.indexOf(modelName) + 1];
-        console.log(`[Analyzer] Falling back to ${nextModel}`);
-        onProgress?.(`${modelName} がレート制限中。${nextModel} にフォールバック...`);
-        await sleep(2000);
+      if (isRateLimitError(error) && attempt < maxRetries) {
+        const waitMs = 10000 * (attempt + 1);
+        console.log(`[Analyzer] Rate limited. Waiting ${waitMs}ms...`);
+        onProgress?.(`レート制限中。${waitMs / 1000}秒後にリトライします...`);
+        await sleep(waitMs);
         continue;
       }
 
@@ -249,9 +218,7 @@ export async function analyzeWithGemini(
 
   if (isRateLimitError(lastError)) {
     throw new Error(
-      `Gemini APIの全モデル（${models.join(', ')}）がレート制限に達しました。` +
-      '数分待ってから再度お試しください。' +
-      '解決しない場合は、Google AI Studio (https://aistudio.google.com/apikey) でAPIキーのクォータ設定を確認してください。'
+      'OpenAI APIのレート制限に達しました。しばらく待ってから再度お試しください。'
     );
   }
 
