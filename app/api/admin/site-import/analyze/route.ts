@@ -1,58 +1,76 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { crawlSite } from '@/lib/site-import/crawler';
 import { analyzeWithGemini } from '@/lib/site-import/analyzer';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { url, maxPages = 50, maxDepth = 3, excludePaths = [] } = body;
+  const body = await request.json();
+  const { url, maxPages = 50, maxDepth = 3, excludePaths = [] } = body;
 
-    if (!url) {
-      return NextResponse.json(
-        { error: 'URLは必須です' },
-        { status: 400 }
-      );
-    }
+  const encoder = new TextEncoder();
 
-    try {
-      new URL(url);
-    } catch {
-      return NextResponse.json(
-        { error: '有効なURLを入力してください' },
-        { status: 400 }
-      );
-    }
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (data: Record<string, any>) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      };
 
-    const crawlResult = await crawlSite(url, {
-      maxPages,
-      maxDepth,
-      excludePatterns: [
-        'wp-admin', 'wp-login', 'wp-json', '/feed', '.xml', '.pdf', '.zip',
-        ...excludePaths.filter((p: string) => p.trim()),
-      ],
-    });
+      try {
+        if (!url) {
+          send({ status: 'error', error: 'URLは必須です' });
+          controller.close();
+          return;
+        }
 
-    if (crawlResult.pages.length === 0) {
-      return NextResponse.json(
-        { error: 'クロール結果が0ページです。URLを確認してください。' },
-        { status: 400 }
-      );
-    }
+        try {
+          new URL(url);
+        } catch {
+          send({ status: 'error', error: '有効なURLを入力してください' });
+          controller.close();
+          return;
+        }
 
-    const analysis = await analyzeWithGemini(crawlResult);
+        send({ status: 'crawling', message: 'サイトをクロール中...' });
 
-    return NextResponse.json({
-      success: true,
-      data: analysis,
-    });
-  } catch (error: any) {
-    console.error('[API site-import/analyze] Error:', error);
-    return NextResponse.json(
-      { error: error.message || 'AI解析中にエラーが発生しました' },
-      { status: 500 }
-    );
-  }
+        const crawlResult = await crawlSite(url, {
+          maxPages,
+          maxDepth,
+          excludePatterns: [
+            'wp-admin', 'wp-login', 'wp-json', '/feed', '.xml', '.pdf', '.zip',
+            ...excludePaths.filter((p: string) => p.trim()),
+          ],
+        });
+
+        if (crawlResult.pages.length === 0) {
+          send({ status: 'error', error: 'クロール結果が0ページです。URLを確認してください。' });
+          controller.close();
+          return;
+        }
+
+        send({
+          status: 'analyzing',
+          message: `${crawlResult.pages.length}ページをクロール完了。AI解析中...`,
+        });
+
+        const analysis = await analyzeWithGemini(crawlResult);
+
+        send({ status: 'done', data: analysis });
+        controller.close();
+      } catch (error: any) {
+        console.error('[API site-import/analyze] Error:', error);
+        send({ status: 'error', error: error.message || 'AI解析中にエラーが発生しました' });
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }

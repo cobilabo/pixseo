@@ -61,6 +61,7 @@ export default function SiteImportPage() {
   const [isPublished, setIsPublished] = useState(false);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
+  const [analyzeProgress, setAnalyzeProgress] = useState('');
 
   const getExcludePaths = (): string[] => {
     return excludePathsText
@@ -99,6 +100,7 @@ export default function SiteImportPage() {
   const handleAnalyze = async () => {
     setStep('analyzing');
     setError('');
+    setAnalyzeProgress('サーバーに接続中...');
 
     try {
       const response = await fetch('/api/admin/site-import/analyze', {
@@ -107,14 +109,57 @@ export default function SiteImportPage() {
         body: JSON.stringify({ url, maxPages, excludePaths: getExcludePaths() }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const json = JSON.parse(text);
+          throw new Error(json.error || 'AI解析に失敗しました');
+        } catch {
+          throw new Error(`サーバーエラー (${response.status})`);
+        }
+      }
 
-      setAnalysis(data.data);
-      setStep('preview');
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('ストリーム読み取りに失敗しました');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.status === 'crawling' || event.status === 'analyzing') {
+              setAnalyzeProgress(event.message || event.status);
+            } else if (event.status === 'done') {
+              setAnalysis(event.data);
+              setStep('preview');
+              setAnalyzeProgress('');
+              return;
+            } else if (event.status === 'error') {
+              throw new Error(event.error);
+            }
+          } catch (e: any) {
+            if (e.message && !e.message.includes('JSON')) throw e;
+          }
+        }
+      }
+
+      if (step === 'analyzing') {
+        throw new Error('サーバーからの応答が途中で途切れました。再度お試しください。');
+      }
     } catch (err: any) {
       setError(err.message || 'AI解析に失敗しました');
       setStep('crawled');
+      setAnalyzeProgress('');
     }
   };
 
@@ -351,7 +396,7 @@ export default function SiteImportPage() {
                   {step === 'analyzing' ? (
                     <span className="flex items-center gap-2">
                       <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      AI解析中...（クロール＋解析で数十秒〜数分かかります）
+                      {analyzeProgress || 'AI解析中...'}
                     </span>
                   ) : 'AI解析を実行'}
                 </button>
