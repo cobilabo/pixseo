@@ -102,6 +102,42 @@ export default function SiteImportPage() {
     }
   };
 
+  const extractHtmlBySelector = (bodyHtml: string, selector: string): string => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<html><body>${bodyHtml}</body></html>`, 'text/html');
+      const el = doc.querySelector(selector);
+      return el ? el.outerHTML : '';
+    } catch {
+      return '';
+    }
+  };
+
+  const removeSelectorsFromHtml = (bodyHtml: string, selectors: string[]): string => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<html><body>${bodyHtml}</body></html>`, 'text/html');
+      for (const sel of selectors) {
+        try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch { /* skip */ }
+      }
+      return doc.body.innerHTML.trim();
+    } catch {
+      return bodyHtml;
+    }
+  };
+
+  const inferSlugFromUrl = (url: string): string => {
+    try {
+      const u = new URL(url);
+      const path = u.pathname.replace(/\/$/, '').replace(/^\//, '');
+      if (!path) return 'home';
+      const last = path.split('/').pop() || 'home';
+      return last.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+    } catch {
+      return 'page';
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!crawlData) return;
 
@@ -110,10 +146,16 @@ export default function SiteImportPage() {
     setAnalyzeProgress('サーバーに接続中...');
 
     try {
+      const samplePages = crawlData.pages.slice(0, 3).map(p => ({
+        url: p.url,
+        bodyHtml: p.bodyHtml.substring(0, 20000),
+      }));
+      const allPages = crawlData.pages.map(p => ({ url: p.url, title: p.title }));
+
       const response = await fetch('/api/admin/site-import/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crawlData }),
+        body: JSON.stringify({ samplePages, allPages }),
       });
 
       if (!response.ok) {
@@ -131,6 +173,7 @@ export default function SiteImportPage() {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let selectorResult: { commonBlocks: any[]; pages: any[] } | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -144,13 +187,10 @@ export default function SiteImportPage() {
           if (!line.startsWith('data: ')) continue;
           try {
             const event = JSON.parse(line.slice(6));
-            if (event.status === 'crawling' || event.status === 'analyzing') {
+            if (event.status === 'analyzing') {
               setAnalyzeProgress(event.message || event.status);
             } else if (event.status === 'done') {
-              setAnalysis(event.data);
-              setStep('preview');
-              setAnalyzeProgress('');
-              return;
+              selectorResult = event.data;
             } else if (event.status === 'error') {
               throw new Error(event.error);
             }
@@ -160,9 +200,76 @@ export default function SiteImportPage() {
         }
       }
 
-      if (step === 'analyzing') {
+      if (!selectorResult) {
         throw new Error('サーバーからの応答が途中で途切れました。再度お試しください。');
       }
+
+      setAnalyzeProgress('共通ブロックを抽出中...');
+
+      const commonBlocks: AnalyzedCommonBlock[] = [];
+      const selectors: string[] = [];
+      const detectedPositions = new Set<string>();
+
+      if (selectorResult.commonBlocks?.length) {
+        for (const block of selectorResult.commonBlocks) {
+          if (!block.selector) continue;
+          selectors.push(block.selector);
+
+          let html = '';
+          for (const page of crawlData.pages) {
+            html = extractHtmlBySelector(page.bodyHtml, block.selector);
+            if (html) break;
+          }
+
+          if (html) {
+            commonBlocks.push({ name: block.name || block.selector, html, css: '', position: block.position || 'other' });
+            detectedPositions.add(block.position);
+          }
+        }
+      }
+
+      const fallbacks = [
+        { selector: 'header', position: 'header' as const, name: '共通ヘッダー' },
+        { selector: 'footer', position: 'footer' as const, name: '共通フッター' },
+      ];
+      for (const fb of fallbacks) {
+        if (detectedPositions.has(fb.position)) continue;
+        for (const page of crawlData.pages) {
+          const html = extractHtmlBySelector(page.bodyHtml, fb.selector);
+          if (html && html.length > 20) {
+            selectors.push(fb.selector);
+            commonBlocks.push({ name: fb.name, html, css: '', position: fb.position });
+            detectedPositions.add(fb.position);
+            break;
+          }
+        }
+      }
+
+      setAnalyzeProgress('ページコンテンツを分離中...');
+
+      const aiPageMap = new Map<string, any>();
+      if (selectorResult.pages?.length) {
+        for (const p of selectorResult.pages) {
+          if (p.url) aiPageMap.set(p.url, p);
+        }
+      }
+
+      const pages: AnalyzedPage[] = crawlData.pages.map(page => {
+        const meta = aiPageMap.get(page.url);
+        const contentHtml = removeSelectorsFromHtml(page.bodyHtml, selectors);
+        return {
+          url: page.url,
+          title: meta?.title || page.title || '',
+          slug: meta?.slug || inferSlugFromUrl(page.url),
+          metaDescription: meta?.metaDescription || page.metaDescription || '',
+          contentHtml,
+          images: page.images,
+        };
+      });
+
+      setAnalysis({ commonBlocks, pages, sharedCss: '' });
+      setStep('preview');
+      setAnalyzeProgress('');
     } catch (err: any) {
       setError(err.message || 'AI解析に失敗しました');
       setStep('crawled');

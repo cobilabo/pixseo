@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import * as cheerio from 'cheerio';
 
 export interface AnalyzedCommonBlock {
   name: string;
@@ -23,25 +22,13 @@ export interface AnalysisResult {
   sharedCss: string;
 }
 
-export interface CompactPage {
-  url: string;
-  title: string;
-  metaDescription: string;
-  images: string[];
-  bodyHtml: string;
-}
-
-export interface CompactCrawlData {
-  pages: CompactPage[];
-}
-
-interface AICommonBlock {
+export interface AICommonBlock {
   name: string;
   selector: string;
   position: 'header' | 'footer' | 'navigation' | 'other';
 }
 
-interface AIPageMeta {
+export interface AIPageMeta {
   url: string;
   title: string;
   slug: string;
@@ -53,12 +40,22 @@ interface AIResponse {
   pages: AIPageMeta[];
 }
 
+export interface SelectorAnalysisInput {
+  samplePages: { url: string; bodyHtml: string }[];
+  allPages: { url: string; title: string }[];
+}
+
+export interface SelectorAnalysisResult {
+  commonBlocks: AICommonBlock[];
+  pages: AIPageMeta[];
+}
+
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.substring(0, max) + '\n<!-- truncated -->';
 }
 
-function inferSlugFromUrl(url: string): string {
+export function inferSlugFromUrl(url: string): string {
   try {
     const u = new URL(url);
     const path = u.pathname.replace(/\/$/, '').replace(/^\//, '');
@@ -70,25 +67,24 @@ function inferSlugFromUrl(url: string): string {
   }
 }
 
-function buildPrompt(data: CompactCrawlData): string {
-  const samples = data.pages.slice(0, 3);
-  const perPage = Math.floor(60000 / samples.length);
+function buildSelectorPrompt(input: SelectorAnalysisInput): string {
+  const perPage = Math.floor(60000 / Math.max(input.samplePages.length, 1));
 
-  const pagesHtml = samples.map((p, i) => {
+  const pagesHtml = input.samplePages.map((p, i) => {
     const body = truncate(p.bodyHtml, perPage);
     return `=== PAGE ${i + 1}: ${p.url} ===\n${body}`;
   }).join('\n\n');
 
-  const allPages = data.pages.map((p, i) =>
+  const allPages = input.allPages.map((p, i) =>
     `${i + 1}. ${p.url} (title: ${p.title})`
   ).join('\n');
 
   return `HTMLを分析し、共通要素のCSSセレクタとページのメタ情報を返してください。
 
-## 代表ページのHTML（${samples.length}ページ）
+## 代表ページのHTML（${input.samplePages.length}ページ）
 ${pagesHtml}
 
-## 全ページ一覧（${data.pages.length}ページ）
+## 全ページ一覧（${input.allPages.length}ページ）
 ${allPages}
 
 ## タスク
@@ -114,7 +110,7 @@ ${allPages}
   "pages": [
     { "url": "https://example.com/", "title": "ホーム", "slug": "home", "metaDescription": "説明文" }
   ]
-}`;
+}`
 }
 
 function cleanJsonResponse(text: string): string {
@@ -135,34 +131,10 @@ function isRateLimitError(error: any): boolean {
   return status === 429 || msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('rate_limit');
 }
 
-function extractCommonBlockHtml(bodyHtml: string, selector: string): string {
-  try {
-    const $ = cheerio.load(`<body>${bodyHtml}</body>`);
-    const el = $(selector).first();
-    if (el.length === 0) return '';
-    return $.html(el) || '';
-  } catch {
-    return '';
-  }
-}
-
-function extractPageContent(bodyHtml: string, selectors: string[]): string {
-  try {
-    const $ = cheerio.load(`<body>${bodyHtml}</body>`);
-    for (const sel of selectors) {
-      try { $(sel).remove(); } catch { /* skip */ }
-    }
-    let html = $('body').html() || '';
-    return html.replace(/^\s+|\s+$/g, '');
-  } catch {
-    return bodyHtml;
-  }
-}
-
-export async function analyzeWithGemini(
-  crawlData: CompactCrawlData,
+export async function analyzeSelectors(
+  input: SelectorAnalysisInput,
   onProgress?: (message: string) => void,
-): Promise<AnalysisResult> {
+): Promise<SelectorAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY is not configured');
@@ -171,10 +143,9 @@ export async function analyzeWithGemini(
   const modelName = process.env.OPENAI_SITE_IMPORT_MODEL || 'gpt-4o';
   const openai = new OpenAI({ apiKey });
 
-  // Phase 1: AI detects common block selectors + page metadata
   onProgress?.(`AI解析中...（共通要素の検出 - ${modelName}）`);
 
-  const prompt = buildPrompt(crawlData);
+  const prompt = buildSelectorPrompt(input);
   console.log(`[Analyzer] Prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 3)} tokens (est.)`);
 
   let aiResult: AIResponse | undefined;
@@ -226,87 +197,10 @@ export async function analyzeWithGemini(
     throw lastError;
   }
 
-  // Phase 2: Extract common blocks HTML using selectors + fallback detection
-  onProgress?.('共通ブロックのHTML抽出中...');
+  console.log(`[Analyzer] AI returned ${aiResult.commonBlocks?.length || 0} common blocks, ${aiResult.pages?.length || 0} pages`);
 
-  const commonBlocks: AnalyzedCommonBlock[] = [];
-  const selectors: string[] = [];
-  const detectedPositions = new Set<string>();
-
-  if (aiResult.commonBlocks && Array.isArray(aiResult.commonBlocks)) {
-    for (const block of aiResult.commonBlocks) {
-      if (!block.selector) continue;
-      selectors.push(block.selector);
-
-      let html = '';
-      for (const page of crawlData.pages) {
-        html = extractCommonBlockHtml(page.bodyHtml, block.selector);
-        if (html) break;
-      }
-
-      if (html) {
-        commonBlocks.push({
-          name: block.name || block.selector,
-          html,
-          css: '',
-          position: block.position || 'other',
-        });
-        detectedPositions.add(block.position);
-      }
-    }
-  }
-
-  // Fallback: detect header/footer by HTML tags if AI missed them
-  const fallbackSelectors: { selector: string; position: 'header' | 'footer'; name: string }[] = [
-    { selector: 'header', position: 'header', name: '共通ヘッダー' },
-    { selector: 'footer', position: 'footer', name: '共通フッター' },
-  ];
-
-  for (const fb of fallbackSelectors) {
-    if (detectedPositions.has(fb.position)) continue;
-
-    for (const page of crawlData.pages) {
-      const html = extractCommonBlockHtml(page.bodyHtml, fb.selector);
-      if (html && html.length > 20) {
-        selectors.push(fb.selector);
-        commonBlocks.push({
-          name: fb.name,
-          html,
-          css: '',
-          position: fb.position,
-        });
-        detectedPositions.add(fb.position);
-        console.log(`[Analyzer] Fallback detected <${fb.selector}> as ${fb.position}`);
-        break;
-      }
-    }
-  }
-
-  // Phase 3: Extract page-specific content by removing common blocks
-  onProgress?.('ページ固有コンテンツの抽出中...');
-
-  const aiPageMap = new Map<string, AIPageMeta>();
-  if (aiResult.pages && Array.isArray(aiResult.pages)) {
-    for (const p of aiResult.pages) {
-      if (p.url) aiPageMap.set(p.url, p);
-    }
-  }
-
-  const pages: AnalyzedPage[] = crawlData.pages.map(page => {
-    const meta = aiPageMap.get(page.url);
-    const contentHtml = extractPageContent(page.bodyHtml, selectors);
-
-    return {
-      url: page.url,
-      title: meta?.title || page.title || '',
-      slug: meta?.slug || inferSlugFromUrl(page.url),
-      metaDescription: meta?.metaDescription || page.metaDescription || '',
-      contentHtml,
-      images: page.images,
-    };
-  });
-
-  console.log(`[Analyzer] Done: ${commonBlocks.length} common blocks, ${pages.length} pages`);
-
-  return { commonBlocks, pages, sharedCss: '' };
+  return {
+    commonBlocks: aiResult.commonBlocks || [],
+    pages: aiResult.pages || [],
+  };
 }

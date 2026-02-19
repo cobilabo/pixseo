@@ -1,20 +1,12 @@
 import { NextRequest } from 'next/server';
-import { analyzeWithGemini } from '@/lib/site-import/analyzer';
+import { analyzeSelectors, SelectorAnalysisInput } from '@/lib/site-import/analyzer';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
-interface CrawlDataPage {
-  url: string;
-  title: string;
-  metaDescription: string;
-  images: string[];
-  bodyHtml: string;
-}
-
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { crawlData } = body as { crawlData: { pages: CrawlDataPage[] } };
+  const { samplePages, allPages } = body as SelectorAnalysisInput;
 
   const encoder = new TextEncoder();
 
@@ -25,7 +17,7 @@ export async function POST(request: NextRequest) {
       };
 
       try {
-        if (!crawlData?.pages || crawlData.pages.length === 0) {
+        if (!samplePages?.length || !allPages?.length) {
           send({ status: 'error', error: 'クロールデータが必要です。先にクロールを実行してください。' });
           controller.close();
           return;
@@ -33,16 +25,16 @@ export async function POST(request: NextRequest) {
 
         send({
           status: 'analyzing',
-          message: `${crawlData.pages.length}ページのAI解析を開始...`,
+          message: `${allPages.length}ページのAI解析を開始...`,
         });
 
         const onProgress = (message: string) => {
           send({ status: 'analyzing', message });
         };
 
-        const analysis = await analyzeWithGemini(crawlData, onProgress);
+        const result = await analyzeSelectors({ samplePages, allPages }, onProgress);
 
-        send({ status: 'done', data: analysis });
+        send({ status: 'done', data: result });
         controller.close();
       } catch (error: any) {
         console.error('[API site-import/analyze] Error:', error);
