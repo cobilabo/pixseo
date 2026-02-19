@@ -117,7 +117,7 @@ export default function FormBlock({ block }: FormBlockProps) {
   }
 
   return (
-    <div className="my-6">
+    <div className="my-6" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
       {config.showTitle !== false && (
         <h3 className="text-xl font-bold text-gray-900 mb-4">{form.name}</h3>
       )}
