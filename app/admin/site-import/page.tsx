@@ -115,12 +115,23 @@ export default function SiteImportPage() {
     }
   };
 
-  const removeSelectorsFromHtml = (bodyHtml: string, selectors: string[]): string => {
+  const removeCommonElements = (
+    bodyHtml: string,
+    commonSelectors: { selector: string; position: string }[],
+  ): string => {
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(`<html><body>${bodyHtml}</body></html>`, 'text/html');
-      for (const sel of selectors) {
-        try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch { /* skip */ }
+      for (const { selector, position } of commonSelectors) {
+        try {
+          const matches = doc.querySelectorAll(selector);
+          if (matches.length === 0) continue;
+          if (position === 'footer') {
+            matches[matches.length - 1].remove();
+          } else {
+            matches[0].remove();
+          }
+        } catch { /* skip */ }
       }
       return doc.body.innerHTML.trim();
     } catch {
@@ -209,13 +220,14 @@ export default function SiteImportPage() {
       setAnalyzeProgress('共通ブロックを抽出中...');
 
       const commonBlocks: AnalyzedCommonBlock[] = [];
-      const selectors: string[] = [];
+      const commonSelectors: { selector: string; position: string }[] = [];
       const detectedPositions = new Set<string>();
 
       if (selectorResult.commonBlocks?.length) {
         for (const block of selectorResult.commonBlocks) {
           if (!block.selector) continue;
-          selectors.push(block.selector);
+          const pos = block.position || 'other';
+          commonSelectors.push({ selector: block.selector, position: pos });
 
           let html = '';
           for (const page of crawlData.pages) {
@@ -224,8 +236,8 @@ export default function SiteImportPage() {
           }
 
           if (html) {
-            commonBlocks.push({ name: block.name || block.selector, html, css: '', position: block.position || 'other' });
-            detectedPositions.add(block.position);
+            commonBlocks.push({ name: block.name || block.selector, html, css: '', position: pos });
+            detectedPositions.add(pos);
           }
         }
       }
@@ -239,7 +251,7 @@ export default function SiteImportPage() {
         for (const page of crawlData.pages) {
           const html = extractHtmlBySelector(page.bodyHtml, fb.selector);
           if (html && html.length > 20) {
-            selectors.push(fb.selector);
+            commonSelectors.push({ selector: fb.selector, position: fb.position });
             commonBlocks.push({ name: fb.name, html, css: '', position: fb.position });
             detectedPositions.add(fb.position);
             break;
@@ -258,7 +270,7 @@ export default function SiteImportPage() {
 
       const pages: AnalyzedPage[] = crawlData.pages.map(page => {
         const meta = aiPageMap.get(page.url);
-        const contentHtml = removeSelectorsFromHtml(page.bodyHtml, selectors);
+        const contentHtml = removeCommonElements(page.bodyHtml, commonSelectors);
         return {
           url: page.url,
           title: meta?.title || page.title || '',

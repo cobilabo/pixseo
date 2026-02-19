@@ -69,14 +69,28 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    // Fetch external CSS files
+    // Fetch external CSS files (skip files > 1MB, cap total at 5MB)
+    const MAX_SINGLE_CSS = 1 * 1024 * 1024;
+    const MAX_TOTAL_CSS = 5 * 1024 * 1024;
     const cssContents: string[] = [];
+    let totalCssSize = 0;
+
     for (const cssUrl of result.allCssUrls) {
+      if (totalCssSize >= MAX_TOTAL_CSS) break;
       const css = await fetchCss(cssUrl);
-      if (css) cssContents.push(`/* Source: ${cssUrl} */\n${css}`);
+      if (!css) continue;
+      if (css.length > MAX_SINGLE_CSS) {
+        console.log(`[Crawl] Skipping large CSS (${(css.length / 1024).toFixed(0)}KB): ${cssUrl}`);
+        continue;
+      }
+      cssContents.push(`/* Source: ${cssUrl} */\n${css}`);
+      totalCssSize += css.length;
     }
-    if (result.inlineCss.length > 0) {
-      cssContents.push(`/* Inline CSS */\n${result.inlineCss.join('\n')}`);
+    if (result.inlineCss.length > 0 && totalCssSize < MAX_TOTAL_CSS) {
+      const inlineCombined = result.inlineCss.join('\n');
+      if (totalCssSize + inlineCombined.length <= MAX_TOTAL_CSS) {
+        cssContents.push(`/* Inline CSS */\n${inlineCombined}`);
+      }
     }
 
     // Store CSS in Firebase Storage to avoid body size limits
