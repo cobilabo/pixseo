@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecentArticlesServer, getPopularArticlesServer } from '@/lib/firebase/articles-server';
+import { getRecentArticlesServer, getPopularArticlesServer, getArticlesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost } from '@/lib/firebase/media-tenant-helper';
 import { localizeArticle } from '@/lib/i18n/localize';
 import { Lang, isValidLang } from '@/types/lang';
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || 'recent'; // 'recent' or 'popular'
     const limitParam = searchParams.get('limit') || '4';
     const langParam = searchParams.get('lang') || 'ja';
+    const categoryId = searchParams.get('category') || undefined;
     
     const limit = parseInt(limitParam, 10);
     const lang: Lang = isValidLang(langParam) ? langParam as Lang : 'ja';
@@ -19,7 +20,15 @@ export async function GET(request: NextRequest) {
     const mediaId = await getMediaIdFromHost();
     
     let articles;
-    if (type === 'popular') {
+    if (categoryId) {
+      articles = await getArticlesServer({
+        categoryId,
+        orderBy: type === 'popular' ? 'viewCount' : 'publishedAt',
+        orderDirection: 'desc',
+        limit,
+        mediaId: mediaId || undefined,
+      });
+    } else if (type === 'popular') {
       articles = await getPopularArticlesServer(limit, mediaId || undefined);
     } else {
       articles = await getRecentArticlesServer(limit, mediaId || undefined);

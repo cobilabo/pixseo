@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Block, ArticleBlockConfig } from '@/types/block';
-import { Article } from '@/types/article';
+import { Article, Category } from '@/types/article';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 
 interface ArticleBlockSettingsProps {
@@ -18,6 +18,7 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
   const config = block.config as ArticleBlockConfig;
   const { currentTenant } = useMediaTenant();
   const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -25,6 +26,7 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
   useEffect(() => {
     if (currentTenant) {
       fetchArticles();
+      fetchCategories();
     }
   }, [currentTenant]);
 
@@ -52,6 +54,20 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
       console.error('Error fetching articles:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/admin/categories', {
+        headers: { 'x-media-id': currentTenant?.id || '' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -319,6 +335,30 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
       {/* 新着/人気記事一覧時のUI */}
       {(config.articleType === 'recent' || config.articleType === 'popular') && (
         <>
+          {/* カテゴリフィルター */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              カテゴリで絞り込み
+            </label>
+            <select
+              value={config.categoryId || ''}
+              onChange={(e) => updateConfig({ categoryId: e.target.value || undefined })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            >
+              <option value="">すべてのカテゴリ</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            {config.categoryId && (
+              <p className="text-xs text-blue-600 mt-1">
+                選択中: {categories.find(c => c.id === config.categoryId)?.name || config.categoryId}
+              </p>
+            )}
+          </div>
+
           {/* 表示件数 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -335,6 +375,9 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
               <option value={8}>8件</option>
               <option value={10}>10件</option>
               <option value={12}>12件</option>
+              <option value={20}>20件</option>
+              <option value={25}>25件</option>
+              <option value={50}>50件</option>
             </select>
           </div>
 
@@ -344,14 +387,22 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
               {config.articleType === 'recent' ? (
                 <>
                   最新の記事を<strong>{config.displayCount || 4}件</strong>表示します。
-                  <br />
-                  トップページと同じカードUIで表示されます。
+                  {config.categoryId && (
+                    <>
+                      <br />
+                      カテゴリ「<strong>{categories.find(c => c.id === config.categoryId)?.name}</strong>」で絞り込み中
+                    </>
+                  )}
                 </>
               ) : (
                 <>
                   人気の記事（閲覧数順）を<strong>{config.displayCount || 4}件</strong>表示します。
-                  <br />
-                  トップページと同じカードUIで表示されます。
+                  {config.categoryId && (
+                    <>
+                      <br />
+                      カテゴリ「<strong>{categories.find(c => c.id === config.categoryId)?.name}</strong>」で絞り込み中
+                    </>
+                  )}
                 </>
               )}
             </p>

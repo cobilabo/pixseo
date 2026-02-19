@@ -40,9 +40,15 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
       const fetchArticles = async () => {
         setLoading(true);
         try {
-          const response = await fetch(
-            `/api/articles/list?type=${config.articleType}&limit=${config.displayCount || 4}&lang=${lang}`
-          );
+          const params = new URLSearchParams({
+            type: config.articleType,
+            limit: String(config.displayCount || 4),
+            lang,
+          });
+          if (config.categoryId) {
+            params.set('category', config.categoryId);
+          }
+          const response = await fetch(`/api/articles/list?${params}`);
           if (response.ok) {
             const data = await response.json();
             setArticles(data);
@@ -55,7 +61,7 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
       };
       fetchArticles();
     }
-  }, [config.articleType, config.displayCount, lang]);
+  }, [config.articleType, config.displayCount, config.categoryId, lang]);
 
   // 個別記事選択の場合
   if (config.articleType === 'single') {
@@ -93,10 +99,15 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
     const titleKey = config.articleType === 'recent' ? 'section.recentArticles' : 'section.popularArticles';
     const titleEnKey = config.articleType === 'recent' ? 'section.recentArticlesEn' : 'section.popularArticlesEn';
 
+    const containerStyle: React.CSSProperties = {
+      maxWidth: '1100px',
+      margin: '0 auto',
+      padding: '0 20px',
+    };
+
     if (loading) {
       return (
-        <section className="article-block-list">
-          {/* 見出し */}
+        <section className="article-block-list" style={containerStyle}>
           <div className="text-center mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
             <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
@@ -116,8 +127,7 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
 
     if (articles.length === 0) {
       return (
-        <section className="article-block-list">
-          {/* 見出し */}
+        <section className="article-block-list" style={containerStyle}>
           <div className="text-center mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
             <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
@@ -130,8 +140,7 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
     }
 
     return (
-      <section className="article-block-list">
-        {/* 見出し */}
+      <section className="article-block-list" style={containerStyle}>
         <div className="text-center mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
           <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>

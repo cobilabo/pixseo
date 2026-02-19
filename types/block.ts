@@ -131,6 +131,7 @@ export interface ArticleBlockConfig {
   displayStyle?: 'text' | 'blogcard';
   // 新着/人気記事一覧時のフィールド
   displayCount?: number;      // 表示件数（デフォルト: 4）
+  categoryId?: string;        // カテゴリIDでフィルター（空=全カテゴリ）
 }
 
 // カスタムブロックの設定
