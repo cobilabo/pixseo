@@ -11,11 +11,12 @@ export interface ImportOptions {
   customCss?: string;
   cssStoragePath?: string;
   siteImportBatchId?: string;
+  customBlockMap?: Record<string, { id: string; name: string }>;
 }
 
 export interface ImportResult {
   siteImportBatchId: string;
-  createdCustomBlocks: { id: string; name: string }[];
+  createdCustomBlocks: { id: string; name: string; position: string }[];
   createdPages: { id: string; title: string; slug: string }[];
   uploadedImages: number;
   errors: string[];
@@ -214,19 +215,7 @@ export async function executeImport(
 ): Promise<ImportResult> {
   const { mediaId, layoutMode, isPublished } = options;
   const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
-
-  // Read CSS from Firebase Storage if path is provided
-  let customCss = options.customCss || '';
-  if (!customCss && options.cssStoragePath) {
-    try {
-      const bucket = adminStorage.bucket();
-      const file = bucket.file(options.cssStoragePath);
-      const [contents] = await file.download();
-      customCss = contents.toString('utf-8');
-    } catch (err) {
-      console.error('[Importer] Failed to read CSS from storage:', err);
-    }
-  }
+  const cssStoragePath = options.cssStoragePath || '';
 
   const result: ImportResult = {
     siteImportBatchId,
@@ -241,30 +230,37 @@ export async function executeImport(
   result.uploadedImages = count;
   result.errors.push(...imageErrors);
 
-  // 2. Create custom blocks for common elements
-  const customBlockIdMap = new Map<string, string>(); // position -> customBlockId
-  const customBlockNameMap = new Map<string, string>(); // position -> name
+  // 2. Create custom blocks or use pre-existing map from previous batch
+  const customBlockIdMap = new Map<string, string>();
+  const customBlockNameMap = new Map<string, string>();
 
-  for (const block of analysis.commonBlocks) {
-    try {
-      const html = replaceImageUrls(block.html, urlMap);
-      const css = block.css || '';
+  if (options.customBlockMap) {
+    for (const [position, { id, name }] of Object.entries(options.customBlockMap)) {
+      customBlockIdMap.set(position, id);
+      customBlockNameMap.set(position, name);
+    }
+  } else {
+    for (const block of analysis.commonBlocks) {
+      try {
+        const html = replaceImageUrls(block.html, urlMap);
+        const css = block.css || '';
 
-      const docRef = await adminDb.collection('customBlocks').add({
-        mediaId,
-        name: block.name,
-        html,
-        css,
-        siteImportBatchId,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+        const docRef = await adminDb.collection('customBlocks').add({
+          mediaId,
+          name: block.name,
+          html,
+          css,
+          siteImportBatchId,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
 
-      customBlockIdMap.set(block.position, docRef.id);
-      customBlockNameMap.set(block.position, block.name);
-      result.createdCustomBlocks.push({ id: docRef.id, name: block.name });
-    } catch (error) {
-      result.errors.push(`カスタムブロック「${block.name}」の作成に失敗`);
+        customBlockIdMap.set(block.position, docRef.id);
+        customBlockNameMap.set(block.position, block.name);
+        result.createdCustomBlocks.push({ id: docRef.id, name: block.name, position: block.position });
+      } catch (error) {
+        result.errors.push(`カスタムブロック「${block.name}」の作成に失敗`);
+      }
     }
   }
 
@@ -368,7 +364,8 @@ export async function executeImport(
         showGlobalNav: false,
         showSidebar: false,
         showPanel: false,
-        customCss: customCss || '',
+        customCss: '',
+        cssStoragePath,
         isHomePage: isHome,
         siteImportBatchId,
       };

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminDb, adminStorage } from '@/lib/firebase/admin';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
@@ -174,8 +174,15 @@ export default async function FixedPage({ params }: PageProps) {
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
   const footerBlocks = rawTheme.footerBlocks || [];
 
-  // カスタムCSS
-  const customCss = rawPage.customCss || '';
+  // カスタムCSS（インラインまたはStorage参照）
+  let customCss = rawPage.customCss || '';
+  if (!customCss && rawPage.cssStoragePath) {
+    try {
+      const bucket = adminStorage.bucket();
+      const [contents] = await bucket.file(rawPage.cssStoragePath).download();
+      customCss = contents.toString('utf-8');
+    } catch { /* CSS読み込み失敗はスキップ */ }
+  }
 
   // モバイル判定（user-agentから）
   const headersList2 = headers();

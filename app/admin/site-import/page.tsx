@@ -43,6 +43,7 @@ interface AnalysisData {
 }
 
 interface ImportResultData {
+  siteImportBatchId?: string;
   createdCustomBlocks: { id: string; name: string }[];
   createdPages: { id: string; title: string; slug: string }[];
   uploadedImages: number;
@@ -67,6 +68,7 @@ export default function SiteImportPage() {
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
   const [analyzeProgress, setAnalyzeProgress] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getExcludePaths = (): string[] => {
     return excludePathsText
@@ -288,11 +290,14 @@ export default function SiteImportPage() {
       const BATCH_SIZE = 10;
       const allPages = analysis.pages;
       const aggregated: ImportResultData = {
+        siteImportBatchId,
         createdCustomBlocks: [],
         createdPages: [],
         uploadedImages: 0,
         errors: [],
       };
+
+      let customBlockMap: Record<string, { id: string; name: string }> | undefined;
 
       for (let i = 0; i < allPages.length; i += BATCH_SIZE) {
         const batch = allPages.slice(i, i + BATCH_SIZE);
@@ -313,12 +318,20 @@ export default function SiteImportPage() {
               isPublished,
               cssStoragePath: crawlData?.cssStoragePath || '',
               siteImportBatchId,
+              customBlockMap: isFirstBatch ? undefined : customBlockMap,
             },
           }),
         });
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
+
+        if (isFirstBatch && data.data.createdCustomBlocks?.length) {
+          customBlockMap = {};
+          for (const cb of data.data.createdCustomBlocks) {
+            customBlockMap[cb.position] = { id: cb.id, name: cb.name };
+          }
+        }
 
         aggregated.createdCustomBlocks.push(...(data.data.createdCustomBlocks || []));
         aggregated.createdPages.push(...(data.data.createdPages || []));
@@ -364,6 +377,31 @@ export default function SiteImportPage() {
     const updated = { ...analysis };
     updated.pages = updated.pages.filter((_, i) => i !== index);
     setAnalysis(updated);
+  };
+
+  const handleDeleteBatch = async (batchId: string) => {
+    if (!confirm('このインポートで作成されたページ、カスタムブロック、画像をすべて削除しますか？')) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/admin/site-import/delete-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      alert(`削除完了: ページ${data.deleted.pages}件, カスタムブロック${data.deleted.customBlocks}件, 画像${data.deleted.mediaLibrary}件`);
+      setStep('input');
+      setImportResult(null);
+      setAnalysis(null);
+      setCrawlData(null);
+    } catch (err: any) {
+      showError(err.message || '削除に失敗しました');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const stepLabels: Record<Step, string> = {
@@ -788,6 +826,15 @@ export default function SiteImportPage() {
                 >
                   カスタムブロック管理へ
                 </a>
+                {importResult.siteImportBatchId && (
+                  <button
+                    onClick={() => handleDeleteBatch(importResult.siteImportBatchId!)}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+                  >
+                    {isDeleting ? '削除中...' : 'このインポートを削除'}
+                  </button>
+                )}
               </div>
             </div>
           )}

@@ -54,6 +54,7 @@ export interface Page {
   showPanel?: boolean;       // パネル表示（デフォルト: true）
   panelColor?: string;       // パネルカラー（showPanel=trueの時のみ）
   customCss?: string;        // カスタムCSS（最優先で読み込まれる）
+  cssStoragePath?: string;   // Firebase Storage上のCSSファイルパス（大容量CSS用）
   
   // レイアウト設定
   layoutMode?: LayoutMode;   // レイアウトモード（default: 通常, blank: 完全白紙）

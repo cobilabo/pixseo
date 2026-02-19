@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminDb, adminStorage } from '@/lib/firebase/admin';
 import { getRecentArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
@@ -200,7 +200,14 @@ export default async function HomePage({ params }: PageProps) {
     const homePage = localizePage(rawHomePage, lang);
     const showGlobalNav = rawHomePage.showGlobalNav || false;
     const showSidebar = rawHomePage.showSidebar || false;
-    const customCss = rawHomePage.customCss || '';
+    let customCss = rawHomePage.customCss || '';
+    if (!customCss && rawHomePage.cssStoragePath) {
+      try {
+        const bucket = adminStorage.bucket();
+        const [contents] = await bucket.file(rawHomePage.cssStoragePath).download();
+        customCss = contents.toString('utf-8');
+      } catch { /* CSS読み込み失敗はスキップ */ }
+    }
     const layoutMode = rawHomePage.layoutMode || 'default';
 
     // 完全白紙モードの場合は、ヘッダー/フッターなしで表示（[slug]/page.tsxと同一の処理）
