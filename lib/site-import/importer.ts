@@ -10,6 +10,7 @@ export interface ImportOptions {
   isPublished: boolean;
   customCss?: string;
   cssStoragePath?: string;
+  cssLinks?: string[];
   siteImportBatchId?: string;
   customBlockMap?: Record<string, { id: string; name: string }>;
 }
@@ -215,7 +216,7 @@ export async function executeImport(
 ): Promise<ImportResult> {
   const { mediaId, layoutMode, isPublished } = options;
   const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
-  const cssStoragePath = options.cssStoragePath || '';
+  const cssLinks = options.cssLinks || [];
 
   const result: ImportResult = {
     siteImportBatchId,
@@ -365,7 +366,7 @@ export async function executeImport(
         showSidebar: false,
         showPanel: false,
         customCss: '',
-        cssStoragePath,
+        cssLinks: cssLinks.length > 0 ? cssLinks : [],
         isHomePage: isHome,
         siteImportBatchId,
       };

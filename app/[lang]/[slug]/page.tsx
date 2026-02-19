@@ -189,6 +189,8 @@ export default async function FixedPage({ params }: PageProps) {
   const userAgent = headersList2.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
 
+  const cssLinks: string[] = rawPage.cssLinks || [];
+
   // 完全白紙モードの場合は、ヘッダー/フッターなしで表示
   if (layoutMode === 'blank') {
     return (
@@ -197,6 +199,9 @@ export default async function FixedPage({ params }: PageProps) {
         {customCss && (
           <style dangerouslySetInnerHTML={{ __html: customCss }} />
         )}
+        {cssLinks.map((href: string, i: number) => (
+          <link key={i} rel="stylesheet" href={href} />
+        ))}
         {/* SEO用のh1タグ（視覚的には非表示） */}
         <h1 className="sr-only">{page.title}</h1>
         

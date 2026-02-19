@@ -211,6 +211,8 @@ export default async function HomePage({ params }: PageProps) {
     const layoutMode = rawHomePage.layoutMode || 'default';
 
     // 完全白紙モードの場合は、ヘッダー/フッターなしで表示（[slug]/page.tsxと同一の処理）
+    const homeCssLinks: string[] = (rawHomePage as any).cssLinks || [];
+
     if (layoutMode === 'blank') {
       return (
         <>
@@ -218,6 +220,9 @@ export default async function HomePage({ params }: PageProps) {
           {customCss && (
             <style dangerouslySetInnerHTML={{ __html: customCss }} />
           )}
+          {homeCssLinks.map((href: string, i: number) => (
+            <link key={i} rel="stylesheet" href={href} />
+          ))}
 
           {/* JSON-LD構造化データ */}
           <script
