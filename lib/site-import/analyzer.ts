@@ -97,6 +97,9 @@ ${allPages}
    セレクタは具体的に指定してください（例: "header.site-header", "footer#footer", "footer", "nav.global-nav"）
    タグ名だけでもOKです（例: "header", "footer"）。クラスやIDがあればそれも含めてください。
    **ヘッダーとフッターは必ず両方検出してください。**
+   
+   **重要な注意**: ページ全体を包むラッパー要素（例: div.elementor, div#page, main, div.site-content等）は
+   共通要素として検出しないでください。ヘッダー・フッター・ナビゲーション等の独立したパーツのみ検出してください。
 
 2. 全ページのメタ情報を推定してください。
 

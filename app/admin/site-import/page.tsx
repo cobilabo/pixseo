@@ -109,7 +109,13 @@ export default function SiteImportPage() {
       const parser = new DOMParser();
       const doc = parser.parseFromString(`<html><body>${bodyHtml}</body></html>`, 'text/html');
       const el = doc.querySelector(selector);
-      return el ? el.outerHTML : '';
+      if (!el) return '';
+
+      const totalText = doc.body.textContent?.trim().length || 1;
+      const elText = el.textContent?.trim().length || 0;
+      if (elText / totalText > 0.7) return '';
+
+      return el.outerHTML;
     } catch {
       return '';
     }
@@ -126,11 +132,15 @@ export default function SiteImportPage() {
         try {
           const matches = doc.querySelectorAll(selector);
           if (matches.length === 0) continue;
-          if (position === 'footer') {
-            matches[matches.length - 1].remove();
-          } else {
-            matches[0].remove();
-          }
+          const target = position === 'footer'
+            ? matches[matches.length - 1]
+            : matches[0];
+
+          const currentText = doc.body.textContent?.trim().length || 1;
+          const targetText = target.textContent?.trim().length || 0;
+          if (targetText / currentText > 0.5) continue;
+
+          target.remove();
         } catch { /* skip */ }
       }
       return doc.body.innerHTML.trim();
