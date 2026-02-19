@@ -8,7 +8,8 @@ export interface ImportOptions {
   mediaId: string;
   layoutMode: 'blank' | 'default';
   isPublished: boolean;
-  customCss: string;
+  customCss?: string;
+  cssStoragePath?: string;
   siteImportBatchId?: string;
 }
 
@@ -211,8 +212,21 @@ export async function executeImport(
   analysis: AnalysisResult,
   options: ImportOptions,
 ): Promise<ImportResult> {
-  const { mediaId, layoutMode, isPublished, customCss } = options;
+  const { mediaId, layoutMode, isPublished } = options;
   const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
+
+  // Read CSS from Firebase Storage if path is provided
+  let customCss = options.customCss || '';
+  if (!customCss && options.cssStoragePath) {
+    try {
+      const bucket = adminStorage.bucket();
+      const file = bucket.file(options.cssStoragePath);
+      const [contents] = await file.download();
+      customCss = contents.toString('utf-8');
+    } catch (err) {
+      console.error('[Importer] Failed to read CSS from storage:', err);
+    }
+  }
 
   const result: ImportResult = {
     siteImportBatchId,

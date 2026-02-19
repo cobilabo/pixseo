@@ -17,7 +17,7 @@ interface CrawlPageData {
 
 interface CrawlData {
   pages: CrawlPageData[];
-  collectedCss: string;
+  cssStoragePath: string;
 }
 
 interface AnalyzedCommonBlock {
@@ -94,7 +94,7 @@ export default function SiteImportPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      setCrawlData({ pages: data.data.pages, collectedCss: data.data.collectedCss || '' });
+      setCrawlData({ pages: data.data.pages, cssStoragePath: data.data.cssStoragePath || '' });
       setStep('crawled');
     } catch (err: any) {
       setError(err.message || 'クロールに失敗しました');
@@ -284,24 +284,49 @@ export default function SiteImportPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/admin/site-import/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          analysis,
-          options: {
-            mediaId: currentTenant.id,
-            layoutMode,
-            isPublished,
-            customCss: crawlData?.collectedCss || analysis.sharedCss || '',
-          },
-        }),
-      });
+      const siteImportBatchId = `import_${Date.now()}`;
+      const BATCH_SIZE = 10;
+      const allPages = analysis.pages;
+      const aggregated: ImportResultData = {
+        createdCustomBlocks: [],
+        createdPages: [],
+        uploadedImages: 0,
+        errors: [],
+      };
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      for (let i = 0; i < allPages.length; i += BATCH_SIZE) {
+        const batch = allPages.slice(i, i + BATCH_SIZE);
+        const isFirstBatch = i === 0;
 
-      setImportResult(data.data);
+        const response = await fetch('/api/admin/site-import/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            analysis: {
+              commonBlocks: isFirstBatch ? analysis.commonBlocks : [],
+              pages: batch,
+              sharedCss: '',
+            },
+            options: {
+              mediaId: currentTenant.id,
+              layoutMode,
+              isPublished,
+              cssStoragePath: crawlData?.cssStoragePath || '',
+              siteImportBatchId,
+            },
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+
+        aggregated.createdCustomBlocks.push(...(data.data.createdCustomBlocks || []));
+        aggregated.createdPages.push(...(data.data.createdPages || []));
+        aggregated.uploadedImages += data.data.uploadedImages || 0;
+        aggregated.errors.push(...(data.data.errors || []));
+      }
+
+      setImportResult(aggregated);
       setStep('done');
     } catch (err: any) {
       setError(err.message || 'インポートに失敗しました');

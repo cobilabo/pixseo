@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { crawlSite } from '@/lib/site-import/crawler';
+import { adminStorage } from '@/lib/firebase/admin';
 import * as cheerio from 'cheerio';
 
 export const dynamic = 'force-dynamic';
@@ -74,9 +75,21 @@ export async function POST(request: NextRequest) {
       const css = await fetchCss(cssUrl);
       if (css) cssContents.push(`/* Source: ${cssUrl} */\n${css}`);
     }
-    // Include inline CSS
     if (result.inlineCss.length > 0) {
       cssContents.push(`/* Inline CSS */\n${result.inlineCss.join('\n')}`);
+    }
+
+    // Store CSS in Firebase Storage to avoid body size limits
+    let cssStoragePath = '';
+    const collectedCss = cssContents.join('\n\n');
+    if (collectedCss.length > 0) {
+      const timestamp = Date.now();
+      cssStoragePath = `site-import/css/${timestamp}.css`;
+      const bucket = adminStorage.bucket();
+      const file = bucket.file(cssStoragePath);
+      await file.save(collectedCss, {
+        metadata: { contentType: 'text/css' },
+      });
     }
 
     return NextResponse.json({
@@ -85,7 +98,7 @@ export async function POST(request: NextRequest) {
         pageCount: result.pages.length,
         imageCount: result.allImages.length,
         cssCount: result.allCssUrls.length,
-        collectedCss: cssContents.join('\n\n'),
+        cssStoragePath,
         pages: result.pages.map(p => ({
           url: p.url,
           title: p.title,
