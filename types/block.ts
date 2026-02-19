@@ -9,6 +9,7 @@ export type BlockType =
   | 'spacer'    // 空白
   | 'content'   // セクションブロック（統合ブロック）
   | 'article'   // 記事リンクブロック
+  | 'row'       // 行レイアウト（複数カラム）
   | 'custom';   // カスタムブロック
 
 // CTAボタンの設定
@@ -134,6 +135,21 @@ export interface ArticleBlockConfig {
   categoryId?: string;        // カテゴリIDでフィルター（空=全カテゴリ）
 }
 
+// 行レイアウトのカラム設定
+export interface RowColumnConfig {
+  type?: 'html' | 'form';
+  html?: string;
+  formId?: string;
+}
+
+// 行レイアウトブロックの設定
+export interface RowBlockConfig {
+  columnCount: number;
+  gap?: number;
+  responsive?: boolean;
+  columns: RowColumnConfig[];
+}
+
 // カスタムブロックの設定
 export interface CustomBlockConfig {
   customBlockId: string;      // カスタムブロックのID
@@ -145,7 +161,7 @@ export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | CustomBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | RowBlockConfig | CustomBlockConfig;
   
   // 余白設定（共通）
   spacing?: {
