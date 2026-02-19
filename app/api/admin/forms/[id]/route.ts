@@ -53,6 +53,7 @@ export async function PUT(
     if (body.fields !== undefined) updateData.fields = body.fields;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.emailNotification !== undefined) updateData.emailNotification = body.emailNotification;
+    if (body.autoReply !== undefined) updateData.autoReply = body.autoReply;
     if (body.afterSubmit !== undefined) updateData.afterSubmit = body.afterSubmit;
 
     await adminDb.collection('forms').doc(params.id).update(updateData);

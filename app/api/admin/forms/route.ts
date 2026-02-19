@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       fields: body.fields || [],
       isActive: body.isActive !== undefined ? body.isActive : true,
       emailNotification: body.emailNotification || { enabled: false, to: [], subject: '' },
+      autoReply: body.autoReply || { enabled: false, fromEmail: '', fromName: '', subject: '', body: '' },
       afterSubmit: body.afterSubmit || { type: 'message', message: 'お問い合わせありがとうございます。' },
       submissionCount: 0,
       mediaId,

@@ -8,24 +8,33 @@ export interface Form {
   name: string;
   description?: string;
   fields: FormField[];
-  isActive: boolean; // 公開/非公開
-  submissionCount?: number; // 送信回数
+  isActive: boolean;
+  submissionCount?: number;
   mediaId: string;
   createdAt: Date;
   updatedAt: Date;
   
-  // メール通知設定
+  // メール通知設定（管理者向け）
   emailNotification?: {
     enabled: boolean;
-    to: string[]; // 通知先メールアドレス
-    subject?: string; // 件名テンプレート
+    to: string[];
+    subject?: string;
+  };
+  
+  // 自動返信メール設定（送信者向け）
+  autoReply?: {
+    enabled: boolean;
+    fromEmail: string;
+    fromName?: string;
+    subject?: string;
+    body?: string;
   };
   
   // 送信後の設定
   afterSubmit?: {
-    type: 'message' | 'redirect'; // メッセージ表示 or リダイレクト
-    message?: string; // メッセージ（type='message'の場合）
-    redirectUrl?: string; // リダイレクト先URL（type='redirect'の場合）
+    type: 'message' | 'redirect';
+    message?: string;
+    redirectUrl?: string;
   };
 }
 

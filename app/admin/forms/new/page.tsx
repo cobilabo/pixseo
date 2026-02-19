@@ -28,6 +28,13 @@ export default function NewFormPage() {
       to: string[];
       subject?: string;
     };
+    autoReply: {
+      enabled: boolean;
+      fromEmail: string;
+      fromName?: string;
+      subject?: string;
+      body?: string;
+    };
     afterSubmit: {
       type: 'message' | 'redirect';
       message?: string;
@@ -41,6 +48,13 @@ export default function NewFormPage() {
       enabled: false,
       to: [''],
       subject: '',
+    },
+    autoReply: {
+      enabled: false,
+      fromEmail: '',
+      fromName: '',
+      subject: '',
+      body: '',
     },
     afterSubmit: {
       type: 'message',
@@ -226,9 +240,9 @@ export default function NewFormPage() {
                     />
                   )}
 
-                  {/* メール通知設定 */}
+                  {/* メール通知設定（管理者向け） */}
                   <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-md font-bold text-gray-900 mb-4">メール通知設定</h4>
+                    <h4 className="text-md font-bold text-gray-900 mb-4">メール通知設定（管理者向け）</h4>
                   
                     <div className="flex items-center gap-2">
                       <input
@@ -276,6 +290,91 @@ export default function NewFormPage() {
                             },
                           })}
                           placeholder="新しいフォーム送信がありました"
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* 自動返信メール設定（送信者向け） */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-bold text-gray-900 mb-4">自動返信メール設定（送信者向け）</h4>
+                    <p className="text-xs text-gray-500 mb-4">フォームにメールアドレス入力欄がある場合、送信者に自動で確認メールを送信します。</p>
+                    
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="autoReplyEnabled"
+                        checked={formData.autoReply.enabled}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          autoReply: {
+                            ...formData.autoReply,
+                            enabled: e.target.checked,
+                          },
+                        })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="autoReplyEnabled" className="text-sm text-gray-700">
+                        自動返信メールを送信する
+                      </label>
+                    </div>
+
+                    {formData.autoReply.enabled && (
+                      <>
+                        <FloatingInput
+                          label="送信元メールアドレス *"
+                          type="email"
+                          value={formData.autoReply.fromEmail}
+                          onChange={(value) => setFormData({
+                            ...formData,
+                            autoReply: {
+                              ...formData.autoReply,
+                              fromEmail: value,
+                            },
+                          })}
+                          placeholder="noreply@example.com"
+                          required
+                        />
+
+                        <FloatingInput
+                          label="送信者名"
+                          value={formData.autoReply.fromName || ''}
+                          onChange={(value) => setFormData({
+                            ...formData,
+                            autoReply: {
+                              ...formData.autoReply,
+                              fromName: value,
+                            },
+                          })}
+                          placeholder="Ayumi"
+                        />
+
+                        <FloatingInput
+                          label="件名"
+                          value={formData.autoReply.subject || ''}
+                          onChange={(value) => setFormData({
+                            ...formData,
+                            autoReply: {
+                              ...formData.autoReply,
+                              subject: value,
+                            },
+                          })}
+                          placeholder="お問い合わせありがとうございます"
+                        />
+
+                        <FloatingInput
+                          label="本文"
+                          value={formData.autoReply.body || ''}
+                          onChange={(value) => setFormData({
+                            ...formData,
+                            autoReply: {
+                              ...formData.autoReply,
+                              body: value,
+                            },
+                          })}
+                          multiline
+                          rows={5}
+                          placeholder="この度はお問い合わせいただき、誠にありがとうございます。&#10;以下の内容で受け付けました。担当者より改めてご連絡いたします。"
                         />
                       </>
                     )}
