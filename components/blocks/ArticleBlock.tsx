@@ -95,9 +95,10 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
 
   // 新着/人気記事一覧の場合
   if (config.articleType === 'recent' || config.articleType === 'popular') {
-    // 見出しの翻訳キー
-    const titleKey = config.articleType === 'recent' ? 'section.recentArticles' : 'section.popularArticles';
-    const titleEnKey = config.articleType === 'recent' ? 'section.recentArticlesEn' : 'section.popularArticlesEn';
+    const defaultTitle = config.articleType === 'recent' ? t('section.recentArticles', lang) : t('section.popularArticles', lang);
+    const defaultTitleEn = config.articleType === 'recent' ? t('section.recentArticlesEn', lang) : t('section.popularArticlesEn', lang);
+    const displayTitle = config.title || defaultTitle;
+    const displayTitleEn = config.titleEn !== undefined ? config.titleEn : defaultTitleEn;
 
     const containerStyle: React.CSSProperties = {
       maxWidth: '1100px',
@@ -109,8 +110,8 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
       return (
         <section className="article-block-list" style={containerStyle}>
           <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{displayTitle}</h2>
+            {displayTitleEn && <p className="text-xs text-gray-500 uppercase tracking-wider">{displayTitleEn}</p>}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: config.displayCount || 4 }).map((_, index) => (
@@ -129,8 +130,8 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
       return (
         <section className="article-block-list" style={containerStyle}>
           <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{displayTitle}</h2>
+            {displayTitleEn && <p className="text-xs text-gray-500 uppercase tracking-wider">{displayTitleEn}</p>}
           </div>
           <p className="text-gray-500 text-center py-8">
             {t('message.noArticles', lang)}
@@ -142,8 +143,8 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
     return (
       <section className="article-block-list" style={containerStyle}>
         <div className="text-center mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">{t(titleKey, lang)}</h2>
-          <p className="text-xs text-gray-500 uppercase tracking-wider">{t(titleEnKey, lang)}</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">{displayTitle}</h2>
+          {displayTitleEn && <p className="text-xs text-gray-500 uppercase tracking-wider">{displayTitleEn}</p>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {articles.map((article) => (

@@ -133,6 +133,9 @@ export interface ArticleBlockConfig {
   // 新着/人気記事一覧時のフィールド
   displayCount?: number;      // 表示件数（デフォルト: 4）
   categoryId?: string;        // カテゴリIDでフィルター（空=全カテゴリ）
+  // カスタム見出し（設定時はデフォルトの「新着記事」等を上書き）
+  title?: string;
+  titleEn?: string;
 }
 
 // 行レイアウトのカラム設定
