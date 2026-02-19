@@ -416,9 +416,10 @@ export default function NewPagePage() {
       await createPage(pageData);
       
       showSuccessAndNavigate('固定ページを作成しました', '/admin/pages');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating page:', error);
-      showError('固定ページの作成に失敗しました');
+      const msg = error?.message || error?.code || String(error);
+      showError(`固定ページの作成に失敗しました: ${msg}`);
     } finally {
       setLoading(false);
     }

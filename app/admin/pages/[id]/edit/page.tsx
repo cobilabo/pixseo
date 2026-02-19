@@ -454,9 +454,10 @@ export default function EditPagePage() {
       await updatePage(pageId, updateData);
       
       showSuccessAndNavigate('固定ページを更新しました', '/admin/pages');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating page:', error);
-      showError('固定ページの更新に失敗しました');
+      const msg = error?.message || error?.code || String(error);
+      showError(`固定ページの更新に失敗しました: ${msg}`);
     } finally {
       setLoading(false);
     }
