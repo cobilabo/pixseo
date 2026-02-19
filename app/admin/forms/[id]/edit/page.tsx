@@ -291,7 +291,6 @@ export default function EditFormPage() {
                             redirectUrl: value,
                           },
                         })}
-                        placeholder="https://example.com/thanks"
                       />
                     )}
 
@@ -331,7 +330,6 @@ export default function EditFormPage() {
                                 to: [value],
                               },
                             })}
-                            placeholder="admin@example.com"
                           />
 
                           <FloatingInput
@@ -344,7 +342,6 @@ export default function EditFormPage() {
                                 subject: value,
                               },
                             })}
-                            placeholder="新しいフォーム送信がありました"
                           />
                         </>
                       )}
@@ -377,7 +374,7 @@ export default function EditFormPage() {
                       {formData.autoReply.enabled && (
                         <>
                           <FloatingInput
-                            label="送信元メールアドレス *"
+                            label="送信元メールアドレス"
                             type="email"
                             value={formData.autoReply.fromEmail}
                             onChange={(value) => setFormData({
@@ -387,7 +384,6 @@ export default function EditFormPage() {
                                 fromEmail: value,
                               },
                             })}
-                            placeholder="noreply@example.com"
                             required
                           />
 
@@ -401,7 +397,6 @@ export default function EditFormPage() {
                                 fromName: value,
                               },
                             })}
-                            placeholder="Ayumi"
                           />
 
                           <FloatingInput
@@ -414,7 +409,6 @@ export default function EditFormPage() {
                                 subject: value,
                               },
                             })}
-                            placeholder="お問い合わせありがとうございます"
                           />
 
                           <FloatingInput
@@ -429,7 +423,6 @@ export default function EditFormPage() {
                             })}
                             multiline
                             rows={5}
-                            placeholder="この度はお問い合わせいただき、誠にありがとうございます。&#10;以下の内容で受け付けました。担当者より改めてご連絡いたします。"
                           />
                         </>
                       )}
