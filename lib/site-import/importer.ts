@@ -211,6 +211,9 @@ export async function executeImport(
   analysis: AnalysisResult,
   options: ImportOptions,
 ): Promise<ImportResult> {
+  const { mediaId, layoutMode, isPublished, customCss } = options;
+  const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
+
   const result: ImportResult = {
     siteImportBatchId,
     createdCustomBlocks: [],
@@ -218,9 +221,6 @@ export async function executeImport(
     uploadedImages: 0,
     errors: [],
   };
-
-  const { mediaId, layoutMode, isPublished, customCss } = options;
-  const siteImportBatchId = options.siteImportBatchId || `import_${Date.now()}`;
 
   // 1. Upload images and build URL map
   const { urlMap, count, errors: imageErrors } = await uploadAllImages(analysis, mediaId, siteImportBatchId);
