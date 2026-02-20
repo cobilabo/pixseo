@@ -13,7 +13,7 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ article, category, lang = 'ja' }: BreadcrumbsProps) {
-  const [origin, setOrigin] = useState('https://furatto.pixseo.cloud');
+  const [origin, setOrigin] = useState('https://flat.pixseo.cloud');
   
   useEffect(() => {
     if (typeof window !== 'undefined') {

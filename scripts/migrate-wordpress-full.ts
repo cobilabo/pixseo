@@ -29,7 +29,7 @@ dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 // WordPress設定
 const WORDPRESS_URL = 'https://the-ayumi.jp';
-const NEW_SITE_URL = 'https://furatto.pixseo.cloud'; // 新サイトのURL
+const NEW_SITE_URL = 'https://flat.pixseo.cloud'; // 新サイトのURL
 
 // WordPress認証情報（環境変数から取得）
 const WP_USERNAME = process.env.WP_USERNAME || '';

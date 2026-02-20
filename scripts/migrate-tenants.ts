@@ -111,7 +111,7 @@ async function migrateTenants() {
       console.log('');
       console.log('📝 次のステップ:');
       console.log('   1. Firebase Console で mediaTenants コレクションを確認');
-      console.log('   2. https://furatto.pixseo.cloud/ にアクセスして動作確認');
+      console.log('   2. https://flat.pixseo.cloud/ にアクセスして動作確認');
       console.log('   3. 問題なければ tenants コレクションを削除（任意）');
     } else {
       console.log('⚠️  移行に失敗したドキュメントがあります。');

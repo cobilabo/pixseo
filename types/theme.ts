@@ -110,6 +110,27 @@ export interface NavigationItem {
   label_ko?: string;
 }
 
+// グローバルメニューの高さプリセット
+export type GlobalMenuHeight = 'small' | 'medium' | 'large';
+
+// グローバルメニューのホバーエフェクト
+export type GlobalMenuHoverEffect = 'grayscale' | 'darken' | 'zoom' | 'none';
+
+// グローバルメニューのデザイン設定
+export interface GlobalMenuDesign {
+  height: GlobalMenuHeight;
+  borderRadius: number;
+  overlayOpacity: number;
+  defaultGradientFrom: string;
+  defaultGradientTo: string;
+  labelColor: string;
+  labelFontSize: string;
+  labelFontWeight: string;
+  hoverEffect: GlobalMenuHoverEffect;
+  gap: number;
+  showInitialChar: boolean;
+}
+
 // メニュー設定の定義
 export interface MenuSettings {
   // 新形式: ハンバーガーメニューのナビゲーション項目配列
@@ -117,6 +138,9 @@ export interface MenuSettings {
   
   // グローバルメニュー（ヘッダー表示用）のナビゲーション項目配列
   globalNavItems?: NavigationItem[];
+  
+  // グローバルメニューデザイン設定
+  globalMenuDesign?: GlobalMenuDesign;
   
   // 後方互換性のため既存フィールドを保持
   topLabel: string;           // トップ

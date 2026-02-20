@@ -141,111 +141,108 @@ export async function PUT(
     // 公開ステータスが変更された場合
     const statusChanged = wasPublished !== body.isPublished;
     
-    // 🚀 公開に切り替えた場合、翻訳とAlgolia登録を実行（同期的に実行）
+    // 🚀 公開に切り替えた場合、翻訳とAlgolia登録をバックグラウンドで実行
     if (body.isPublished === true && statusChanged) {
-      try {
-        const translationData: any = {};
+      const bgArticleRef = adminDb.collection('articles').doc(id);
+      const bgExistingData = existingData ? { ...existingData } : null;
 
-        // 既存データから翻訳用のデータを取得
-        const contentToTranslate = existingData?.content || '';
-        const titleToTranslate = existingData?.title || '';
-        const excerptToTranslate = existingData?.excerpt || '';
-        const metaTitleToTranslate = existingData?.metaTitle || titleToTranslate;
-        const metaDescriptionToTranslate = existingData?.metaDescription || excerptToTranslate;
-        const faqsToTranslate = existingData?.faqs_ja;
-        // AIサマリー生成（日本語）
-        if (contentToTranslate) {
-          try {
-            const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
-            translationData.aiSummary_ja = aiSummaryJa;
-          } catch (error) {
-            console.error(`[API ${id}] AIサマリー生成エラー（ja）:`, error);
-          }
-        }
+      (async () => {
+        try {
+          const translationData: any = {};
 
-        // 他の言語への翻訳（並列処理）
-        const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-        
-        await Promise.all(otherLangs.map(async (lang) => {
-          try {
-            // 記事本体を翻訳
-            const translated = await translateArticle({
-              title: titleToTranslate,
-              content: contentToTranslate,
-              excerpt: excerptToTranslate,
-              metaTitle: metaTitleToTranslate,
-              metaDescription: metaDescriptionToTranslate,
-            }, lang);
+          const contentToTranslate = bgExistingData?.content || '';
+          const titleToTranslate = bgExistingData?.title || '';
+          const excerptToTranslate = bgExistingData?.excerpt || '';
+          const metaTitleToTranslate = bgExistingData?.metaTitle || titleToTranslate;
+          const metaDescriptionToTranslate = bgExistingData?.metaDescription || excerptToTranslate;
+          const faqsToTranslate = bgExistingData?.faqs_ja;
 
-            translationData[`title_${lang}`] = translated.title;
-            translationData[`content_${lang}`] = translated.content;
-            translationData[`excerpt_${lang}`] = translated.excerpt;
-            translationData[`metaTitle_${lang}`] = translated.metaTitle;
-            translationData[`metaDescription_${lang}`] = translated.metaDescription;
-
-            // 目次を生成
-            const toc = generateTableOfContents(translated.content);
-            translationData[`tableOfContents_${lang}`] = toc;
-
-            // AIサマリーを生成
-            const aiSummary = await generateAISummary(translated.content, lang);
-            translationData[`aiSummary_${lang}`] = aiSummary;
-
-            // FAQsを翻訳
-            if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
-              const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
-              translationData[`faqs_${lang}`] = translatedFaqs;
+          if (contentToTranslate) {
+            try {
+              const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
+              translationData.aiSummary_ja = aiSummaryJa;
+            } catch (error) {
+              console.error(`[BG ${id}] AIサマリー生成エラー（ja）:`, error);
             }
-          } catch (error) {
-            console.error(`[API ${id}] 翻訳エラー（${lang}）:`, error);
           }
-        }));
-        // 翻訳データを保存
-        if (Object.keys(translationData).length > 0) {
-          await articleRef.update(translationData);
-        }
 
-        // Algolia同期（翻訳データを含む最新データを取得）
-        const finalDoc = await articleRef.get();
-        if (finalDoc.exists) {
-          const finalData = finalDoc.data()!;
-          const article: Article = {
-            id: finalDoc.id,
-            ...finalData,
-            publishedAt: convertToDate(finalData.publishedAt) || new Date(),
-            updatedAt: convertToDate(finalData.updatedAt) || new Date(),
-          } as Article;
+          const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+          
+          await Promise.all(otherLangs.map(async (lang) => {
+            try {
+              const translated = await translateArticle({
+                title: titleToTranslate,
+                content: contentToTranslate,
+                excerpt: excerptToTranslate,
+                metaTitle: metaTitleToTranslate,
+                metaDescription: metaDescriptionToTranslate,
+              }, lang);
 
-          await syncArticleToAlgolia(article);
+              translationData[`title_${lang}`] = translated.title;
+              translationData[`content_${lang}`] = translated.content;
+              translationData[`excerpt_${lang}`] = translated.excerpt;
+              translationData[`metaTitle_${lang}`] = translated.metaTitle;
+              translationData[`metaDescription_${lang}`] = translated.metaDescription;
+
+              const toc = generateTableOfContents(translated.content);
+              translationData[`tableOfContents_${lang}`] = toc;
+
+              const aiSummary = await generateAISummary(translated.content, lang);
+              translationData[`aiSummary_${lang}`] = aiSummary;
+
+              if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
+                const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
+                translationData[`faqs_${lang}`] = translatedFaqs;
+              }
+            } catch (error) {
+              console.error(`[BG ${id}] 翻訳エラー（${lang}）:`, error);
+            }
+          }));
+
+          if (Object.keys(translationData).length > 0) {
+            await bgArticleRef.update(translationData);
+          }
+
+          const finalDoc = await bgArticleRef.get();
+          if (finalDoc.exists) {
+            const finalData = finalDoc.data()!;
+            const article: Article = {
+              id: finalDoc.id,
+              ...finalData,
+              publishedAt: convertToDate(finalData.publishedAt) || new Date(),
+              updatedAt: convertToDate(finalData.updatedAt) || new Date(),
+            } as Article;
+            await syncArticleToAlgolia(article);
+          }
+          console.log(`[BG ${id}] 翻訳・Algolia同期完了`);
+        } catch (error) {
+          console.error(`[BG ${id}] バックグラウンド翻訳処理エラー:`, error);
         }
-      } catch (translationError) {
-        console.error(`[API ${id}] 翻訳処理エラー:`, translationError);
-        // エラーが発生しても記事の公開状態は更新済みなので処理は続行
-      }
+      })();
     } else if (!body.isPublished) {
-      // 非公開にした場合は同期的にAlgoliaから削除
       try {
         await deleteArticleFromAlgolia(id);
       } catch (algoliaError) {
         console.error('[API] Algolia delete error:', algoliaError);
       }
     } else if (body.isPublished && !statusChanged) {
-      // 既に公開済みの場合は、Algoliaに同期（翻訳なし）
-      try {
-        const updatedDoc = await articleRef.get();
-        const updatedData = updatedDoc.data()!;
-        
-        const article: Article = {
-          id: updatedDoc.id,
-          ...updatedData,
-          publishedAt: convertToDate(updatedData.publishedAt) || new Date(),
-          updatedAt: convertToDate(updatedData.updatedAt) || new Date(),
-        } as Article;
-
-        await syncArticleToAlgolia(article);
-      } catch (algoliaError) {
-        console.error(`[API /admin/articles/${id}] Algolia sync error:`, algoliaError);
-      }
+      // 既に公開済みのAlgolia同期は軽量なのでバックグラウンドで実行
+      (async () => {
+        try {
+          const bgRef = adminDb.collection('articles').doc(id);
+          const updatedDoc = await bgRef.get();
+          const updatedData = updatedDoc.data()!;
+          const article: Article = {
+            id: updatedDoc.id,
+            ...updatedData,
+            publishedAt: convertToDate(updatedData.publishedAt) || new Date(),
+            updatedAt: convertToDate(updatedData.updatedAt) || new Date(),
+          } as Article;
+          await syncArticleToAlgolia(article);
+        } catch (algoliaError) {
+          console.error(`[BG /admin/articles/${id}] Algolia sync error:`, algoliaError);
+        }
+      })();
     }
     
     return NextResponse.json({ success: true });

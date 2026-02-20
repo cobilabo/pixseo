@@ -74,7 +74,45 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // テナント一覧を取得（キャッシュ付き）
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+
+  const getCachedTenants = (uid: string): MediaTenant[] | null => {
+    try {
+      const raw = sessionStorage.getItem(`tenants_${uid}`);
+      if (!raw) return null;
+      const { data, timestamp } = JSON.parse(raw);
+      if (Date.now() - timestamp > CACHE_TTL_MS) {
+        sessionStorage.removeItem(`tenants_${uid}`);
+        return null;
+      }
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
+  const setCachedTenants = (uid: string, data: MediaTenant[]) => {
+    sessionStorage.setItem(`tenants_${uid}`, JSON.stringify({ data, timestamp: Date.now() }));
+  };
+
+  const applyTenantSelection = (tenantList: MediaTenant[]) => {
+    setTenants(tenantList);
+    const storedTenantId = getStoredTenantId();
+    if (storedTenantId) {
+      const storedTenant = tenantList.find((t: MediaTenant) => t.id === storedTenantId);
+      if (storedTenant) {
+        setCurrentTenantState(storedTenant);
+        setLoading(false);
+        return;
+      }
+    }
+    if (tenantList.length > 0) {
+      setCurrentTenantState(tenantList[0]);
+      storeTenantId(tenantList[0].id);
+    }
+    setLoading(false);
+  };
+
   const fetchTenants = async () => {
     if (!user) {
       setTenants([]);
@@ -83,68 +121,21 @@ export function MediaTenantProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // セッションキャッシュから取得
-    const cachedTenants = sessionStorage.getItem(`tenants_${user.uid}`);
-    if (cachedTenants) {
-      try {
-        const parsedTenants = JSON.parse(cachedTenants);
-        setTenants(parsedTenants);
-
-        // 保存されたテナントIDがあれば復元
-        const storedTenantId = getStoredTenantId();
-        if (storedTenantId) {
-          const storedTenant = parsedTenants.find((t: MediaTenant) => t.id === storedTenantId);
-          if (storedTenant) {
-            setCurrentTenantState(storedTenant);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // 最初のテナントを自動選択
-        if (parsedTenants.length > 0) {
-          setCurrentTenantState(parsedTenants[0]);
-          storeTenantId(parsedTenants[0].id);
-        }
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error parsing cached tenants:', error);
-      }
+    const cached = getCachedTenants(user.uid);
+    if (cached) {
+      applyTenantSelection(cached);
+      return;
     }
 
-    // APIから取得
     try {
       const response = await fetch('/api/admin/service');
       if (response.ok) {
         const data = await response.json();
-        
-        // 現在のユーザーが所属しているテナントのみフィルタ
         const userTenants = data.filter((tenant: MediaTenant) => 
           tenant.ownerId === user.uid || tenant.memberIds.includes(user.uid)
         );
-        
-        setTenants(userTenants);
-        
-        // セッションキャッシュに保存
-        sessionStorage.setItem(`tenants_${user.uid}`, JSON.stringify(userTenants));
-
-        // 保存されたテナントIDがあれば復元
-        const storedTenantId = getStoredTenantId();
-        if (storedTenantId) {
-          const storedTenant = userTenants.find((t: MediaTenant) => t.id === storedTenantId);
-          if (storedTenant) {
-            setCurrentTenantState(storedTenant);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // 最初のテナントを自動選択
-        if (userTenants.length > 0) {
-          setCurrentTenantState(userTenants[0]);
-          storeTenantId(userTenants[0].id);
-        }
+        setCachedTenants(user.uid, userTenants);
+        applyTenantSelection(userTenants);
       }
     } catch (error) {
       console.error('Error fetching tenants:', error);

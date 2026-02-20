@@ -300,6 +300,7 @@ export default async function HomePage({ params }: PageProps) {
             categories={categories} 
             lang={lang} 
             globalNavItems={rawTheme.menuSettings?.globalNavItems}
+            globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
           />
         )}
 
@@ -460,6 +461,7 @@ export default async function HomePage({ params }: PageProps) {
         categories={categories} 
         lang={lang} 
         globalNavItems={rawTheme.menuSettings?.globalNavItems}
+        globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
       />
 
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}

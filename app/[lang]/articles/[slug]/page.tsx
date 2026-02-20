@@ -413,6 +413,7 @@ export default async function ArticlePage({ params }: PageProps) {
         variant="half" 
         lang={lang} 
         globalNavItems={rawTheme.menuSettings?.globalNavItems}
+        globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
       />
 
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
