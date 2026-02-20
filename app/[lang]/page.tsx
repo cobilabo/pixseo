@@ -325,6 +325,7 @@ export default async function HomePage({ params }: PageProps) {
                         mediaId={mediaId || undefined}
                         lang={lang}
                         tags={tags}
+                        categories={categories}
                         popularTags={popularSearchTags}
                       />
                     </div>
@@ -341,6 +342,7 @@ export default async function HomePage({ params }: PageProps) {
                       mediaId={mediaId || undefined}
                       lang={lang}
                       tags={tags}
+                      categories={categories}
                       popularTags={popularSearchTags}
                       variant="compact"
                     />
@@ -377,6 +379,7 @@ export default async function HomePage({ params }: PageProps) {
                     mediaId={mediaId || undefined}
                     lang={lang}
                     tags={tags}
+                    categories={categories}
                   />
                 </div>
               )}
@@ -475,6 +478,7 @@ export default async function HomePage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={tags}
+                  categories={categories}
                 />
               </div>
             )}
@@ -537,6 +541,7 @@ export default async function HomePage({ params }: PageProps) {
                 mediaId={mediaId || undefined}
                 lang={lang}
                 tags={tags}
+                categories={categories}
                 variant="compact"
               />
             )}

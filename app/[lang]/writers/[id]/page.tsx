@@ -186,6 +186,7 @@ export default async function WriterPage({ params }: PageProps) {
                 mediaId={mediaId || undefined}
                 lang={lang}
                 tags={sidebarTags}
+                categories={headerCategories}
                 popularTags={popularSearchTags}
                 variant="compact"
               />

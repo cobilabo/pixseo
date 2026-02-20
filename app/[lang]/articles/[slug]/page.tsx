@@ -429,6 +429,7 @@ export default async function ArticlePage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={sidebarTags}
+                  categories={headerCategories}
                   popularTags={popularSearchTags}
                 />
               </div>
@@ -506,6 +507,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 mediaId={mediaId || undefined}
                 lang={lang}
                 tags={sidebarTags}
+                categories={headerCategories}
                 popularTags={popularSearchTags}
                 variant="compact"
               />

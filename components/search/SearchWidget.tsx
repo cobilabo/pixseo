@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SearchSettings } from '@/types/theme';
+import { SearchSettings, SearchTypeKey } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import TagSearchDropdown from './TagSearchDropdown';
+import CategorySearchDropdown from './CategorySearchDropdown';
 
 interface PopularTag {
   value: string;
@@ -13,20 +14,30 @@ interface PopularTag {
   count: number;
 }
 
+interface CategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface SearchWidgetProps {
   searchSettings?: SearchSettings;
   mediaId?: string;
   lang?: Lang;
   tags?: Array<{ id: string; name: string; slug: string }>;
+  categories?: CategoryItem[];
   popularTags?: PopularTag[];
   variant?: 'default' | 'compact';
 }
+
+const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
 
 export default function SearchWidget({ 
   searchSettings, 
   mediaId, 
   lang = 'ja',
   tags = [],
+  categories = [],
   popularTags = [],
   variant = 'default'
 }: SearchWidgetProps) {
@@ -34,47 +45,50 @@ export default function SearchWidget({
   const [keyword, setKeyword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 新形式の検索タイプを取得（後方互換性対応）
   const getSearchTypes = () => {
     if (searchSettings?.searchTypes) {
       return searchSettings.searchTypes;
     }
-    // 後方互換性: searchBoxType から変換
     const oldType = searchSettings?.searchBoxType || 'keyword';
     return {
       keywordSearch: oldType === 'keyword' || oldType === 'both',
       tagSearch: oldType === 'tag' || oldType === 'both',
+      categorySearch: false,
       popularTags: false,
     };
   };
 
   const searchTypes = getSearchTypes();
   const popularTagsCount = searchSettings?.popularTagsSettings?.displayCount || 10;
+  const categoryDisplayType = searchSettings?.categorySearchDisplayType || 'dropdown';
 
-  // キーワード検索 - 検索ページへ遷移
+  const searchOrder = (() => {
+    const saved = searchSettings?.searchOrder;
+    if (saved && saved.length > 0) {
+      const missing = DEFAULT_SEARCH_ORDER.filter(k => !saved.includes(k));
+      return [...saved, ...missing];
+    }
+    return DEFAULT_SEARCH_ORDER;
+  })();
+
   const handleKeywordSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!keyword.trim()) return;
-
     setIsSubmitting(true);
-    
-    // 検索ページへ遷移（検索ログは SearchContent で記録）
     router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
     setIsSubmitting(false);
   };
 
-  // タグ検索 - 検索ページへ遷移（Algolia経由で検索）
   const handleTagSearch = async (tagId: string, tagName: string) => {
     setIsSubmitting(true);
-    
-    // 検索ページへ遷移（タグ名パラメータで検索）
-    // タグ名を使ってAlgoliaで検索する（検索ログは SearchContent で記録）
     router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
     setIsSubmitting(false);
   };
 
-  // よく検索されているタグをクリック
+  const handleCategorySelect = (categorySlug: string) => {
+    router.push(`/${lang}/categories/${categorySlug}`);
+  };
+
   const handlePopularTagClick = (tagName: string) => {
     setIsSubmitting(true);
     router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
@@ -82,20 +96,14 @@ export default function SearchWidget({
   };
 
   const isCompact = variant === 'compact';
-
-  // 表示するよく検索されているタグ
   const displayPopularTags = popularTags.slice(0, popularTagsCount);
 
-  return (
-    <div className={`bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`}>
-      <h3 className={`font-bold text-gray-900 ${isCompact ? 'text-sm mb-3' : 'text-lg mb-4'}`}>
-        {t('common.search', lang)}
-      </h3>
-
-      <div className="space-y-4">
-        {/* キーワード検索 */}
-        {searchTypes.keywordSearch && (
-          <form onSubmit={handleKeywordSearch}>
+  const renderSearchItem = (key: SearchTypeKey) => {
+    switch (key) {
+      case 'keywordSearch':
+        if (!searchTypes.keywordSearch) return null;
+        return (
+          <form key={key} onSubmit={handleKeywordSearch}>
             <div className="relative">
               <input
                 type="text"
@@ -123,22 +131,61 @@ export default function SearchWidget({
               </button>
             </div>
           </form>
-        )}
+        );
 
-        {/* タグ検索（プルダウン） */}
-        {searchTypes.tagSearch && tags.length > 0 && (
+      case 'tagSearch':
+        if (!searchTypes.tagSearch || tags.length === 0) return null;
+        return (
           <TagSearchDropdown
+            key={key}
             tags={tags}
             onSelect={handleTagSearch}
             disabled={isSubmitting}
             lang={lang}
             isCompact={isCompact}
           />
-        )}
+        );
 
-        {/* よく検索されているタグ */}
-        {searchTypes.popularTags && displayPopularTags.length > 0 && (
-          <div>
+      case 'categorySearch':
+        if (!searchTypes.categorySearch || categories.length === 0) return null;
+        if (categoryDisplayType === 'list') {
+          return (
+            <div key={key}>
+              <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+                カテゴリーから探す
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategorySelect(cat.slug)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors ${
+                      isCompact ? 'text-xs' : 'text-sm'
+                    }`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <CategorySearchDropdown
+            key={key}
+            categories={categories}
+            onSelect={handleCategorySelect}
+            isCompact={isCompact}
+          />
+        );
+
+      case 'popularTags':
+        if (!searchTypes.popularTags || displayPopularTags.length === 0) return null;
+        return (
+          <div key={key}>
             <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`}>
               {t('search.popularTags', lang)}
             </label>
@@ -158,9 +205,22 @@ export default function SearchWidget({
               ))}
             </div>
           </div>
-        )}
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={`bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`}>
+      <h3 className={`font-bold text-gray-900 ${isCompact ? 'text-sm mb-3' : 'text-lg mb-4'}`}>
+        {t('common.search', lang)}
+      </h3>
+
+      <div className="space-y-4">
+        {searchOrder.map(renderSearchItem)}
       </div>
     </div>
   );
 }
-

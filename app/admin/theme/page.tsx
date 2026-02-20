@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -15,6 +15,73 @@ import { apiClient, apiGet } from '@/lib/api-client';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+// ソート可能な検索種類アイテム
+function SortableSearchTypeItem({
+  id,
+  label,
+  icon,
+  description,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-start gap-3 p-4 bg-gray-50 rounded-xl transition-colors ${isDragging ? 'shadow-lg ring-2 ring-blue-300' : ''}`}
+    >
+      <button
+        type="button"
+        className="mt-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        </svg>
+      </button>
+      <label className="flex items-start gap-3 flex-1 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+        />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{icon}</span>
+            <span className="font-medium text-gray-900">{label}</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        </div>
+      </label>
+    </div>
+  );
+}
 
 // ソート可能なメニュー項目コンポーネント
 function SortableNavigationItem({ 
@@ -797,6 +864,8 @@ export default function ThemePage() {
   };
 
   // 検索設定のデフォルト値
+  const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
+
   const defaultSearchSettings: SearchSettings = {
     displayPages: {
       topPage: false,
@@ -807,11 +876,23 @@ export default function ThemePage() {
     searchTypes: {
       keywordSearch: true,
       tagSearch: false,
+      categorySearch: false,
       popularTags: false,
     },
+    searchOrder: DEFAULT_SEARCH_ORDER,
+    categorySearchDisplayType: 'dropdown',
     popularTagsSettings: {
       displayCount: 10,
     },
+  };
+
+  const getSearchOrder = (): SearchTypeKey[] => {
+    const saved = theme.searchSettings?.searchOrder;
+    if (saved && saved.length > 0) {
+      const missing = DEFAULT_SEARCH_ORDER.filter(k => !saved.includes(k));
+      return [...saved, ...missing];
+    }
+    return DEFAULT_SEARCH_ORDER;
   };
 
   // 検索設定の更新（表示ページ）
@@ -843,6 +924,34 @@ export default function ThemePage() {
             ...(currentSettings.searchTypes || defaultSearchSettings.searchTypes),
             [field]: value,
           },
+        },
+      };
+    });
+  };
+
+  // 検索項目の並び順を更新
+  const updateSearchOrder = (newOrder: SearchTypeKey[]) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          searchOrder: newOrder,
+        },
+      };
+    });
+  };
+
+  // カテゴリー検索の表示形式を更新
+  const updateCategorySearchDisplayType = (displayType: CategorySearchDisplayType) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          categorySearchDisplayType: displayType,
         },
       };
     });
@@ -1696,37 +1805,86 @@ export default function ThemePage() {
                     </div>
                   </div>
 
-                  {/* 検索の種類 */}
+                  {/* 検索の種類（ドラッグ＆ドロップで並び替え） */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4">検索の種類</label>
-                    <p className="text-sm text-gray-500 mb-4">表示する検索機能を選択してください（複数選択可）</p>
-                    <div className="space-y-3">
-                      {[
-                        { key: 'keywordSearch', label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
-                        { key: 'tagSearch', label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
-                        { key: 'popularTags', label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
-                      ].map(({ key, label, icon, description }) => (
-                        <label
-                          key={key}
-                          className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={theme.searchSettings?.searchTypes?.[key as keyof SearchSettings['searchTypes']] ?? (key === 'keywordSearch')}
-                            onChange={(e) => updateSearchTypes(key as keyof SearchSettings['searchTypes'], e.target.checked)}
-                            className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{icon}</span>
-                              <span className="font-medium text-gray-900">{label}</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">検索の種類と表示順</label>
+                    <p className="text-sm text-gray-500 mb-4">表示する検索機能を選択し、ドラッグで表示順を変更できます</p>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event: DragEndEvent) => {
+                        const { active, over } = event;
+                        if (over && active.id !== over.id) {
+                          const currentOrder = getSearchOrder();
+                          const oldIndex = currentOrder.indexOf(active.id as SearchTypeKey);
+                          const newIndex = currentOrder.indexOf(over.id as SearchTypeKey);
+                          updateSearchOrder(arrayMove(currentOrder, oldIndex, newIndex));
+                        }
+                      }}
+                    >
+                      <SortableContext items={getSearchOrder()} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-3">
+                          {getSearchOrder().map((key) => {
+                            const config: Record<SearchTypeKey, { label: string; icon: string; description: string }> = {
+                              keywordSearch: { label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
+                              tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
+                              categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
+                              popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
+                            };
+                            const { label, icon, description } = config[key];
+                            return (
+                              <SortableSearchTypeItem
+                                key={key}
+                                id={key}
+                                label={label}
+                                icon={icon}
+                                description={description}
+                                checked={theme.searchSettings?.searchTypes?.[key] ?? (key === 'keywordSearch')}
+                                onChange={(checked) => updateSearchTypes(key, checked)}
+                              />
+                            );
+                          })}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   </div>
+
+                  {/* カテゴリー検索の表示形式 */}
+                  {theme.searchSettings?.searchTypes?.categorySearch && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                      <label className="block text-sm font-medium text-indigo-700 mb-3">
+                        カテゴリー検索の表示形式
+                      </label>
+                      <div className="flex gap-4">
+                        {([
+                          { value: 'dropdown' as const, label: 'プルダウン形式', desc: 'セレクトボックスから選択' },
+                          { value: 'list' as const, label: 'リスト形式', desc: 'ボタン一覧から選択' },
+                        ]).map(({ value, label, desc }) => (
+                          <label
+                            key={value}
+                            className={`flex-1 flex items-start gap-3 p-3 rounded-lg cursor-pointer border-2 transition-colors ${
+                              (theme.searchSettings?.categorySearchDisplayType || 'dropdown') === value
+                                ? 'border-indigo-500 bg-indigo-100'
+                                : 'border-transparent bg-white hover:bg-indigo-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="categorySearchDisplayType"
+                              value={value}
+                              checked={(theme.searchSettings?.categorySearchDisplayType || 'dropdown') === value}
+                              onChange={() => updateCategorySearchDisplayType(value)}
+                              className="mt-1 w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                            />
+                            <div>
+                              <span className="font-medium text-gray-900">{label}</span>
+                              <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* よく検索されているタグの表示件数 */}
                   {theme.searchSettings?.searchTypes?.popularTags && (

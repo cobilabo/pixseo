@@ -55,12 +55,13 @@ const db = admin.firestore();
 const storage = admin.storage();
 
 // コマンドライン引数の解析
-function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number; includePages: boolean } {
+function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number; includePages: boolean; after?: string } {
   const args = process.argv.slice(2);
   let mediaId = '';
   let dryRun = false;
   let limit: number | undefined;
   let includePages = false;
+  let after: string | undefined;
 
   for (const arg of args) {
     if (arg.startsWith('--mediaId=')) {
@@ -71,16 +72,18 @@ function parseArgs(): { mediaId: string; dryRun: boolean; limit?: number; includ
       limit = parseInt(arg.split('=')[1], 10);
     } else if (arg === '--includePages') {
       includePages = true;
+    } else if (arg.startsWith('--after=')) {
+      after = arg.split('=')[1];
     }
   }
 
   if (!mediaId) {
     console.error('Error: --mediaId is required');
-    console.log('Usage: npx tsx scripts/migrate-wordpress-full.ts --mediaId=YOUR_MEDIA_ID [--dryRun] [--limit=N] [--includePages]');
+    console.log('Usage: npx tsx scripts/migrate-wordpress-full.ts --mediaId=YOUR_MEDIA_ID [--dryRun] [--limit=N] [--includePages] [--after=YYYY-MM-DD]');
     process.exit(1);
   }
 
-  return { mediaId, dryRun, limit, includePages };
+  return { mediaId, dryRun, limit, includePages, after };
 }
 
 // WordPress REST API インターフェース
@@ -154,12 +157,11 @@ interface WPUser {
 /**
  * WordPress REST APIからデータを取得（リスト形式）
  */
-async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false, useEditContext: boolean = false): Promise<T[]> {
-  // 認証がある場合は全ステータスを取得可能（trashは除く）
+async function fetchFromWordPress<T>(endpoint: string, page: number = 1, perPage: number = 100, includeAllStatus: boolean = false, useEditContext: boolean = false, afterDate?: string): Promise<T[]> {
   const statusParam = (includeAllStatus && WP_AUTH_HEADER) ? '&status=publish,draft,private,pending,future' : '';
-  // 認証がある場合はeditコンテキストでプロフィール情報も取得可能
   const contextParam = (useEditContext && WP_AUTH_HEADER) ? '&context=edit' : '';
-  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}${contextParam}`;
+  const afterParam = afterDate ? `&after=${afterDate}T00:00:00` : '';
+  const url = `${WORDPRESS_URL}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}${statusParam}${contextParam}${afterParam}`;
   console.log(`  Fetching: ${url}`);
   
   try {
@@ -223,12 +225,12 @@ async function fetchSingleFromWordPress<T>(endpoint: string, retries: number = 3
 /**
  * 全ページのデータを取得
  */
-async function fetchAllPages<T>(endpoint: string, limit?: number, includeAllStatus: boolean = false, useEditContext: boolean = false): Promise<T[]> {
+async function fetchAllPages<T>(endpoint: string, limit?: number, includeAllStatus: boolean = false, useEditContext: boolean = false, afterDate?: string): Promise<T[]> {
   const allData: T[] = [];
   let page = 1;
   
   while (true) {
-    const data = await fetchFromWordPress<T>(endpoint, page, 100, includeAllStatus, useEditContext);
+    const data = await fetchFromWordPress<T>(endpoint, page, 100, includeAllStatus, useEditContext, afterDate);
     
     if (data.length === 0) {
       break;
@@ -1126,7 +1128,7 @@ async function updatePageParentRelations(
  * メイン処理
  */
 async function main() {
-  const { mediaId, dryRun, limit, includePages } = parseArgs();
+  const { mediaId, dryRun, limit, includePages, after } = parseArgs();
   
   console.log('='.repeat(60));
   console.log('WordPress完全移行スクリプト');
@@ -1134,6 +1136,7 @@ async function main() {
   console.log(`\nTarget mediaId: ${mediaId}`);
   console.log(`Dry run: ${dryRun}`);
   if (limit) console.log(`Limit: ${limit} articles`);
+  if (after) console.log(`After: ${after} (差分インポート)`);
   console.log(`Include pages: ${includePages}`);
   console.log(`WP Auth: ${WP_AUTH_HEADER ? '✅ Authenticated (can fetch draft/private)' : '❌ Not authenticated (public posts only)'}`);
   console.log('');
@@ -1184,7 +1187,10 @@ async function main() {
     if (WP_AUTH_HEADER) {
       console.log('  🔐 Authenticated: Including draft/private posts');
     }
-    const posts = await fetchAllPages<WPPost>('posts', limit, !!WP_AUTH_HEADER);
+    if (after) {
+      console.log(`  📅 Filtering posts after: ${after}`);
+    }
+    const posts = await fetchAllPages<WPPost>('posts', limit, !!WP_AUTH_HEADER, false, after);
     console.log(`  Found ${posts.length} posts\n`);
     
     // 固定ページを取得（内部リンク変換に使用 + オプションで移行）

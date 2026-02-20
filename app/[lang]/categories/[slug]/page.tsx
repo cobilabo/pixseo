@@ -257,6 +257,7 @@ export default async function CategoryPage({ params }: PageProps) {
                 mediaId={mediaId || undefined}
                 lang={lang}
                 tags={sidebarTags}
+                categories={categories}
                 popularTags={popularSearchTags}
                 variant="compact"
               />

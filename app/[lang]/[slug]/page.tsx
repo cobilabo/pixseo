@@ -291,6 +291,7 @@ export default async function FixedPage({ params }: PageProps) {
                       mediaId={mediaId || undefined}
                       lang={lang}
                       tags={sidebarTags}
+                      categories={categories}
                       popularTags={popularSearchTags}
                     />
                   </div>
@@ -307,6 +308,7 @@ export default async function FixedPage({ params }: PageProps) {
                     mediaId={mediaId || undefined}
                     lang={lang}
                     tags={sidebarTags}
+                    categories={categories}
                     popularTags={popularSearchTags}
                     variant="compact"
                   />
@@ -343,6 +345,7 @@ export default async function FixedPage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={sidebarTags}
+                  categories={categories}
                 />
               </div>
             )}

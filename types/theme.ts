@@ -142,8 +142,15 @@ export interface SearchDisplayPages {
 export interface SearchTypes {
   keywordSearch: boolean;      // キーワード検索
   tagSearch: boolean;          // タグ検索（プルダウン）
+  categorySearch: boolean;     // カテゴリー検索
   popularTags: boolean;        // よく検索されているタグ
 }
+
+// カテゴリー検索の表示形式
+export type CategorySearchDisplayType = 'dropdown' | 'list';
+
+// 検索項目のキー
+export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags';
 
 // よく検索されているタグの設定
 export interface PopularTagsSettings {
@@ -154,6 +161,8 @@ export interface PopularTagsSettings {
 export interface SearchSettings {
   displayPages: SearchDisplayPages;    // 表示対象ページ
   searchTypes: SearchTypes;            // 検索の種類
+  searchOrder?: SearchTypeKey[];       // 検索項目の表示順
+  categorySearchDisplayType?: CategorySearchDisplayType; // カテゴリー検索の表示形式
   popularTagsSettings: PopularTagsSettings;  // よく検索されているタグの設定
   // 後方互換性のため残す（廃止予定）
   searchBoxType?: 'keyword' | 'tag' | 'both';
@@ -431,6 +440,7 @@ export const defaultTheme: Theme = {
     searchTypes: {
       keywordSearch: true,
       tagSearch: false,
+      categorySearch: false,
       popularTags: false,
     },
     popularTagsSettings: {

@@ -201,6 +201,7 @@ export default async function SearchPage({ params }: PageProps) {
                   mediaId={mediaId || undefined}
                   lang={lang}
                   tags={tags}
+                  categories={categories}
                   popularTags={popularSearchTags}
                   variant="compact"
                 />
