@@ -1040,9 +1040,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           <ToolbarButton onClick={insertQuoteBlock} title="引用">
             💬
           </ToolbarButton>
-          <ToolbarButton onClick={insertReferenceBlock} title="参照">
-            📎
-          </ToolbarButton>
           
           <div className="w-px bg-gray-300 mx-1" />
           
@@ -1111,8 +1108,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* 画像挿入モーダル */}
       {showImageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
-            <h3 className="text-xl font-bold mb-4">画像を挿入</h3>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom text-gray-900">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">画像を挿入</h3>
             
             {/* タブ切り替え */}
             <div className="flex gap-2 mb-4">
@@ -1255,7 +1252,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   setImageCaption('');
                   setImageCopyright('');
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
                 disabled={uploadingImage}
               >
                 キャンセル
@@ -1268,8 +1265,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* テーブル挿入モーダル */}
       {showTableModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
-            <h3 className="text-xl font-bold mb-4">表を挿入</h3>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom text-gray-900">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">表を挿入</h3>
             
             {/* 行数 */}
             <div className="mb-4">
@@ -1310,7 +1307,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               </button>
               <button
                 onClick={() => setShowTableModal(false)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
               >
                 キャンセル
               </button>
@@ -1322,8 +1319,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* HTML挿入モーダル */}
       {showHtmlModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">HTML挿入</h3>
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-custom max-h-[90vh] overflow-y-auto text-gray-900">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">HTML挿入</h3>
             <p className="text-sm text-gray-600 mb-4">
               スクリプトタグ、Googleマップ、YouTube埋め込みなどのHTMLコードを直接挿入できます。
             </p>
@@ -1402,7 +1399,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   setHtmlContent('');
                   setSavedRange(null);
                 }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
               >
                 キャンセル
               </button>
@@ -1414,8 +1411,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       {/* フォントサイズ変更モーダル */}
       {showFontSizeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom">
-            <h3 className="text-xl font-bold mb-4">フォントサイズ変更</h3>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom text-gray-900">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">フォントサイズ変更</h3>
             <p className="text-sm text-gray-600 mb-4">
               テキストを選択してから、フォントサイズを変更してください。
             </p>
@@ -1515,7 +1512,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                     }
                   }
                 }}
-                className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-sm"
+                className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-sm text-gray-900"
               >
                 リセット
               </button>
@@ -1527,7 +1524,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   setShowFontSizeModal(false);
                   setFontSize('16');
                 }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
               >
                 キャンセル
               </button>

@@ -689,21 +689,6 @@ function NewArticlePageContent() {
                 />
               </div>
 
-              {/* Googleマップ URL */}
-              <FloatingInput
-                label="Googleマップ URL"
-                value={formData.googleMapsUrl}
-                onChange={(value) => setFormData({ ...formData, googleMapsUrl: value })}
-                type="url"
-              />
-
-              {/* 予約サイト URL */}
-              <FloatingInput
-                label="予約サイト URL"
-                value={formData.reservationUrl}
-                onChange={(value) => setFormData({ ...formData, reservationUrl: value })}
-                type="url"
-              />
 
               {/* メタタイトル */}
               <div className="flex gap-2">
