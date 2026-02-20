@@ -2,6 +2,7 @@
 
 import { Block, RowBlockConfig, FormBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
+import { localizeHtmlLinks } from '@/lib/i18n/localize-html';
 import FormBlock from './FormBlock';
 
 interface RowBlockProps {
@@ -48,7 +49,7 @@ export default function RowBlock({ block, lang = 'ja' }: RowBlockProps) {
               }}
             />
           ) : col.html ? (
-            <div dangerouslySetInnerHTML={{ __html: (lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html }} />
+            <div dangerouslySetInnerHTML={{ __html: localizeHtmlLinks((lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html, lang) }} />
           ) : null}
         </div>
       ))}

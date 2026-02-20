@@ -1,6 +1,7 @@
 import { CustomBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import { getCustomBlockByIdServer } from '@/lib/firebase/custom-blocks-server';
+import { localizeHtmlLinks } from '@/lib/i18n/localize-html';
 
 interface CustomBlockProps {
   config: CustomBlockConfig;
@@ -20,7 +21,8 @@ export default async function CustomBlock({ config, showPanel, lang = 'ja' }: Cu
   }
 
   const htmlMap: Record<string, string | undefined> = { en: customBlock.html_en, zh: customBlock.html_zh, ko: customBlock.html_ko };
-  const html = (lang !== 'ja' && htmlMap[lang]?.trim()) ? htmlMap[lang]! : customBlock.html;
+  const raw = (lang !== 'ja' && htmlMap[lang]?.trim()) ? htmlMap[lang]! : customBlock.html;
+  const html = localizeHtmlLinks(raw, lang);
 
   return (
     <>
