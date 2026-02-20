@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { formatDate } from '@/lib/utils/date';
+import { t } from '@/lib/i18n/translations';
 
 interface ArticleCardProps {
   article: Article;
@@ -39,7 +40,7 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
         )}
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>{formatDate(article.publishedAt)}</span>
-          <span>{article.viewCount || 0} views</span>
+          <span>{t('article.viewCount', lang, { count: article.viewCount || 0 })}</span>
         </div>
       </div>
     </Link>

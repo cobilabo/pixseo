@@ -147,7 +147,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       publishedTime: rawArticle.publishedAt instanceof Date ? rawArticle.publishedAt.toISOString() : undefined,
       modifiedTime: rawArticle.updatedAt instanceof Date ? rawArticle.updatedAt.toISOString() : undefined,
-      authors: writer ? [writer.handleName] : ['匿名'],
+      authors: writer ? [writer.handleName] : ['Anonymous'],
       tags: tags.map(t => t.name),
       images: rawArticle.featuredImage ? [
         {
@@ -177,7 +177,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...(rawArticle.updatedAt instanceof Date && {
         'article:modified_time': rawArticle.updatedAt.toISOString(),
       }),
-      'article:author': writer ? writer.handleName : '匿名',
+      'article:author': writer ? writer.handleName : 'Anonymous',
       ...(categories.length > 0 && {
         'article:section': categories[0].name,
       }),
@@ -310,7 +310,7 @@ export default async function ArticlePage({ params }: PageProps) {
       description: writer.bio || '',
     } : {
       '@type': 'Person',
-      name: '匿名',
+      name: 'Anonymous',
     },
     publisher: {
       '@type': 'Organization',
@@ -400,7 +400,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 ? rawArticle.updatedAt.toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
                 : new Date((rawArticle.updatedAt as any).toDate()).toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
             }` : undefined,
-            views: rawArticle.viewCount !== undefined ? `${rawArticle.viewCount} views` : undefined,
+            views: rawArticle.viewCount !== undefined ? t('article.viewCount', lang, { count: rawArticle.viewCount }) : undefined,
             readingTime: rawArticle.readingTime ? t('article.readingTime', lang, { minutes: rawArticle.readingTime }) : undefined,
           }}
           showCustomContent={true}
@@ -474,7 +474,7 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* Googleマイマップ */}
             {rawArticle.googleMapsUrl && (
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">地図情報</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{t('article.mapInfo', lang)}</h2>
                 <GoogleMapsEmbed url={rawArticle.googleMapsUrl} />
               </div>
             )}
@@ -488,7 +488,7 @@ export default async function ArticlePage({ params }: PageProps) {
                   rel="noopener noreferrer"
                   className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
-                  予約する
+                  {t('article.reserve', lang)}
                 </a>
               </div>
             )}

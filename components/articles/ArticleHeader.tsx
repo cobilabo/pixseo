@@ -1,14 +1,17 @@
 import Image from 'next/image';
 import { Article } from '@/types/article';
 import { Writer } from '@/types/writer';
+import { Lang } from '@/types/lang';
 import { formatDate } from '@/lib/utils/date';
+import { t } from '@/lib/i18n/translations';
 
 interface ArticleHeaderProps {
   article: Article;
   writer?: Writer | null;
+  lang?: Lang;
 }
 
-export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
+export default function ArticleHeader({ article, writer, lang = 'ja' }: ArticleHeaderProps) {
   return (
     <header className="mb-8">
       {article.featuredImage && (
@@ -31,10 +34,9 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span>公開: {formatDate(article.publishedAt)}</span>
+          <span>{t('article.published', lang)}: {formatDate(article.publishedAt)}</span>
         </div>
         
-        {/* 更新日が公開日と異なる場合のみ表示 */}
         {article.updatedAt && article.publishedAt &&
          new Date(article.updatedAt).getTime() !== new Date(article.publishedAt).getTime() && (
           <>
@@ -43,7 +45,7 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>更新: {formatDate(article.updatedAt)}</span>
+              <span>{t('article.updated', lang)}: {formatDate(article.updatedAt)}</span>
             </div>
           </>
         )}
@@ -53,7 +55,7 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span>{writer?.handleName || '匿名'}</span>
+          <span>{writer?.handleName || t('article.anonymous', lang)}</span>
         </div>
         
         <span>•</span>
@@ -62,7 +64,7 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
-          <span>{article.viewCount || 0} views</span>
+          <span>{t('article.viewCount', lang, { count: article.viewCount || 0 })}</span>
         </div>
       </div>
       {article.excerpt && typeof article.excerpt === 'string' && (
@@ -71,5 +73,3 @@ export default function ArticleHeader({ article, writer }: ArticleHeaderProps) {
     </header>
   );
 }
-
-

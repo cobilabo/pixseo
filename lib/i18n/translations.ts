@@ -40,6 +40,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'article.category': 'カテゴリー',
     'article.tags': 'タグ',
     'article.writer': 'ライター',
+    'article.anonymous': '匿名',
+    'article.viewCount': '{count} views',
+    'article.mapInfo': '地図情報',
+    'article.reserve': '予約する',
     
     // セクション
     'section.recentArticles': '新着記事',
@@ -61,6 +65,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': 'タグ検索結果',
     'search.categorySearchResults': 'カテゴリー検索結果',
     'search.popularTags': 'よく検索されているタグ',
+    'search.categorySearch': 'カテゴリーから探す',
     
     // メッセージ
     'message.noArticles': '記事がまだありません',
@@ -123,6 +128,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'article.category': 'Category',
     'article.tags': 'Tags',
     'article.writer': 'Writer',
+    'article.anonymous': 'Anonymous',
+    'article.viewCount': '{count} views',
+    'article.mapInfo': 'Map Information',
+    'article.reserve': 'Reserve',
     
     // Sections
     'section.recentArticles': 'Recent Articles',
@@ -144,6 +153,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': 'Tag search results',
     'search.categorySearchResults': 'Category search results',
     'search.popularTags': 'Popular Tags',
+    'search.categorySearch': 'Search by category',
     
     // Messages
     'message.noArticles': 'No articles yet',
@@ -206,6 +216,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'article.category': '分类',
     'article.tags': '标签',
     'article.writer': '作者',
+    'article.anonymous': '匿名',
+    'article.viewCount': '{count}次浏览',
+    'article.mapInfo': '地图信息',
+    'article.reserve': '预约',
     
     // 栏目
     'section.recentArticles': '最新文章',
@@ -227,6 +241,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': '标签搜索结果',
     'search.categorySearchResults': '分类搜索结果',
     'search.popularTags': '热门标签',
+    'search.categorySearch': '按分类搜索',
     
     // 消息
     'message.noArticles': '暂无文章',
@@ -289,6 +304,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'article.category': '카테고리',
     'article.tags': '태그',
     'article.writer': '작성자',
+    'article.anonymous': '익명',
+    'article.viewCount': '{count}회 조회',
+    'article.mapInfo': '지도 정보',
+    'article.reserve': '예약하기',
     
     // 섹션
     'section.recentArticles': '최신 기사',
@@ -310,6 +329,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': '태그 검색 결과',
     'search.categorySearchResults': '카테고리 검색 결과',
     'search.popularTags': '인기 태그',
+    'search.categorySearch': '카테고리로 검색',
     
     // 메시지
     'message.noArticles': '아직 기사가 없습니다',

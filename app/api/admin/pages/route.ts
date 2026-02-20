@@ -65,43 +65,30 @@ export async function POST(request: NextRequest) {
     pageData.metaTitle_ja = pageData.metaTitle || pageData.title;
     pageData.metaDescription_ja = pageData.metaDescription || pageData.excerpt || '';
     
-    // ブロックビルダー使用時は翻訳をスキップ（Phase 3で実装予定）
-    if (pageData.useBlockBuilder) {
-      const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-      for (const lang of otherLangs) {
+    // 他言語への翻訳
+    const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
+    for (const lang of otherLangs) {
+      try {
+        const translated = await translateArticle({
+          title: pageData.title,
+          content: pageData.useBlockBuilder ? '' : pageData.content,
+          excerpt: pageData.excerpt || '',
+          metaTitle: pageData.metaTitle || pageData.title,
+          metaDescription: pageData.metaDescription || pageData.excerpt || '',
+        }, lang);
+        
+        pageData[`title_${lang}`] = translated.title;
+        pageData[`content_${lang}`] = pageData.useBlockBuilder ? pageData.content : translated.content;
+        pageData[`excerpt_${lang}`] = translated.excerpt;
+        pageData[`metaTitle_${lang}`] = translated.metaTitle;
+        pageData[`metaDescription_${lang}`] = translated.metaDescription;
+      } catch (error) {
+        console.error(`[API] 翻訳エラー（${lang}）:`, error);
         pageData[`title_${lang}`] = pageData.title;
         pageData[`content_${lang}`] = pageData.content;
         pageData[`excerpt_${lang}`] = pageData.excerpt || '';
         pageData[`metaTitle_${lang}`] = pageData.metaTitle || pageData.title;
         pageData[`metaDescription_${lang}`] = pageData.metaDescription || pageData.excerpt || '';
-      }
-    } else {
-      // 従来のエディター使用時は翻訳を実行
-      const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-      for (const lang of otherLangs) {
-        try {
-          const translated = await translateArticle({
-            title: pageData.title,
-            content: pageData.content,
-            excerpt: pageData.excerpt || '',
-            metaTitle: pageData.metaTitle || pageData.title,
-            metaDescription: pageData.metaDescription || pageData.excerpt || '',
-          }, lang);
-          
-          pageData[`title_${lang}`] = translated.title;
-          pageData[`content_${lang}`] = translated.content;
-          pageData[`excerpt_${lang}`] = translated.excerpt;
-          pageData[`metaTitle_${lang}`] = translated.metaTitle;
-          pageData[`metaDescription_${lang}`] = translated.metaDescription;
-        } catch (error) {
-          console.error(`[API] 翻訳エラー（${lang}）:`, error);
-          // エラーの場合は日本語をコピー
-          pageData[`title_${lang}`] = pageData.title;
-          pageData[`content_${lang}`] = pageData.content;
-          pageData[`excerpt_${lang}`] = pageData.excerpt || '';
-          pageData[`metaTitle_${lang}`] = pageData.metaTitle || pageData.title;
-          pageData[`metaDescription_${lang}`] = pageData.metaDescription || pageData.excerpt || '';
-        }
       }
     }
     

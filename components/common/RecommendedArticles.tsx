@@ -73,7 +73,7 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
                   
                   <div className="flex items-center gap-1.5">
                     {article.viewCount !== undefined && (
-                      <span>{article.viewCount.toLocaleString()} views</span>
+                      <span>{t('article.viewCount', lang, { count: article.viewCount.toLocaleString() })}</span>
                     )}
                     {articleCategories.length > 0 && (
                       <>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 
 interface Category {
   id: string;
@@ -13,6 +15,7 @@ interface CategorySearchDropdownProps {
   onSelect: (categorySlug: string) => void;
   disabled?: boolean;
   isCompact?: boolean;
+  lang?: Lang;
 }
 
 export default function CategorySearchDropdown({
@@ -20,6 +23,7 @@ export default function CategorySearchDropdown({
   onSelect,
   disabled = false,
   isCompact = false,
+  lang = 'ja',
 }: CategorySearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -44,7 +48,7 @@ export default function CategorySearchDropdown({
   return (
     <div ref={dropdownRef} className="relative">
       <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
-        カテゴリーから探す
+        {t('search.categorySearch', lang)}
       </label>
 
       <button

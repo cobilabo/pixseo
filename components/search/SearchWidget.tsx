@@ -152,7 +152,7 @@ export default function SearchWidget({
           return (
             <div key={key}>
               <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
-                カテゴリーから探す
+                {t('search.categorySearch', lang)}
               </label>
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => (

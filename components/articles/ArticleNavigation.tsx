@@ -57,15 +57,15 @@ export default function ArticleNavigation({
               
               <div className="space-y-1.5 text-xs text-gray-600">
                 <div className="flex items-center gap-2">
-                  <span>公開: {formatDate(nextArticle.publishedAt)}</span>
+                  <span>{t('article.published', lang)}: {formatDate(nextArticle.publishedAt)}</span>
                   {nextArticle.updatedAt && (
-                    <span>• 更新: {formatDate(nextArticle.updatedAt)}</span>
+                    <span>• {t('article.updated', lang)}: {formatDate(nextArticle.updatedAt)}</span>
                   )}
                 </div>
                 
                 <div className="flex items-center gap-2">
                   {nextArticle.viewCount !== undefined && (
-                    <span>{nextArticle.viewCount.toLocaleString()} views</span>
+                    <span>{t('article.viewCount', lang, { count: nextArticle.viewCount.toLocaleString() })}</span>
                   )}
                   {nextCategories.length > 0 && (
                     <>
@@ -136,15 +136,15 @@ export default function ArticleNavigation({
               
               <div className="space-y-1.5 text-xs text-gray-600 text-right">
                 <div className="flex items-center justify-end gap-2">
-                  <span>公開: {formatDate(previousArticle.publishedAt)}</span>
+                  <span>{t('article.published', lang)}: {formatDate(previousArticle.publishedAt)}</span>
                   {previousArticle.updatedAt && (
-                    <span>• 更新: {formatDate(previousArticle.updatedAt)}</span>
+                    <span>• {t('article.updated', lang)}: {formatDate(previousArticle.updatedAt)}</span>
                   )}
                 </div>
                 
                 <div className="flex items-center justify-end gap-2">
                   {previousArticle.viewCount !== undefined && (
-                    <span>{previousArticle.viewCount.toLocaleString()} views</span>
+                    <span>{t('article.viewCount', lang, { count: previousArticle.viewCount.toLocaleString() })}</span>
                   )}
                   {previousCategories.length > 0 && (
                     <>
