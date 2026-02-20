@@ -2,10 +2,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/types/article';
 import { Lang } from '@/types/lang';
-import { NavigationItem, GlobalMenuDesign, GlobalMenuHeight, GlobalMenuHoverEffect } from '@/types/theme';
+import { NavigationItem, GlobalMenuDesign, GlobalMenuHoverEffect } from '@/types/theme';
 
 const DEFAULT_DESIGN: GlobalMenuDesign = {
-  height: 'medium',
+  height: 192,
+  paddingTop: 48,
   borderRadius: 24,
   overlayOpacity: 70,
   defaultGradientFrom: '#3b82f6',
@@ -16,12 +17,6 @@ const DEFAULT_DESIGN: GlobalMenuDesign = {
   hoverEffect: 'grayscale',
   gap: 0,
   showInitialChar: true,
-};
-
-const HEIGHT_MAP: Record<GlobalMenuHeight, string> = {
-  small: '120px',
-  medium: '192px',
-  large: '384px',
 };
 
 interface CategoryBarProps {
@@ -69,14 +64,16 @@ const getHoverClasses = (effect: GlobalMenuHoverEffect): { image: string; bg: st
 export default function CategoryBar({ categories, excludeCategoryId, variant = 'half', lang = 'ja', globalNavItems = [], globalMenuDesign }: CategoryBarProps) {
   const d = { ...DEFAULT_DESIGN, ...globalMenuDesign };
   const hoverClasses = getHoverClasses(d.hoverEffect);
-  const itemHeight = HEIGHT_MAP[d.height];
+  const heightMap: Record<string, number> = { small: 120, medium: 192, large: 384 };
+  const numericHeight = typeof d.height === 'string' ? (heightMap[d.height] || 192) : d.height;
+  const itemHeight = `${numericHeight}px`;
   const overlayFrom = Math.round(d.overlayOpacity / 100 * 255).toString(16).padStart(2, '0');
   const overlayVia = Math.round(d.overlayOpacity / 100 * 0.43 * 255).toString(16).padStart(2, '0');
   const fontWeightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
 
   if (globalNavItems.length > 0) {
     return (
-      <section className="relative z-20 pt-12 pb-8 bg-transparent">
+      <section className="relative z-20 pb-8 bg-transparent" style={{ paddingTop: `${d.paddingTop}px` }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="overflow-hidden" style={{ borderRadius: `${d.borderRadius}px` }}>
             <div className="flex overflow-x-auto scrollbar-hide" style={{ gap: `${d.gap}px` }}>
@@ -161,7 +158,7 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
   }
 
   return (
-    <section className="relative z-20 pt-12 pb-8 bg-transparent">
+    <section className="relative z-20 pb-8 bg-transparent" style={{ paddingTop: `${d.paddingTop}px` }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="overflow-hidden" style={{ borderRadius: `${d.borderRadius}px` }}>
           <div className="flex overflow-x-auto scrollbar-hide" style={{ gap: `${d.gap}px` }}>

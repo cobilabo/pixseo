@@ -110,15 +110,13 @@ export interface NavigationItem {
   label_ko?: string;
 }
 
-// グローバルメニューの高さプリセット
-export type GlobalMenuHeight = 'small' | 'medium' | 'large';
-
 // グローバルメニューのホバーエフェクト
 export type GlobalMenuHoverEffect = 'grayscale' | 'darken' | 'zoom' | 'none';
 
 // グローバルメニューのデザイン設定
 export interface GlobalMenuDesign {
-  height: GlobalMenuHeight;
+  height: number;
+  paddingTop: number;
   borderRadius: number;
   overlayOpacity: number;
   defaultGradientFrom: string;

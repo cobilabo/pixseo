@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, GlobalMenuDesign, GlobalMenuHeight, GlobalMenuHoverEffect } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, GlobalMenuDesign, GlobalMenuHoverEffect } from '@/types/theme';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -617,7 +617,8 @@ export default function ThemePage() {
 
   // グローバルメニューのデフォルトデザイン
   const DEFAULT_GLOBAL_MENU_DESIGN: GlobalMenuDesign = {
-    height: 'medium',
+    height: 192,
+    paddingTop: 48,
     borderRadius: 24,
     overlayOpacity: 70,
     defaultGradientFrom: '#3b82f6',
@@ -1628,26 +1629,39 @@ export default function ThemePage() {
 
                       {/* 高さ */}
                       <div className="mb-5">
-                        <label className="block text-xs font-medium text-gray-600 mb-2">項目の高さ</label>
-                        <div className="flex gap-2">
-                          {([
-                            { value: 'small' as GlobalMenuHeight, label: '小（120px）' },
-                            { value: 'medium' as GlobalMenuHeight, label: '中（192px）' },
-                            { value: 'large' as GlobalMenuHeight, label: '大（384px）' },
-                          ]).map(opt => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => updateGlobalMenuDesign('height', opt.value)}
-                              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium border transition-colors ${
-                                getGlobalMenuDesign().height === opt.value
-                                  ? 'bg-green-100 border-green-400 text-green-700'
-                                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
+                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                          項目の高さ（px）: {getGlobalMenuDesign().height}
+                        </label>
+                        <input
+                          type="range"
+                          min="60"
+                          max="500"
+                          step="10"
+                          value={getGlobalMenuDesign().height}
+                          onChange={e => updateGlobalMenuDesign('height', Number(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                          <span>60</span><span>500</span>
+                        </div>
+                      </div>
+
+                      {/* 上余白 */}
+                      <div className="mb-5">
+                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                          上の余白（px）: {getGlobalMenuDesign().paddingTop}
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="120"
+                          step="4"
+                          value={getGlobalMenuDesign().paddingTop}
+                          onChange={e => updateGlobalMenuDesign('paddingTop', Number(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                          <span>0</span><span>120</span>
                         </div>
                       </div>
 
