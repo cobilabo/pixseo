@@ -1,9 +1,12 @@
 export interface CustomBlock {
   id: string;
-  mediaId: string;          // 所属メディアID（サービス単位）
-  name: string;             // カスタムブロック名
-  html: string;             // HTML コンテンツ
-  css: string;              // CSS スタイル
+  mediaId: string;
+  name: string;
+  html: string;
+  html_en?: string;
+  html_zh?: string;
+  html_ko?: string;
+  css: string;
   createdAt: Date;
   updatedAt: Date;
 }

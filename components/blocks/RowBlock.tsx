@@ -1,13 +1,15 @@
 'use client';
 
 import { Block, RowBlockConfig, FormBlockConfig } from '@/types/block';
+import { Lang } from '@/types/lang';
 import FormBlock from './FormBlock';
 
 interface RowBlockProps {
   block: Block;
+  lang?: Lang;
 }
 
-export default function RowBlock({ block }: RowBlockProps) {
+export default function RowBlock({ block, lang = 'ja' }: RowBlockProps) {
   const config = block.config as RowBlockConfig;
   const gap = config.gap ?? 40;
   const columns = config.columns || [];
@@ -46,7 +48,7 @@ export default function RowBlock({ block }: RowBlockProps) {
               }}
             />
           ) : col.html ? (
-            <div dangerouslySetInnerHTML={{ __html: col.html }} />
+            <div dangerouslySetInnerHTML={{ __html: (lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html }} />
           ) : null}
         </div>
       ))}

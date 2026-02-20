@@ -54,7 +54,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             blockContent = <FormBlock block={block} />;
             break;
           case 'html':
-            blockContent = <HTMLBlock block={block} />;
+            blockContent = <HTMLBlock block={block} lang={lang} />;
             break;
           case 'spacer':
             blockContent = <SpacerBlock block={block} />;
@@ -66,10 +66,10 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             blockContent = <ArticleBlock block={block} lang={lang} />;
             break;
           case 'row':
-            blockContent = <RowBlock block={block} />;
+            blockContent = <RowBlock block={block} lang={lang} />;
             break;
           case 'custom':
-            blockContent = <CustomBlock config={block.config as any} showPanel={showPanel} />;
+            blockContent = <CustomBlock config={block.config as any} showPanel={showPanel} lang={lang} />;
             break;
           default:
             blockContent = null;
