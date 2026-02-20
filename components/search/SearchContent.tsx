@@ -10,16 +10,23 @@ import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 
+interface LocalizedTag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface SearchContentProps {
   faviconUrl?: string;
   mediaId?: string;
   lang?: Lang;
+  tags?: LocalizedTag[];
 }
 
 // 検索タイプの定義
 type SearchType = 'keyword' | 'tag' | 'category';
 
-export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: SearchContentProps) {
+export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags = [] }: SearchContentProps) {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const tagParam = searchParams.get('tag') || '';       // タグ名パラメータ
@@ -88,12 +95,16 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja' }: Sear
     }
   };
 
-  // タグ検索（Algolia経由）
+  const getLocalizedTagName = (name: string): string => {
+    const found = tags.find(t => t.name === name || t.slug === name);
+    return found?.name || name;
+  };
+
   const handleTagSearch = async (tagName: string) => {
     setLoading(true);
     setKeyword('');
     setSearchType('tag');
-    setSearchLabel(tagName);
+    setSearchLabel(getLocalizedTagName(tagName));
     
     try {
       // 検索ログを記録
