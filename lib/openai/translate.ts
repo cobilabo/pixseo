@@ -43,6 +43,9 @@ ${context ? `このテキストは${context}です。` : ''}
 7. **翻訳のみを返す**：余計な説明や注釈は不要。翻訳結果のみを返してください`;
 
   try {
+    const estimatedTokens = Math.ceil(text.length / 2);
+    const maxTokens = Math.min(Math.max(4000, estimatedTokens), 16000);
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -55,8 +58,8 @@ ${context ? `このテキストは${context}です。` : ''}
           content: text,
         },
       ],
-      temperature: 0.3, // 一貫性のある翻訳のため低めに設定
-      max_tokens: 4000,
+      temperature: 0.3,
+      max_tokens: maxTokens,
     });
 
     const translatedText = response.choices[0]?.message?.content?.trim() || '';

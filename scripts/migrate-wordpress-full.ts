@@ -968,6 +968,12 @@ async function migrateArticle(
     mediaId,
     metaTitle: post.yoast_head_json?.og_title || stripHtml(post.title.rendered),
     metaDescription: post.yoast_head_json?.og_description || stripHtml(post.excerpt.rendered),
+    // 日本語フィールドを保存（翻訳バッチ用）
+    title_ja: stripHtml(post.title.rendered),
+    content_ja: finalContent,
+    excerpt_ja: stripHtml(post.excerpt.rendered),
+    metaTitle_ja: post.yoast_head_json?.og_title || stripHtml(post.title.rendered),
+    metaDescription_ja: post.yoast_head_json?.og_description || stripHtml(post.excerpt.rendered),
     // 移行識別マーカー（ロールバック用）
     wpMigrated: true,
     wpMigratedAt: admin.firestore.Timestamp.now(),
