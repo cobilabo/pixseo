@@ -47,6 +47,7 @@ export default function RowBlock({ block, lang = 'ja' }: RowBlockProps) {
                   showTitle: true,
                 } as FormBlockConfig,
               }}
+              lang={lang}
             />
           ) : col.html ? (
             <div dangerouslySetInnerHTML={{ __html: localizeHtmlLinks((lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html, lang) }} />
