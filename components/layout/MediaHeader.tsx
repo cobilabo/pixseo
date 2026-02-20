@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { SiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { MenuSettings } from '@/types/theme';
 import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 import HamburgerMenu from './HamburgerMenu';
 import SearchPanel from './SearchPanel';
 
@@ -53,11 +54,11 @@ export default function MediaHeader({
               <button
                 onClick={toggleMenu}
                 className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                aria-label="メニュー"
+                aria-label={t('common.menu', lang)}
               >
                 <Image
                   src="/menu.svg"
-                  alt="メニュー"
+                  alt={t('common.menu', lang)}
                   width={24}
                   height={24}
                   className="w-6 h-6"
@@ -100,11 +101,11 @@ export default function MediaHeader({
               <button
                 onClick={toggleSearch}
                 className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                aria-label="検索"
+                aria-label={t('common.search', lang)}
               >
                 <Image
                   src="/search.svg"
-                  alt="検索"
+                  alt={t('common.search', lang)}
                   width={24}
                   height={24}
                   className="w-6 h-6"

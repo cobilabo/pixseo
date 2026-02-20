@@ -123,6 +123,10 @@ export default function SidebarRenderer({
               <SidebarHtmlContent
                 key={item.id}
                 htmlCode={item.htmlCode}
+                lang={lang}
+                htmlCode_en={(item as any).htmlCode_en}
+                htmlCode_zh={(item as any).htmlCode_zh}
+                htmlCode_ko={(item as any).htmlCode_ko}
               />
             );
           default:

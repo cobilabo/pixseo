@@ -15,6 +15,8 @@ export default function PopularArticles({ articles, categories = [], lang = 'ja'
     return null;
   }
 
+  const getTitle = (article: Article) => (article as any)[`title_${lang}`] || article.title;
+
   const formatDate = (date: Date | any) => {
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date.toDate?.() || date);
@@ -44,7 +46,7 @@ export default function PopularArticles({ articles, categories = [], lang = 'ja'
                 <div className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden">
                   <Image
                     src={article.featuredImage}
-                    alt={article.featuredImageAlt || article.title}
+                    alt={article.featuredImageAlt || getTitle(article)}
                     fill
                     className="object-cover"
                     sizes="80px"
@@ -54,9 +56,9 @@ export default function PopularArticles({ articles, categories = [], lang = 'ja'
               )}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium line-clamp-2 mb-2 transition-colors" style={{ color: 'var(--link-text-color, #1f2937)' }}>
-                  <span className="group-hover:hidden">{article.title}</span>
+                  <span className="group-hover:hidden">{getTitle(article)}</span>
                   <span className="hidden group-hover:inline" style={{ color: 'var(--link-hover-color, #2563eb)' }}>
-                    {article.title}
+                    {getTitle(article)}
                   </span>
                 </h3>
                 

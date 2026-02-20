@@ -217,7 +217,6 @@ export async function PUT(request: NextRequest) {
         for (const menu of theme.menuSettings.customMenus) {
           menu.label_ja = menu.label;
           
-          // 全文英語の場合は翻訳せず、全言語で同じ値を使用
           const isMenuLabelEnglish = isFullEnglish(menu.label || '');
           
           for (const lang of otherLangs) {
@@ -231,6 +230,72 @@ export async function PUT(request: NextRequest) {
               console.error(`[Theme Custom Menu Translation Error] ${lang}:`, error);
               menu[`label_${lang}`] = menu.label;
             }
+          }
+        }
+      }
+
+      // ナビゲーション項目（ハンバーガーメニュー）の翻訳
+      if (theme.menuSettings.navigationItems && Array.isArray(theme.menuSettings.navigationItems)) {
+        for (const item of theme.menuSettings.navigationItems) {
+          if (!item.label) continue;
+          item.label_ja = item.label;
+          const isEnglish = isFullEnglish(item.label);
+          for (const lang of otherLangs) {
+            try {
+              item[`label_${lang}`] = isEnglish ? item.label : await translateText(item.label, lang, 'ナビゲーション項目ラベル');
+            } catch (error) {
+              console.error(`[Theme Nav Item Translation Error] ${lang}:`, error);
+              item[`label_${lang}`] = item.label;
+            }
+          }
+        }
+      }
+
+      // グローバルメニュー項目の翻訳
+      if (theme.menuSettings.globalNavItems && Array.isArray(theme.menuSettings.globalNavItems)) {
+        for (const item of theme.menuSettings.globalNavItems) {
+          if (!item.label) continue;
+          item.label_ja = item.label;
+          const isEnglish = isFullEnglish(item.label);
+          for (const lang of otherLangs) {
+            try {
+              item[`label_${lang}`] = isEnglish ? item.label : await translateText(item.label, lang, 'グローバルメニュー項目ラベル');
+            } catch (error) {
+              console.error(`[Theme Global Nav Translation Error] ${lang}:`, error);
+              item[`label_${lang}`] = item.label;
+            }
+          }
+        }
+      }
+    }
+
+    // サイドコンテンツHTML項目の翻訳
+    if (theme.sideContentItems && Array.isArray(theme.sideContentItems)) {
+      for (const item of theme.sideContentItems) {
+        if (item.type !== 'html' || !item.htmlCode?.trim()) continue;
+        item.htmlCode_ja = item.htmlCode;
+        for (const lang of otherLangs) {
+          try {
+            item[`htmlCode_${lang}`] = await translateText(item.htmlCode, lang, 'サイドバーHTMLコンテンツ');
+          } catch (error) {
+            console.error(`[Theme Side Content HTML Translation Error] ${lang}:`, error);
+            item[`htmlCode_${lang}`] = item.htmlCode;
+          }
+        }
+      }
+    }
+
+    // 旧形式サイドコンテンツHTML項目の翻訳
+    if (theme.sideContentHtmlItems && Array.isArray(theme.sideContentHtmlItems)) {
+      for (const item of theme.sideContentHtmlItems) {
+        if (!item.htmlCode?.trim()) continue;
+        item.htmlCode_ja = item.htmlCode;
+        for (const lang of otherLangs) {
+          try {
+            item[`htmlCode_${lang}`] = await translateText(item.htmlCode, lang, 'サイドバーHTMLコンテンツ');
+          } catch (error) {
+            console.error(`[Theme Side Content HTML Translation Error] ${lang}:`, error);
+            item[`htmlCode_${lang}`] = item.htmlCode;
           }
         }
       }

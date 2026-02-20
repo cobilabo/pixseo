@@ -5,7 +5,18 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { MenuSettings, NavigationItem } from '@/types/theme';
 import { Lang } from '@/types/lang';
+import { t } from '@/lib/i18n/translations';
 import LanguageSelector from '@/components/common/LanguageSelector';
+
+const getItemLabel = (item: NavigationItem, lang: Lang): string => {
+  const langKey = `label_${lang}` as keyof NavigationItem;
+  return (item[langKey] as string) || item.label || '';
+};
+
+const getMenuLabel = (menu: any, field: string, lang: Lang): string => {
+  const langKey = `${field}_${lang}`;
+  return menu[langKey] || menu[field] || '';
+};
 
 interface HamburgerMenuProps {
   isOpen: boolean;
@@ -95,7 +106,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
             <button
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity"
-              aria-label="閉じる"
+              aria-label={t('common.close', lang)}
             >
               <svg
                 className="w-6 h-6"
@@ -126,7 +137,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                         onClick={onClose}
                         className="block text-lg font-medium hover:opacity-70 transition-opacity"
                       >
-                        {item.label}
+                        {getItemLabel(item, lang)}
                       </Link>
                     </li>
                   ))}
@@ -141,7 +152,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       onClick={onClose}
                       className="block text-lg font-medium hover:opacity-70 transition-opacity"
                     >
-                      {menuSettings.topLabel || 'トップ'}
+                      {getMenuLabel(menuSettings, 'topLabel', lang) || t('nav.top', lang)}
                     </Link>
                   </li>
 
@@ -152,7 +163,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       onClick={onClose}
                       className="block text-lg font-medium hover:opacity-70 transition-opacity"
                     >
-                      {menuSettings.articlesLabel || '記事一覧'}
+                      {getMenuLabel(menuSettings, 'articlesLabel', lang) || t('nav.articles', lang)}
                     </Link>
                   </li>
 
@@ -163,7 +174,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       onClick={onClose}
                       className="block text-lg font-medium hover:opacity-70 transition-opacity"
                     >
-                      {menuSettings.searchLabel || '検索'}
+                      {getMenuLabel(menuSettings, 'searchLabel', lang) || t('nav.search', lang)}
                     </Link>
                   </li>
 
@@ -184,7 +195,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                         target={menu.url.startsWith('http') ? '_blank' : undefined}
                         rel={menu.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                       >
-                        {menu.label}
+                        {getMenuLabel(menu, 'label', lang)}
                       </Link>
                     </li>
                   ))}
