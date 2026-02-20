@@ -51,7 +51,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
         let blockContent;
         switch (block.type) {
           case 'form':
-            blockContent = <FormBlock block={block} />;
+            blockContent = <FormBlock block={block} lang={lang} />;
             break;
           case 'html':
             blockContent = <HTMLBlock block={block} lang={lang} />;

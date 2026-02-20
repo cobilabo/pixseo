@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { translateText } from '@/lib/openai/translate';
+import { Lang } from '@/types/lang';
 
 export const dynamic = 'force-dynamic';
+
+const TARGET_LANGS: Lang[] = ['en', 'zh', 'ko'];
 
 // フォーム一覧取得
 export async function GET(request: NextRequest) {
@@ -53,6 +57,7 @@ export async function POST(request: NextRequest) {
     
     const formData: any = {
       name: body.name,
+      name_ja: body.name,
       description: body.description || '',
       fields: body.fields || [],
       isActive: body.isActive !== undefined ? body.isActive : true,
@@ -64,6 +69,21 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    for (const lang of TARGET_LANGS) {
+      try {
+        formData[`name_${lang}`] = await translateText(body.name, lang, 'フォーム名');
+      } catch { formData[`name_${lang}`] = body.name; }
+    }
+
+    if (formData.afterSubmit?.message) {
+      formData.afterSubmit.message_ja = formData.afterSubmit.message;
+      for (const lang of TARGET_LANGS) {
+        try {
+          formData.afterSubmit[`message_${lang}`] = await translateText(formData.afterSubmit.message, lang, 'フォーム送信完了メッセージ');
+        } catch { formData.afterSubmit[`message_${lang}`] = formData.afterSubmit.message; }
+      }
+    }
 
     const docRef = await adminDb.collection('forms').add(formData);
 
