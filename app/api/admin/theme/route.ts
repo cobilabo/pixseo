@@ -3,19 +3,51 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { defaultTheme } from '@/types/theme';
 import { translateText } from '@/lib/openai/translate';
-import { SUPPORTED_LANGS } from '@/types/lang';
+import { SUPPORTED_LANGS, Lang } from '@/types/lang';
 import { clearThemeCache } from '@/lib/firebase/theme-helper';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * テキストが全て英語（アルファベット+スペース+記号）かどうかをチェック
- */
 function isFullEnglish(text: string): boolean {
   if (!text || text.trim() === '') return false;
-  // 英数字、スペース、一般的な記号のみで構成されているかチェック
   const englishOnlyPattern = /^[a-zA-Z0-9\s\.,!?;:'"()\-\/_&]+$/;
   return englishOnlyPattern.test(text);
+}
+
+interface TranslationTask {
+  text: string;
+  lang: Lang;
+  context: string;
+  apply: (translated: string) => void;
+}
+
+function addTask(tasks: TranslationTask[], text: string | undefined, lang: Lang, context: string, apply: (t: string) => void) {
+  if (!text || text.trim() === '') {
+    apply('');
+    return;
+  }
+  if (isFullEnglish(text)) {
+    apply(text);
+    return;
+  }
+  tasks.push({ text, lang, context, apply });
+}
+
+async function runTranslationTasks(tasks: TranslationTask[], concurrency = 10): Promise<void> {
+  for (let i = 0; i < tasks.length; i += concurrency) {
+    const batch = tasks.slice(i, i + concurrency);
+    const results = await Promise.all(
+      batch.map(async (task) => {
+        try {
+          return await translateText(task.text, task.lang, task.context);
+        } catch (error) {
+          console.error(`[Theme Translation Error] ${task.context} ${task.lang}:`, error);
+          return task.text;
+        }
+      })
+    );
+    results.forEach((result, idx) => batch[idx].apply(result));
+  }
 }
 
 // GET: デザイン設定を取得
@@ -40,8 +72,6 @@ export async function GET(request: NextRequest) {
     }
 
     const data = tenantDoc.data();
-    
-    // themeが存在しない場合はデフォルトテーマを返す
     const theme = data?.theme || defaultTheme;
     
     return NextResponse.json({ theme });
@@ -76,237 +106,143 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 翻訳処理
-    const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-    
-    // FV設定の翻訳
+    const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja') as Lang[];
+    const tasks: TranslationTask[] = [];
+
+    // FV設定
     if (theme.firstView) {
       theme.firstView.catchphrase_ja = theme.firstView.catchphrase;
       theme.firstView.description_ja = theme.firstView.description;
       
       for (const lang of otherLangs) {
-        try {
-          theme.firstView[`catchphrase_${lang}`] = await translateText(theme.firstView.catchphrase || '', lang, 'FVキャッチコピー');
-          theme.firstView[`description_${lang}`] = await translateText(theme.firstView.description || '', lang, 'FVディスクリプション');
-        } catch (error) {
-          console.error(`[Theme FV Translation Error] ${lang}:`, error);
-          theme.firstView[`catchphrase_${lang}`] = theme.firstView.catchphrase;
-          theme.firstView[`description_${lang}`] = theme.firstView.description;
-        }
+        addTask(tasks, theme.firstView.catchphrase, lang, 'FVキャッチコピー',
+          (t) => { theme.firstView[`catchphrase_${lang}`] = t; });
+        addTask(tasks, theme.firstView.description, lang, 'FVディスクリプション',
+          (t) => { theme.firstView[`description_${lang}`] = t; });
       }
     }
     
-    // フッターコンテンツの翻訳
+    // フッターコンテンツ
     if (theme.footerContents && Array.isArray(theme.footerContents)) {
       for (const content of theme.footerContents) {
         content.title_ja = content.title;
         content.description_ja = content.description;
         
-        // 全文英語の場合は翻訳せず、全言語で同じ値を使用
-        const isTitleEnglish = isFullEnglish(content.title || '');
-        const isDescriptionEnglish = isFullEnglish(content.description || '');
-        
         for (const lang of otherLangs) {
-          try {
-            if (isTitleEnglish) {
-              content[`title_${lang}`] = content.title;
-            } else {
-              content[`title_${lang}`] = await translateText(content.title || '', lang, 'フッターコンテンツタイトル');
-            }
-            
-            if (isDescriptionEnglish) {
-              content[`description_${lang}`] = content.description;
-            } else {
-              content[`description_${lang}`] = await translateText(content.description || '', lang, 'フッターコンテンツ説明');
-            }
-          } catch (error) {
-            console.error(`[Theme Footer Content Translation Error] ${lang}:`, error);
-            content[`title_${lang}`] = content.title;
-            content[`description_${lang}`] = content.description;
-          }
+          addTask(tasks, content.title, lang, 'フッターコンテンツタイトル',
+            (t) => { content[`title_${lang}`] = t; });
+          addTask(tasks, content.description, lang, 'フッターコンテンツ説明',
+            (t) => { content[`description_${lang}`] = t; });
         }
       }
     }
     
-    // フッターテキストリンクセクションの翻訳
+    // フッターテキストリンクセクション
     if (theme.footerTextLinkSections && Array.isArray(theme.footerTextLinkSections)) {
       for (const section of theme.footerTextLinkSections) {
         section.title_ja = section.title;
         
-        // 全文英語の場合は翻訳せず、全言語で同じ値を使用
-        const isSectionTitleEnglish = isFullEnglish(section.title || '');
-        
         for (const lang of otherLangs) {
-          try {
-            if (isSectionTitleEnglish) {
-              section[`title_${lang}`] = section.title;
-            } else {
-              section[`title_${lang}`] = await translateText(section.title || '', lang, 'フッターセクションタイトル');
-            }
-          } catch (error) {
-            console.error(`[Theme Footer Section Translation Error] ${lang}:`, error);
-            section[`title_${lang}`] = section.title;
-          }
+          addTask(tasks, section.title, lang, 'フッターセクションタイトル',
+            (t) => { section[`title_${lang}`] = t; });
         }
         
-        // リンクテキストの翻訳
         if (section.links && Array.isArray(section.links)) {
           for (const link of section.links) {
             link.text_ja = link.text;
-            
-            // 全文英語の場合は翻訳せず、全言語で同じ値を使用
-            const isLinkTextEnglish = isFullEnglish(link.text || '');
-            
             for (const lang of otherLangs) {
-              try {
-                if (isLinkTextEnglish) {
-                  link[`text_${lang}`] = link.text;
-                } else {
-                  link[`text_${lang}`] = await translateText(link.text || '', lang, 'フッターリンクテキスト');
-                }
-              } catch (error) {
-                console.error(`[Theme Footer Link Translation Error] ${lang}:`, error);
-                link[`text_${lang}`] = link.text;
-              }
+              addTask(tasks, link.text, lang, 'フッターリンクテキスト',
+                (t) => { link[`text_${lang}`] = t; });
             }
           }
         }
       }
     }
     
-    // メニュー設定の翻訳
+    // メニュー設定
     if (theme.menuSettings) {
       theme.menuSettings.topLabel_ja = theme.menuSettings.topLabel || 'トップ';
       theme.menuSettings.articlesLabel_ja = theme.menuSettings.articlesLabel || '記事一覧';
       theme.menuSettings.searchLabel_ja = theme.menuSettings.searchLabel || '検索';
       
-      // 全文英語の場合は翻訳せず、全言語で同じ値を使用
-      const isTopLabelEnglish = isFullEnglish(theme.menuSettings.topLabel || '');
-      const isArticlesLabelEnglish = isFullEnglish(theme.menuSettings.articlesLabel || '');
-      const isSearchLabelEnglish = isFullEnglish(theme.menuSettings.searchLabel || '');
-      
       for (const lang of otherLangs) {
-        try {
-          if (isTopLabelEnglish) {
-            theme.menuSettings[`topLabel_${lang}`] = theme.menuSettings.topLabel;
-          } else {
-            theme.menuSettings[`topLabel_${lang}`] = await translateText(theme.menuSettings.topLabel || 'トップ', lang, 'メニューラベル');
-          }
-          
-          if (isArticlesLabelEnglish) {
-            theme.menuSettings[`articlesLabel_${lang}`] = theme.menuSettings.articlesLabel;
-          } else {
-            theme.menuSettings[`articlesLabel_${lang}`] = await translateText(theme.menuSettings.articlesLabel || '記事一覧', lang, 'メニューラベル');
-          }
-          
-          if (isSearchLabelEnglish) {
-            theme.menuSettings[`searchLabel_${lang}`] = theme.menuSettings.searchLabel;
-          } else {
-            theme.menuSettings[`searchLabel_${lang}`] = await translateText(theme.menuSettings.searchLabel || '検索', lang, 'メニューラベル');
-          }
-        } catch (error) {
-          console.error(`[Theme Menu Translation Error] ${lang}:`, error);
-          theme.menuSettings[`topLabel_${lang}`] = theme.menuSettings.topLabel;
-          theme.menuSettings[`articlesLabel_${lang}`] = theme.menuSettings.articlesLabel;
-          theme.menuSettings[`searchLabel_${lang}`] = theme.menuSettings.searchLabel;
-        }
+        addTask(tasks, theme.menuSettings.topLabel || 'トップ', lang, 'メニューラベル',
+          (t) => { theme.menuSettings[`topLabel_${lang}`] = t; });
+        addTask(tasks, theme.menuSettings.articlesLabel || '記事一覧', lang, 'メニューラベル',
+          (t) => { theme.menuSettings[`articlesLabel_${lang}`] = t; });
+        addTask(tasks, theme.menuSettings.searchLabel || '検索', lang, 'メニューラベル',
+          (t) => { theme.menuSettings[`searchLabel_${lang}`] = t; });
       }
       
-      // カスタムメニューの翻訳
+      // カスタムメニュー
       if (theme.menuSettings.customMenus && Array.isArray(theme.menuSettings.customMenus)) {
         for (const menu of theme.menuSettings.customMenus) {
           menu.label_ja = menu.label;
-          
-          const isMenuLabelEnglish = isFullEnglish(menu.label || '');
-          
           for (const lang of otherLangs) {
-            try {
-              if (isMenuLabelEnglish) {
-                menu[`label_${lang}`] = menu.label;
-              } else {
-                menu[`label_${lang}`] = await translateText(menu.label || '', lang, 'カスタムメニューラベル');
-              }
-            } catch (error) {
-              console.error(`[Theme Custom Menu Translation Error] ${lang}:`, error);
-              menu[`label_${lang}`] = menu.label;
-            }
+            addTask(tasks, menu.label, lang, 'カスタムメニューラベル',
+              (t) => { menu[`label_${lang}`] = t; });
           }
         }
       }
 
-      // ナビゲーション項目（ハンバーガーメニュー）の翻訳
+      // ナビゲーション項目
       if (theme.menuSettings.navigationItems && Array.isArray(theme.menuSettings.navigationItems)) {
         for (const item of theme.menuSettings.navigationItems) {
           if (!item.label) continue;
           item.label_ja = item.label;
-          const isEnglish = isFullEnglish(item.label);
           for (const lang of otherLangs) {
-            try {
-              item[`label_${lang}`] = isEnglish ? item.label : await translateText(item.label, lang, 'ナビゲーション項目ラベル');
-            } catch (error) {
-              console.error(`[Theme Nav Item Translation Error] ${lang}:`, error);
-              item[`label_${lang}`] = item.label;
-            }
+            addTask(tasks, item.label, lang, 'ナビゲーション項目ラベル',
+              (t) => { item[`label_${lang}`] = t; });
           }
         }
       }
 
-      // グローバルメニュー項目の翻訳
+      // グローバルメニュー項目
       if (theme.menuSettings.globalNavItems && Array.isArray(theme.menuSettings.globalNavItems)) {
         for (const item of theme.menuSettings.globalNavItems) {
           if (!item.label) continue;
           item.label_ja = item.label;
-          const isEnglish = isFullEnglish(item.label);
           for (const lang of otherLangs) {
-            try {
-              item[`label_${lang}`] = isEnglish ? item.label : await translateText(item.label, lang, 'グローバルメニュー項目ラベル');
-            } catch (error) {
-              console.error(`[Theme Global Nav Translation Error] ${lang}:`, error);
-              item[`label_${lang}`] = item.label;
-            }
+            addTask(tasks, item.label, lang, 'グローバルメニュー項目ラベル',
+              (t) => { item[`label_${lang}`] = t; });
           }
         }
       }
     }
 
-    // サイドコンテンツHTML項目の翻訳
+    // サイドコンテンツHTML項目
     if (theme.sideContentItems && Array.isArray(theme.sideContentItems)) {
       for (const item of theme.sideContentItems) {
         if (item.type !== 'html' || !item.htmlCode?.trim()) continue;
         item.htmlCode_ja = item.htmlCode;
         for (const lang of otherLangs) {
-          try {
-            item[`htmlCode_${lang}`] = await translateText(item.htmlCode, lang, 'サイドバーHTMLコンテンツ');
-          } catch (error) {
-            console.error(`[Theme Side Content HTML Translation Error] ${lang}:`, error);
-            item[`htmlCode_${lang}`] = item.htmlCode;
-          }
+          addTask(tasks, item.htmlCode, lang, 'サイドバーHTMLコンテンツ',
+            (t) => { item[`htmlCode_${lang}`] = t; });
         }
       }
     }
 
-    // 旧形式サイドコンテンツHTML項目の翻訳
+    // 旧形式サイドコンテンツHTML項目
     if (theme.sideContentHtmlItems && Array.isArray(theme.sideContentHtmlItems)) {
       for (const item of theme.sideContentHtmlItems) {
         if (!item.htmlCode?.trim()) continue;
         item.htmlCode_ja = item.htmlCode;
         for (const lang of otherLangs) {
-          try {
-            item[`htmlCode_${lang}`] = await translateText(item.htmlCode, lang, 'サイドバーHTMLコンテンツ');
-          } catch (error) {
-            console.error(`[Theme Side Content HTML Translation Error] ${lang}:`, error);
-            item[`htmlCode_${lang}`] = item.htmlCode;
-          }
+          addTask(tasks, item.htmlCode, lang, 'サイドバーHTMLコンテンツ',
+            (t) => { item[`htmlCode_${lang}`] = t; });
         }
       }
     }
+
+    console.log(`[Theme Save] Running ${tasks.length} translation tasks in parallel batches...`);
+    await runTranslationTasks(tasks);
+    console.log(`[Theme Save] Translation complete.`);
 
     await adminDb.collection('mediaTenants').doc(mediaId).update({
       theme,
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // テーマキャッシュをクリア
     clearThemeCache(mediaId);
 
     return NextResponse.json({ 
@@ -321,4 +257,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
