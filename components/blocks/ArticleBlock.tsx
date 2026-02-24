@@ -97,7 +97,8 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
   if (config.articleType === 'recent' || config.articleType === 'popular') {
     const defaultTitle = config.articleType === 'recent' ? t('section.recentArticles', lang) : t('section.popularArticles', lang);
     const defaultTitleEn = config.articleType === 'recent' ? t('section.recentArticlesEn', lang) : t('section.popularArticlesEn', lang);
-    const displayTitle = config.title || defaultTitle;
+    const localizedTitle = lang !== 'ja' ? (config as any)[`title_${lang}`] : undefined;
+    const displayTitle = localizedTitle || config.title || defaultTitle;
     const displayTitleEn = config.titleEn !== undefined ? config.titleEn : defaultTitleEn;
 
     const containerStyle: React.CSSProperties = {
