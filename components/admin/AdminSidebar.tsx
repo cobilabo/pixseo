@@ -216,19 +216,6 @@ const AdminSidebar = memo(function AdminSidebar({
         />
       )
     },
-    { 
-      name: 'サイトインポート', 
-      href: '/site-import',
-      icon: (
-        <Image 
-          src="/site.svg" 
-          alt="サイトインポート" 
-          width={20}
-          height={20}
-          priority
-        />
-      )
-    },
   ];
 
   // サービス管理メニュー（super_adminのみ）
