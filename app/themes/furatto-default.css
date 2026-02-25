@@ -52,6 +52,15 @@
   background-color: rgba(250, 247, 242, 0.97);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+}
+
+.furatto-logo-link {
+  padding: 0;
+}
+
+.furatto-logo-img {
+  max-height: 100%;
+  width: auto;
   border-bottom: 1px solid var(--ft-border-light);
   box-shadow: 0 1px 4px rgba(90, 70, 50, 0.04);
 }

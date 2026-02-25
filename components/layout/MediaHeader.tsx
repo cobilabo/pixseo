@@ -13,6 +13,8 @@ import SearchPanel from './SearchPanel';
 
 const LANG_SHORT: Record<Lang, string> = { ja: 'JA', en: 'EN', zh: 'ZH', ko: 'KO' };
 
+const FURATTO_LOGO_URL = 'https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/articles/1762645192138_5s2s79ph8wr.jpg';
+
 const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
   switch (item.type) {
     case 'top':
@@ -126,35 +128,15 @@ export default function MediaHeader({
   );
 
   const furattoLogoElement = (
-    <Link href={`/${lang}`} className="flex items-center flex-shrink-0">
-      <div className="flex items-center gap-2">
-        {siteInfo?.faviconUrl && (
-          <Image
-            src={siteInfo.faviconUrl}
-            alt={`${siteName} アイコン`}
-            width={28}
-            height={28}
-            className="w-7 h-7 object-contain flex-shrink-0"
-            priority
-            unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
-          />
-        )}
-        {siteInfo?.logoUrl ? (
-          <Image
-            src={siteInfo.logoUrl}
-            alt={siteName}
-            width={160}
-            height={28}
-            className="h-7 w-auto object-contain"
-            priority
-            unoptimized={siteInfo.logoUrl.endsWith('.svg')}
-          />
-        ) : (
-          <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-            {siteName}
-          </span>
-        )}
-      </div>
+    <Link href={`/${lang}`} className="furatto-logo-link flex items-center flex-shrink-0 h-full">
+      <Image
+        src={FURATTO_LOGO_URL}
+        alt={siteName}
+        width={200}
+        height={56}
+        className="furatto-logo-img h-full w-auto object-contain"
+        priority
+      />
     </Link>
   );
 
@@ -164,7 +146,7 @@ export default function MediaHeader({
         <header className="furatto-header fixed top-0 left-0 right-0 z-50">
           <div className="furatto-header-inner">
             {/* Mobile: ハンバーガー左 + ロゴ中央 */}
-            <div className="flex items-center justify-between lg:hidden px-3 py-2.5">
+            <div className="flex items-center justify-between lg:hidden px-3 h-12">
               <button
                 onClick={toggleMenu}
                 className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
@@ -188,7 +170,7 @@ export default function MediaHeader({
             </div>
 
             {/* PC: ロゴ左 + メニュー中央 */}
-            <div className="hidden lg:flex items-center px-8 py-3">
+            <div className="hidden lg:flex items-center px-8 h-14">
               <div className="flex-shrink-0">
                 {furattoLogoElement}
               </div>
