@@ -86,6 +86,35 @@
   left: 20%;
 }
 
+/* ===== Furatto Language Switcher ===== */
+.furatto-lang-btn {
+  color: var(--ft-text-sub);
+  border: 1px solid var(--ft-border);
+}
+
+.furatto-lang-btn:hover {
+  color: var(--ft-text);
+  background-color: var(--ft-hover-bg);
+  border-color: var(--ft-border);
+}
+
+.furatto-lang-dropdown {
+  background-color: var(--ft-bg);
+  border: 1px solid var(--ft-border);
+}
+
+.furatto-lang-option {
+  color: var(--ft-text);
+}
+
+.furatto-lang-option:hover {
+  background-color: var(--ft-hover-bg);
+}
+
+.furatto-lang-option.font-semibold {
+  color: var(--ft-primary-dark);
+}
+
 /* Legacy header override for non-integrated pages */
 .theme-furatto-default header.fixed:not(.furatto-header) {
   top: 0 !important;

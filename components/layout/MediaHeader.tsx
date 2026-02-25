@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation';
 import { SiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { MenuSettings, NavigationItem, ThemeLayoutId } from '@/types/theme';
-import { Lang } from '@/types/lang';
+import { Lang, SUPPORTED_LANGS } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import HamburgerMenu from './HamburgerMenu';
 import SearchPanel from './SearchPanel';
+
+const LANG_SHORT: Record<Lang, string> = { ja: 'JA', en: 'EN', zh: 'ZH', ko: 'KO' };
 
 const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
   switch (item.type) {
@@ -56,6 +59,27 @@ export default function MediaHeader({
 }: MediaHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLangChange = (newLang: Lang) => {
+    const parts = pathname.split('/');
+    parts[1] = newLang;
+    router.push(parts.join('/'));
+    setIsLangOpen(false);
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -185,8 +209,42 @@ export default function MediaHeader({
                 </nav>
               )}
 
-              {/* 右側のスペーサー（ロゴと対称） */}
-              <div className="flex-shrink-0 w-[120px]" />
+              {/* 右側：言語切り替え */}
+              <div className="flex-shrink-0 flex items-center justify-end w-[120px]" ref={langRef}>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsLangOpen(!isLangOpen)}
+                    className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                    aria-label="言語を選択"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
+                    </svg>
+                    <span>{LANG_SHORT[lang]}</span>
+                    <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isLangOpen && (
+                    <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+                      {SUPPORTED_LANGS.map((l) => (
+                        <button
+                          key={l}
+                          onClick={() => handleLangChange(l)}
+                          className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
+                            l === lang ? 'font-semibold' : 'font-normal'
+                          }`}
+                        >
+                          <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
+                          {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </header>
