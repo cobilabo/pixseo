@@ -377,6 +377,7 @@ export default async function ArticlePage({ params }: PageProps) {
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
+        layoutTheme={rawTheme.layoutTheme}
       />
 
       {/* FV（ファーストビュー）- アイキャッチ画像 */}

@@ -294,6 +294,7 @@ export default async function HomePage({ params }: PageProps) {
           menuBackgroundColor={rawTheme.menuBackgroundColor}
           menuTextColor={rawTheme.menuTextColor}
           lang={lang}
+          layoutTheme={rawTheme.layoutTheme}
         />
 
         {/* カテゴリーバー / グローバルメニュー */}
@@ -458,6 +459,7 @@ export default async function HomePage({ params }: PageProps) {
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
+        layoutTheme={rawTheme.layoutTheme}
       />
 
       {/* カテゴリーバー / グローバルメニュー */}

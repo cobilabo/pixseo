@@ -196,6 +196,7 @@ export default async function CategoryPage({ params }: PageProps) {
         menuBackgroundColor={rawTheme.menuBackgroundColor}
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
+        layoutTheme={rawTheme.layoutTheme}
       />
 
       {/* カテゴリーバー / グローバルメニュー */}

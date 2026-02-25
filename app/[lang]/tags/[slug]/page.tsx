@@ -159,7 +159,7 @@ export default async function TagPage({ params }: PageProps) {
       {rawTheme.firstView && (
         <FirstView settings={theme.firstView} customTitle={tag.name} customSubtitle="TAG" customMeta={t('meta.articlesCount', lang, { count: localizedArticles.length })} showCustomContent={true} />
       )}
-      <MediaHeader siteName={siteInfo.name} siteInfo={rawSiteInfo} menuSettings={theme.menuSettings} menuBackgroundColor={rawTheme.menuBackgroundColor} menuTextColor={rawTheme.menuTextColor} lang={lang} />
+      <MediaHeader siteName={siteInfo.name} siteInfo={rawSiteInfo} menuSettings={theme.menuSettings} menuBackgroundColor={rawTheme.menuBackgroundColor} menuTextColor={rawTheme.menuTextColor} lang={lang} layoutTheme={rawTheme.layoutTheme} />
       {/* カテゴリーバー / グローバルメニュー */}
       <CategoryBar 
         categories={categories} 

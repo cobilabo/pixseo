@@ -43,65 +43,32 @@
   color: var(--ft-primary-dark);
 }
 
-/* ===== Header (LUXUNA-style full-width bar) ===== */
-.theme-furatto-default header.fixed {
-  top: 0 !important;
-  padding-top: 0;
+/* ===== Furatto Integrated Header ===== */
+.furatto-header {
+  top: 0;
 }
 
-.theme-furatto-default header.fixed > div {
-  max-width: 100% !important;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.theme-furatto-default header.fixed > div > div {
-  background-color: rgba(250, 247, 242, 0.97) !important;
+.furatto-header .furatto-header-inner {
+  background-color: rgba(250, 247, 242, 0.97);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 0 !important;
-  border: none !important;
-  border-bottom: 1px solid var(--ft-border-light) !important;
+  border-bottom: 1px solid var(--ft-border-light);
   box-shadow: 0 1px 4px rgba(90, 70, 50, 0.04);
-  padding: 14px 24px;
 }
 
-@media (min-width: 640px) {
-  .theme-furatto-default header.fixed > div > div {
-    padding: 14px 40px;
-  }
-}
-
-.theme-furatto-default header.fixed > div > div img {
-  filter: none;
-}
-
-/* ===== Furatto Nav Bar (LUXUNA-style text navigation) ===== */
-.theme-furatto-default .furatto-nav-bar {
-  background-color: var(--ft-bg);
-  border-bottom-color: var(--ft-border) !important;
-  padding-top: 0;
-  margin-top: 0;
-}
-
-.theme-furatto-default .furatto-nav-bar > div {
-  display: flex;
-  justify-content: center;
-}
-
-.theme-furatto-default .furatto-nav-bar .furatto-nav-link {
+.furatto-header .furatto-header-nav-link {
   color: var(--ft-text);
   font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: 0.06em;
-  padding: 14px 20px;
+  border-radius: 6px;
   position: relative;
 }
 
-.theme-furatto-default .furatto-nav-bar .furatto-nav-link::after {
+.furatto-header .furatto-header-nav-link::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: 2px;
   left: 50%;
   width: 0;
   height: 2px;
@@ -109,21 +76,32 @@
   transition: width 0.25s ease, left 0.25s ease;
 }
 
-.theme-furatto-default .furatto-nav-bar .furatto-nav-link:hover {
+.furatto-header .furatto-header-nav-link:hover {
   color: var(--ft-primary-dark);
   background-color: transparent;
 }
 
-.theme-furatto-default .furatto-nav-bar .furatto-nav-link:hover::after {
+.furatto-header .furatto-header-nav-link:hover::after {
   width: 60%;
   left: 20%;
 }
 
-@media (max-width: 767px) {
-  .theme-furatto-default .furatto-nav-bar .furatto-nav-link {
-    font-size: 0.75rem;
-    padding: 12px 14px;
-  }
+/* Legacy header override for non-integrated pages */
+.theme-furatto-default header.fixed:not(.furatto-header) {
+  top: 0 !important;
+  padding-top: 10px;
+}
+
+.theme-furatto-default header.fixed:not(.furatto-header) > div > div {
+  background-color: rgba(250, 247, 242, 0.95) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--ft-border-light);
+  box-shadow: 0 1px 8px rgba(90, 70, 50, 0.06);
+}
+
+.theme-furatto-default header.fixed > div > div img {
+  filter: none;
 }
 
 /* ===== Hamburger Menu (LUXUNA-style warm tones) ===== */
@@ -150,16 +128,23 @@
   border-color: var(--ft-border) !important;
 }
 
-/* ===== Layout: Remove card-style overlap for furatto nav ===== */
-/* When furatto nav bar is present, content should flow below it without overlap */
-.theme-furatto-default .furatto-nav-bar + div.relative {
+/* ===== Layout: Remove card-style overlap when CategoryBar returns null ===== */
+/* When furatto header has integrated nav, CategoryBar returns null.
+   The content div with -mt-24 directly follows header/FV and needs margin reset. */
+.theme-furatto-default .furatto-header + div.relative {
   margin-top: 0 !important;
-  padding-top: 0 !important;
+  padding-top: 4rem !important;
 }
 
-/* FirstView: reduce negative bottom margin so nav sits closer to FV */
+/* FirstView: reduce negative bottom margin for furatto layout */
 .theme-furatto-default > div[class*="-mb-40"].relative.w-full {
-  margin-bottom: 0 !important;
+  margin-bottom: -2rem !important;
+}
+
+/* Content div following FV (when CategoryBar is null) */
+.theme-furatto-default > div[class*="-mb-40"] ~ div.relative[style*="z-index"] {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* ===== FirstView ===== */

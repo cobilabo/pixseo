@@ -73,27 +73,7 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
   const fontWeightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
 
   if (layoutTheme === 'furatto' && globalNavItems.length > 0) {
-    return (
-      <nav className="furatto-nav-bar relative z-20 border-b" aria-label="Global navigation">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center overflow-x-auto scrollbar-hide">
-            {globalNavItems.map((item) => {
-              const label = getNavItemLabel(item, lang);
-              const url = getNavItemUrl(item, lang);
-              return (
-                <Link
-                  key={item.id}
-                  href={url}
-                  className="furatto-nav-link flex-shrink-0 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors"
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
-    );
+    return null;
   }
 
   if (globalNavItems.length > 0) {
