@@ -158,8 +158,10 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
     },
   };
 
+  const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
+    <div className={`min-h-screen ${themeClass}`} style={{ backgroundColor: rawTheme.backgroundColor }}>
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 

@@ -244,8 +244,10 @@ export default async function FixedPage({ params }: PageProps) {
     </article>
   );
 
+  const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
+    <div className={`min-h-screen ${themeClass}`} style={{ backgroundColor: rawTheme.backgroundColor }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
       {customCss && (
         <style dangerouslySetInnerHTML={{ __html: customCss }} />

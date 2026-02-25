@@ -148,7 +148,7 @@ export default async function SearchPage({ params }: PageProps) {
           `,
         }}
       />
-      <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
+      <div className={`min-h-screen ${rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : ''}`} style={{ backgroundColor: rawTheme.backgroundColor }}>
         {/* Themeスタイル注入 */}
         <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 

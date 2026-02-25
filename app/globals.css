@@ -443,3 +443,6 @@ body {
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
 }
+
+/* Theme: furatto-default (LUXUNA-inspired) */
+@import './themes/furatto-default.css';

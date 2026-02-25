@@ -135,8 +135,10 @@ export default async function WriterPage({ params }: PageProps) {
     inLanguage: LANG_REGIONS[lang],
   };
 
+  const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor || '#f9fafb' }}>
+    <div className={`min-h-screen ${themeClass}`} style={{ backgroundColor: rawTheme.backgroundColor || '#f9fafb' }}>
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 

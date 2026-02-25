@@ -272,8 +272,10 @@ export default async function HomePage({ params }: PageProps) {
       </article>
     );
 
+    const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
+
     return (
-      <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
+      <div className={`min-h-screen ${themeClass}`} style={{ backgroundColor: rawTheme.backgroundColor }}>
         <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
         {customCss && (
           <style dangerouslySetInnerHTML={{ __html: customCss }} />
@@ -430,8 +432,9 @@ export default async function HomePage({ params }: PageProps) {
   }
 
   // homeページがない場合は従来のトップページを表示
+  const fallbackThemeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
   return (
-    <div className="min-h-screen" style={{ backgroundColor: rawTheme.backgroundColor }}>
+    <div className={`min-h-screen ${fallbackThemeClass}`} style={{ backgroundColor: rawTheme.backgroundColor }}>
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
