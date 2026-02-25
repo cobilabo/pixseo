@@ -58,9 +58,9 @@
 
 .furatto-header .furatto-header-nav-link {
   color: var(--ft-text);
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   border-radius: 6px;
   position: relative;
 }
@@ -128,12 +128,16 @@
   border-color: var(--ft-border) !important;
 }
 
-/* ===== Layout: Remove card-style overlap when CategoryBar returns null ===== */
-/* When furatto header has integrated nav, CategoryBar returns null.
-   The content div with -mt-24 directly follows header/FV and needs margin reset. */
-.theme-furatto-default .furatto-header + div.relative {
+/* ===== Layout: Header clearance & overlap removal ===== */
+/* Pages WITHOUT FirstView: content div needs padding-top for fixed header clearance */
+.theme-furatto-default .furatto-header + div.relative:not([class*="-mb-40"]) {
   margin-top: 0 !important;
-  padding-top: 4rem !important;
+  padding-top: 5rem !important;
+}
+
+/* Pages WITH FirstView: the FV text div follows the header */
+.theme-furatto-default .furatto-header + div.relative[class*="-mb-40"] {
+  margin-top: 0 !important;
 }
 
 /* FirstView: reduce negative bottom margin for furatto layout */
