@@ -128,13 +128,13 @@ export default function MediaHeader({
   );
 
   const furattoLogoElement = (
-    <Link href={`/${lang}`} className="furatto-logo-link flex items-center flex-shrink-0 h-full">
+    <Link href={`/${lang}`} className="furatto-logo-link flex items-center flex-shrink-0">
       <Image
         src={FURATTO_LOGO_URL}
         alt={siteName}
         width={200}
         height={56}
-        className="furatto-logo-img h-full w-auto object-contain"
+        className="furatto-logo-img w-auto object-contain"
         priority
       />
     </Link>
