@@ -7,14 +7,17 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { getCustomBlocksByMediaId, deleteCustomBlock } from '@/lib/firebase/custom-blocks-admin';
 import { CustomBlock } from '@/types/custom-block';
+import { Page } from '@/types/page';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
+import { apiGet } from '@/lib/api-client';
 
 export default function CustomBlocksPage() {
   const router = useRouter();
   const { currentTenant } = useMediaTenant();
   const { showSuccess, showError } = useToast();
   const [customBlocks, setCustomBlocks] = useState<CustomBlock[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,14 +31,24 @@ export default function CustomBlocksPage() {
     
     try {
       setLoading(true);
-      const blocks = await getCustomBlocksByMediaId(currentTenant.id);
+      const [blocks, pagesData] = await Promise.all([
+        getCustomBlocksByMediaId(currentTenant.id),
+        apiGet<Page[]>('/api/admin/pages'),
+      ]);
       setCustomBlocks(blocks);
+      setPages(pagesData);
     } catch (error) {
       console.error('Error fetching custom blocks:', error);
       showError('カスタムブロックの取得に失敗しました');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getBlockPageCount = (blockId: string): number => {
+    return pages.filter(page =>
+      (page.blocks || []).some(block => block.type === 'custom' && (block.config as any)?.customBlockId === blockId)
+    ).length;
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -98,6 +111,9 @@ export default function CustomBlocksPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         更新日
                       </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ページ数
+                      </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         操作
                       </th>
@@ -118,6 +134,11 @@ export default function CustomBlocksPage() {
                           <div className="text-sm text-gray-500">
                             {block.updatedAt.toLocaleDateString('ja-JP')}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {getBlockPageCount(block.id)} ページ
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link

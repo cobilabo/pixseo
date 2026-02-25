@@ -125,7 +125,25 @@ export async function PUT(
     }
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.emailNotification !== undefined) updateData.emailNotification = body.emailNotification;
-    if (body.autoReply !== undefined) updateData.autoReply = body.autoReply;
+    if (body.autoReply !== undefined) {
+      updateData.autoReply = { ...body.autoReply };
+      if (body.autoReply.subject) {
+        updateData.autoReply.subject_ja = body.autoReply.subject;
+        for (const lang of TARGET_LANGS) {
+          try {
+            updateData.autoReply[`subject_${lang}`] = await translateText(body.autoReply.subject, lang, '自動返信メールの件名');
+          } catch { updateData.autoReply[`subject_${lang}`] = body.autoReply.subject; }
+        }
+      }
+      if (body.autoReply.body) {
+        updateData.autoReply.body_ja = body.autoReply.body;
+        for (const lang of TARGET_LANGS) {
+          try {
+            updateData.autoReply[`body_${lang}`] = await translateText(body.autoReply.body, lang, '自動返信メールの本文');
+          } catch { updateData.autoReply[`body_${lang}`] = body.autoReply.body; }
+        }
+      }
+    }
     if (body.afterSubmit !== undefined) {
       updateData.afterSubmit = body.afterSubmit;
       if (body.afterSubmit.message) {

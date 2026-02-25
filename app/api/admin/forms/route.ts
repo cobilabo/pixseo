@@ -76,6 +76,23 @@ export async function POST(request: NextRequest) {
       } catch { formData[`name_${lang}`] = body.name; }
     }
 
+    if (formData.autoReply?.subject) {
+      formData.autoReply.subject_ja = formData.autoReply.subject;
+      for (const lang of TARGET_LANGS) {
+        try {
+          formData.autoReply[`subject_${lang}`] = await translateText(formData.autoReply.subject, lang, '自動返信メールの件名');
+        } catch { formData.autoReply[`subject_${lang}`] = formData.autoReply.subject; }
+      }
+    }
+    if (formData.autoReply?.body) {
+      formData.autoReply.body_ja = formData.autoReply.body;
+      for (const lang of TARGET_LANGS) {
+        try {
+          formData.autoReply[`body_${lang}`] = await translateText(formData.autoReply.body, lang, '自動返信メールの本文');
+        } catch { formData.autoReply[`body_${lang}`] = formData.autoReply.body; }
+      }
+    }
+
     if (formData.afterSubmit?.message) {
       formData.afterSubmit.message_ja = formData.afterSubmit.message;
       for (const lang of TARGET_LANGS) {

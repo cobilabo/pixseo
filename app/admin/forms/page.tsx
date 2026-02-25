@@ -7,6 +7,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AIFormGeneratorModal from '@/components/admin/AIFormGeneratorModal';
 import { Form } from '@/types/form';
+import { Page } from '@/types/page';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
@@ -16,6 +17,7 @@ export default function FormsListPage() {
   const { showSuccess, showError } = useToast();
 
   const [forms, setForms] = useState<Form[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAIModal, setShowAIModal] = useState(false);
@@ -28,20 +30,29 @@ export default function FormsListPage() {
 
   const fetchForms = async () => {
     try {
-      const data: Form[] = await apiGet('/api/admin/forms');
+      const [formsData, pagesData] = await Promise.all([
+        apiGet<Form[]>('/api/admin/forms'),
+        apiGet<Page[]>('/api/admin/pages'),
+      ]);
       
-      // 作成日でソート（新しい順）
-      const sortedData = data.sort((a, b) => 
+      const sortedData = formsData.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       
       setForms(sortedData);
+      setPages(pagesData);
     } catch (error) {
       console.error('Error fetching forms:', error);
       showError('フォームの取得に失敗しました');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFormPageCount = (formId: string): number => {
+    return pages.filter(page =>
+      (page.blocks || []).some(block => block.type === 'form' && (block.config as any)?.formId === formId)
+    ).length;
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -128,7 +139,7 @@ export default function FormsListPage() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '35%' }}>
                         フォーム名
                       </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '25%' }}>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
                         説明
                       </th>
                       <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
@@ -137,7 +148,10 @@ export default function FormsListPage() {
                       <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
                         送信数
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
+                        ページ数
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
                         操作
                       </th>
                     </tr>
@@ -183,6 +197,11 @@ export default function FormsListPage() {
                           >
                             {form.submissionCount || 0}件
                           </Link>
+                        </td>
+                        <td className="px-3 py-3 text-center whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {getFormPageCount(form.id)} ページ
+                          </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">

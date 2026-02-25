@@ -84,6 +84,7 @@ export default function FormBlock({ block, lang = 'ja' }: FormBlockProps) {
         },
         body: JSON.stringify({
           data: formData,
+          lang,
         }),
       });
 
