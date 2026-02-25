@@ -43,18 +43,33 @@
   color: var(--ft-primary-dark);
 }
 
-/* ===== Header ===== */
+/* ===== Header (LUXUNA-style full-width bar) ===== */
 .theme-furatto-default header.fixed {
   top: 0 !important;
-  padding-top: 10px;
+  padding-top: 0;
+}
+
+.theme-furatto-default header.fixed > div {
+  max-width: 100% !important;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .theme-furatto-default header.fixed > div > div {
-  background-color: rgba(250, 247, 242, 0.95) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--ft-border-light);
-  box-shadow: 0 1px 8px rgba(90, 70, 50, 0.06);
+  background-color: rgba(250, 247, 242, 0.97) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 0 !important;
+  border: none !important;
+  border-bottom: 1px solid var(--ft-border-light) !important;
+  box-shadow: 0 1px 4px rgba(90, 70, 50, 0.04);
+  padding: 14px 24px;
+}
+
+@media (min-width: 640px) {
+  .theme-furatto-default header.fixed > div > div {
+    padding: 14px 40px;
+  }
 }
 
 .theme-furatto-default header.fixed > div > div img {
@@ -133,6 +148,18 @@
 
 .theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] .border-t {
   border-color: var(--ft-border) !important;
+}
+
+/* ===== Layout: Remove card-style overlap for furatto nav ===== */
+/* When furatto nav bar is present, content should flow below it without overlap */
+.theme-furatto-default .furatto-nav-bar + div.relative {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* FirstView: reduce negative bottom margin so nav sits closer to FV */
+.theme-furatto-default > div[class*="-mb-40"].relative.w-full {
+  margin-bottom: 0 !important;
 }
 
 /* ===== FirstView ===== */
@@ -318,6 +345,43 @@
 
 .theme-furatto-default aside h3 {
   color: var(--ft-primary-dark);
+}
+
+/* ===== Search Widget (sidebar category search) ===== */
+.theme-furatto-default .bg-indigo-50 {
+  background-color: #EDF3EE !important;
+  color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .bg-indigo-50:hover,
+.theme-furatto-default .hover\:bg-indigo-100:hover {
+  background-color: #DCE8DD !important;
+}
+
+.theme-furatto-default .text-indigo-700 {
+  color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .bg-orange-50 {
+  background-color: #FDF6EE !important;
+  color: var(--ft-secondary) !important;
+}
+
+.theme-furatto-default .bg-orange-50:hover,
+.theme-furatto-default .hover\:bg-orange-100:hover {
+  background-color: #F5E8D8 !important;
+}
+
+.theme-furatto-default .text-orange-700 {
+  color: var(--ft-secondary) !important;
+}
+
+.theme-furatto-default .text-orange-500 {
+  color: var(--ft-accent) !important;
+}
+
+.theme-furatto-default .focus\:ring-blue-500:focus {
+  --tw-ring-color: rgba(91, 127, 94, 0.4) !important;
 }
 
 /* ===== Breadcrumbs ===== */
