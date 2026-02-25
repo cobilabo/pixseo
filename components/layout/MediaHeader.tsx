@@ -101,39 +101,72 @@ export default function MediaHeader({
     </Link>
   );
 
+  const furattoLogoElement = (
+    <Link href={`/${lang}`} className="flex items-center flex-shrink-0">
+      <div className="flex items-center gap-2">
+        {siteInfo?.faviconUrl && (
+          <Image
+            src={siteInfo.faviconUrl}
+            alt={`${siteName} アイコン`}
+            width={28}
+            height={28}
+            className="w-7 h-7 object-contain flex-shrink-0"
+            priority
+            unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
+          />
+        )}
+        {siteInfo?.logoUrl ? (
+          <Image
+            src={siteInfo.logoUrl}
+            alt={siteName}
+            width={160}
+            height={28}
+            className="h-7 w-auto object-contain"
+            priority
+            unoptimized={siteInfo.logoUrl.endsWith('.svg')}
+          />
+        ) : (
+          <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+            {siteName}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+
   if (isFuratto) {
     return (
       <>
         <header className="furatto-header fixed top-0 left-0 right-0 z-50">
           <div className="furatto-header-inner">
             {/* Mobile: ハンバーガー左 + ロゴ中央 */}
-            <div className="flex items-center justify-between lg:hidden px-4 py-3">
+            <div className="flex items-center justify-between lg:hidden px-3 py-2.5">
               <button
                 onClick={toggleMenu}
-                className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
                 aria-label={t('common.menu', lang)}
               >
                 <Image
                   src="/menu.svg"
                   alt={t('common.menu', lang)}
-                  width={24}
-                  height={24}
-                  className="w-6 h-6"
+                  width={22}
+                  height={22}
+                  className="w-[22px] h-[22px]"
                 />
               </button>
 
-              <div className="absolute left-1/2 -translate-x-1/2">
-                {logoElement}
+              <div className="absolute left-1/2 -translate-x-1/2 max-w-[calc(100%-100px)]">
+                {furattoLogoElement}
               </div>
 
               {/* 右側のスペーサー（バランス用） */}
-              <div className="w-10 h-10 flex-shrink-0" />
+              <div className="w-9 h-9 flex-shrink-0" />
             </div>
 
             {/* PC: ロゴ左 + メニュー中央 */}
             <div className="hidden lg:flex items-center px-8 py-3">
               <div className="flex-shrink-0">
-                {logoElement}
+                {furattoLogoElement}
               </div>
 
               {globalNavItems.length > 0 && (
