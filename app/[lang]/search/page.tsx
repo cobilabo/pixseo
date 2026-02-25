@@ -179,6 +179,7 @@ export default async function SearchPage({ params }: PageProps) {
         lang={lang} 
         globalNavItems={rawTheme.menuSettings?.globalNavItems}
         globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
+        layoutTheme={rawTheme.layoutTheme}
       />
 
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}

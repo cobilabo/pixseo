@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/types/article';
 import { Lang } from '@/types/lang';
-import { NavigationItem, GlobalMenuDesign, GlobalMenuHoverEffect } from '@/types/theme';
+import { NavigationItem, GlobalMenuDesign, GlobalMenuHoverEffect, ThemeLayoutId } from '@/types/theme';
 
 const DEFAULT_DESIGN: GlobalMenuDesign = {
   height: 192,
@@ -26,6 +26,7 @@ interface CategoryBarProps {
   lang?: Lang;
   globalNavItems?: NavigationItem[];
   globalMenuDesign?: GlobalMenuDesign;
+  layoutTheme?: ThemeLayoutId;
 }
 
 const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
@@ -61,7 +62,7 @@ const getHoverClasses = (effect: GlobalMenuHoverEffect): { image: string; bg: st
   }
 };
 
-export default function CategoryBar({ categories, excludeCategoryId, variant = 'half', lang = 'ja', globalNavItems = [], globalMenuDesign }: CategoryBarProps) {
+export default function CategoryBar({ categories, excludeCategoryId, variant = 'half', lang = 'ja', globalNavItems = [], globalMenuDesign, layoutTheme }: CategoryBarProps) {
   const d = { ...DEFAULT_DESIGN, ...globalMenuDesign };
   const hoverClasses = getHoverClasses(d.hoverEffect);
   const heightMap: Record<string, number> = { small: 120, medium: 192, large: 384 };
@@ -70,6 +71,30 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
   const overlayFrom = Math.round(d.overlayOpacity / 100 * 255).toString(16).padStart(2, '0');
   const overlayVia = Math.round(d.overlayOpacity / 100 * 0.43 * 255).toString(16).padStart(2, '0');
   const fontWeightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
+
+  if (layoutTheme === 'furatto' && globalNavItems.length > 0) {
+    return (
+      <nav className="furatto-nav-bar relative z-20 border-b" aria-label="Global navigation">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center overflow-x-auto scrollbar-hide">
+            {globalNavItems.map((item) => {
+              const label = getNavItemLabel(item, lang);
+              const url = getNavItemUrl(item, lang);
+              return (
+                <Link
+                  key={item.id}
+                  href={url}
+                  className="furatto-nav-link flex-shrink-0 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors"
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   if (globalNavItems.length > 0) {
     return (

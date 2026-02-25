@@ -269,6 +269,7 @@ export default async function FixedPage({ params }: PageProps) {
           lang={lang} 
           globalNavItems={rawTheme.menuSettings?.globalNavItems}
           globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
+          layoutTheme={rawTheme.layoutTheme}
         />
       )}
 

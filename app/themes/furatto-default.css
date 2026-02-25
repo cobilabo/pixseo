@@ -46,15 +46,93 @@
 /* ===== Header ===== */
 .theme-furatto-default header.fixed {
   top: 0 !important;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .theme-furatto-default header.fixed > div > div {
-  background-color: rgba(250, 247, 242, 0.92) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(250, 247, 242, 0.95) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--ft-border-light);
   box-shadow: 0 1px 8px rgba(90, 70, 50, 0.06);
+}
+
+.theme-furatto-default header.fixed > div > div img {
+  filter: none;
+}
+
+/* ===== Furatto Nav Bar (LUXUNA-style text navigation) ===== */
+.theme-furatto-default .furatto-nav-bar {
+  background-color: var(--ft-bg);
+  border-bottom-color: var(--ft-border) !important;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.theme-furatto-default .furatto-nav-bar > div {
+  display: flex;
+  justify-content: center;
+}
+
+.theme-furatto-default .furatto-nav-bar .furatto-nav-link {
+  color: var(--ft-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 14px 20px;
+  position: relative;
+}
+
+.theme-furatto-default .furatto-nav-bar .furatto-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--ft-primary);
+  transition: width 0.25s ease, left 0.25s ease;
+}
+
+.theme-furatto-default .furatto-nav-bar .furatto-nav-link:hover {
+  color: var(--ft-primary-dark);
+  background-color: transparent;
+}
+
+.theme-furatto-default .furatto-nav-bar .furatto-nav-link:hover::after {
+  width: 60%;
+  left: 20%;
+}
+
+@media (max-width: 767px) {
+  .theme-furatto-default .furatto-nav-bar .furatto-nav-link {
+    font-size: 0.75rem;
+    padding: 12px 14px;
+  }
+}
+
+/* ===== Hamburger Menu (LUXUNA-style warm tones) ===== */
+.theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] {
+  background-color: var(--ft-bg) !important;
+  color: var(--ft-text) !important;
+}
+
+.theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] nav a {
+  color: var(--ft-text) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
+.theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] nav a:hover {
+  color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] svg {
+  color: var(--ft-text) !important;
+}
+
+.theme-furatto-default ~ div [style*="width: 320px"][style*="position: fixed"] .border-t {
+  border-color: var(--ft-border) !important;
 }
 
 /* ===== FirstView ===== */
@@ -72,9 +150,14 @@
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== CategoryBar / GlobalNav ===== */
+/* ===== CategoryBar / GlobalNav (legacy card style override) ===== */
 .theme-furatto-default [class*="sticky top-0"] {
   border-bottom: 1px solid var(--ft-border);
+}
+
+.theme-furatto-default section.relative.z-20.pb-8 {
+  padding-bottom: 0;
+  padding-top: 0 !important;
 }
 
 /* ===== Typography / Prose ===== */
