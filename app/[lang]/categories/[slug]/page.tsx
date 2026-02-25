@@ -223,8 +223,8 @@ export default async function CategoryPage({ params }: PageProps) {
 
             <section>
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{category.name}</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">CATEGORY</p>
               </div>
               {localizedArticles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
