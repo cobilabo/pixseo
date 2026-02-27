@@ -47,7 +47,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
   const responsiveCols = useResponsiveColumns(columnCount);
   const effectiveCols = Math.min(responsiveCols, total);
   const maxPage = Math.max(0, total - effectiveCols);
-  const canNavigate = maxPage > 0;
+  const showControls = total > 1;
 
   const [currentPage, setCurrentPage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -71,11 +71,11 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
   }, [maxPage]);
 
   useEffect(() => {
-    if (!canNavigate || !autoplay || isHovered) return;
+    if (maxPage <= 0 || !autoplay || isHovered) return;
     const ms = autoplayInterval * 1000;
     timerRef.current = setInterval(next, ms);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [next, canNavigate, autoplay, autoplayInterval, isHovered]);
+  }, [next, maxPage, autoplay, autoplayInterval, isHovered]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -101,100 +101,104 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
 
   return (
     <div
-      className="top-slider relative w-full py-6 md:py-8"
+      className="top-slider w-full py-6 md:py-8"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative overflow-hidden mx-auto max-w-7xl px-10 sm:px-12 lg:px-14">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{
-            transform: `translateX(calc(-${currentPage * cardWidthPercent}% - ${currentPage * gapPx / effectiveCols}px))`,
-            gap: `${gapPx}px`,
-          }}
-        >
-          {articles.map((article, index) => (
-            <div
-              key={article.id}
-              className="flex-shrink-0"
-              style={{ width: `calc(${cardWidthPercent}% - ${gapPx * (effectiveCols - 1) / effectiveCols}px)` }}
-            >
-              <Link
-                href={`/${lang}/articles/${article.slug}`}
-                className="block group"
+      {/* スライダー本体 + 矢印を含むコンテナ */}
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* カードスライド領域 */}
+        <div className="overflow-hidden">
+          <div
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{
+              transform: `translateX(calc(-${currentPage * cardWidthPercent}% - ${currentPage * gapPx / effectiveCols}px))`,
+              gap: `${gapPx}px`,
+            }}
+          >
+            {articles.map((article, index) => (
+              <div
+                key={article.id}
+                className="flex-shrink-0"
+                style={{ width: `calc(${cardWidthPercent}% - ${gapPx * (effectiveCols - 1) / effectiveCols}px)` }}
               >
-                <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-gray-100">
-                  {article.featuredImage ? (
-                    <Image
-                      src={article.featuredImage}
-                      alt={article.featuredImageAlt || article.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes={`(max-width: 640px) 100vw, (max-width: 1024px) 50vw, ${Math.round(100 / effectiveCols)}vw`}
-                      priority={index === 0}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
-                  )}
-                  {article.categoryNames && article.categoryNames.length > 0 && (
-                    <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                      {article.categoryNames.map((name, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 text-[10px] font-semibold rounded bg-white/90 text-gray-800 backdrop-blur-sm"
-                        >
-                          {name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 px-1">
-                  <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {article.title}
-                  </h3>
-                  {article.publishedAt && (
-                    <p className="text-xs text-gray-500 mt-1.5">
-                      {formatDate(article.publishedAt)}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            </div>
-          ))}
+                <Link
+                  href={`/${lang}/articles/${article.slug}`}
+                  className="block group"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-gray-100">
+                    {article.featuredImage ? (
+                      <Image
+                        src={article.featuredImage}
+                        alt={article.featuredImageAlt || article.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes={`(max-width: 640px) 100vw, (max-width: 1024px) 50vw, ${Math.round(100 / effectiveCols)}vw`}
+                        priority={index === 0}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
+                    )}
+                    {article.categoryNames && article.categoryNames.length > 0 && (
+                      <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                        {article.categoryNames.map((name, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 text-[10px] font-semibold rounded bg-white/90 text-gray-800 backdrop-blur-sm"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 px-1">
+                    <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {article.title}
+                    </h3>
+                    {article.publishedAt && (
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        {formatDate(article.publishedAt)}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* 左右矢印（overflow-hiddenの外側、relativeコンテナ内） */}
+        {showControls && (
+          <>
+            <button
+              onClick={(e) => { e.preventDefault(); prev(); }}
+              className="absolute left-0 top-[20%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center -translate-x-1/2"
+              aria-label="前へ"
+            >
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <button
+              onClick={(e) => { e.preventDefault(); next(); }}
+              className="absolute right-0 top-[20%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center translate-x-1/2"
+              aria-label="次へ"
+            >
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
       </div>
 
-      {/* 左右矢印 */}
-      {canNavigate && (
-        <>
-          <button
-            onClick={(e) => { e.preventDefault(); prev(); }}
-            className="absolute left-2 md:left-3 top-1/3 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
-            aria-label="前へ"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <button
-            onClick={(e) => { e.preventDefault(); next(); }}
-            className="absolute right-2 md:right-3 top-1/3 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
-            aria-label="次へ"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </>
-      )}
-
       {/* ドットインジケーター */}
-      {canNavigate && dotCount <= 15 && (
-        <div className="flex justify-center gap-1.5 mt-4">
+      {showControls && dotCount >= 1 && dotCount <= 15 && (
+        <div className="flex justify-center gap-1.5 mt-5">
           {Array.from({ length: dotCount }).map((_, index) => (
             <button
               key={index}
