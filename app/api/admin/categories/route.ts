@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       imageAlt: doc.data().imageAlt || '',
       mediaId: doc.data().mediaId,
       isRecommended: doc.data().isRecommended || false,
+      isHiddenFromLists: doc.data().isHiddenFromLists || false,
       order: doc.data().order || 0,
     }));
     return NextResponse.json(categories);
