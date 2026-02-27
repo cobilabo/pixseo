@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, slug, description, imageUrl, imageAlt, isRecommended, order, mediaId } = body;
+    const { id, name, slug, description, imageUrl, imageAlt, isRecommended, isHiddenFromLists, order, mediaId } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -78,6 +78,7 @@ export async function PUT(request: NextRequest) {
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     if (imageAlt !== undefined) updateData.imageAlt = imageAlt;
     if (isRecommended !== undefined) updateData.isRecommended = isRecommended;
+    if (isHiddenFromLists !== undefined) updateData.isHiddenFromLists = isHiddenFromLists;
     if (order !== undefined) updateData.order = order;
     if (mediaId !== undefined) updateData.mediaId = mediaId;
 

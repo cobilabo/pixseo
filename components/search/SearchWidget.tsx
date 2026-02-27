@@ -18,6 +18,7 @@ interface CategoryItem {
   id: string;
   name: string;
   slug: string;
+  isHiddenFromLists?: boolean;
 }
 
 interface SearchWidgetProps {
@@ -44,6 +45,8 @@ export default function SearchWidget({
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists);
 
   const getSearchTypes = () => {
     if (searchSettings?.searchTypes) {
@@ -147,7 +150,7 @@ export default function SearchWidget({
         );
 
       case 'categorySearch':
-        if (!searchTypes.categorySearch || categories.length === 0) return null;
+        if (!searchTypes.categorySearch || visibleCategories.length === 0) return null;
         if (categoryDisplayType === 'list') {
           return (
             <div key={key}>
@@ -155,7 +158,7 @@ export default function SearchWidget({
                 {t('search.categorySearch', lang)}
               </label>
               <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
+                {visibleCategories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.slug)}
@@ -176,7 +179,7 @@ export default function SearchWidget({
         return (
           <CategorySearchDropdown
             key={key}
-            categories={categories}
+            categories={visibleCategories}
             onSelect={handleCategorySelect}
             isCompact={isCompact}
           />

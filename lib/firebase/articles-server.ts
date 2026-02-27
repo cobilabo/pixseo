@@ -13,6 +13,23 @@ import { Writer } from '@/types/writer';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 import { isPreviewMode } from './media-tenant-helper';
 
+// 非表示カテゴリーIDを取得（キャッシュ付き）
+const getHiddenCategoryIds = async (mediaId?: string): Promise<string[]> => {
+  const cacheKey = generateCacheKey('hiddenCategoryIds', mediaId || 'all');
+  const cached = cacheManager.get<string[]>(cacheKey, CACHE_TTL.LONG);
+  if (cached) return cached;
+
+  const categoriesRef = adminDb.collection('categories');
+  let q: admin.firestore.Query = categoriesRef.where('isHiddenFromLists', '==', true);
+  if (mediaId) {
+    q = q.where('mediaId', '==', mediaId);
+  }
+  const snapshot = await q.get();
+  const ids = snapshot.docs.map(doc => doc.id);
+  cacheManager.set(cacheKey, ids);
+  return ids;
+};
+
 // FirestoreのTimestampをDateに変換
 const convertTimestamp = (timestamp: any): Date => {
   if (timestamp?.toDate) {
@@ -120,6 +137,7 @@ export const getArticlesServer = async (
     mediaId?: string;
     orderBy?: 'publishedAt' | 'createdAt' | 'updatedAt' | 'viewCount' | 'likeCount';
     orderDirection?: 'asc' | 'desc';
+    excludeHiddenCategories?: boolean;
   } = {}
 ): Promise<Article[]> => {
   try {
@@ -135,7 +153,8 @@ export const getArticlesServer = async (
       options.orderDirection,
       options.limit,
       options.offset,
-      isPreview ? 'preview' : 'live'
+      isPreview ? 'preview' : 'live',
+      options.excludeHiddenCategories ? 'excHidden' : ''
     );
     
     // キャッシュから取得
@@ -226,6 +245,16 @@ export const getArticlesServer = async (
     })
     .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
+    // 非表示カテゴリーの記事を除外
+    if (options.excludeHiddenCategories) {
+      const hiddenIds = await getHiddenCategoryIds(options.mediaId);
+      if (hiddenIds.length > 0) {
+        articles = articles.filter(article =>
+          !article.categoryIds?.some((catId: string) => hiddenIds.includes(catId))
+        );
+      }
+    }
+    
     // createdAt/updatedAt 指定時、またはインデックスソート未使用時はJavaScriptでソート
     const needsResort = orderField === 'createdAt' || orderField === 'updatedAt' || !useIndexSort || options.categoryId || options.tagId;
     if (needsResort) {
@@ -274,6 +303,7 @@ export const getRecentArticlesServer = async (limitCount: number = 10, mediaId?:
     orderDirection: 'desc',
     limit: limitCount,
     mediaId,
+    excludeHiddenCategories: true,
   });
 };
 
@@ -284,6 +314,7 @@ export const getPopularArticlesServer = async (limitCount: number = 10, mediaId?
     orderDirection: 'desc',
     limit: limitCount,
     mediaId,
+    excludeHiddenCategories: true,
   });
 };
 

@@ -19,7 +19,7 @@ import {
   EmptyState,
 } from '@/components/admin/common';
 
-type SortColumn = 'name' | 'slug' | 'articleCount' | 'isRecommended';
+type SortColumn = 'name' | 'slug' | 'articleCount' | 'isRecommended' | 'isHiddenFromLists';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
@@ -94,6 +94,27 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleToggleHiddenFromLists = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isHiddenFromLists: !currentStatus }),
+      });
+
+      if (response.ok) {
+        fetchCategories();
+      } else {
+        throw new Error('更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error toggling category hidden:', error);
+      showError('非表示状態の更新に失敗しました');
+    }
+  };
+
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -126,6 +147,9 @@ export default function CategoriesPage() {
           break;
         case 'isRecommended':
           comparison = (a.isRecommended ? 1 : 0) - (b.isRecommended ? 1 : 0);
+          break;
+        case 'isHiddenFromLists':
+          comparison = (a.isHiddenFromLists ? 1 : 0) - (b.isHiddenFromLists ? 1 : 0);
           break;
       }
       
@@ -204,6 +228,15 @@ export default function CategoriesPage() {
                             <SortIcon column="isRecommended" currentColumn={sortColumn} direction={sortDirection} />
                           </div>
                         </th>
+                        <th 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort('isHiddenFromLists')}
+                        >
+                          <div className="flex items-center">
+                            各種一覧への非表示
+                            <SortIcon column="isHiddenFromLists" currentColumn={sortColumn} direction={sortDirection} />
+                          </div>
+                        </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                           操作
                         </th>
@@ -239,6 +272,12 @@ export default function CategoriesPage() {
                             <Toggle
                               checked={category.isRecommended || false}
                               onChange={() => handleToggleRecommended(category.id, category.isRecommended || false)}
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Toggle
+                              checked={category.isHiddenFromLists || false}
+                              onChange={() => handleToggleHiddenFromLists(category.id, category.isHiddenFromLists || false)}
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
           orderDirection: 'desc',
           limit,
           mediaId: mediaId || undefined,
+          excludeHiddenCategories: true,
         }),
         getCategoryServer(categoryId),
       ]);

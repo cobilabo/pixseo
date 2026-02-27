@@ -55,6 +55,7 @@ export async function PUT(
       }
     }
     if (body.isRecommended !== undefined) updateData.isRecommended = body.isRecommended;
+    if (body.isHiddenFromLists !== undefined) updateData.isHiddenFromLists = body.isHiddenFromLists;
     if (body.order !== undefined) updateData.order = body.order;
     
     // 更新日時を追加

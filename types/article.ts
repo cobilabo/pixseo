@@ -94,6 +94,7 @@ export interface Category {
   imageUrl?: string;         // カテゴリー画像
   imageAlt?: string;         // 画像のalt属性
   isRecommended?: boolean;
+  isHiddenFromLists?: boolean;
   order?: number;
   // 多言語フィールド
   name_ja?: string;

@@ -13,8 +13,8 @@ interface SidebarCategoriesProps {
 }
 
 export default function SidebarCategories({ categories, lang = 'ja' }: SidebarCategoriesProps) {
-  // 記事が登録されているカテゴリーのみ表示
-  const categoriesWithArticles = categories.filter(cat => (cat.articleCount || 0) > 0);
+  // 非表示設定のカテゴリーを除外し、記事が登録されているカテゴリーのみ表示
+  const categoriesWithArticles = categories.filter(cat => !(cat as any).isHiddenFromLists && (cat.articleCount || 0) > 0);
 
   if (categoriesWithArticles.length === 0) {
     return null;
