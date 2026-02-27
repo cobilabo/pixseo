@@ -265,6 +265,8 @@ function getDefaultConfig(type: BlockType): any {
         displayStyle: 'blogcard',
         displayCount: 4,
       };
+    case 'slider':
+      return {};
     case 'custom':
       return {
         customBlockId: '',

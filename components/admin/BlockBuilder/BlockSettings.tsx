@@ -25,6 +25,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     content: 'セクションブロック',
     form: 'フォームブロック',
     article: '記事ブロック',
+    slider: 'スライダーブロック',
     html: 'HTMLブロック',
     spacer: '空白ブロック',
     custom: 'カスタムブロック',
@@ -48,6 +49,18 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'article' && (
           <ArticleBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'slider' && (
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <p className="text-sm text-gray-700">
+                記事一覧ページの「スライダー」列で 1〜10 の数字を設定した記事がスライドで表示されます。
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                数字の小さい順に表示されます。
+              </p>
+            </div>
+          </div>
         )}
         
         {/* 共通の余白設定（空白ブロック以外） */}

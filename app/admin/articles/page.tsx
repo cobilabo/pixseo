@@ -734,7 +734,7 @@ function ArticlesPageContent() {
                             const val = e.target.value;
                             handleSliderOrderChange(article.id, val === '' ? null : parseInt(val, 10));
                           }}
-                          className="px-1.5 py-1 rounded text-xs border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="px-1.5 py-1 rounded text-xs border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           <option value="">非表示</option>
                           {[1,2,3,4,5,6,7,8,9,10].map(n => (

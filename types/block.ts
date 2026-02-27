@@ -9,6 +9,7 @@ export type BlockType =
   | 'spacer'    // 空白
   | 'content'   // セクションブロック（統合ブロック）
   | 'article'   // 記事リンクブロック
+  | 'slider'    // スライダーブロック
   | 'row'       // 行レイアウト（複数カラム）
   | 'custom';   // カスタムブロック
 
@@ -138,6 +139,12 @@ export interface ArticleBlockConfig {
   titleEn?: string;
 }
 
+// スライダーブロックの設定（sliderOrder が設定された記事を表示）
+export interface SliderBlockConfig {
+  // 設定不要（sliderOrder が設定された記事を自動取得）
+  _placeholder?: boolean;
+}
+
 // 行レイアウトのカラム設定
 export interface RowColumnConfig {
   type?: 'html' | 'form';
@@ -164,7 +171,7 @@ export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | RowBlockConfig | CustomBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | SliderBlockConfig | RowBlockConfig | CustomBlockConfig;
   
   // 余白設定（共通）
   spacing?: {

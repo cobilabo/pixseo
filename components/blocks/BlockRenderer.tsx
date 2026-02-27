@@ -10,6 +10,7 @@ import HTMLBlock from './HTMLBlock';
 import SpacerBlock from './SpacerBlock';
 import ContentBlock from './ContentBlock';
 import ArticleBlock from './ArticleBlock';
+import SliderBlock from './SliderBlock';
 import RowBlock from './RowBlock';
 import CustomBlock from './CustomBlock';
 
@@ -64,6 +65,9 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             break;
           case 'article':
             blockContent = <ArticleBlock block={block} lang={lang} />;
+            break;
+          case 'slider':
+            blockContent = <SliderBlock block={block} lang={lang} />;
             break;
           case 'row':
             blockContent = <RowBlock block={block} lang={lang} />;

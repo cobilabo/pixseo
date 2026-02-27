@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer, getSliderArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
@@ -22,7 +22,6 @@ import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
-import TopSlider from '@/components/common/TopSlider';
 import BlockRenderer from '@/components/blocks/BlockRenderer';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag, localizePage } from '@/lib/i18n/localize';
@@ -135,14 +134,13 @@ export default async function HomePage({ params }: PageProps) {
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
   
   // すべてのデータを並列取得（homeページチェックも含む）
-  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, sliderArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     mediaId ? getHomePage(mediaId) : Promise.resolve(null),
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
-    getSliderArticlesServer(mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
@@ -162,18 +160,6 @@ export default async function HomePage({ params }: PageProps) {
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
   
-  // スライダー記事のローカライズ
-  const localizedSliderArticles = sliderArticles.map(article => {
-    const localized = localizeArticle(article, lang);
-    const categoryNames = (article.categoryIds || [])
-      .map((catId: string) => {
-        const cat = allCategories.find(c => c.id === catId);
-        return cat ? ((cat as any)[`name_${lang}`] || cat.name) : null;
-      })
-      .filter(Boolean) as string[];
-    return { ...localized, categoryNames };
-  });
-
   // 記事も多言語化
   const localizedRecentArticles = recentArticles.map(article => localizeArticle(article, lang));
   const localizedPopularArticles = popularArticles.map(article => localizeArticle(article, lang));
@@ -318,14 +304,9 @@ export default async function HomePage({ params }: PageProps) {
           />
         )}
 
-        {/* トップスライダー */}
-        {localizedSliderArticles.length > 0 && (
-          <TopSlider articles={localizedSliderArticles} lang={lang} />
-        )}
-
         {/* メインコンテンツエリア */}
         <div 
-          className={`relative ${showGlobalNav && localizedSliderArticles.length === 0 ? '-mt-24 pt-16 md:pt-32' : ''}`}
+          className={`relative ${showGlobalNav ? '-mt-24 pt-16 md:pt-32' : ''}`}
           style={{ 
             backgroundColor: rawHomePage.backgroundColor || rawTheme.backgroundColor, 
             zIndex: 10 
@@ -487,13 +468,8 @@ export default async function HomePage({ params }: PageProps) {
         layoutTheme={rawTheme.layoutTheme}
       />
 
-      {/* トップスライダー */}
-      {localizedSliderArticles.length > 0 && (
-        <TopSlider articles={localizedSliderArticles} lang={lang} />
-      )}
-
       {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
-      <div className={`relative ${localizedSliderArticles.length === 0 ? '-mt-24 pt-16 md:pt-32' : ''}`} style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
+      <div className="relative -mt-24 pt-16 md:pt-32" style={{ backgroundColor: rawTheme.backgroundColor, zIndex: 10 }}>
 
         {/* メインコンテンツ - 2カラムレイアウト */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -94,6 +94,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     content: { label: 'セクションブロック', icon: '/dashboard.svg' },
     form: { label: 'フォーム', icon: '/form.svg' },
     article: { label: '記事', icon: '/article.svg' },
+    slider: { label: 'スライダー', icon: '/dashboard.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
     custom: { label: (block.config as any)?.customBlockName || 'カスタムブロック', icon: '/block.svg' },
@@ -193,6 +194,8 @@ function BlockPreview({ block }: { block: Block }) {
         const displayType = articleConfig.displayStyle === 'blogcard' ? 'ブログカード' : 'テキストリンク';
         return <span>{articleConfig.articleTitle || '未選択'} ({displayType})</span>;
       }
+    case 'slider':
+      return <span>スライダー設定済み記事を表示</span>;
     case 'html':
       return <span>カスタムHTML</span>;
     case 'spacer':

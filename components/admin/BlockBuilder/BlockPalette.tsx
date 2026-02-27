@@ -37,6 +37,12 @@ const blockTypes = [
     description: '記事リンクをテキストまたはブログカードで表示',
   },
   {
+    type: 'slider' as BlockType,
+    label: 'スライダーブロック',
+    icon: '/dashboard.svg',
+    description: 'スライダー設定済みの記事をスライド表示',
+  },
+  {
     type: 'html' as BlockType,
     label: 'HTMLブロック',
     icon: '/html.svg',
