@@ -66,7 +66,7 @@ export async function getMediaIdFromHost(): Promise<string | null> {
       const cacheKey = `mediaId:slug:${slug}`;
 
       // キャッシュから取得（5分間有効）
-      const cachedMediaId = cacheManager.get<string>(cacheKey, 5 * 60 * 1000);
+      const cachedMediaId = cacheManager.get<string>(cacheKey, 30 * 60 * 1000);
       if (cachedMediaId) {
         return cachedMediaId;
       }
@@ -93,8 +93,8 @@ export async function getMediaIdFromHost(): Promise<string | null> {
     // 2. カスタムドメイン
     const cacheKey = `mediaId:domain:${host}`;
 
-    // キャッシュから取得（5分間有効）
-    const cachedMediaId = cacheManager.get<string>(cacheKey, 5 * 60 * 1000);
+    // キャッシュから取得（30分間有効）
+    const cachedMediaId = cacheManager.get<string>(cacheKey, 30 * 60 * 1000);
     if (cachedMediaId) {
       return cachedMediaId;
     }
@@ -165,10 +165,10 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
     // キャッシュキー（プレビューモードかどうかも含める）
     const cacheKey = `siteInfo:${mediaId}:${isPreview ? 'preview' : 'live'}`;
 
-    // キャッシュから取得（5分間有効）
+    // キャッシュから取得（30分間有効）
     const cachedInfo = cacheManager.get<SiteInfo>(
       cacheKey,
-      5 * 60 * 1000
+      30 * 60 * 1000
     );
     if (cachedInfo) {
       return cachedInfo;

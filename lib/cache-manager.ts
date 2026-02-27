@@ -12,9 +12,9 @@ class CacheManager {
   private cache: Map<string, CacheEntry<any>>;
   private defaultTTL: number;
 
-  constructor(defaultTTL: number = 5 * 60 * 1000) {
+  constructor(defaultTTL: number = 10 * 60 * 1000) {
     this.cache = new Map();
-    this.defaultTTL = defaultTTL; // デフォルト5分
+    this.defaultTTL = defaultTTL; // デフォルト10分
   }
 
   /**
@@ -106,8 +106,8 @@ export const generateCacheKey = (...parts: (string | number | undefined)[]): str
 
 // TTL定数（ミリ秒）
 export const CACHE_TTL = {
-  SHORT: 1 * 60 * 1000,      // 1分
-  MEDIUM: 5 * 60 * 1000,     // 5分
+  SHORT: 3 * 60 * 1000,      // 3分
+  MEDIUM: 10 * 60 * 1000,    // 10分
   LONG: 30 * 60 * 1000,      // 30分
   VERY_LONG: 60 * 60 * 1000, // 1時間
 };

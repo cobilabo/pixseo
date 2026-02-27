@@ -4,9 +4,9 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getCategoryServer, getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getArticlesServer } from '@/lib/firebase/articles-server';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -25,7 +25,7 @@ import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 
 // ISR: 60秒ごとに再生成
-export const revalidate = 60;
+export const revalidate = 300;
 
 interface PageProps {
   params: {

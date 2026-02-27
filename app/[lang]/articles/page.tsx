@@ -2,10 +2,10 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getArticlesServer, getArticlesCountServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer, getArticlesCountServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -33,7 +33,7 @@ interface PageProps {
 }
 
 // ISR: 60秒ごとに再生成
-export const revalidate = 60;
+export const revalidate = 300;
 
 // 動的にメタデータを生成
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

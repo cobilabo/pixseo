@@ -3,12 +3,12 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getRecentArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getRecentArticlesServer } from '@/lib/firebase/articles-server';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
@@ -67,7 +67,7 @@ interface PageProps {
 }
 
 // ISR: 5分ごとに再生成
-export const revalidate = 300;
+export const revalidate = 600;
 
 // 全言語パスを事前生成
 export async function generateStaticParams() {
@@ -90,10 +90,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const [rawSiteInfo] = await Promise.all([
-    getSiteInfo(mediaId),
-  ]);
-  
+  const rawSiteInfo = await getSiteInfo(mediaId);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   
   return {

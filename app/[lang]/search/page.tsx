@@ -10,12 +10,12 @@ import FirstView from '@/components/layout/FirstView';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getArticlesServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import XLink from '@/components/common/XLink';
@@ -37,9 +37,9 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  const mediaId = await getMediaIdFromHost();
   const headersList = headers();
   const host = headersList.get('host') || '';
+  const mediaId = await getMediaIdFromHost();
   
   const rawSiteInfo = mediaId 
     ? await getSiteInfo(mediaId)

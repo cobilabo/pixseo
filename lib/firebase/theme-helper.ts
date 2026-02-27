@@ -1,9 +1,9 @@
 import { adminDb } from './admin';
 import { Theme, defaultTheme } from '@/types/theme';
 
-// Themeキャッシュ（5分間）
+// Themeキャッシュ（15分間）
 const themeCache = new Map<string, { theme: Theme; timestamp: number }>();
-const THEME_CACHE_TTL = 5 * 60 * 1000; // 5分
+const THEME_CACHE_TTL = 15 * 60 * 1000; // 15分
 
 /**
  * テーマキャッシュをクリア

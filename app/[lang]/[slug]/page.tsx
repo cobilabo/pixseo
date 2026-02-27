@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizePage, localizeTag, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -32,7 +31,7 @@ interface PageProps {
   };
 }
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 // 固定ページ取得
 async function getPageBySlug(slug: string, mediaId: string) {
@@ -67,21 +66,23 @@ async function getPageBySlug(slug: string, mediaId: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  const mediaId = await getMediaIdFromHost();
   const headersList = headers();
   const host = headersList.get('host') || '';
+  const mediaId = await getMediaIdFromHost();
   
   if (!mediaId) {
     return { title: 'ページが見つかりません' };
   }
 
-  const rawPage = await getPageBySlug(params.slug, mediaId);
+  const [rawPage, rawSiteInfo] = await Promise.all([
+    getPageBySlug(params.slug, mediaId),
+    getSiteInfo(mediaId),
+  ]);
   if (!rawPage) {
     return { title: 'ページが見つかりません' };
   }
 
   const page = localizePage(rawPage, lang);
-  const rawSiteInfo = await getSiteInfo(mediaId);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
 
   const title = `${page.title} | ${siteInfo.name}`;
@@ -117,7 +118,15 @@ export default async function FixedPage({ params }: PageProps) {
     notFound();
   }
 
-  const rawPage = await getPageBySlug(params.slug, mediaId);
+  // mediaId依存の取得を並列化
+  const [rawPage, rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags] = await Promise.all([
+    getPageBySlug(params.slug, mediaId),
+    getSiteInfo(mediaId),
+    getTheme(mediaId),
+    getTagsServer(),
+    getCategoriesServer(),
+    getPopularSearchTagsServer(mediaId, 30, 20),
+  ]);
   if (!rawPage) {
     notFound();
   }
@@ -126,15 +135,6 @@ export default async function FixedPage({ params }: PageProps) {
   const layoutMode = rawPage.layoutMode || 'default';
   const showGlobalNav = rawPage.showGlobalNav || false;
   const showSidebar = rawPage.showSidebar || false;
-  
-  // 基本データの取得
-  const [rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags] = await Promise.all([
-    getSiteInfo(mediaId),
-    getTheme(mediaId),
-    getTagsServer(),
-    getCategoriesServer(),
-    getPopularSearchTagsServer(mediaId, 30, 20),
-  ]);
   
   // サイドバー表示時のみ記事データを取得
   let popularArticles: any[] = [];

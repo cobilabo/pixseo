@@ -2,10 +2,10 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { getWriterServer, getArticlesByWriterServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/articles-server';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getWriterServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getArticlesByWriterServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeWriter, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -35,8 +35,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  const mediaId = await getMediaIdFromHost();
-  const rawWriter = await getWriterServer(params.id);
+  const [mediaId, rawWriter] = await Promise.all([getMediaIdFromHost(), getWriterServer(params.id)]);
   
   if (!rawWriter) {
     return { title: 'ライターが見つかりません', robots: { index: false, follow: false } };
@@ -79,8 +78,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function WriterPage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  const mediaId = await getMediaIdFromHost();
-  const rawWriter = await getWriterServer(params.id);
+  const [mediaId, rawWriter] = await Promise.all([getMediaIdFromHost(), getWriterServer(params.id)]);
   if (!rawWriter) notFound();
 
   const writer = localizeWriter(rawWriter, lang);

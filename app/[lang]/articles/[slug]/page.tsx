@@ -3,19 +3,16 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { 
-  getArticleServer, 
   getRelatedArticlesServer, 
   getCategoriesServer,
   getTagsServer,
-  getWriterServer,
   getAdjacentArticlesServer,
-  getPopularArticlesServer 
 } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/media-tenant-helper';
-import { getTheme, getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getMediaIdFromHost, getArticleServer, getSiteInfo, getTheme, getPopularArticlesServer, getWriterServer } from '@/lib/firebase/cached';
+import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
@@ -53,7 +50,7 @@ import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
 
 // ISR: 5分ごとに再生成
-export const revalidate = 300;
+export const revalidate = 600;
 
 interface PageProps {
   params: {
@@ -65,43 +62,30 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   const mediaId = await getMediaIdFromHost();
-  const rawArticle = await getArticleServer(params.slug, mediaId || undefined);
+
+  const defaultSiteInfo = { 
+    allowIndexing: false, isPreview: false, name: 'メディアサイト',
+    name_ja: 'メディアサイト', name_en: 'Media Site', name_zh: '媒体网站', name_ko: '미디어 사이트',
+    description: '', logoUrl: '', faviconUrl: '',
+  };
+
+  // 記事取得とサイト情報取得を並列化（両方 mediaId のみに依存）
+  const [rawArticle, rawSiteInfo] = await Promise.all([
+    getArticleServer(params.slug, mediaId || undefined),
+    mediaId ? getSiteInfo(mediaId) : Promise.resolve(defaultSiteInfo),
+  ]);
   
   if (!rawArticle) {
     return {
       title: '記事が見つかりません',
-      robots: {
-        index: false,
-        follow: false,
-      },
+      robots: { index: false, follow: false },
     };
   }
 
-  // 記事を多言語化
   const article = localizeArticle(rawArticle, lang);
-
-  // サイトのインデックス設定を取得
-  const rawSiteInfo = mediaId 
-    ? await getSiteInfo(mediaId) 
-    : { 
-        allowIndexing: false, 
-        isPreview: false,
-        name: 'メディアサイト',
-        name_ja: 'メディアサイト', 
-        name_en: 'Media Site', 
-        name_zh: '媒体网站', 
-        name_ko: '미디어 사이트',
-        description: '',
-        logoUrl: '',
-        faviconUrl: '',
-      };
-  
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
-  
-  // インデックス制御のロジック
   const allowIndexing = rawSiteInfo.allowIndexing && rawArticle.isPublished;
   
-  // カテゴリー・タグ・ライター情報を取得
   const [rawCategories, rawTags, rawWriter] = await Promise.all([
     rawArticle.categoryIds ? getCategoriesServer(rawArticle.categoryIds).catch(() => []) : Promise.resolve([]),
     rawArticle.tagIds ? getTagsServer(rawArticle.tagIds).catch(() => []) : Promise.resolve([]),
@@ -195,37 +179,31 @@ export default async function ArticlePage({ params }: PageProps) {
   const headersList = headers();
   const siteHost = headersList.get('host') || '';
   
-  // mediaIdを取得
+  const defaultSiteInfo = { 
+    name: 'メディアサイト', name_ja: 'メディアサイト', name_en: 'Media Site',
+    name_zh: '媒体网站', name_ko: '미디어 사이트',
+    description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false,
+  };
+
+  // Step 1: mediaId 取得
   const mediaId = await getMediaIdFromHost();
-  const rawArticle = await getArticleServer(params.slug, mediaId || undefined);
+
+  // Step 2: 記事・サイト情報・テーマを並列取得（全て mediaId のみに依存）
+  const [rawArticle, rawSiteInfo, rawTheme] = await Promise.all([
+    getArticleServer(params.slug, mediaId || undefined),
+    mediaId ? getSiteInfo(mediaId) : Promise.resolve(defaultSiteInfo),
+    mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
+  ]);
+
   if (!rawArticle) {
     notFound();
   }
 
-  // 記事を多言語化
   const article = localizeArticle(rawArticle, lang);
-
-  // サイト情報、テーマを取得
-  const [rawSiteInfo, rawTheme] = await Promise.all([
-    mediaId ? getSiteInfo(mediaId) : Promise.resolve({ 
-      name: 'メディアサイト',
-      name_ja: 'メディアサイト', 
-      name_en: 'Media Site',
-      name_zh: '媒体网站',
-      name_ko: '미디어 사이트',
-      description: '', 
-      logoUrl: '', 
-      faviconUrl: '', 
-      allowIndexing: false,
-      isPreview: false,
-    }),
-    mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
-  ]);
-
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
 
-  // カテゴリー、タグ、ライター、前後の記事、関連記事、全カテゴリー、全タグ、人気記事、よく検索されているタグを並行取得
+  // Step 3: 記事に依存するデータ + サイドバーデータを全て並列取得
   const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, popularSearchTags] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
@@ -239,40 +217,33 @@ export default async function ArticlePage({ params }: PageProps) {
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20).catch(() => []) : Promise.resolve([]),
   ]);
   
-  // 多言語化
   const categories = rawCategories.map(cat => localizeCategory(cat, lang));
   const tags = rawTags.map(tag => localizeTag(tag, lang));
   const writer = rawWriter ? localizeWriter(rawWriter, lang) : null;
   const relatedArticles = rawRelatedArticles.map(art => localizeArticle(art, lang));
   const popularArticles = rawPopularArticles.map(art => localizeArticle(art, lang));
-  // サイドバー用カテゴリー（記事数付き）
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
-  // サイドバー検索用のタグ一覧（メディアIDでフィルタリング）
   const sidebarTags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
   
-  // 前後の記事のカテゴリー情報を取得
+  // 前後記事のカテゴリーを並列取得（adjacentArticles の結果に依存するが、Step 3 完了後即座に実行）
   const [previousCategories, nextCategories] = await Promise.all([
-    adjacentArticles.previousArticle && adjacentArticles.previousArticle.categoryIds?.length
+    adjacentArticles.previousArticle?.categoryIds?.length
       ? getCategoriesServer(adjacentArticles.previousArticle.categoryIds).catch(() => [])
       : Promise.resolve([]),
-    adjacentArticles.nextArticle && adjacentArticles.nextArticle.categoryIds?.length
+    adjacentArticles.nextArticle?.categoryIds?.length
       ? getCategoriesServer(adjacentArticles.nextArticle.categoryIds).catch(() => [])
       : Promise.resolve([]),
   ]);
   
-  // 前後の記事も多言語化
   const localizedPreviousArticle = adjacentArticles.previousArticle 
-    ? localizeArticle(adjacentArticles.previousArticle, lang)
-    : null;
+    ? localizeArticle(adjacentArticles.previousArticle, lang) : null;
   const localizedNextArticle = adjacentArticles.nextArticle 
-    ? localizeArticle(adjacentArticles.nextArticle, lang)
-    : null;
+    ? localizeArticle(adjacentArticles.nextArticle, lang) : null;
   
-  // mediaIdでカテゴリーをフィルタリング
   const headerCategories = mediaId 
     ? allCategories.filter(cat => cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang))
     : allCategories.map(cat => localizeCategory(cat, lang));
