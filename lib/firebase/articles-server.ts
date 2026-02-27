@@ -118,7 +118,7 @@ export const getArticlesServer = async (
     categoryId?: string;
     tagId?: string;
     mediaId?: string;
-    orderBy?: 'publishedAt' | 'viewCount' | 'likeCount';
+    orderBy?: 'publishedAt' | 'createdAt' | 'viewCount' | 'likeCount';
     orderDirection?: 'asc' | 'desc';
   } = {}
 ): Promise<Article[]> => {
@@ -146,7 +146,7 @@ export const getArticlesServer = async (
     
     const limitCount = options.limit || 30;
     const offsetCount = options.offset || 0;
-    const orderField = options.orderBy || 'publishedAt';
+    const orderField = options.orderBy || 'createdAt';
     const orderDir = options.orderDirection || 'desc';
     
     // Firestoreから取得
@@ -257,7 +257,7 @@ export const getArticlesServer = async (
 // 新着記事を取得（サーバーサイド用）
 export const getRecentArticlesServer = async (limitCount: number = 10, mediaId?: string): Promise<Article[]> => {
   return getArticlesServer({
-    orderBy: 'publishedAt',
+    orderBy: 'createdAt',
     orderDirection: 'desc',
     limit: limitCount,
     mediaId,
