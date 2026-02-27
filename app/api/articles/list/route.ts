@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecentArticlesServer, getPopularArticlesServer, getArticlesServer } from '@/lib/firebase/articles-server';
+import { getRecentArticlesServer, getPopularArticlesServer, getArticlesServer, getCategoryServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost } from '@/lib/firebase/media-tenant-helper';
 import { localizeArticle } from '@/lib/i18n/localize';
 import { Lang, isValidLang } from '@/types/lang';
@@ -20,14 +20,23 @@ export async function GET(request: NextRequest) {
     const mediaId = await getMediaIdFromHost();
     
     let articles;
+    let categoryName: string | undefined;
+
     if (categoryId) {
-      articles = await getArticlesServer({
-        categoryId,
-        orderBy: type === 'popular' ? 'viewCount' : 'publishedAt',
-        orderDirection: 'desc',
-        limit,
-        mediaId: mediaId || undefined,
-      });
+      const [articleResults, category] = await Promise.all([
+        getArticlesServer({
+          categoryId,
+          orderBy: type === 'popular' ? 'viewCount' : 'updatedAt',
+          orderDirection: 'desc',
+          limit,
+          mediaId: mediaId || undefined,
+        }),
+        getCategoryServer(categoryId),
+      ]);
+      articles = articleResults;
+      if (category) {
+        categoryName = (category as any)[`name_${lang}`] || category.name;
+      }
     } else if (type === 'popular') {
       articles = await getPopularArticlesServer(limit, mediaId || undefined);
     } else {
@@ -38,7 +47,7 @@ export async function GET(request: NextRequest) {
     const localizedArticles = articles.map(article => localizeArticle(article, lang));
     
     // 必要なフィールドのみを返す
-    const response = localizedArticles.map(article => ({
+    const responseArticles = localizedArticles.map(article => ({
       id: article.id,
       title: article.title,
       slug: article.slug,
@@ -49,7 +58,10 @@ export async function GET(request: NextRequest) {
       viewCount: article.viewCount,
     }));
     
-    return NextResponse.json(response);
+    return NextResponse.json({
+      articles: responseArticles,
+      ...(categoryName ? { categoryName } : {}),
+    });
   } catch (error) {
     console.error('[Articles List API] Error:', error);
     return NextResponse.json(

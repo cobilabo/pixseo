@@ -33,12 +33,14 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
   const config = block.config as ArticleBlockConfig;
   const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [categoryName, setCategoryName] = useState<string | undefined>();
   
   // 新着/人気記事一覧を取得
   useEffect(() => {
     if (config.articleType === 'recent' || config.articleType === 'popular') {
       const fetchArticles = async () => {
         setLoading(true);
+        setCategoryName(undefined);
         try {
           const params = new URLSearchParams({
             type: config.articleType,
@@ -51,7 +53,10 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
           const response = await fetch(`/api/articles/list?${params}`);
           if (response.ok) {
             const data = await response.json();
-            setArticles(data);
+            setArticles(data.articles || []);
+            if (data.categoryName) {
+              setCategoryName(data.categoryName);
+            }
           }
         } catch (error) {
           console.error('Error fetching articles:', error);
@@ -98,8 +103,8 @@ export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBloc
     const defaultTitle = config.articleType === 'recent' ? t('section.recentArticles', lang) : t('section.popularArticles', lang);
     const defaultTitleEn = config.articleType === 'recent' ? t('section.recentArticlesEn', lang) : t('section.popularArticlesEn', lang);
     const localizedTitle = lang !== 'ja' ? (config as any)[`title_${lang}`] : undefined;
-    const displayTitle = localizedTitle || config.title || defaultTitle;
-    const displayTitleEn = config.titleEn !== undefined ? config.titleEn : defaultTitleEn;
+    const displayTitle = categoryName || localizedTitle || config.title || defaultTitle;
+    const displayTitleEn = categoryName ? undefined : (config.titleEn !== undefined ? config.titleEn : defaultTitleEn);
 
     const containerStyle: React.CSSProperties = {
       maxWidth: '1100px',

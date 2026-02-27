@@ -118,7 +118,7 @@ export const getArticlesServer = async (
     categoryId?: string;
     tagId?: string;
     mediaId?: string;
-    orderBy?: 'publishedAt' | 'createdAt' | 'viewCount' | 'likeCount';
+    orderBy?: 'publishedAt' | 'createdAt' | 'updatedAt' | 'viewCount' | 'likeCount';
     orderDirection?: 'asc' | 'desc';
   } = {}
 ): Promise<Article[]> => {
@@ -170,8 +170,8 @@ export const getArticlesServer = async (
       q = q.where('tagIds', 'array-contains', options.tagId);
     }
     
-    // Firestoreクエリは publishedAt でソート（createdAt はフィールド欠損があるため）
-    const firestoreOrderField = (orderField === 'createdAt') ? 'publishedAt' : orderField;
+    // Firestoreクエリは publishedAt でソート（createdAt/updatedAt はフィールド欠損があるため）
+    const firestoreOrderField = (orderField === 'createdAt' || orderField === 'updatedAt') ? 'publishedAt' : orderField;
     
     let snapshot;
     let useIndexSort = false;
@@ -226,19 +226,23 @@ export const getArticlesServer = async (
     })
     .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
-    // createdAt 指定時、またはインデックスソート未使用時はJavaScriptでソート
-    const needsResort = orderField === 'createdAt' || !useIndexSort || options.categoryId || options.tagId;
+    // createdAt/updatedAt 指定時、またはインデックスソート未使用時はJavaScriptでソート
+    const needsResort = orderField === 'createdAt' || orderField === 'updatedAt' || !useIndexSort || options.categoryId || options.tagId;
     if (needsResort) {
       articles.sort((a, b) => {
         let aTime: number, bTime: number;
         
-        if (orderField === 'createdAt' || orderField === 'publishedAt') {
-          const aDate = orderField === 'createdAt'
-            ? ((a as any).createdAt || a.publishedAt)
-            : a.publishedAt;
-          const bDate = orderField === 'createdAt'
-            ? ((b as any).createdAt || b.publishedAt)
-            : b.publishedAt;
+        if (orderField === 'createdAt' || orderField === 'updatedAt' || orderField === 'publishedAt') {
+          const aDate = orderField === 'updatedAt'
+            ? (a.updatedAt || a.publishedAt)
+            : orderField === 'createdAt'
+              ? ((a as any).createdAt || a.publishedAt)
+              : a.publishedAt;
+          const bDate = orderField === 'updatedAt'
+            ? (b.updatedAt || b.publishedAt)
+            : orderField === 'createdAt'
+              ? ((b as any).createdAt || b.publishedAt)
+              : b.publishedAt;
           aTime = aDate instanceof Date ? aDate.getTime() : 0;
           bTime = bDate instanceof Date ? bDate.getTime() : 0;
         } else {
@@ -266,7 +270,7 @@ export const getArticlesServer = async (
 // 新着記事を取得（サーバーサイド用）
 export const getRecentArticlesServer = async (limitCount: number = 10, mediaId?: string): Promise<Article[]> => {
   return getArticlesServer({
-    orderBy: 'createdAt',
+    orderBy: 'updatedAt',
     orderDirection: 'desc',
     limit: limitCount,
     mediaId,
