@@ -296,6 +296,52 @@ export const getArticlesServer = async (
   }
 };
 
+// スライダー用記事を取得（sliderOrder が設定されている公開記事を昇順で取得）
+export const getSliderArticlesServer = async (mediaId?: string): Promise<Article[]> => {
+  try {
+    const cacheKey = generateCacheKey('sliderArticles', mediaId || 'all');
+    const cached = cacheManager.get<Article[]>(cacheKey, CACHE_TTL.MEDIUM);
+    if (cached) return cached;
+
+    const articlesRef = adminDb.collection('articles');
+    let q: admin.firestore.Query = articlesRef
+      .where('isPublished', '==', true);
+
+    if (mediaId) {
+      q = q.where('mediaId', '==', mediaId);
+    }
+
+    const snapshot = await q.get();
+    const now = new Date();
+
+    let articles = snapshot.docs
+      .filter(doc => {
+        const data = doc.data();
+        return typeof data.sliderOrder === 'number' && data.sliderOrder >= 1 && data.sliderOrder <= 10;
+      })
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          publishedAt: convertTimestamp(data.publishedAt),
+          updatedAt: convertTimestamp(data.updatedAt),
+          tableOfContents: Array.isArray(data.tableOfContents) ? data.tableOfContents : [],
+          relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
+          readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
+        } as Article;
+      })
+      .filter(article => !article.publishedAt || article.publishedAt <= now)
+      .sort((a, b) => (a.sliderOrder || 999) - (b.sliderOrder || 999));
+
+    cacheManager.set(cacheKey, articles);
+    return articles;
+  } catch (error) {
+    console.error('[getSliderArticlesServer] Error:', error);
+    return [];
+  }
+};
+
 // 新着記事を取得（サーバーサイド用）
 export const getRecentArticlesServer = async (limitCount: number = 10, mediaId?: string): Promise<Article[]> => {
   return getArticlesServer({

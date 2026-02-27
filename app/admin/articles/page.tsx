@@ -14,7 +14,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // ソート可能なカラム
-type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'publishedAt' | 'createdAt' | 'updatedAt';
+type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'sliderOrder' | 'publishedAt' | 'createdAt' | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
@@ -177,6 +177,31 @@ function ArticlesPageContent() {
     });
   };
 
+  const handleSliderOrderChange = (id: string, value: number | null) => {
+    const prev = articles.find(a => a.id === id)?.sliderOrder ?? null;
+    setArticles(articles => articles.map(a =>
+      a.id === id ? { ...a, sliderOrder: value ?? undefined } : a
+    ));
+
+    fetch(`/api/admin/articles/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sliderOrder: value }),
+    }).then(async (response) => {
+      if (!response.ok) {
+        setArticles(articles => articles.map(a =>
+          a.id === id ? { ...a, sliderOrder: prev ?? undefined } : a
+        ));
+        showError('スライダー設定の更新に失敗しました');
+      }
+    }).catch(() => {
+      setArticles(articles => articles.map(a =>
+        a.id === id ? { ...a, sliderOrder: prev ?? undefined } : a
+      ));
+      showError('スライダー設定の更新に失敗しました');
+    });
+  };
+
   // ソート切り替え
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -273,6 +298,11 @@ function ArticlesPageContent() {
           break;
         case 'isPublished':
           comparison = (a.isPublished ? 1 : 0) - (b.isPublished ? 1 : 0);
+          break;
+        case 'sliderOrder':
+          const soA = a.sliderOrder ?? 999;
+          const soB = b.sliderOrder ?? 999;
+          comparison = soA - soB;
           break;
         case 'publishedAt':
           const pubA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
@@ -527,7 +557,7 @@ function ArticlesPageContent() {
                     </th>
                     <th 
                       className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '6%' }}
+                      style={{ width: '5%' }}
                       onClick={() => handleSort('isPublished')}
                     >
                       <div className="flex items-center justify-center">
@@ -536,8 +566,18 @@ function ArticlesPageContent() {
                       </div>
                     </th>
                     <th 
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
+                      style={{ width: '7%' }}
+                      onClick={() => handleSort('sliderOrder')}
+                    >
+                      <div className="flex items-center justify-center">
+                        スライダー
+                        <SortIcon column="sliderOrder" />
+                      </div>
+                    </th>
+                    <th 
                       className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" 
-                      style={{ width: '11%' }}
+                      style={{ width: '10%' }}
                       onClick={() => handleSort('publishedAt')}
                     >
                       <div className="flex items-center">
@@ -687,8 +727,23 @@ function ArticlesPageContent() {
                           </label>
                         )}
                       </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                        <select
+                          value={article.sliderOrder ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleSliderOrderChange(article.id, val === '' ? null : parseInt(val, 10));
+                          }}
+                          className="px-1.5 py-1 rounded text-xs border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="">非表示</option>
+                          {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {article.publishedAt 
+                        {article.publishedAt
                           ? new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
                           : '-'
                         }

@@ -29,6 +29,7 @@ export interface Article {
   isPublished: boolean;
   isScheduled?: boolean;     // 予約公開待ち状態（true: 公開日が未来で公開待ち）
   isFeatured?: boolean;
+  sliderOrder?: number;
   viewCount: number;
   likeCount: number;
   // SEO（既存）
