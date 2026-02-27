@@ -1039,7 +1039,7 @@ export default function ThemePage() {
       type,
       isEnabled: true,
       order: currentItems.length,
-      ...(type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: 5 } : {}),
+      ...(type === 'recentArticles' || type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: 5 } : {}),
       ...(type === 'html' ? { title: '', htmlCode: '' } : {}),
     };
     setTheme(prev => ({
@@ -1076,6 +1076,7 @@ export default function ThemePage() {
 
   const getSideContentItemLabel = (type: SideContentItemType): string => {
     switch (type) {
+      case 'recentArticles': return '新着記事';
       case 'popularArticles': return '人気記事';
       case 'recommendedArticles': return 'おすすめ記事';
       case 'categories': return 'カテゴリー一覧';
@@ -1086,6 +1087,8 @@ export default function ThemePage() {
 
   const getSideContentItemIcon = (type: SideContentItemType): React.ReactNode => {
     switch (type) {
+      case 'recentArticles':
+        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
       case 'popularArticles':
         return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;
       case 'recommendedArticles':
@@ -1939,7 +1942,7 @@ export default function ThemePage() {
                         <p className="font-medium mb-1">サイドコンテンツ設定</p>
                         <ul className="list-disc list-inside space-y-1 text-blue-600">
                           <li>サイドバーに表示するコンテンツを設定できます</li>
-                          <li>人気記事、おすすめ記事、カテゴリー一覧、HTMLコードを追加できます</li>
+                          <li>新着記事、人気記事、おすすめ記事、カテゴリー一覧、HTMLコードを追加できます</li>
                           <li>項目の順番を変更して表示順を制御できます</li>
                         </ul>
                       </div>
@@ -1954,6 +1957,7 @@ export default function ThemePage() {
                         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                              item.type === 'recentArticles' ? 'bg-teal-100 text-teal-600' :
                               item.type === 'popularArticles' ? 'bg-orange-100 text-orange-600' :
                               item.type === 'recommendedArticles' ? 'bg-yellow-100 text-yellow-600' :
                               item.type === 'categories' ? 'bg-green-100 text-green-600' :
@@ -2010,8 +2014,8 @@ export default function ThemePage() {
 
                         {/* コンテンツ */}
                         <div className="p-6 space-y-4">
-                          {/* 人気記事・おすすめ記事の場合：表示件数 */}
-                          {(item.type === 'popularArticles' || item.type === 'recommendedArticles') && (
+                          {/* 新着記事・人気記事・おすすめ記事の場合：表示件数 */}
+                          {(item.type === 'recentArticles' || item.type === 'popularArticles' || item.type === 'recommendedArticles') && (
                             <div className="flex items-center gap-4">
                               <label className="text-sm font-medium text-gray-700">表示件数</label>
                               <select
@@ -2064,7 +2068,17 @@ export default function ThemePage() {
                   </div>
 
                   {/* 追加ボタン群 */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {!getSideContentItems().some(item => item.type === 'recentArticles') && (
+                      <button
+                        type="button"
+                        onClick={() => addSideContentItem('recentArticles')}
+                        className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-teal-400 hover:text-teal-600 hover:bg-teal-50 transition-all"
+                      >
+                        {getSideContentItemIcon('recentArticles')}
+                        <span className="text-sm font-medium">新着記事</span>
+                      </button>
+                    )}
                     {!getSideContentItems().some(item => item.type === 'popularArticles') && (
                       <button
                         type="button"

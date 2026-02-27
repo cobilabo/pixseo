@@ -10,7 +10,7 @@ import FirstView from '@/components/layout/FirstView';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
@@ -94,7 +94,7 @@ export default async function SearchPage({ params }: PageProps) {
   const mediaId = await getMediaIdFromHost();
   
   // サイト設定、Theme、カテゴリー、タグ、よく検索されているタグを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, recentArticles, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, fallbackArticles, recentArticles, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
@@ -103,6 +103,7 @@ export default async function SearchPage({ params }: PageProps) {
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
     getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
+    getRecentArticlesServer(10, mediaId || undefined),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
   ]);
 
@@ -119,11 +120,12 @@ export default async function SearchPage({ params }: PageProps) {
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedFallbackArticles = fallbackArticles.map(art => localizeArticle(art, lang));
   const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   // おすすめ記事（おすすめカテゴリーに属する記事、なければ最近の記事をフォールバック）
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
-    : localizedRecentArticles;
+    : localizedFallbackArticles;
 
   // スタイルとフッター情報を準備
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -214,6 +216,7 @@ export default async function SearchPage({ params }: PageProps) {
               <SidebarRenderer
                 sideContentItems={rawTheme.sideContentItems}
                 sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+                recentArticles={localizedRecentArticles}
                 popularArticles={localizedPopularArticles}
                 recommendedArticles={localizedRecommendedArticles}
                 categories={categoriesWithCount}

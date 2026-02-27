@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getTagServer } from '@/lib/firebase/cached';
 import { getArticlesServer } from '@/lib/firebase/articles-server';
-import { getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/cached';
 import { getTheme } from '@/lib/firebase/cached';
@@ -89,12 +89,13 @@ export default async function TagPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ tagId: rawTag.id, limit: 30 }),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
+    getRecentArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
@@ -109,6 +110,7 @@ export default async function TagPage({ params }: PageProps) {
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
     : localizedPopularArticles;
@@ -218,6 +220,7 @@ export default async function TagPage({ params }: PageProps) {
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              recentArticles={localizedRecentArticles}
               popularArticles={localizedPopularArticles}
               recommendedArticles={localizedRecommendedArticles}
               categories={categoriesWithCount}

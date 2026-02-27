@@ -13,6 +13,7 @@ import {
   getArticleServer as _getArticleServer,
   getPopularArticlesServer as _getPopularArticlesServer,
   getRecommendedArticlesServer as _getRecommendedArticlesServer,
+  getRecentArticlesServer as _getRecentArticlesServer,
   getWriterServer as _getWriterServer,
 } from './articles-server';
 import {
@@ -31,6 +32,7 @@ export const getTheme = cache((mediaId: string) => _getTheme(mediaId));
 export const getArticleServer = cache((slug: string, mediaId?: string) => _getArticleServer(slug, mediaId));
 export const getPopularArticlesServer = cache((limitCount: number, mediaId?: string) => _getPopularArticlesServer(limitCount, mediaId));
 export const getRecommendedArticlesServer = cache((limitCount: number, mediaId?: string) => _getRecommendedArticlesServer(limitCount, mediaId));
+export const getRecentArticlesServer = cache((limitCount: number, mediaId?: string) => _getRecentArticlesServer(limitCount, mediaId));
 export const getWriterServer = cache((writerId: string) => _getWriterServer(writerId));
 export const getCategoryServer = cache((slug: string, mediaId?: string) => _getCategoryServer(slug, mediaId));
 export const getTagServer = cache((slug: string, mediaId?: string) => _getTagServer(slug, mediaId));

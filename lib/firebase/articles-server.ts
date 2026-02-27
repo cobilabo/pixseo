@@ -891,6 +891,13 @@ export const getRecommendedArticlesServer = async (
       // プレビューモードでない場合のみ公開日チェック
       .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
+    // 更新日順でソート（updatedAt がない場合は publishedAt をフォールバック）
+    articles.sort((a, b) => {
+      const aTime = (a.updatedAt || a.publishedAt)?.getTime() || 0;
+      const bTime = (b.updatedAt || b.publishedAt)?.getTime() || 0;
+      return bTime - aTime;
+    });
+    
     // limit適用
     articles = articles.slice(0, limitCount);
     

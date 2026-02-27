@@ -192,7 +192,8 @@ export interface SearchSettings {
 
 // サイドコンテンツ項目タイプの定義
 export type SideContentItemType = 
-  | 'popularArticles'    // 人気記事
+  | 'recentArticles'      // 新着記事
+  | 'popularArticles'     // 人気記事
   | 'recommendedArticles' // おすすめ記事
   | 'categories'          // カテゴリー一覧
   | 'html';               // HTMLコード

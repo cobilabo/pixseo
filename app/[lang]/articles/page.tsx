@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getArticlesServer, getArticlesCountServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
@@ -94,13 +94,14 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
   const offset = (currentPage - 1) * articlesPerPage;
   
   // サイト設定、Theme、記事、総記事数、カテゴリー、タグ、人気タグを並列取得
-  const [rawSiteInfo, rawTheme, articles, totalArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, totalArticles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: articlesPerPage, offset, mediaId: mediaId || undefined }),
     getArticlesCountServer(mediaId || undefined),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
+    getRecentArticlesServer(10, mediaId || undefined),
     getCategoriesServer(),
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
@@ -118,6 +119,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   // おすすめ記事（おすすめカテゴリーに属する記事、なければ人気記事をフォールバック）
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
@@ -306,6 +308,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              recentArticles={localizedRecentArticles}
               popularArticles={localizedPopularArticles}
               recommendedArticles={localizedRecommendedArticles}
               categories={categoriesWithCount}

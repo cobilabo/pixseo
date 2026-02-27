@@ -3,8 +3,7 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getRecentArticlesServer } from '@/lib/firebase/articles-server';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
@@ -354,6 +353,7 @@ export default async function HomePage({ params }: PageProps) {
                   <SidebarRenderer
                     sideContentItems={rawTheme.sideContentItems}
                     sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+                    recentArticles={localizedRecentArticles}
                     popularArticles={localizedPopularArticles}
                     recommendedArticles={localizedRecommendedArticles}
                     categories={categoriesWithCount}
@@ -556,6 +556,7 @@ export default async function HomePage({ params }: PageProps) {
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              recentArticles={localizedRecentArticles}
               popularArticles={localizedPopularArticles}
               recommendedArticles={localizedRecommendedArticles}
               categories={rawTheme.layoutTheme === 'furatto' ? [] : categoriesWithCount}

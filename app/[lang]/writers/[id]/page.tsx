@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getWriterServer, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getWriterServer, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getArticlesByWriterServer } from '@/lib/firebase/articles-server';
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
@@ -85,7 +85,7 @@ export default async function WriterPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles, recentArticles, allTags, popularSearchTags] = await Promise.all([
     mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
     getArticlesByWriterServer(params.id, mediaId || undefined),
@@ -93,6 +93,7 @@ export default async function WriterPage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getPopularArticlesServer(10, mediaId || undefined),
     getRecommendedArticlesServer(10, mediaId || undefined),
+    getRecentArticlesServer(10, mediaId || undefined),
     getTagsServer(),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
   ]);
@@ -105,6 +106,7 @@ export default async function WriterPage({ params }: PageProps) {
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
   const localizedArticles = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
     : localizedPopularArticles;
@@ -198,6 +200,7 @@ export default async function WriterPage({ params }: PageProps) {
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              recentArticles={localizedRecentArticles}
               popularArticles={localizedPopularArticles}
               recommendedArticles={localizedRecommendedArticles}
               categories={categoriesWithCount}

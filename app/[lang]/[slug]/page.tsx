@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
@@ -139,17 +139,20 @@ export default async function FixedPage({ params }: PageProps) {
   // サイドバー表示時のみ記事データを取得
   let popularArticles: any[] = [];
   let recommendedArticles: any[] = [];
+  let recentArticles: any[] = [];
   let allCategoriesWithCount: any[] = [];
   if (showSidebar) {
-    [popularArticles, recommendedArticles, allCategoriesWithCount] = await Promise.all([
+    [popularArticles, recommendedArticles, recentArticles, allCategoriesWithCount] = await Promise.all([
       getPopularArticlesServer(5, mediaId),
       getRecommendedArticlesServer(5, mediaId),
+      getRecentArticlesServer(10, mediaId),
       getCategoriesWithCountServer({ mediaId }),
     ]);
   }
   
   // ローカライズ
   const localizedPopularArticles = popularArticles.map(article => localizeArticle(article, lang));
+  const localizedRecentArticles = recentArticles.map(article => localizeArticle(article, lang));
   // おすすめ記事（なければ人気記事をフォールバック）
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(article => localizeArticle(article, lang))
@@ -323,6 +326,7 @@ export default async function FixedPage({ params }: PageProps) {
                 <SidebarRenderer
                   sideContentItems={rawTheme.sideContentItems}
                   sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+                  recentArticles={localizedRecentArticles}
                   popularArticles={localizedPopularArticles}
                   recommendedArticles={localizedRecommendedArticles}
                   categories={categoriesWithCount}

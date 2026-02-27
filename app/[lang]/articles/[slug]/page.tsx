@@ -11,7 +11,7 @@ import {
 import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getMediaIdFromHost, getArticleServer, getSiteInfo, getTheme, getPopularArticlesServer, getWriterServer } from '@/lib/firebase/cached';
+import { getMediaIdFromHost, getArticleServer, getSiteInfo, getTheme, getPopularArticlesServer, getRecentArticlesServer, getWriterServer } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -204,7 +204,7 @@ export default async function ArticlePage({ params }: PageProps) {
   const theme = localizeTheme(rawTheme, lang);
 
   // Step 3: 記事に依存するデータ + サイドバーデータを全て並列取得
-  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, popularSearchTags] = await Promise.all([
+  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, rawRecentArticles, popularSearchTags] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
     rawArticle.writerId ? getWriterServer(rawArticle.writerId).catch(() => null) : Promise.resolve(null),
@@ -214,6 +214,7 @@ export default async function ArticlePage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }).catch(() => []),
     getAllTagsServer().catch(() => []),
     getPopularArticlesServer(10, mediaId || undefined).catch(() => []),
+    getRecentArticlesServer(10, mediaId || undefined).catch(() => []),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20).catch(() => []) : Promise.resolve([]),
   ]);
   
@@ -222,6 +223,7 @@ export default async function ArticlePage({ params }: PageProps) {
   const writer = rawWriter ? localizeWriter(rawWriter, lang) : null;
   const relatedArticles = rawRelatedArticles.map(art => localizeArticle(art, lang));
   const popularArticles = rawPopularArticles.map(art => localizeArticle(art, lang));
+  const localizedRecentArticles = rawRecentArticles.map(art => localizeArticle(art, lang));
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
@@ -496,6 +498,7 @@ export default async function ArticlePage({ params }: PageProps) {
             <SidebarRenderer
               sideContentItems={rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
+              recentArticles={localizedRecentArticles}
               popularArticles={popularArticles}
               recommendedArticles={relatedArticles}
               categories={categoriesWithCount}

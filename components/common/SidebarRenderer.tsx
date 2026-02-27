@@ -1,6 +1,7 @@
 import { SideContentItem, SideContentHtmlItem } from '@/types/theme';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
+import RecentArticles from './RecentArticles';
 import PopularArticles from './PopularArticles';
 import RecommendedArticles from './RecommendedArticles';
 import SidebarCategories from './SidebarCategories';
@@ -14,6 +15,7 @@ interface SidebarRendererProps {
   sideContentItems?: SideContentItem[];
   // 後方互換性のため
   sideContentHtmlItems?: SideContentHtmlItem[];
+  recentArticles?: Article[];
   popularArticles: Article[];
   recommendedArticles: Article[];
   categories: CategoryWithCount[];
@@ -31,6 +33,7 @@ const getDefaultSideContentItems = (): SideContentItem[] => {
 export default function SidebarRenderer({
   sideContentItems,
   sideContentHtmlItems,
+  recentArticles = [],
   popularArticles,
   recommendedArticles,
   categories,
@@ -87,6 +90,17 @@ export default function SidebarRenderer({
     <>
       {enabledItems.map((item) => {
         switch (item.type) {
+          case 'recentArticles':
+            const limitedRecent = recentArticles.slice(0, item.displayCount || 5);
+            if (limitedRecent.length === 0) return null;
+            return (
+              <RecentArticles
+                key={item.id}
+                articles={limitedRecent}
+                categories={categories}
+                lang={lang}
+              />
+            );
           case 'popularArticles':
             const limitedPopular = popularArticles.slice(0, item.displayCount || 5);
             if (limitedPopular.length === 0) return null;
