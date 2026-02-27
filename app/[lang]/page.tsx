@@ -22,7 +22,8 @@ import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
-import BlockRenderer from '@/components/blocks/BlockRenderer';
+import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks } from '@/components/blocks/BlockRenderer';
+import SliderBlock from '@/components/blocks/SliderBlock';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag, localizePage } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -244,6 +245,10 @@ export default async function HomePage({ params }: PageProps) {
       );
     }
 
+    const homeBlocks = rawHomePage.blocks || [];
+    const homeHasFullWidthSlider = rawHomePage.useBlockBuilder && hasFullWidthSlider(homeBlocks);
+    const homeFullWidthSliders = homeHasFullWidthSlider ? getFullWidthSliderBlocks(homeBlocks) : [];
+
     // メインコンテンツのレンダリング
     const renderMainContent = () => (
       <article 
@@ -258,7 +263,7 @@ export default async function HomePage({ params }: PageProps) {
         
         {/* ブロックビルダー使用時はBlockRendererで表示 */}
         {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} />
+          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} excludeFullWidthSliders />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -304,9 +309,16 @@ export default async function HomePage({ params }: PageProps) {
           />
         )}
 
+        {/* fullWidthTop スライダー（ヘッダー直下・横幅いっぱい） */}
+        {homeFullWidthSliders.map(block => (
+          <div key={block.id} className="relative" style={{ zIndex: 10 }}>
+            <SliderBlock block={block} lang={lang} />
+          </div>
+        ))}
+
         {/* メインコンテンツエリア */}
         <div 
-          className={`relative ${showGlobalNav ? '-mt-24 pt-16 md:pt-32' : ''}`}
+          className={`relative ${showGlobalNav && !homeHasFullWidthSlider ? '-mt-24 pt-16 md:pt-32' : ''}`}
           style={{ 
             backgroundColor: rawHomePage.backgroundColor || rawTheme.backgroundColor, 
             zIndex: 10 

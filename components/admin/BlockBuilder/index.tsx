@@ -266,7 +266,10 @@ function getDefaultConfig(type: BlockType): any {
         displayCount: 4,
       };
     case 'slider':
-      return {};
+      return {
+        fullWidthTop: false,
+        columnCount: 3,
+      };
     case 'custom':
       return {
         customBlockId: '',

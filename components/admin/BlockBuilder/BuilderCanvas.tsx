@@ -195,7 +195,10 @@ function BlockPreview({ block }: { block: Block }) {
         return <span>{articleConfig.articleTitle || '未選択'} ({displayType})</span>;
       }
     case 'slider':
-      return <span>スライダー設定済み記事を表示</span>;
+      const sliderCfg = block.config as any;
+      const cols = sliderCfg.columnCount ?? 3;
+      const fwt = sliderCfg.fullWidthTop ? '・トップ横幅' : '';
+      return <span>スライダー ({cols}カラム{fwt})</span>;
     case 'html':
       return <span>カスタムHTML</span>;
     case 'spacer':

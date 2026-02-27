@@ -15,7 +15,8 @@ import CategoryBar from '@/components/layout/CategoryBar';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import BlockRenderer from '@/components/blocks/BlockRenderer';
+import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks } from '@/components/blocks/BlockRenderer';
+import SliderBlock from '@/components/blocks/SliderBlock';
 import SearchWidget from '@/components/search/SearchWidget';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
@@ -223,6 +224,10 @@ export default async function FixedPage({ params }: PageProps) {
     );
   }
 
+  const pageBlocks = rawPage.blocks || [];
+  const pageHasFullWidthSlider = rawPage.useBlockBuilder && hasFullWidthSlider(pageBlocks);
+  const pageFullWidthSliders = pageHasFullWidthSlider ? getFullWidthSliderBlocks(pageBlocks) : [];
+
   // メインコンテンツのレンダリング
   const renderMainContent = () => (
     <article 
@@ -237,7 +242,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} />
+        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders />
       ) : (
         <div 
           className="prose prose-lg max-w-none"
@@ -277,9 +282,16 @@ export default async function FixedPage({ params }: PageProps) {
         />
       )}
 
+      {/* fullWidthTop スライダー（ヘッダー直下・横幅いっぱい） */}
+      {pageFullWidthSliders.map(block => (
+        <div key={block.id} className="relative" style={{ zIndex: 10 }}>
+          <SliderBlock block={block} lang={lang} />
+        </div>
+      ))}
+
       {/* メインコンテンツエリア */}
       <div 
-        className={`relative ${showGlobalNav ? '-mt-24 pt-16 md:pt-32' : ''}`}
+        className={`relative ${showGlobalNav && !pageHasFullWidthSlider ? '-mt-24 pt-16 md:pt-32' : ''}`}
         style={{ 
           backgroundColor: rawPage.backgroundColor || rawTheme.backgroundColor, 
           zIndex: 10 

@@ -5,13 +5,14 @@
  * 選択されたブロックの設定を編集
  */
 
-import { Block } from '@/types/block';
+import { Block, SliderBlockConfig } from '@/types/block';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
 import SpacerBlockSettings from './settings/SpacerBlockSettings';
 import SpacingSettings from './settings/SpacingSettings';
 import ContentBlockSettings from './settings/ContentBlockSettings';
 import ArticleBlockSettings from './settings/ArticleBlockSettings';
+import CustomCheckbox from '@/components/admin/CustomCheckbox';
 
 interface BlockSettingsProps {
   block: Block;
@@ -50,18 +51,50 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         {block.type === 'article' && (
           <ArticleBlockSettings block={block} onUpdate={onUpdate} />
         )}
-        {block.type === 'slider' && (
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <p className="text-sm text-gray-700">
-                記事一覧ページの「スライダー」列で 1〜10 の数字を設定した記事がスライドで表示されます。
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                数字の小さい順に表示されます。
-              </p>
+        {block.type === 'slider' && (() => {
+          const sliderConfig = block.config as SliderBlockConfig;
+          return (
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <p className="text-sm text-gray-700">
+                  記事一覧ページの「スライダー」列で 1〜10 の数字を設定した記事がスライドで表示されます。
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  数字の小さい順に表示されます。
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  表示カラム数
+                </label>
+                <select
+                  value={sliderConfig.columnCount ?? 3}
+                  onChange={(e) => onUpdate({ config: { ...sliderConfig, columnCount: parseInt(e.target.value, 10) } })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <option key={n} value={n}>{n}カラム</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  1画面に表示する記事数です。記事数が少ない場合は自動調整されます。
+                </p>
+              </div>
+
+              <CustomCheckbox
+                label="ページトップに横幅いっぱいで表示"
+                checked={sliderConfig.fullWidthTop ?? false}
+                onChange={(checked) => onUpdate({ config: { ...sliderConfig, fullWidthTop: checked } })}
+              />
+              {sliderConfig.fullWidthTop && (
+                <p className="text-xs text-gray-500 -mt-2 ml-7">
+                  ヘッダー直下に、サイドバーの有無に関わらず横幅いっぱいで表示されます。
+                </p>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
         
         {/* 共通の余白設定（空白ブロック以外） */}
         {block.type !== 'spacer' && (

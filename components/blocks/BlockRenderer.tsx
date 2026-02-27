@@ -3,7 +3,7 @@
  * メインアプリ（フロントエンド）で使用
  */
 
-import { Block } from '@/types/block';
+import { Block, SliderBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
@@ -19,18 +19,30 @@ interface BlockRendererProps {
   isMobile?: boolean;
   showPanel?: boolean;
   lang?: Lang;
+  excludeFullWidthSliders?: boolean;
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang }: BlockRendererProps) {
-  // 表示するブロックをフィルタリング
+export function hasFullWidthSlider(blocks: Block[]): boolean {
+  return blocks.some(
+    block => block.type === 'slider' && (block.config as SliderBlockConfig).fullWidthTop
+  );
+}
+
+export function getFullWidthSliderBlocks(blocks: Block[]): Block[] {
+  return blocks
+    .filter(block => block.type === 'slider' && (block.config as SliderBlockConfig).fullWidthTop)
+    .sort((a, b) => a.order - b.order);
+}
+
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
       if (!isMobile && block.showOnDesktop === false) return false;
+      if (excludeFullWidthSliders && block.type === 'slider' && (block.config as SliderBlockConfig).fullWidthTop) return false;
       return true;
     })
     .sort((a, b) => {
-      // モバイル時は mobileOrder を優先
       if (isMobile && a.mobileOrder !== undefined && b.mobileOrder !== undefined) {
         return a.mobileOrder - b.mobileOrder;
       }
@@ -40,7 +52,6 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
   return (
     <div>
       {visibleBlocks.map((block) => {
-        // padding設定を適用
         const paddingStyle: React.CSSProperties = {};
         if (block.spacing?.paddingTop !== undefined) {
           paddingStyle.paddingTop = `${block.spacing.paddingTop}px`;
