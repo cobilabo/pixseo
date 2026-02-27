@@ -13,6 +13,8 @@ interface SliderBlockProps {
 export default function SliderBlock({ block, lang = 'ja' as Lang }: SliderBlockProps) {
   const config = block.config as SliderBlockConfig;
   const columnCount = config.columnCount ?? 3;
+  const autoplay = config.autoplay ?? true;
+  const autoplayInterval = config.autoplayInterval ?? 5;
 
   const [articles, setArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,5 +57,5 @@ export default function SliderBlock({ block, lang = 'ja' as Lang }: SliderBlockP
 
   if (articles.length === 0) return null;
 
-  return <TopSlider articles={articles} lang={lang} columnCount={columnCount} />;
+  return <TopSlider articles={articles} lang={lang} columnCount={columnCount} autoplay={autoplay} autoplayInterval={autoplayInterval} />;
 }

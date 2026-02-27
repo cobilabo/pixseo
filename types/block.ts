@@ -141,8 +141,10 @@ export interface ArticleBlockConfig {
 
 // スライダーブロックの設定（sliderOrder が設定された記事を表示）
 export interface SliderBlockConfig {
-  fullWidthTop?: boolean;   // ページトップに横幅いっぱいで表示
-  columnCount?: number;     // 1画面に表示するカラム数（1〜5、デフォルト3）
+  fullWidthTop?: boolean;       // ページトップに横幅いっぱいで表示
+  columnCount?: number;         // 1画面に表示するカラム数（1〜5、デフォルト3）
+  autoplay?: boolean;           // 自動スライド（デフォルト true）
+  autoplayInterval?: number;    // 自動スライド間隔（秒、デフォルト5）
 }
 
 // 行レイアウトのカラム設定

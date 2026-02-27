@@ -269,6 +269,8 @@ function getDefaultConfig(type: BlockType): any {
       return {
         fullWidthTop: false,
         columnCount: 3,
+        autoplay: true,
+        autoplayInterval: 5,
       };
     case 'custom':
       return {

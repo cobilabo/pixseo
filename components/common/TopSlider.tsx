@@ -20,9 +20,9 @@ interface TopSliderProps {
   articles: SliderArticle[];
   lang: Lang;
   columnCount?: number;
+  autoplay?: boolean;
+  autoplayInterval?: number;
 }
-
-const AUTOPLAY_INTERVAL = 5000;
 
 function useResponsiveColumns(baseColumns: number) {
   const [cols, setCols] = useState(baseColumns);
@@ -42,11 +42,12 @@ function useResponsiveColumns(baseColumns: number) {
   return cols;
 }
 
-export default function TopSlider({ articles, lang, columnCount = 3 }: TopSliderProps) {
+export default function TopSlider({ articles, lang, columnCount = 3, autoplay = true, autoplayInterval = 5 }: TopSliderProps) {
   const total = articles.length;
   const responsiveCols = useResponsiveColumns(columnCount);
   const effectiveCols = Math.min(responsiveCols, total);
   const maxPage = Math.max(0, total - effectiveCols);
+  const canNavigate = maxPage > 0;
 
   const [currentPage, setCurrentPage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -70,10 +71,11 @@ export default function TopSlider({ articles, lang, columnCount = 3 }: TopSlider
   }, [maxPage]);
 
   useEffect(() => {
-    if (maxPage <= 0 || isHovered) return;
-    timerRef.current = setInterval(next, AUTOPLAY_INTERVAL);
+    if (!canNavigate || !autoplay || isHovered) return;
+    const ms = autoplayInterval * 1000;
+    timerRef.current = setInterval(next, ms);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [next, maxPage, isHovered]);
+  }, [next, canNavigate, autoplay, autoplayInterval, isHovered]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -105,7 +107,7 @@ export default function TopSlider({ articles, lang, columnCount = 3 }: TopSlider
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden mx-auto max-w-7xl px-10 sm:px-12 lg:px-14">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{
@@ -165,45 +167,47 @@ export default function TopSlider({ articles, lang, columnCount = 3 }: TopSlider
         </div>
       </div>
 
-      {maxPage > 0 && (
+      {/* 左右矢印 */}
+      {canNavigate && (
         <>
           <button
             onClick={(e) => { e.preventDefault(); prev(); }}
-            className="absolute left-1 md:left-2 top-[calc(50%-2rem)] -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
+            className="absolute left-2 md:left-3 top-1/3 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
             aria-label="前へ"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
           <button
             onClick={(e) => { e.preventDefault(); next(); }}
-            className="absolute right-1 md:right-2 top-[calc(50%-2rem)] -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
+            className="absolute right-2 md:right-3 top-1/3 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center"
             aria-label="次へ"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-
-          {dotCount <= 10 && (
-            <div className="flex justify-center gap-1.5 mt-4">
-              {Array.from({ length: dotCount }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => { e.preventDefault(); goTo(index); }}
-                  className={`rounded-full transition-all ${
-                    index === currentPage
-                      ? 'w-6 h-2 bg-gray-800'
-                      : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  aria-label={`スライド ${index + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </>
+      )}
+
+      {/* ドットインジケーター */}
+      {canNavigate && dotCount <= 15 && (
+        <div className="flex justify-center gap-1.5 mt-4">
+          {Array.from({ length: dotCount }).map((_, index) => (
+            <button
+              key={index}
+              onClick={(e) => { e.preventDefault(); goTo(index); }}
+              className={`rounded-full transition-all ${
+                index === currentPage
+                  ? 'w-6 h-2 bg-gray-800'
+                  : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`スライド ${index + 1}`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
