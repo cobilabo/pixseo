@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     
     let articles;
     let categoryName: string | undefined;
+    let categoryNameEn: string | undefined;
 
     if (categoryId) {
       const [articleResults, category] = await Promise.all([
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
       articles = articleResults;
       if (category) {
         categoryName = (category as any)[`name_${lang}`] || category.name;
+        categoryNameEn = (category as any).name_en || category.name;
       }
     } else if (type === 'popular') {
       articles = await getPopularArticlesServer(limit, mediaId || undefined);
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       articles: responseArticles,
       ...(categoryName ? { categoryName } : {}),
+      ...(categoryNameEn ? { categoryNameEn } : {}),
     });
   } catch (error) {
     console.error('[Articles List API] Error:', error);
