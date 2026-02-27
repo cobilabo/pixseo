@@ -101,6 +101,7 @@ export function localizeCategory(category: any, lang: Lang) {
     featuredImage: category.featuredImage,
     featuredImageAlt: category.featuredImageAlt,
     isRecommended: category.isRecommended,
+    isHiddenFromLists: category.isHiddenFromLists,
     displayOrder: category.displayOrder,
     mediaId: category.mediaId,
   };
