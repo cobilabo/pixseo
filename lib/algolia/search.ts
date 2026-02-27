@@ -56,10 +56,11 @@ export async function searchArticlesWithAlgolia(
     const result = await searchClient.searchSingleIndex({
       indexName,
       searchParams: {
-        query: keyword || '',  // タグ/カテゴリー検索時はキーワードは空でもOK
+        query: keyword || '',
         page,
         hitsPerPage,
         filters,
+        ...(keyword ? { restrictSearchableAttributes: ['title'] } : {}),
       },
     });
 
