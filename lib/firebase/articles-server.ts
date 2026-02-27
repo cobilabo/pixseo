@@ -146,7 +146,7 @@ export const getArticlesServer = async (
     
     const limitCount = options.limit || 30;
     const offsetCount = options.offset || 0;
-    const orderField = options.orderBy || 'createdAt';
+    const orderField = options.orderBy || 'publishedAt';
     const orderDir = options.orderDirection || 'desc';
     
     // Firestoreから取得
@@ -170,14 +170,15 @@ export const getArticlesServer = async (
       q = q.where('tagIds', 'array-contains', options.tagId);
     }
     
-    // インデックスを使用したクエリを試行、失敗時はフォールバック
+    // Firestoreクエリは publishedAt でソート（createdAt はフィールド欠損があるため）
+    const firestoreOrderField = (orderField === 'createdAt') ? 'publishedAt' : orderField;
+    
     let snapshot;
     let useIndexSort = false;
     
     if (!options.categoryId && !options.tagId) {
-      // カテゴリー・タグフィルターがない場合はFirestoreでソートを試行
       try {
-        let indexedQuery = q.orderBy(orderField, orderDir);
+        let indexedQuery = q.orderBy(firestoreOrderField, orderDir);
         if (offsetCount > 0) {
           indexedQuery = indexedQuery.offset(offsetCount);
         }
@@ -185,7 +186,6 @@ export const getArticlesServer = async (
         snapshot = await indexedQuery.get();
         useIndexSort = true;
       } catch (indexError) {
-        // インデックスがない場合はフォールバック
         console.warn('[getArticlesServer] Index not available, using fallback:', indexError);
         snapshot = await q.get();
       }
@@ -210,34 +210,43 @@ export const getArticlesServer = async (
         relatedArticleIds = [];
       }
       
+      const createdAt = data.createdAt ? convertTimestamp(data.createdAt) : null;
+      const publishedAt = convertTimestamp(data.publishedAt);
+
       return {
         id: doc.id,
         ...data,
-        publishedAt: convertTimestamp(data.publishedAt),
+        createdAt: createdAt || publishedAt,
+        publishedAt,
         updatedAt: convertTimestamp(data.updatedAt),
         tableOfContents,
         relatedArticleIds,
         readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
       } as Article;
     })
-    // プレビューモードでない場合のみ、公開日が現在日時以下の記事に絞る
     .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
-    // インデックスソートを使用しなかった場合、またはカテゴリー・タグフィルターがある場合はJavaScriptでソート
-    if (!useIndexSort || options.categoryId || options.tagId) {
+    // createdAt 指定時、またはインデックスソート未使用時はJavaScriptでソート
+    const needsResort = orderField === 'createdAt' || !useIndexSort || options.categoryId || options.tagId;
+    if (needsResort) {
       articles.sort((a, b) => {
-        const aValue = a[orderField] || 0;
-        const bValue = b[orderField] || 0;
+        let aTime: number, bTime: number;
         
-        if (orderField === 'publishedAt') {
-          const aTime = (aValue as Date).getTime();
-          const bTime = (bValue as Date).getTime();
-          return orderDir === 'desc' ? bTime - aTime : aTime - bTime;
+        if (orderField === 'createdAt' || orderField === 'publishedAt') {
+          const aDate = orderField === 'createdAt'
+            ? ((a as any).createdAt || a.publishedAt)
+            : a.publishedAt;
+          const bDate = orderField === 'createdAt'
+            ? ((b as any).createdAt || b.publishedAt)
+            : b.publishedAt;
+          aTime = aDate instanceof Date ? aDate.getTime() : 0;
+          bTime = bDate instanceof Date ? bDate.getTime() : 0;
         } else {
-          return orderDir === 'desc' 
-            ? (bValue as number) - (aValue as number)
-            : (aValue as number) - (bValue as number);
+          aTime = (a[orderField] as number) || 0;
+          bTime = (b[orderField] as number) || 0;
         }
+        
+        return orderDir === 'desc' ? bTime - aTime : aTime - bTime;
       });
     }
     
