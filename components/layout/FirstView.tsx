@@ -37,12 +37,13 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
       )}
 
       {/* テキストコンテンツ（通常スクロール） */}
-      <div className="relative w-full h-[700px] -mb-40" style={{ zIndex: 1 }}>
-        <div className="flex flex-col items-center justify-center text-white px-4 h-full" style={{ paddingTop: '40px' }}>
+      {/* 背景画像がない場合（ライターページ等）はコンパクト表示・黒文字 */}
+      <div className={`relative w-full ${settings.imageUrl ? 'h-[700px] -mb-40' : 'py-8'}`} style={{ zIndex: 1 }}>
+        <div className={`flex flex-col items-center justify-center px-4 ${settings.imageUrl ? 'text-white h-full' : 'text-gray-900'}`} style={settings.imageUrl ? { paddingTop: '40px' } : undefined}>
           {showCustomContent ? (
             <>
               {writerIcon && (
-                <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-lg mb-8">
+                <div className={`relative w-48 h-48 rounded-full overflow-hidden border-4 shadow-lg mb-4 ${settings.imageUrl ? 'border-white' : 'border-gray-200'}`}>
                   <Image
                     src={writerIcon}
                     alt="Writer Icon"
@@ -53,7 +54,7 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
               )}
               {customTitle && (
                 <h1 
-                  className="font-bold text-center mb-4 drop-shadow-lg"
+                  className={`font-bold text-center mb-2 ${settings.imageUrl ? 'drop-shadow-lg' : ''}`}
                   style={{ fontSize: writerIcon ? undefined : '1.5em' }}
                 >
                   {writerIcon ? (
@@ -65,11 +66,11 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
               )}
               {customMeta && (
                 typeof customMeta === 'string' ? (
-                  <p className="text-sm text-gray-200 drop-shadow-md">
+                  <p className={`text-sm ${settings.imageUrl ? 'text-gray-200 drop-shadow-md' : 'text-gray-600'}`}>
                     {customMeta}
                   </p>
                 ) : (
-                  <div className="flex flex-col md:flex-row md:gap-2 text-sm text-gray-200 drop-shadow-md text-center md:text-left">
+                  <div className={`flex flex-col md:flex-row md:gap-2 text-sm text-center md:text-left ${settings.imageUrl ? 'text-gray-200 drop-shadow-md' : 'text-gray-600'}`}>
                     {customMeta.published && <span>{customMeta.published}</span>}
                     {customMeta.updated && <span className="hidden md:inline">•</span>}
                     {customMeta.updated && <span>{customMeta.updated}</span>}
@@ -81,7 +82,7 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
                 )
               )}
               {customSubtitle && !customMeta && (
-                <p className="text-xs text-gray-200 uppercase tracking-wider drop-shadow-md">
+                <p className={`text-xs uppercase tracking-wider ${settings.imageUrl ? 'text-gray-200 drop-shadow-md' : 'text-gray-500'}`}>
                   {customSubtitle}
                 </p>
               )}
