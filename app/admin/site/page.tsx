@@ -15,6 +15,7 @@ interface SiteSettings {
   logoLandscape: string;
   logoSquare: string;
   logoPortrait: string;
+  logoLinkPath: string;
   allowIndexing: boolean;
 }
 
@@ -31,6 +32,7 @@ export default function SitePage() {
     logoLandscape: '',
     logoSquare: '',
     logoPortrait: '',
+    logoLinkPath: '',
     allowIndexing: false,
   });
 
@@ -59,6 +61,7 @@ export default function SitePage() {
           logoLandscape: data.logoLandscape || '',
           logoSquare: data.logoSquare || '',
           logoPortrait: data.logoPortrait || '',
+          logoLinkPath: data.logoLinkPath || '',
           allowIndexing: data.allowIndexing || false,
         };
         
@@ -102,6 +105,7 @@ export default function SitePage() {
           logoLandscape: formData.logoLandscape,
           logoSquare: formData.logoSquare,
           logoPortrait: formData.logoPortrait,
+          logoLinkPath: formData.logoLinkPath,
           allowIndexing: formData.allowIndexing,
         }),
       });
@@ -172,6 +176,14 @@ export default function SitePage() {
                 onChange={(value) => setFormData({ ...formData, siteDescription: value })}
                 multiline
                 rows={3}
+              />
+
+              {/* ロゴリンク先 */}
+              <FloatingInput
+                label="ロゴリンク先パス（例: /media/ ）"
+                value={formData.logoLinkPath}
+                onChange={(value) => setFormData({ ...formData, logoLinkPath: value })}
+                placeholder="未設定の場合はトップページ"
               />
             </div>
           </form>

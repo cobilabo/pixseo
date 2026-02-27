@@ -44,6 +44,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       logoLandscape,
       logoSquare,
       logoPortrait,
+      logoLinkPath,
       allowIndexing,
       theme,
       previewAuth,
@@ -98,6 +99,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (logoLandscape !== undefined) updateData.logoLandscape = logoLandscape;
     if (logoSquare !== undefined) updateData.logoSquare = logoSquare;
     if (logoPortrait !== undefined) updateData.logoPortrait = logoPortrait;
+    if (logoLinkPath !== undefined) updateData.logoLinkPath = logoLinkPath;
     if (allowIndexing !== undefined) updateData.allowIndexing = allowIndexing;
     if (theme !== undefined) updateData.theme = theme;
     if (previewAuth !== undefined) updateData.previewAuth = previewAuth;

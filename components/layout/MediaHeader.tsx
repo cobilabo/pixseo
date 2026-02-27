@@ -93,9 +93,10 @@ export default function MediaHeader({
 
   const globalNavItems = menuSettings.globalNavItems || [];
   const isFuratto = layoutTheme === 'furatto';
+  const logoHref = siteInfo?.logoLinkPath ? `/${lang}${siteInfo.logoLinkPath}` : `/${lang}`;
 
   const logoElement = (
-    <Link href={`/${lang}`} className="flex items-center flex-shrink-0">
+    <Link href={logoHref} className="flex items-center flex-shrink-0">
       <div className="flex items-center gap-3">
         {siteInfo?.faviconUrl && (
           <Image
@@ -128,7 +129,7 @@ export default function MediaHeader({
   );
 
   const furattoLogoElement = (
-    <Link href={`/${lang}`} className="furatto-logo-link flex items-center flex-shrink-0">
+    <Link href={logoHref} className="furatto-logo-link flex items-center flex-shrink-0">
       <Image
         src={FURATTO_LOGO_URL}
         alt={siteName}

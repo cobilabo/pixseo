@@ -124,14 +124,14 @@ export async function getMediaIdFromHost(): Promise<string | null> {
 
 export interface SiteInfo {
   allowIndexing: boolean;
-  isPreview: boolean;           // プレビューモードかどうか
-  // 後方互換性のため既存フィールドを保持
+  isPreview: boolean;
   name: string;
   description?: string;
   faviconUrl?: string;
   logoUrl?: string;
   symbolUrl?: string;
   ogImageUrl?: string;
+  logoLinkPath?: string;
   // 多言語フィールド
   name_ja?: string;
   name_en?: string;
@@ -192,6 +192,7 @@ export async function getSiteInfo(mediaId: string): Promise<SiteInfo> {
       logoUrl: data?.logoLandscape || undefined,
       symbolUrl: data?.logoSquare || undefined,
       ogImageUrl: data?.ogImage || undefined,
+      logoLinkPath: data?.logoLinkPath || undefined,
       // 多言語フィールド
       name_ja: data?.name_ja || data?.name,
       name_en: data?.name_en || data?.name,
