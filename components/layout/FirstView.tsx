@@ -38,7 +38,7 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
 
       {/* テキストコンテンツ（通常スクロール） */}
       {/* 背景画像がない場合（ライターページ等）はコンパクト表示・黒文字 */}
-      <div className={`relative w-full ${settings.imageUrl ? 'h-[700px] -mb-40' : 'py-8'}`} style={{ zIndex: 1 }}>
+      <div className={`relative w-full ${settings.imageUrl ? 'h-[700px] -mb-40' : 'pt-20 pb-8'}`} style={{ zIndex: 1 }}>
         <div className={`flex flex-col items-center justify-center px-4 ${settings.imageUrl ? 'text-white h-full' : 'text-gray-900'}`} style={settings.imageUrl ? { paddingTop: '40px' } : undefined}>
           {showCustomContent ? (
             <>
