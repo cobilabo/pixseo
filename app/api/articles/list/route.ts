@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       featuredImage: article.featuredImage,
       featuredImageAlt: article.featuredImageAlt,
       publishedAt: article.publishedAt,
+      updatedAt: article.updatedAt,
       viewCount: article.viewCount,
     }));
     

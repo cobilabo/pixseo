@@ -26,6 +26,7 @@ interface ArticleListItem {
   featuredImage?: string;
   featuredImageAlt?: string;
   publishedAt?: Date;
+  updatedAt?: Date;
   viewCount?: number;
 }
 

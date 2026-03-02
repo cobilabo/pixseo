@@ -2,12 +2,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
-import { formatDate } from '@/lib/utils/date';
 import { t } from '@/lib/i18n/translations';
 
 interface ArticleCardProps {
   article: Article;
   lang?: Lang;
+}
+
+function cardFormatDate(date: Date | any): string {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date.toDate?.() || date);
+  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
 }
 
 export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) {
@@ -39,7 +44,15 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
           </p>
         )}
         <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>{formatDate(article.publishedAt)}</span>
+          <div className="flex items-center gap-1.5">
+            <span>{t('article.publishedAt', lang)}: {cardFormatDate(article.publishedAt)}</span>
+            {article.updatedAt && (
+              <>
+                <span>•</span>
+                <span>{t('article.updatedAt', lang)}: {cardFormatDate(article.updatedAt)}</span>
+              </>
+            )}
+          </div>
           <span>{t('article.viewCount', lang, { count: article.viewCount || 0 })}</span>
         </div>
       </div>

@@ -156,8 +156,8 @@ function handleWordPressRedirect(pathname: string): string | null {
     return `/${DEFAULT_LANG}/articles/${slug}`;
   }
   
-  // カテゴリー: /category/slug/ → /ja/categories/slug
-  const categoryMatch = pathname.match(/^\/category\/([^/]+)\/?$/);
+  // カテゴリー: /category/slug/ or /category/parent/child/ → /ja/categories/slug
+  const categoryMatch = pathname.match(/^\/category\/(?:[^/]+\/)*([^/]+)\/?$/);
   if (categoryMatch) {
     const slug = categoryMatch[1];
     return `/${DEFAULT_LANG}/categories/${slug}`;
@@ -175,6 +175,26 @@ function handleWordPressRedirect(pathname: string): string | null {
   if (authorMatch) {
     const slug = authorMatch[1];
     return `/${DEFAULT_LANG}/writers/${slug}`;
+  }
+  
+  // ページネーション: /page/N/ → トップへ
+  if (/^\/page\/\d+\/?$/.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
+  }
+  
+  // フィード: /feed/, /rss/ → トップへ
+  if (/^\/(feed|rss)\/?$/.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
+  }
+  
+  // WP管理系: /wp-admin/, /wp-login.php → トップへ
+  if (/^\/(wp-admin|wp-login\.php)/.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
+  }
+  
+  // WPコンテンツ: /wp-content/, /wp-includes/ → トップへ
+  if (/^\/(wp-content|wp-includes)\//.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
   }
   
   return null;
