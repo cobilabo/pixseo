@@ -18,6 +18,9 @@ export function cleanWordPressHtml(html: string): string {
   const scriptPlaceholders: string[] = [];
   const iframePlaceholders: string[] = [];
   const htmlBlockPlaceholders: string[] = [];
+
+  // 目次プレースホルダーをシンプルなマーカーに正規化（depth-countingでネストdivを正確にマッチ）
+  cleaned = normalizeTocPlaceholder(cleaned);
   
   // HTMLブロック（カスタムエディタのHTMLブロック）を一時的に置換
   cleaned = cleaned.replace(/<div[^>]*class="html-block"[^>]*>[\s\S]*?<\/div>/gi, (match) => {
@@ -96,5 +99,50 @@ export function cleanWordPressHtml(html: string): string {
   });
 
   return cleaned;
+}
+
+function normalizeTocPlaceholder(html: string): string {
+  const marker = 'class="toc-placeholder"';
+  const simple = '<div class="toc-placeholder" data-toc="auto"></div>';
+  let result = html;
+  let searchStart = 0;
+
+  while (true) {
+    const markerPos = result.indexOf(marker, searchStart);
+    if (markerPos === -1) break;
+
+    const divStart = result.lastIndexOf('<div', markerPos);
+    if (divStart === -1) { searchStart = markerPos + marker.length; continue; }
+
+    const openTagEnd = result.indexOf('>', markerPos);
+    if (openTagEnd === -1) break;
+
+    let depth = 1;
+    let pos = openTagEnd + 1;
+
+    while (depth > 0 && pos < result.length) {
+      const nextOpen = result.indexOf('<div', pos);
+      const nextClose = result.indexOf('</div>', pos);
+      if (nextClose === -1) break;
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++;
+        pos = result.indexOf('>', nextOpen) + 1;
+      } else {
+        depth--;
+        if (depth === 0) {
+          const endPos = nextClose + 6;
+          result = result.substring(0, divStart) + simple + result.substring(endPos);
+          searchStart = divStart + simple.length;
+          break;
+        }
+        pos = nextClose + 6;
+      }
+    }
+
+    if (depth !== 0) break;
+  }
+
+  return result;
 }
 

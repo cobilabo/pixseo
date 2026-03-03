@@ -9,6 +9,7 @@ import BlogCard from './BlogCard';
 import { TableOfContentsItem } from '@/types/article';
 import { InternalLinkStyle } from '@/types/theme';
 import { Lang } from '@/types/lang';
+import InlineTableOfContents from './InlineTableOfContents';
 
 interface ArticleContentProps {
   content: string;
@@ -264,6 +265,16 @@ export default function ArticleContent({
           <a href={newHref} {...rest}>
             {linkText}
           </a>
+        );
+      }
+
+      // 目次プレースホルダーをインライン目次コンポーネントに置換
+      if (domNode.name === 'div' && domNode.attribs?.class?.includes('toc-placeholder')) {
+        return (
+          <InlineTableOfContents
+            items={Array.isArray(tableOfContents) ? tableOfContents : []}
+            lang={lang}
+          />
         );
       }
 

@@ -419,8 +419,9 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* カテゴリー・タグバッジ */}
             <CategoryTagBadges categories={categories} tags={tags} lang={lang} />
 
-            {/* 目次 */}
-            {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 && (
+            {/* 目次（コンテンツ内にインライン目次がない場合のみ表示） */}
+            {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 &&
+              !(typeof article.content === 'string' && article.content.includes('toc-placeholder')) && (
               <TableOfContents items={article.tableOfContents} faviconUrl={rawSiteInfo.faviconUrl} lang={lang} />
             )}
 

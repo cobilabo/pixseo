@@ -85,6 +85,18 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
   }, [value]);
 
+  // 保存されたシンプルなTOCマーカーをエディタUI用のリッチHTMLに展開
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const tocElements = editorRef.current.querySelectorAll('.toc-placeholder');
+    tocElements.forEach((el) => {
+      if (el.querySelector('.toc-placeholder-inner')) return;
+      el.setAttribute('contenteditable', 'false');
+      el.innerHTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
+    });
+  }, [value]);
+
   // 既存のHTMLブロックを検出して初期化
   useEffect(() => {
     if (!editorRef.current) return;
@@ -137,6 +149,18 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         
         const action = button.getAttribute('data-action');
         const blockId = button.getAttribute('data-block-id');
+
+        if (action === 'delete-toc') {
+          const tocBlock = editor.querySelector('.toc-placeholder');
+          if (tocBlock) {
+            tocBlock.remove();
+            if (editorRef.current) {
+              const html = editorRef.current.innerHTML;
+              onChange(html);
+            }
+          }
+          return;
+        }
         
         if (!blockId) return;
         
@@ -650,6 +674,57 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
   };
 
+  // 目次プレースホルダー挿入
+  const insertTableOfContents = () => {
+    if (!editorRef.current) return;
+
+    const existing = editorRef.current.querySelector('.toc-placeholder');
+    if (existing) {
+      alert('目次は記事内に1つだけ挿入できます。既存の目次を削除してから再度挿入してください。');
+      return;
+    }
+
+    const tocBlock = document.createElement('div');
+    tocBlock.className = 'toc-placeholder';
+    tocBlock.setAttribute('contenteditable', 'false');
+    tocBlock.setAttribute('data-toc', 'auto');
+    tocBlock.innerHTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
+
+    const selection = window.getSelection();
+    let range: Range;
+
+    if (selection && selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+      if (!editorRef.current.contains(range.commonAncestorContainer)) {
+        range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+      }
+    } else {
+      range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
+    }
+
+    range.insertNode(tocBlock);
+
+    const br = document.createElement('br');
+    if (tocBlock.nextSibling) {
+      tocBlock.parentNode?.insertBefore(br, tocBlock.nextSibling);
+    } else {
+      tocBlock.parentNode?.appendChild(br);
+    }
+
+    range.setStartAfter(br);
+    range.collapse(true);
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    handleInput();
+  };
+
   // 引用ブロック挿入
   const insertQuoteBlock = () => {
     document.execCommand('formatBlock', false, '<blockquote>');
@@ -1039,6 +1114,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           </ToolbarButton>
           <ToolbarButton onClick={insertQuoteBlock} title="引用">
             💬
+          </ToolbarButton>
+          <ToolbarButton onClick={insertTableOfContents} title="目次を挿入">
+            <span className="text-xs">目次</span>
           </ToolbarButton>
           
           <div className="w-px bg-gray-300 mx-1" />
