@@ -547,6 +547,20 @@ if (typeof window !== 'undefined') {
       word-break: break-all !important;
       overflow-wrap: break-word !important;
     }
+    /* インライン目次のスタイルリセット */
+    .article-content .toc-inline li {
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+      background: transparent !important;
+      font-size: inherit !important;
+      counter-increment: none !important;
+    }
+    .article-content .toc-inline li::before {
+      display: none !important;
+      content: none !important;
+    }
     /* BlogCard専用スタイルリセット */
     .article-content .blogcard-wrapper {
       display: block !important;
