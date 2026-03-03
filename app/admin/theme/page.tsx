@@ -1382,6 +1382,17 @@ export default function ThemePage() {
               {/* FVタブ */}
               {activeTab === 'fv' && (
                 <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">ファーストビュー（FV）設定</p>
+                        <p className="text-blue-600">トップページの最上部に表示されるメインビジュアルエリアです。画像・キャッチコピー・説明文がサイト訪問者に最初に目に入る部分になります。</p>
+                      </div>
+                    </div>
+                  </div>
                   <FeaturedImageUpload
                     value={theme.firstView?.imageUrl || ''}
                     onChange={(url) => updateFirstView('imageUrl', url)}
@@ -1406,6 +1417,18 @@ export default function ThemePage() {
 
               {/* バナーエリアタブ */}
               {activeTab === 'banner' && (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">バナーエリア設定</p>
+                        <p className="text-blue-600">各ページのフッター上部に表示されるバナー画像エリアです。最大4枚まで設定でき、それぞれにリンク先URLを指定できます。広告やキャンペーンの訴求に活用できます。</p>
+                      </div>
+                    </div>
+                  </div>
                 <div className="grid grid-cols-2 gap-8">
                   {[0, 1, 2, 3].map((index) => {
                     const block = theme.footerBlocks?.[index] || { imageUrl: '', alt: '', linkUrl: '' };
@@ -1430,10 +1453,23 @@ export default function ThemePage() {
                     );
                   })}
                 </div>
+                </div>
               )}
 
               {/* フッターコンテンツタブ (cobi テーマ専用) */}
               {activeTab === 'footer-content' && (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">フッターコンテンツ設定</p>
+                        <p className="text-blue-600">フッター内に表示される画像付きコンテンツブロックです。最大2つまで設定でき、画像・タイトル・説明・リンク先を指定できます。サービス紹介や関連サイトへの誘導に活用できます。</p>
+                      </div>
+                    </div>
+                  </div>
                 <div className="grid grid-cols-2 gap-8">
                   {[0, 1].map((index) => {
                     const content = theme.footerContents?.[index] || { imageUrl: '', alt: '', title: '', description: '', linkUrl: '' };
@@ -1472,11 +1508,23 @@ export default function ThemePage() {
                     );
                   })}
                 </div>
+                </div>
               )}
 
               {/* フッターセクションタブ (cobi テーマ専用) */}
               {activeTab === 'footer-section' && (
                 <div className="space-y-8">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">フッターセクション設定</p>
+                        <p className="text-blue-600">フッター内に表示されるテキストリンクのセクションです。2セット設定可能で、各セクションにタイトルと最大5件のリンクを設定できます。サイトマップ的なナビゲーションやカテゴリーリンクの表示に活用できます。</p>
+                      </div>
+                    </div>
+                  </div>
                   {[0, 1].map((sectionIndex) => {
                     const section = theme.footerTextLinkSections?.[sectionIndex] || { title: '', links: [] };
                     
@@ -1645,6 +1693,17 @@ export default function ThemePage() {
               {/* SNSタブ */}
               {activeTab === 'sns' && (
                 <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">SNS連携設定</p>
+                        <p className="text-blue-600">SNSアカウントを設定すると、サイトのサイドバーやフッターにSNSリンクが表示されます。</p>
+                      </div>
+                    </div>
+                  </div>
                   <FloatingInput
                     label="X（Twitter）ユーザーID"
                     value={theme.snsSettings?.xUserId || ''}
@@ -1657,7 +1716,7 @@ export default function ThemePage() {
                     }))}
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    ※ 未入力の場合、サイドバーにX（Twitter）タイムラインは表示されません
+                    ※ 未入力の場合、サイドバーにX（Twitter）リンクは表示されません。「@」は不要です（例: pixseo_media）
                   </p>
                 </div>
               )}
@@ -2124,42 +2183,135 @@ export default function ThemePage() {
               {/* カラータブ */}
               {activeTab === 'color' && (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-3 gap-6">
-                    <ColorPicker label="メインカラー" value={theme.primaryColor} onChange={(v) => updateTheme('primaryColor', v)} />
-                    <ColorPicker label="サブカラー" value={theme.secondaryColor} onChange={(v) => updateTheme('secondaryColor', v)} />
-                    <ColorPicker label="アクセントカラー" value={theme.accentColor} onChange={(v) => updateTheme('accentColor', v)} />
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">カラー設定</p>
+                        <p className="text-blue-600">サイト全体のカラーテーマを設定します。各色はCSS変数としてサイト全体に反映されます。</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <ColorPicker label="全体背景色" value={theme.backgroundColor} onChange={(v) => updateTheme('backgroundColor', v)} />
-                    <ColorPicker label="ヘッダー背景色" value={theme.headerBackgroundColor} onChange={(v) => updateTheme('headerBackgroundColor', v)} />
-                    <ColorPicker label="フッター背景色" value={theme.footerBackgroundColor} onChange={(v) => updateTheme('footerBackgroundColor', v)} />
-                    <ColorPicker label="ブロック背景色" value={theme.blockBackgroundColor} onChange={(v) => updateTheme('blockBackgroundColor', v)} />
-                    <ColorPicker label="メニュー背景色" value={theme.menuBackgroundColor} onChange={(v) => updateTheme('menuBackgroundColor', v)} />
-                    <ColorPicker label="メニューテキストカラー" value={theme.menuTextColor} onChange={(v) => updateTheme('menuTextColor', v)} />
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">基本カラー</h3>
+                    <p className="text-xs text-gray-500 mb-4">サイト全体のブランドカラーを設定します</p>
+                    <div className="grid grid-cols-3 gap-6">
+                      <div>
+                        <ColorPicker label="メインカラー" value={theme.primaryColor} onChange={(v) => updateTheme('primaryColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">見出し・ボタン・アクティブ要素など、サイトの主要な色として使用されます</p>
+                      </div>
+                      <div className="opacity-60">
+                        <ColorPicker label="サブカラー" value={theme.secondaryColor} onChange={(v) => updateTheme('secondaryColor', v)} />
+                        <p className="text-xs text-amber-600 mt-1">※ 現在フロントサイトで未使用</p>
+                      </div>
+                      <div className="opacity-60">
+                        <ColorPicker label="アクセントカラー" value={theme.accentColor} onChange={(v) => updateTheme('accentColor', v)} />
+                        <p className="text-xs text-amber-600 mt-1">※ 現在フロントサイトで未使用</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <ColorPicker label="リンクテキストカラー" value={theme.linkColor} onChange={(v) => updateTheme('linkColor', v)} />
-                    <ColorPicker label="リンクホバーカラー" value={theme.linkHoverColor} onChange={(v) => updateTheme('linkHoverColor', v)} />
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">背景色</h3>
+                    <p className="text-xs text-gray-500 mb-4">各エリアの背景色を設定します</p>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <ColorPicker label="全体背景色" value={theme.backgroundColor} onChange={(v) => updateTheme('backgroundColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">ページ全体の背景色</p>
+                      </div>
+                      <div className="opacity-60">
+                        <ColorPicker label="ヘッダー背景色" value={theme.headerBackgroundColor} onChange={(v) => updateTheme('headerBackgroundColor', v)} />
+                        <p className="text-xs text-amber-600 mt-1">※ 現在フロントサイトで未使用</p>
+                      </div>
+                      <div>
+                        <ColorPicker label="フッター背景色" value={theme.footerBackgroundColor} onChange={(v) => updateTheme('footerBackgroundColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">フッターエリアの背景色</p>
+                      </div>
+                      <div>
+                        <ColorPicker label="ブロック背景色" value={theme.blockBackgroundColor} onChange={(v) => updateTheme('blockBackgroundColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">記事内の引用・参考文献ブロックなどの背景色</p>
+                      </div>
+                      <div>
+                        <ColorPicker label="メニュー背景色" value={theme.menuBackgroundColor} onChange={(v) => updateTheme('menuBackgroundColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">ヘッダーメニュー・ハンバーガーメニューの背景色</p>
+                      </div>
+                      <div>
+                        <ColorPicker label="メニューテキストカラー" value={theme.menuTextColor} onChange={(v) => updateTheme('menuTextColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">ヘッダーメニュー・ハンバーガーメニューのテキスト色</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <ColorPicker label="ボーダーカラー" value={theme.borderColor} onChange={(v) => updateTheme('borderColor', v)} />
-                    <FloatingInput
-                      label="シャドウカラー（RGBA形式）"
-                      value={theme.shadowColor}
-                      onChange={(v) => updateTheme('shadowColor', v)}
-                      placeholder="rgba(0, 0, 0, 0.1)"
-                    />
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">リンク</h3>
+                    <p className="text-xs text-gray-500 mb-4">リンクテキストの色を設定します</p>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="opacity-60">
+                        <ColorPicker label="リンクテキストカラー" value={theme.linkColor} onChange={(v) => updateTheme('linkColor', v)} />
+                        <p className="text-xs text-amber-600 mt-1">※ 現在フロントサイトで未使用</p>
+                      </div>
+                      <div>
+                        <ColorPicker label="リンクホバーカラー" value={theme.linkHoverColor} onChange={(v) => updateTheme('linkHoverColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">サイドバーやナビゲーション内のリンクにマウスを乗せた時の色</p>
+                      </div>
+                    </div>
                   </div>
 
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">装飾</h3>
+                    <p className="text-xs text-gray-500 mb-4">ボーダーやシャドウの色を設定します</p>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <ColorPicker label="ボーダーカラー" value={theme.borderColor} onChange={(v) => updateTheme('borderColor', v)} />
+                        <p className="text-xs text-gray-500 mt-1">記事内の区切り線・リストの枠線などに使用されます</p>
+                      </div>
+                      <div className="opacity-60">
+                        <FloatingInput
+                          label="シャドウカラー（RGBA形式）"
+                          value={theme.shadowColor}
+                          onChange={(v) => updateTheme('shadowColor', v)}
+                          placeholder="rgba(0, 0, 0, 0.1)"
+                        />
+                        <p className="text-xs text-amber-600 mt-1">※ 現在フロントサイトで未使用</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div className="text-sm text-amber-700">
+                        <p className="font-medium mb-1">「未使用」と表示されている設定について</p>
+                        <p className="text-amber-600">薄く表示されている項目は、現在フロントサイトのコンポーネントで参照されていない設定です。値を変更しても表示には影響しません。今後の機能拡張で使用される可能性があります。</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* CSSタブ */}
               {activeTab === 'css' && (
-                <div>
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">カスタムCSS設定</p>
+                        <ul className="list-disc list-inside space-y-1 text-blue-600">
+                          <li>すべてのページの <code className="bg-blue-100 px-1 rounded">&lt;head&gt;</code> 内に <code className="bg-blue-100 px-1 rounded">&lt;style&gt;</code> タグとして挿入されます</li>
+                          <li>テーマカラーの後に読み込まれるため、カラー設定を上書きすることもできます</li>
+                          <li>記事コンテンツ内の要素は <code className="bg-blue-100 px-1 rounded">.article-content</code> セレクタで指定できます</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                   <FloatingInput
                     label="カスタムCSS（例：.article-content p { line-height:1.8; }）"
                     value={theme.customCss || ''}
@@ -2528,10 +2680,21 @@ export default function ThemePage() {
                       <div className="text-sm text-blue-700">
                         <p className="font-medium mb-1">HTMLショートコード設定</p>
                         <ul className="list-disc list-inside space-y-1 text-blue-600">
-                          <li>記事編集画面のHTML挿入モーダルで呼び出せるショートコードを登録できます</li>
+                          <li>記事編集画面のHTML挿入モーダルで呼び出せるHTMLテンプレートを登録できます</li>
                           <li>よく使うHTMLコードをラベル付きで登録しておくことで、素早く挿入できます</li>
                           <li>広告コード、埋め込みウィジェットなどの登録に便利です</li>
                         </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div className="text-sm text-amber-700">
+                        <p className="font-medium mb-1">注意事項</p>
+                        <p className="text-amber-600">ここで登録したHTMLは、記事編集時にプルダウンから選択して本文に直接挿入されます（ショートコードタグとしてではなく、HTML本文として挿入）。挿入後は記事本文の一部として保存・表示されます。</p>
                       </div>
                     </div>
                   </div>
