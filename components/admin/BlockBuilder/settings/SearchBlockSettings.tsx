@@ -210,6 +210,50 @@ export default function SearchBlockSettings({ block, onUpdate }: SearchBlockSett
           </select>
         </div>
       )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">表示デバイス</label>
+        <div className="space-y-2">
+          {([
+            { key: 'desktop', label: 'PCサイトで表示', icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            )},
+            { key: 'mobile', label: 'スマホサイトで表示', icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            )},
+          ] as const).map(({ key, label, icon }) => {
+            const checked = key === 'desktop'
+              ? block.showOnDesktop !== false
+              : block.showOnMobile !== false;
+            return (
+              <label
+                key={key}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    if (key === 'desktop') {
+                      onUpdate({ showOnDesktop: e.target.checked });
+                    } else {
+                      onUpdate({ showOnMobile: e.target.checked });
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-gray-500">{icon}</span>
+                <span className="text-sm font-medium text-gray-900">{label}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">両方チェックを外すとどのデバイスにも表示されません</p>
+      </div>
     </div>
   );
 }
