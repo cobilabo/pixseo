@@ -77,10 +77,10 @@ export default function InlineTableOfContents({ items, lang = 'ja' }: InlineTabl
                   <button
                     onClick={() => handleClick(item.id)}
                     className={`
-                      w-full text-left py-1.5 px-2 rounded transition-colors duration-150
+                      w-full text-left py-1.5 transition-colors duration-150
                       ${isActive
-                        ? 'text-blue-700 font-semibold'
-                        : 'text-gray-700 hover:text-blue-600'
+                        ? 'text-blue-800 font-semibold'
+                        : 'text-blue-600 hover:underline'
                       }
                       ${isSubItem ? 'text-sm' : 'text-sm font-medium'}
                     `}
