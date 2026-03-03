@@ -136,13 +136,34 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // 言語パスがない場合、デフォルト言語を追加してリダイレクト
+  // 言語パスがない場合、デフォルト言語を追加してリダイレクト（301: SEO評価引き継ぎ）
   const newPath = `/${DEFAULT_LANG}${pathname === '/' ? '' : pathname}`;
   const url = request.nextUrl.clone();
   url.pathname = newPath;
   
-  return NextResponse.redirect(url);
+  return NextResponse.redirect(url, { status: 301 });
 }
+
+/**
+ * WordPress固定ページのリダイレクトマッピング
+ * key: WordPress側のパス（先頭・末尾スラッシュなし）
+ * value: 新サイトのスラッグ（空文字の場合はホームへリダイレクト）
+ */
+const WP_PAGE_REDIRECTS: Record<string, string> = {
+  'recruitment-information/occupation': 'recruitment-occupation',
+  'recruitment-information/seeking-person': 'recruitment-seeking-person',
+  'recruitment-information/organizational-culture': 'recruitment-organizational-culture',
+  'service-lp': 'service',
+  'verified-locations': 'verified-locations-map',
+  'barrier-free-how-to-take-photos': '',
+  'customer-service-guidebook': 'service',
+  'challenger': 'media',
+  'list': 'media',
+  'ayumi-info': '',
+  'web-writer-introduction': 'media',
+  'adviser': '',
+  'barrierfree-fand-explanation': '',
+};
 
 /**
  * WordPress旧URL形式を新URL形式にリダイレクト
@@ -195,6 +216,13 @@ function handleWordPressRedirect(pathname: string): string | null {
   // WPコンテンツ: /wp-content/, /wp-includes/ → トップへ
   if (/^\/(wp-content|wp-includes)\//.test(pathname)) {
     return `/${DEFAULT_LANG}`;
+  }
+  
+  // WordPress固定ページ: スラッグ変更・ネストページ・削除ページの明示的リダイレクト
+  const cleanPath = pathname.replace(/^\/|\/$/g, '');
+  if (cleanPath in WP_PAGE_REDIRECTS) {
+    const newSlug = WP_PAGE_REDIRECTS[cleanPath];
+    return newSlug ? `/${DEFAULT_LANG}/${newSlug}` : `/${DEFAULT_LANG}`;
   }
   
   return null;
