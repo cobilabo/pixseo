@@ -47,38 +47,11 @@ export default function InlineTableOfContents({ items, lang = 'ja' }: InlineTabl
     }
   };
 
-  let h2Count = 0;
-  const h2CountMap = new Map<number, number>();
-
-  const numberedItems = items.map((item, index) => {
-    if (item.level === 2) {
-      h2Count++;
-      h2CountMap.set(index, h2Count);
-      return { ...item, number: `${h2Count}` };
-    }
-    if (item.level === 3) {
-      let parentH2 = 0;
-      let subCount = 0;
-      for (let i = index - 1; i >= 0; i--) {
-        if (items[i].level === 2) {
-          parentH2 = h2CountMap.get(i) || 0;
-          break;
-        }
-      }
-      for (let i = index - 1; i >= 0; i--) {
-        if (items[i].level === 2) break;
-        if (items[i].level === 3) subCount++;
-      }
-      return { ...item, number: `${parentH2}-${subCount + 1}` };
-    }
-    return { ...item, number: '' };
-  });
-
   return (
-    <div className="toc-inline not-prose my-8 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+    <div className="toc-inline not-prose my-8 bg-gray-50 rounded-lg overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-5 py-4 bg-gray-100 hover:bg-gray-150 transition-colors"
+        className="flex items-center justify-between w-full px-5 py-4 bg-gray-100 hover:bg-gray-200/60 transition-colors"
       >
         <span className="text-base font-bold text-gray-800">{t('article.toc', lang)}</span>
         <svg
@@ -93,34 +66,31 @@ export default function InlineTableOfContents({ items, lang = 'ja' }: InlineTabl
 
       {isOpen && (
         <nav className="px-5 py-4">
-          <ol className="list-none m-0 p-0 space-y-1">
-            {numberedItems.map((item) => {
+          <ul className="list-none m-0 p-0 space-y-0.5">
+            {items.map((item) => {
               if (!item?.id || !item?.text) return null;
               const isActive = activeId === item.id;
               const isSubItem = item.level >= 3;
 
               return (
-                <li key={item.id} className={`m-0 p-0 ${isSubItem ? 'ml-6' : ''}`}>
+                <li key={item.id} className={`m-0 p-0 ${isSubItem ? 'ml-5' : ''}`}>
                   <button
                     onClick={() => handleClick(item.id)}
                     className={`
                       w-full text-left py-1.5 px-2 rounded transition-colors duration-150
                       ${isActive
-                        ? 'text-blue-700 bg-blue-50 font-semibold'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50/50'
+                        ? 'text-blue-700 font-semibold'
+                        : 'text-gray-700 hover:text-blue-600'
                       }
                       ${isSubItem ? 'text-sm' : 'text-sm font-medium'}
                     `}
                   >
-                    <span className={`inline-block mr-1.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
-                      {item.number}.
-                    </span>
                     {item.text}
                   </button>
                 </li>
               );
             })}
-          </ol>
+          </ul>
         </nav>
       )}
     </div>
