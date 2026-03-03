@@ -212,7 +212,7 @@ export default async function FixedPage({ params }: PageProps) {
         
         {/* BlockBuilderのみでレンダリング */}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -245,7 +245,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders excludeFullWidthBottomBlocks />
+        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
       ) : (
         <div 
           className="prose prose-lg max-w-none"

@@ -12,6 +12,7 @@ import ContentBlock from './ContentBlock';
 import ArticleBlock from './ArticleBlock';
 import SliderBlock from './SliderBlock';
 import RowBlock from './RowBlock';
+import SearchBlock from './SearchBlock';
 import CustomBlock from './CustomBlock';
 
 interface BlockRendererProps {
@@ -21,6 +22,12 @@ interface BlockRendererProps {
   lang?: Lang;
   excludeFullWidthSliders?: boolean;
   excludeFullWidthBottomBlocks?: boolean;
+  searchData?: {
+    tags?: Array<{ id: string; name: string; slug: string }>;
+    categories?: Array<{ id: string; name: string; slug: string; isHiddenFromLists?: boolean }>;
+    popularTags?: Array<{ value: string; displayName?: string; count: number }>;
+    mediaId?: string;
+  };
 }
 
 export function hasFullWidthSlider(blocks: Block[]): boolean {
@@ -47,7 +54,7 @@ export function getFullWidthBottomBlocks(blocks: Block[]): Block[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, searchData }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
@@ -96,6 +103,18 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             break;
           case 'row':
             blockContent = <RowBlock block={block} lang={lang} />;
+            break;
+          case 'search':
+            blockContent = (
+              <SearchBlock
+                block={block}
+                lang={lang}
+                tags={searchData?.tags}
+                categories={searchData?.categories}
+                popularTags={searchData?.popularTags}
+                mediaId={searchData?.mediaId}
+              />
+            );
             break;
           case 'custom':
             blockContent = <CustomBlock config={block.config as any} showPanel={showPanel} lang={lang} />;

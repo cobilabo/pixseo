@@ -43,6 +43,12 @@ const blockTypes = [
     description: 'スライダー設定済みの記事をスライド表示',
   },
   {
+    type: 'search' as BlockType,
+    label: '検索ブロック',
+    icon: '/form.svg',
+    description: '検索ボックスをページ内に設置',
+  },
+  {
     type: 'html' as BlockType,
     label: 'HTMLブロック',
     icon: '/html.svg',

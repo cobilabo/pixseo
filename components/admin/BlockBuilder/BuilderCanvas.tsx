@@ -96,6 +96,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     article: { label: '記事', icon: '/article.svg' },
     slider: { label: 'スライダー', icon: '/dashboard.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
+    search: { label: '検索', icon: '/form.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
     custom: { label: (block.config as any)?.customBlockName || 'カスタムブロック', icon: '/block.svg' },
   };
@@ -203,6 +204,14 @@ function BlockPreview({ block }: { block: Block }) {
       const htmlCfg = block.config as any;
       const fwb = htmlCfg.fullWidthBottom ? '・横幅いっぱい' : '';
       return <span>カスタムHTML{fwb}</span>;
+    case 'search':
+      const searchCfg = block.config as any;
+      const enabledTypes = [];
+      if (searchCfg.searchTypes?.keywordSearch) enabledTypes.push('キーワード');
+      if (searchCfg.searchTypes?.tagSearch) enabledTypes.push('タグ');
+      if (searchCfg.searchTypes?.categorySearch) enabledTypes.push('カテゴリー');
+      if (searchCfg.searchTypes?.popularTags) enabledTypes.push('人気タグ');
+      return <span>検索ボックス ({enabledTypes.length > 0 ? enabledTypes.join('・') : '未設定'})</span>;
     case 'spacer':
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;

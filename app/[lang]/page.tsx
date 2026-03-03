@@ -232,7 +232,7 @@ export default async function HomePage({ params }: PageProps) {
 
           {/* BlockBuilderのみでレンダリング */}
           {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} />
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} searchData={{ tags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
           ) : (
             <div
               className="prose prose-lg max-w-none"
@@ -263,7 +263,7 @@ export default async function HomePage({ params }: PageProps) {
         
         {/* ブロックビルダー使用時はBlockRendererで表示 */}
         {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} excludeFullWidthSliders />
+          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} excludeFullWidthSliders searchData={{ tags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"

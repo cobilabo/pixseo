@@ -272,6 +272,18 @@ function getDefaultConfig(type: BlockType): any {
         autoplay: true,
         autoplayInterval: 5,
       };
+    case 'search':
+      return {
+        searchTypes: {
+          keywordSearch: true,
+          tagSearch: false,
+          categorySearch: false,
+          popularTags: false,
+        },
+        searchOrder: ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'],
+        categorySearchDisplayType: 'dropdown',
+        popularTagsDisplayCount: 10,
+      };
     case 'custom':
       return {
         customBlockId: '',

@@ -11,6 +11,7 @@ export type BlockType =
   | 'article'   // 記事リンクブロック
   | 'slider'    // スライダーブロック
   | 'row'       // 行レイアウト（複数カラム）
+  | 'search'    // 検索ブロック
   | 'custom';   // カスタムブロック
 
 // CTAボタンの設定
@@ -163,6 +164,19 @@ export interface RowBlockConfig {
   columns: RowColumnConfig[];
 }
 
+// 検索ブロックの設定
+export interface SearchBlockConfig {
+  searchTypes: {
+    keywordSearch: boolean;
+    tagSearch: boolean;
+    categorySearch: boolean;
+    popularTags: boolean;
+  };
+  searchOrder?: ('keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags')[];
+  categorySearchDisplayType?: 'dropdown' | 'list';
+  popularTagsDisplayCount?: number;
+}
+
 // カスタムブロックの設定
 export interface CustomBlockConfig {
   customBlockId: string;      // カスタムブロックのID
@@ -174,7 +188,7 @@ export interface Block {
   id: string;
   type: BlockType;
   order: number;
-  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | SliderBlockConfig | RowBlockConfig | CustomBlockConfig;
+  config: FormBlockConfig | HTMLBlockConfig | SpacerBlockConfig | ContentBlockConfig | ArticleBlockConfig | SliderBlockConfig | RowBlockConfig | SearchBlockConfig | CustomBlockConfig;
   
   // 余白設定（共通）
   spacing?: {

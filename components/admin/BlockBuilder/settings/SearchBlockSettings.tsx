@@ -1,0 +1,215 @@
+'use client';
+
+import { useState } from 'react';
+import { Block, SearchBlockConfig } from '@/types/block';
+import { SearchTypeKey } from '@/types/theme';
+import CustomCheckbox from '@/components/admin/CustomCheckbox';
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SearchBlockSettingsProps {
+  block: Block;
+  onUpdate: (updates: Partial<Block>) => void;
+}
+
+const SEARCH_TYPE_CONFIG: Record<SearchTypeKey, { label: string; icon: string; description: string }> = {
+  keywordSearch: { label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
+  tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
+  categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
+  popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
+};
+
+const DEFAULT_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
+
+function SortableSearchItem({
+  id,
+  label,
+  icon,
+  description,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-start gap-2 p-3 bg-gray-50 rounded-lg transition-colors ${isDragging ? 'shadow-lg ring-2 ring-blue-300' : ''}`}
+    >
+      <button
+        type="button"
+        className="mt-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        </svg>
+      </button>
+      <label className="flex items-start gap-2 flex-1 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+        />
+        <div className="flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">{icon}</span>
+            <span className="text-sm font-medium text-gray-900">{label}</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        </div>
+      </label>
+    </div>
+  );
+}
+
+export default function SearchBlockSettings({ block, onUpdate }: SearchBlockSettingsProps) {
+  const config = block.config as SearchBlockConfig;
+
+  const updateConfig = (updates: Partial<SearchBlockConfig>) => {
+    onUpdate({ config: { ...config, ...updates } });
+  };
+
+  const searchOrder = (() => {
+    const saved = config.searchOrder;
+    if (saved && saved.length > 0) {
+      const missing = DEFAULT_ORDER.filter(k => !saved.includes(k));
+      return [...saved, ...missing];
+    }
+    return DEFAULT_ORDER;
+  })();
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = searchOrder.indexOf(active.id as SearchTypeKey);
+      const newIndex = searchOrder.indexOf(over.id as SearchTypeKey);
+      updateConfig({ searchOrder: arrayMove(searchOrder, oldIndex, newIndex) });
+    }
+  };
+
+  const updateSearchType = (key: SearchTypeKey, checked: boolean) => {
+    updateConfig({
+      searchTypes: { ...config.searchTypes, [key]: checked },
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <p className="text-xs text-blue-700">
+          ページ内に検索ボックスを設置します。表示する検索機能と順番を設定してください。
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">検索の種類と表示順</label>
+        <p className="text-xs text-gray-500 mb-3">ドラッグで表示順を変更できます</p>
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={searchOrder} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {searchOrder.map((key) => {
+                const { label, icon, description } = SEARCH_TYPE_CONFIG[key];
+                return (
+                  <SortableSearchItem
+                    key={key}
+                    id={key}
+                    label={label}
+                    icon={icon}
+                    description={description}
+                    checked={config.searchTypes?.[key] ?? false}
+                    onChange={(checked) => updateSearchType(key, checked)}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      {config.searchTypes?.categorySearch && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+          <label className="block text-xs font-medium text-indigo-700 mb-2">
+            カテゴリー検索の表示形式
+          </label>
+          <div className="flex gap-3">
+            {([
+              { value: 'dropdown' as const, label: 'プルダウン形式' },
+              { value: 'list' as const, label: 'リスト形式' },
+            ]).map(({ value, label }) => (
+              <label
+                key={value}
+                className={`flex-1 flex items-center gap-2 p-2 rounded-lg cursor-pointer border transition-colors text-xs ${
+                  (config.categorySearchDisplayType || 'dropdown') === value
+                    ? 'border-indigo-500 bg-indigo-100'
+                    : 'border-transparent bg-white hover:bg-indigo-50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="categoryDisplayType"
+                  value={value}
+                  checked={(config.categorySearchDisplayType || 'dropdown') === value}
+                  onChange={() => updateConfig({ categorySearchDisplayType: value })}
+                  className="w-3.5 h-3.5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                />
+                <span className="font-medium text-gray-900">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {config.searchTypes?.popularTags && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+          <label className="block text-xs font-medium text-orange-700 mb-2">
+            人気タグの表示件数
+          </label>
+          <select
+            value={config.popularTagsDisplayCount || 10}
+            onChange={(e) => updateConfig({ popularTagsDisplayCount: parseInt(e.target.value) })}
+            className="w-full px-3 py-2 border border-orange-300 rounded-lg text-gray-900 bg-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+          >
+            {[5, 10, 15, 20, 30].map(num => (
+              <option key={num} value={num}>{num}件</option>
+            ))}
+          </select>
+        </div>
+      )}
+    </div>
+  );
+}

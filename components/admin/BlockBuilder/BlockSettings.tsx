@@ -12,6 +12,7 @@ import SpacerBlockSettings from './settings/SpacerBlockSettings';
 import SpacingSettings from './settings/SpacingSettings';
 import ContentBlockSettings from './settings/ContentBlockSettings';
 import ArticleBlockSettings from './settings/ArticleBlockSettings';
+import SearchBlockSettings from './settings/SearchBlockSettings';
 import CustomCheckbox from '@/components/admin/CustomCheckbox';
 
 interface BlockSettingsProps {
@@ -27,6 +28,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     form: 'フォームブロック',
     article: '記事ブロック',
     slider: 'スライダーブロック',
+    search: '検索ブロック',
     html: 'HTMLブロック',
     spacer: '空白ブロック',
     custom: 'カスタムブロック',
@@ -50,6 +52,9 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         )}
         {block.type === 'article' && (
           <ArticleBlockSettings block={block} onUpdate={onUpdate} />
+        )}
+        {block.type === 'search' && (
+          <SearchBlockSettings block={block} onUpdate={onUpdate} />
         )}
         {block.type === 'slider' && (() => {
           const sliderConfig = block.config as SliderBlockConfig;
