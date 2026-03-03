@@ -126,10 +126,7 @@ export async function PUT(
       );
     }
 
-    // 更新データを作成
-    const updateData: any = {
-      updatedAt: new Date(),
-    };
+    const updateData: any = {};
 
     // isPublishedが含まれている場合のみ更新
     if (typeof body.isPublished === 'boolean') {

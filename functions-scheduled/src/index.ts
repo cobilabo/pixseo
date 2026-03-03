@@ -61,7 +61,6 @@ export const publishScheduledArticles = onSchedule(
           batch.update(doc.ref, {
             isPublished: true,
             isScheduled: false,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
           publishedCount++;
           console.log(`[publishScheduledArticles] Article ${doc.id} will be published`);
