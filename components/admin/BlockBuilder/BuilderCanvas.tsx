@@ -200,7 +200,9 @@ function BlockPreview({ block }: { block: Block }) {
       const fwt = sliderCfg.fullWidthTop ? '・トップ横幅' : '';
       return <span>スライダー ({cols}カラム{fwt})</span>;
     case 'html':
-      return <span>カスタムHTML</span>;
+      const htmlCfg = block.config as any;
+      const fwb = htmlCfg.fullWidthBottom ? '・横幅いっぱい' : '';
+      return <span>カスタムHTML{fwb}</span>;
     case 'spacer':
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;

@@ -114,6 +114,7 @@ export interface FormBlockConfig {
 // HTMLブロックの設定
 export interface HTMLBlockConfig {
   html: string;             // カスタムHTML
+  fullWidthBottom?: boolean; // ページ下部に横幅いっぱいで表示
 }
 
 // 空白ブロックの設定

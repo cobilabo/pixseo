@@ -3,7 +3,7 @@
  * メインアプリ（フロントエンド）で使用
  */
 
-import { Block, SliderBlockConfig } from '@/types/block';
+import { Block, SliderBlockConfig, HTMLBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
@@ -20,6 +20,7 @@ interface BlockRendererProps {
   showPanel?: boolean;
   lang?: Lang;
   excludeFullWidthSliders?: boolean;
+  excludeFullWidthBottomBlocks?: boolean;
 }
 
 export function hasFullWidthSlider(blocks: Block[]): boolean {
@@ -34,12 +35,25 @@ export function getFullWidthSliderBlocks(blocks: Block[]): Block[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false }: BlockRendererProps) {
+export function hasFullWidthBottomBlocks(blocks: Block[]): boolean {
+  return blocks.some(
+    block => block.type === 'html' && (block.config as HTMLBlockConfig).fullWidthBottom
+  );
+}
+
+export function getFullWidthBottomBlocks(blocks: Block[]): Block[] {
+  return blocks
+    .filter(block => block.type === 'html' && (block.config as HTMLBlockConfig).fullWidthBottom)
+    .sort((a, b) => a.order - b.order);
+}
+
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
       if (!isMobile && block.showOnDesktop === false) return false;
       if (excludeFullWidthSliders && block.type === 'slider' && (block.config as SliderBlockConfig).fullWidthTop) return false;
+      if (excludeFullWidthBottomBlocks && block.type === 'html' && (block.config as HTMLBlockConfig).fullWidthBottom) return false;
       return true;
     })
     .sort((a, b) => {

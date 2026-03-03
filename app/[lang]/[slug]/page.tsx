@@ -15,8 +15,9 @@ import CategoryBar from '@/components/layout/CategoryBar';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks } from '@/components/blocks/BlockRenderer';
+import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks, hasFullWidthBottomBlocks, getFullWidthBottomBlocks } from '@/components/blocks/BlockRenderer';
 import SliderBlock from '@/components/blocks/SliderBlock';
+import HTMLBlock from '@/components/blocks/HTMLBlock';
 import SearchWidget from '@/components/search/SearchWidget';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
@@ -227,6 +228,8 @@ export default async function FixedPage({ params }: PageProps) {
   const pageBlocks = rawPage.blocks || [];
   const pageHasFullWidthSlider = rawPage.useBlockBuilder && hasFullWidthSlider(pageBlocks);
   const pageFullWidthSliders = pageHasFullWidthSlider ? getFullWidthSliderBlocks(pageBlocks) : [];
+  const pageHasFullWidthBottom = rawPage.useBlockBuilder && hasFullWidthBottomBlocks(pageBlocks);
+  const pageFullWidthBottomBlocks = pageHasFullWidthBottom ? getFullWidthBottomBlocks(pageBlocks) : [];
 
   // メインコンテンツのレンダリング
   const renderMainContent = () => (
@@ -242,7 +245,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders />
+        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders excludeFullWidthBottomBlocks />
       ) : (
         <div 
           className="prose prose-lg max-w-none"
@@ -373,6 +376,13 @@ export default async function FixedPage({ params }: PageProps) {
             {renderMainContent()}
           </main>
         )}
+
+        {/* フルワイド底部ブロック（サイドバーの外・横幅いっぱい） */}
+        {pageFullWidthBottomBlocks.map(block => (
+          <div key={block.id} className="w-full">
+            <HTMLBlock block={block} lang={lang} />
+          </div>
+        ))}
 
         {footerContents.length > 0 && (
           <section className="w-full">
