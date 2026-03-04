@@ -8,6 +8,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AIPageGeneratorModal from '@/components/admin/AIPageGeneratorModal';
 import { deletePage } from '@/lib/firebase/pages-admin';
 import { Page } from '@/types/page';
+import { Form } from '@/types/form';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -17,6 +18,7 @@ export default function PagesListPage() {
   const { showSuccess, showError } = useToast();
 
   const [pages, setPages] = useState<Page[]>([]);
+  const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAIModal, setShowAIModal] = useState(false);
@@ -27,10 +29,11 @@ export default function PagesListPage() {
 
   const fetchPages = async () => {
     try {
-      console.log('[PagesListPage] Fetching pages from API...');
-      
-      const data: Page[] = await apiGet('/api/admin/pages');
-      console.log('[PagesListPage] Received pages:', data);
+      const [data, formsData] = await Promise.all([
+        apiGet<Page[]>('/api/admin/pages'),
+        apiGet<Form[]>('/api/admin/forms'),
+      ]);
+      setForms(formsData);
       
       // 日付をDateオブジェクトに変換
       const pagesWithDates = data.map(page => ({
@@ -39,9 +42,7 @@ export default function PagesListPage() {
         updatedAt: new Date(page.updatedAt),
       }));
       
-      // 表示順でソート
       const sortedData = pagesWithDates.sort((a, b) => a.order - b.order);
-      console.log('[PagesListPage] Sorted pages:', sortedData);
       setPages(sortedData);
       setLoading(false);
     } catch (error) {
@@ -86,6 +87,26 @@ export default function PagesListPage() {
     }
   };
 
+  const getPageFormNames = (page: Page): string[] => {
+    const formIds = new Set<string>();
+    for (const block of page.blocks || []) {
+      if (block.type === 'form' && (block.config as any)?.formId) {
+        formIds.add((block.config as any).formId);
+      }
+      if (block.type === 'row') {
+        for (const col of (block.config as any)?.columns || []) {
+          if (col.type === 'form' && col.formId) {
+            formIds.add(col.formId);
+          }
+        }
+      }
+    }
+    return Array.from(formIds).map(id => {
+      const form = forms.find(f => f.id === id);
+      return form?.name || '不明なフォーム';
+    });
+  };
+
   const filteredPages = pages.filter((page) => {
     const lowercaseSearch = searchTerm.toLowerCase();
     return (
@@ -120,19 +141,22 @@ export default function PagesListPage() {
                 <table className="w-full table-fixed divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '40%' }}>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '35%' }}>
                         タイトル&ディスクリプション
                       </th>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '8%' }}>
                         表示順
                       </th>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '17%' }}>
+                        フォーム
+                      </th>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
                         ステータス
                       </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '12%' }}>
                         更新日
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '18%' }}>
                         操作
                       </th>
                     </tr>
@@ -173,6 +197,32 @@ export default function PagesListPage() {
                         </td>
                         <td className="px-3 py-3 text-center whitespace-nowrap">
                           <span className="text-sm font-medium text-gray-900">{page.order}</span>
+                        </td>
+                        <td className="px-3 py-3">
+                          {(() => {
+                            const formNames = getPageFormNames(page);
+                            if (formNames.length === 0) {
+                              return (
+                                <span className="text-xs text-gray-400">—</span>
+                              );
+                            }
+                            return (
+                              <div className="flex flex-col gap-1">
+                                {formNames.map((name, i) => (
+                                  <span
+                                    key={i}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full truncate"
+                                    title={name}
+                                  >
+                                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span className="truncate">{name}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-3 py-3 text-center whitespace-nowrap">
                           <label className="cursor-pointer inline-flex items-center justify-center">
