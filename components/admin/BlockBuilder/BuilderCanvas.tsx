@@ -215,13 +215,13 @@ function BlockPreview({ block }: { block: Block }) {
       return <span>検索ボックス ({enabledTypes.length > 0 ? enabledTypes.join('・') : '未設定'})</span>;
     case 'row':
       const rowCfg = block.config as any;
-      const cols = (rowCfg.columns || []) as any[];
-      const colDescs = cols.map((col: any, i: number) => {
+      const rowColumns = (rowCfg.columns || []) as any[];
+      const colDescs = rowColumns.map((col: any, i: number) => {
         if (col.type === 'form' && col.formId) return `カラム${i + 1}: フォーム`;
         if (col.html) return `カラム${i + 1}: HTML`;
         return `カラム${i + 1}: 空`;
       });
-      return <span>{rowCfg.columnCount || cols.length}カラム ({colDescs.join('＋')})</span>;
+      return <span>{rowCfg.columnCount || rowColumns.length}カラム ({colDescs.join('＋')})</span>;
     case 'spacer':
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;
