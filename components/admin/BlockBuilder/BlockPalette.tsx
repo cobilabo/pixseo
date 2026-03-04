@@ -49,6 +49,12 @@ const blockTypes = [
     description: '検索ボックスをページ内に設置',
   },
   {
+    type: 'row' as BlockType,
+    label: '行レイアウトブロック',
+    icon: '/dashboard.svg',
+    description: '複数カラムにHTML・フォームを配置',
+  },
+  {
     type: 'html' as BlockType,
     label: 'HTMLブロック',
     icon: '/html.svg',

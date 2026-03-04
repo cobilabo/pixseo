@@ -284,6 +284,16 @@ function getDefaultConfig(type: BlockType): any {
         categorySearchDisplayType: 'dropdown',
         popularTagsDisplayCount: 10,
       };
+    case 'row':
+      return {
+        columnCount: 2,
+        gap: 16,
+        responsive: true,
+        columns: [
+          { type: 'html', html: '' },
+          { type: 'html', html: '' },
+        ],
+      };
     case 'custom':
       return {
         customBlockId: '',
