@@ -5,7 +5,7 @@
  * 選択されたブロックの設定を編集
  */
 
-import { Block, SliderBlockConfig } from '@/types/block';
+import { Block, SliderBlockConfig, RowBlockConfig } from '@/types/block';
 import FormBlockSettings from './settings/FormBlockSettings';
 import HTMLBlockSettings from './settings/HTMLBlockSettings';
 import SpacerBlockSettings from './settings/SpacerBlockSettings';
@@ -30,6 +30,7 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
     slider: 'スライダーブロック',
     search: '検索ブロック',
     html: 'HTMLブロック',
+    row: '行レイアウトブロック',
     spacer: '空白ブロック',
     custom: 'カスタムブロック',
   };
@@ -56,6 +57,36 @@ export default function BlockSettings({ block, onUpdate, onClose, onDelete }: Bl
         {block.type === 'search' && (
           <SearchBlockSettings block={block} onUpdate={onUpdate} />
         )}
+        {block.type === 'row' && (() => {
+          const rowConfig = block.config as RowBlockConfig;
+          const columns = rowConfig.columns || [];
+          return (
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <p className="text-sm text-amber-800 font-medium mb-1">行レイアウトブロック</p>
+                <p className="text-xs text-amber-700">
+                  データ移行で作成されたブロックです。{rowConfig.columnCount || columns.length}カラム構成で、各カラムの内容は以下の通りです。
+                </p>
+              </div>
+              {columns.map((col, i) => (
+                <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-6 h-6 bg-gray-200 text-gray-600 rounded flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {col.type === 'form' ? 'フォーム' : 'HTML'}
+                    </span>
+                  </div>
+                  {col.type === 'form' && col.formId && (
+                    <p className="text-xs text-gray-500 ml-8">フォームID: {col.formId}</p>
+                  )}
+                  {col.type !== 'form' && col.html && (
+                    <p className="text-xs text-gray-500 ml-8">HTML ({col.html.length}文字)</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
         {block.type === 'slider' && (() => {
           const sliderConfig = block.config as SliderBlockConfig;
           return (

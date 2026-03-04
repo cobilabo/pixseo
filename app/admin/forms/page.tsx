@@ -49,10 +49,19 @@ export default function FormsListPage() {
     }
   };
 
-  const getFormPageCount = (formId: string): number => {
-    return pages.filter(page =>
-      (page.blocks || []).some(block => block.type === 'form' && (block.config as any)?.formId === formId)
-    ).length;
+  const getFormPages = (formId: string): Array<{ title: string; slug: string }> => {
+    return pages
+      .filter(page =>
+        (page.blocks || []).some(block => {
+          if (block.type === 'form' && (block.config as any)?.formId === formId) return true;
+          if (block.type === 'row') {
+            const columns = (block.config as any)?.columns || [];
+            return columns.some((col: any) => col.type === 'form' && col.formId === formId);
+          }
+          return false;
+        })
+      )
+      .map(page => ({ title: page.title || '無題', slug: page.slug || '' }));
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -199,9 +208,22 @@ export default function FormsListPage() {
                           </Link>
                         </td>
                         <td className="px-3 py-3 text-center whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {getFormPageCount(form.id)} ページ
-                          </span>
+                          {(() => {
+                            const usedPages = getFormPages(form.id);
+                            const count = usedPages.length;
+                            return count > 0 ? (
+                              <span
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-help"
+                                title={usedPages.map(p => `${p.title} (/${p.slug})`).join('\n')}
+                              >
+                                {count} ページ
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                未使用
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">

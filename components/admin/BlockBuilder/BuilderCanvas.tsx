@@ -97,6 +97,7 @@ function SortableBlockItem({ block, isSelected, onSelect, onDelete }: SortableBl
     slider: { label: 'スライダー', icon: '/dashboard.svg' },
     html: { label: 'HTML', icon: '/html.svg' },
     search: { label: '検索', icon: '/form.svg' },
+    row: { label: '行レイアウト', icon: '/dashboard.svg' },
     spacer: { label: '空白', icon: '/spacer.svg' },
     custom: { label: (block.config as any)?.customBlockName || 'カスタムブロック', icon: '/block.svg' },
   };
@@ -212,6 +213,15 @@ function BlockPreview({ block }: { block: Block }) {
       if (searchCfg.searchTypes?.categorySearch) enabledTypes.push('カテゴリー');
       if (searchCfg.searchTypes?.popularTags) enabledTypes.push('人気タグ');
       return <span>検索ボックス ({enabledTypes.length > 0 ? enabledTypes.join('・') : '未設定'})</span>;
+    case 'row':
+      const rowCfg = block.config as any;
+      const cols = (rowCfg.columns || []) as any[];
+      const colDescs = cols.map((col: any, i: number) => {
+        if (col.type === 'form' && col.formId) return `カラム${i + 1}: フォーム`;
+        if (col.html) return `カラム${i + 1}: HTML`;
+        return `カラム${i + 1}: 空`;
+      });
+      return <span>{rowCfg.columnCount || cols.length}カラム ({colDescs.join('＋')})</span>;
     case 'spacer':
       const spacerConfig = block.config as any;
       return <span>高さ: {spacerConfig.height || 40}px</span>;
