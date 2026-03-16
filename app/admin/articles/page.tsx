@@ -202,6 +202,114 @@ function ArticlesPageContent() {
     });
   };
 
+  // クイック編集: タイトル
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState('');
+
+  const handleTitleEdit = (articleId: string, currentTitle: string) => {
+    setEditingTitleId(articleId);
+    setEditingTitleValue(currentTitle);
+  };
+
+  const handleTitleSave = (articleId: string) => {
+    const newTitle = editingTitleValue.trim();
+    const prevTitle = articles.find(a => a.id === articleId)?.title || '';
+    setEditingTitleId(null);
+    if (!newTitle || newTitle === prevTitle) return;
+
+    setArticles(prev => prev.map(a =>
+      a.id === articleId ? { ...a, title: newTitle } : a
+    ));
+
+    fetch(`/api/admin/articles/${articleId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTitle }),
+    }).then(res => {
+      if (!res.ok) {
+        setArticles(prev => prev.map(a =>
+          a.id === articleId ? { ...a, title: prevTitle } : a
+        ));
+        showError('タイトルの更新に失敗しました');
+      }
+    }).catch(() => {
+      setArticles(prev => prev.map(a =>
+        a.id === articleId ? { ...a, title: prevTitle } : a
+      ));
+      showError('タイトルの更新に失敗しました');
+    });
+  };
+
+  // クイック編集: カテゴリー
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+
+  const handleCategoryToggle = (articleId: string, categoryId: string) => {
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    const prevIds = article.categoryIds || [];
+    const newIds = prevIds.includes(categoryId)
+      ? prevIds.filter(id => id !== categoryId)
+      : [...prevIds, categoryId];
+
+    setArticles(prev => prev.map(a =>
+      a.id === articleId ? { ...a, categoryIds: newIds } : a
+    ));
+
+    fetch(`/api/admin/articles/${articleId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categoryIds: newIds }),
+    }).then(res => {
+      if (!res.ok) {
+        setArticles(prev => prev.map(a =>
+          a.id === articleId ? { ...a, categoryIds: prevIds } : a
+        ));
+        showError('カテゴリーの更新に失敗しました');
+      }
+    }).catch(() => {
+      setArticles(prev => prev.map(a =>
+        a.id === articleId ? { ...a, categoryIds: prevIds } : a
+      ));
+      showError('カテゴリーの更新に失敗しました');
+    });
+  };
+
+  // クイック編集: タグ
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+
+  const handleTagToggle = (articleId: string, tagId: string) => {
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    const prevIds = article.tagIds || [];
+    const newIds = prevIds.includes(tagId)
+      ? prevIds.filter(id => id !== tagId)
+      : [...prevIds, tagId];
+
+    setArticles(prev => prev.map(a =>
+      a.id === articleId ? { ...a, tagIds: newIds } : a
+    ));
+
+    fetch(`/api/admin/articles/${articleId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tagIds: newIds }),
+    }).then(res => {
+      if (!res.ok) {
+        setArticles(prev => prev.map(a =>
+          a.id === articleId ? { ...a, tagIds: prevIds } : a
+        ));
+        showError('タグの更新に失敗しました');
+      }
+    }).catch(() => {
+      setArticles(prev => prev.map(a =>
+        a.id === articleId ? { ...a, tagIds: prevIds } : a
+      ));
+      showError('タグの更新に失敗しました');
+    });
+  };
+
   // ソート切り替え
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -681,9 +789,28 @@ function ArticlesPageContent() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {article.title}
-                            </div>
+                            {editingTitleId === article.id ? (
+                              <input
+                                type="text"
+                                value={editingTitleValue}
+                                onChange={(e) => setEditingTitleValue(e.target.value)}
+                                onBlur={() => handleTitleSave(article.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleTitleSave(article.id);
+                                  if (e.key === 'Escape') setEditingTitleId(null);
+                                }}
+                                autoFocus
+                                className="w-full text-sm font-medium text-gray-900 px-2 py-1 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            ) : (
+                              <div
+                                className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                                onClick={() => handleTitleEdit(article.id, article.title)}
+                                title="クリックして編集"
+                              >
+                                {article.title}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-500 truncate">
                               {article.excerpt?.substring(0, 60)}...
                             </div>
@@ -712,35 +839,91 @@ function ArticlesPageContent() {
                           </div>
                         )}
                       </td>
-                      <td className="px-2 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {(article.categoryIds || []).slice(0, 2).map(catId => {
-                            const cat = categories.find(c => c.id === catId);
-                            return cat ? (
-                              <span key={catId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 truncate max-w-[80px]" title={cat.name}>
-                                {cat.name}
-                              </span>
-                            ) : null;
-                          })}
-                          {(article.categoryIds || []).length > 2 && (
-                            <span className="text-xs text-gray-500">+{(article.categoryIds || []).length - 2}</span>
+                      <td className="px-2 py-3 relative">
+                        <div
+                          className="flex flex-wrap gap-1 cursor-pointer min-h-[24px] rounded px-1 -mx-1 hover:bg-blue-50 transition-colors"
+                          onClick={() => setEditingCategoryId(editingCategoryId === article.id ? null : article.id)}
+                          title="クリックして編集"
+                        >
+                          {(article.categoryIds || []).length === 0 ? (
+                            <span className="text-xs text-gray-400">未設定</span>
+                          ) : (
+                            <>
+                              {(article.categoryIds || []).slice(0, 2).map(catId => {
+                                const cat = categories.find(c => c.id === catId);
+                                return cat ? (
+                                  <span key={catId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 truncate max-w-[80px]" title={cat.name}>
+                                    {cat.name}
+                                  </span>
+                                ) : null;
+                              })}
+                              {(article.categoryIds || []).length > 2 && (
+                                <span className="text-xs text-gray-500">+{(article.categoryIds || []).length - 2}</span>
+                              )}
+                            </>
                           )}
                         </div>
+                        {editingCategoryId === article.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setEditingCategoryId(null)} />
+                            <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px] max-h-[240px] overflow-y-auto z-20">
+                              {categories.map(cat => (
+                                <label key={cat.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={(article.categoryIds || []).includes(cat.id)}
+                                    onChange={() => handleCategoryToggle(article.id, cat.id)}
+                                    className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
+                                  />
+                                  <span className="text-xs text-gray-700">{cat.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </td>
-                      <td className="px-2 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {(article.tagIds || []).slice(0, 2).map(tagId => {
-                            const tag = tags.find(t => t.id === tagId);
-                            return tag ? (
-                              <span key={tagId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 truncate max-w-[80px]" title={tag.name}>
-                                {tag.name}
-                              </span>
-                            ) : null;
-                          })}
-                          {(article.tagIds || []).length > 2 && (
-                            <span className="text-xs text-gray-500">+{(article.tagIds || []).length - 2}</span>
+                      <td className="px-2 py-3 relative">
+                        <div
+                          className="flex flex-wrap gap-1 cursor-pointer min-h-[24px] rounded px-1 -mx-1 hover:bg-gray-100 transition-colors"
+                          onClick={() => setEditingTagId(editingTagId === article.id ? null : article.id)}
+                          title="クリックして編集"
+                        >
+                          {(article.tagIds || []).length === 0 ? (
+                            <span className="text-xs text-gray-400">未設定</span>
+                          ) : (
+                            <>
+                              {(article.tagIds || []).slice(0, 2).map(tagId => {
+                                const tag = tags.find(t => t.id === tagId);
+                                return tag ? (
+                                  <span key={tagId} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 truncate max-w-[80px]" title={tag.name}>
+                                    {tag.name}
+                                  </span>
+                                ) : null;
+                              })}
+                              {(article.tagIds || []).length > 2 && (
+                                <span className="text-xs text-gray-500">+{(article.tagIds || []).length - 2}</span>
+                              )}
+                            </>
                           )}
                         </div>
+                        {editingTagId === article.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setEditingTagId(null)} />
+                            <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px] max-h-[240px] overflow-y-auto z-20">
+                              {tags.map(tag => (
+                                <label key={tag.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={(article.tagIds || []).includes(tag.id)}
+                                    onChange={() => handleTagToggle(article.id, tag.id)}
+                                    className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
+                                  />
+                                  <span className="text-xs text-gray-700">{tag.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-right text-xs text-gray-500">
                         {(article.viewCount || 0).toLocaleString()}

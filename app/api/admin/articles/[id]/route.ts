@@ -143,6 +143,21 @@ export async function PUT(
       }
     }
 
+    // タイトルの更新
+    if (typeof body.title === 'string') {
+      updateData.title = body.title;
+    }
+
+    // カテゴリーIDの更新
+    if (Array.isArray(body.categoryIds)) {
+      updateData.categoryIds = body.categoryIds;
+    }
+
+    // タグIDの更新
+    if (Array.isArray(body.tagIds)) {
+      updateData.tagIds = body.tagIds;
+    }
+
     // Firestoreを即座に更新
     await articleRef.update(updateData);
     // 公開ステータスが変更された場合
