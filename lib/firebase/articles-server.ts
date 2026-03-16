@@ -345,7 +345,7 @@ export const getSliderArticlesServer = async (mediaId?: string): Promise<Article
 // 新着記事を取得（サーバーサイド用）
 export const getRecentArticlesServer = async (limitCount: number = 10, mediaId?: string): Promise<Article[]> => {
   return getArticlesServer({
-    orderBy: 'updatedAt',
+    orderBy: 'publishedAt',
     orderDirection: 'desc',
     limit: limitCount,
     mediaId,

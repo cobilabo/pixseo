@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       const [articleResults, category] = await Promise.all([
         getArticlesServer({
           categoryId,
-          orderBy: type === 'popular' ? 'viewCount' : 'updatedAt',
+          orderBy: type === 'popular' ? 'viewCount' : 'publishedAt',
           orderDirection: 'desc',
           limit,
           mediaId: mediaId || undefined,
