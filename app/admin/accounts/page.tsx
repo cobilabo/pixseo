@@ -52,7 +52,7 @@ export default function AccountsPage() {
         const filteredAccounts = accountsData.filter((account) => {
           if (account.role === 'super_admin') return false;
           if (account.email === 'admin@pixseo.cloud') return false;
-          return currentTenant.memberIds.includes(account.uid);
+          return account.mediaIds?.includes(currentTenant.id);
         });
         
         setAccounts(filteredAccounts);

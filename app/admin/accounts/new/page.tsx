@@ -11,7 +11,7 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NewAccountPage() {
-  const { currentTenant } = useMediaTenant();
+  const { currentTenant, refreshTenants } = useMediaTenant();
   const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,6 +57,7 @@ export default function NewAccountPage() {
       });
 
       if (response.ok) {
+        await refreshTenants();
         showSuccessAndNavigate('アカウントを作成しました', '/admin/accounts');
       } else {
         const error = await response.json();
