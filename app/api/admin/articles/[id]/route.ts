@@ -5,6 +5,7 @@ import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sy
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
+import { cacheManager } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -160,8 +161,18 @@ export async function PUT(
 
     // Firestoreを即座に更新
     await articleRef.update(updateData);
+
+    // 記事関連のサーバーサイドメモリキャッシュをクリア
+    const articleSlug = existingData?.slug;
+    if (articleSlug) {
+      cacheManager.deletePattern(`^article:${articleSlug}`);
+    }
+    cacheManager.deletePattern('^articles');
+    cacheManager.deletePattern('^sliderArticles');
+
     // 公開ステータスが変更された場合
-    const statusChanged = wasPublished !== body.isPublished;
+    const isPublishedInBody = typeof body.isPublished === 'boolean';
+    const statusChanged = isPublishedInBody && wasPublished !== body.isPublished;
     
     // 🚀 公開に切り替えた場合、翻訳とAlgolia登録をバックグラウンドで実行
     if (body.isPublished === true && statusChanged) {
@@ -241,14 +252,14 @@ export async function PUT(
           console.error(`[BG ${id}] バックグラウンド翻訳処理エラー:`, error);
         }
       })();
-    } else if (!body.isPublished) {
+    } else if (body.isPublished === false) {
       try {
         await deleteArticleFromAlgolia(id);
       } catch (algoliaError) {
         console.error('[API] Algolia delete error:', algoliaError);
       }
-    } else if (body.isPublished && !statusChanged) {
-      // 既に公開済みのAlgolia同期は軽量なのでバックグラウンドで実行
+    } else if (wasPublished) {
+      // 公開中の記事でコンテンツ変更（タイトル・カテゴリー・タグ等）があった場合もAlgolia同期
       (async () => {
         try {
           const bgRef = adminDb.collection('articles').doc(id);
