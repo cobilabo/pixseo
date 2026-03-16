@@ -151,6 +151,8 @@ export default function WritersPage() {
                     totalCount={totalCount}
                     currentPage={currentPage}
                     itemsPerPage={ITEMS_PER_PAGE}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
                   />
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
