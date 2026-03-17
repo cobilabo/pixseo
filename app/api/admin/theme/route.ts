@@ -5,6 +5,7 @@ import { defaultTheme } from '@/types/theme';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS, Lang } from '@/types/lang';
 import { clearThemeCache } from '@/lib/firebase/theme-helper';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -244,6 +245,8 @@ export async function PUT(request: NextRequest) {
     });
 
     clearThemeCache(mediaId);
+    // フロントエンドのルートキャッシュを無効化
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ 
       message: 'デザイン設定を更新しました',
