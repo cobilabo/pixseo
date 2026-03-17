@@ -227,6 +227,14 @@ export interface HtmlShortcodeItem {
   htmlCode: string;           // HTMLコード
 }
 
+// 遷移アニメーションの種類
+export type TransitionAnimation = 'none' | 'fade-in';
+
+// 一般設定の定義
+export interface GeneralSettings {
+  transitionAnimation: TransitionAnimation;
+}
+
 // 内部リンク表示形式
 export type InternalLinkStyle = 'text' | 'blogcard';
 
@@ -413,6 +421,9 @@ export interface Theme {
   
   // カスタムJavaScript
   scripts?: ScriptItem[];           // スクリプト設定（複数可）
+
+  // 一般設定
+  generalSettings?: GeneralSettings;
   
   // 🔄 後方互換性のために残す（オプショナル）
   panelBackgroundColor?: string;
@@ -494,5 +505,10 @@ export const defaultTheme: Theme = {
   
   // カスタムCSS
   customCss: '',
+
+  // 一般設定
+  generalSettings: {
+    transitionAnimation: 'none',
+  },
 };
 

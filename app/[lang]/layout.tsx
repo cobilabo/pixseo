@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import PreviewBadge from '@/components/PreviewBadge';
 import ScriptInjector from '@/components/common/ScriptInjector';
+import PageTransitionWrapper from '@/components/common/PageTransitionWrapper';
 import { getMediaIdFromHost } from '@/lib/firebase/media-tenant-helper';
 import { getTheme } from '@/lib/firebase/theme-helper';
 
@@ -20,10 +21,11 @@ export default async function LangLayout({
   const host = headersList.get('host') || '';
   const isPreview = host.endsWith('.pixseo-preview.cloud');
 
-  // テーマ設定からスクリプトを取得
+  // テーマ設定を取得
   const mediaId = await getMediaIdFromHost();
   const theme = mediaId ? await getTheme(mediaId) : null;
   const scripts = theme?.scripts || [];
+  const isFadeIn = theme?.generalSettings?.transitionAnimation === 'fade-in';
 
   return (
     <>
@@ -33,8 +35,12 @@ export default async function LangLayout({
           <ScriptInjector scripts={scripts} position="head" />
         </Suspense>
       )}
-      
-      {children}
+
+      {isFadeIn ? (
+        <PageTransitionWrapper>{children}</PageTransitionWrapper>
+      ) : (
+        children
+      )}
       
       {/* Body末尾用スクリプト */}
       {scripts.length > 0 && (

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, TransitionAnimation } from '@/types/theme';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -233,7 +233,7 @@ export default function ThemePage() {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode' | 'article'>('fv');
+  const [activeTab, setActiveTab] = useState<'fv' | 'banner' | 'footer-content' | 'footer-section' | 'menu' | 'sns' | 'color' | 'css' | 'js' | 'search' | 'side-content' | 'shortcode' | 'article' | 'general'>('fv');
   
   // 固定ページ一覧
   const [pages, setPages] = useState<Page[]>([]);
@@ -1374,6 +1374,18 @@ export default function ThemePage() {
                     HTMLショートコード
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('general')}
+                  className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    activeTab === 'general'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  style={activeTab === 'general' ? { backgroundColor: '#f9fafb' } : {}}
+                >
+                  一般
+                </button>
               </div>
             </div>
 
@@ -2805,6 +2817,70 @@ export default function ThemePage() {
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+              {/* 一般タブ */}
+              {activeTab === 'general' && (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">一般設定</p>
+                        <p className="text-blue-600">サイト全体に関わる基本的な動作・表示の設定を行います。</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 遷移アニメーション */}
+                  <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800 mb-1">遷移アニメーション</h3>
+                      <p className="text-xs text-gray-500">ページ遷移時のアニメーション効果を設定します。</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                        <input
+                          type="radio"
+                          name="transitionAnimation"
+                          value="none"
+                          checked={(theme.generalSettings?.transitionAnimation ?? 'none') === 'none'}
+                          onChange={() =>
+                            setTheme((prev) => ({
+                              ...prev,
+                              generalSettings: {
+                                ...(prev.generalSettings ?? { transitionAnimation: 'none' }),
+                                transitionAnimation: 'none' as TransitionAnimation,
+                              },
+                            }))
+                          }
+                          className="accent-blue-600"
+                        />
+                        <span className="text-sm font-medium text-gray-700">無し</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                        <input
+                          type="radio"
+                          name="transitionAnimation"
+                          value="fade-in"
+                          checked={(theme.generalSettings?.transitionAnimation ?? 'none') === 'fade-in'}
+                          onChange={() =>
+                            setTheme((prev) => ({
+                              ...prev,
+                              generalSettings: {
+                                ...(prev.generalSettings ?? { transitionAnimation: 'none' }),
+                                transitionAnimation: 'fade-in' as TransitionAnimation,
+                              },
+                            }))
+                          }
+                          className="accent-blue-600"
+                        />
+                        <span className="text-sm font-medium text-gray-700">フェードイン</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
