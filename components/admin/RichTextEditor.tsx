@@ -581,60 +581,108 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
   };
 
+  // 画像モーダルを開く前にカーソル位置を保存
+  const openImageModal = () => {
+    if (!editorRef.current) {
+      setShowImageModal(true);
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        setSavedRange(range.cloneRange());
+      }
+    } else {
+      const range = document.createRange();
+      if (selection && selection.anchorNode && editorRef.current.contains(selection.anchorNode)) {
+        range.setStart(selection.anchorNode, selection.anchorOffset);
+        range.collapse(true);
+        setSavedRange(range);
+      }
+    }
+    setShowImageModal(true);
+  };
+
   // 画像をキャプション付きで挿入
   const insertImageWithCaption = (url: string) => {
+    if (!editorRef.current) return;
+
+    let range: Range | null = null;
+
+    // 保存されたカーソル位置を優先
+    if (savedRange && editorRef.current.contains(savedRange.commonAncestorContainer)) {
+      range = savedRange.cloneRange();
+    } else {
+      // フォールバック：現在の選択範囲 or エディタ末尾
+      const selection = window.getSelection();
+      editorRef.current.focus();
+      if (selection && selection.rangeCount > 0) {
+        const sel = selection.getRangeAt(0);
+        if (editorRef.current.contains(sel.commonAncestorContainer)) {
+          range = sel;
+        }
+      }
+      if (!range) {
+        range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+      }
+    }
+
+    const figure = document.createElement('figure');
+    figure.className = 'image-figure';
+    figure.style.margin = '1.5rem 0';
+    
+    // 著作権表記
+    if (imageCopyright) {
+      const copyright = document.createElement('div');
+      copyright.className = 'image-copyright';
+      copyright.textContent = imageCopyright;
+      copyright.style.fontSize = '0.75rem';
+      copyright.style.color = '#6b7280';
+      copyright.style.marginBottom = '0.5rem';
+      figure.appendChild(copyright);
+    }
+    
+    // 画像
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = imageCaption || '';
+    img.style.width = '100%';
+    img.style.height = 'auto';
+    img.style.borderRadius = '0.5rem';
+    figure.appendChild(img);
+    
+    // キャプション
+    if (imageCaption) {
+      const figcaption = document.createElement('figcaption');
+      figcaption.className = 'image-caption';
+      figcaption.textContent = imageCaption;
+      figcaption.style.fontSize = '0.875rem';
+      figcaption.style.color = '#6b7280';
+      figcaption.style.marginTop = '0.5rem';
+      figcaption.style.textAlign = 'center';
+      figure.appendChild(figcaption);
+    }
+
+    editorRef.current.focus();
+    range.insertNode(figure);
+    range.setStartAfter(figure);
+    range.setEndAfter(figure);
     const selection = window.getSelection();
-    if (selection && editorRef.current) {
-      const range = selection.getRangeAt(0);
-      
-      const figure = document.createElement('figure');
-      figure.className = 'image-figure';
-      figure.style.margin = '1.5rem 0';
-      
-      // 著作権表記
-      if (imageCopyright) {
-        const copyright = document.createElement('div');
-        copyright.className = 'image-copyright';
-        copyright.textContent = imageCopyright;
-        copyright.style.fontSize = '0.75rem';
-        copyright.style.color = '#6b7280';
-        copyright.style.marginBottom = '0.5rem';
-        figure.appendChild(copyright);
-      }
-      
-      // 画像
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = imageCaption || '';
-      img.style.width = '100%';
-      img.style.height = 'auto';
-      img.style.borderRadius = '0.5rem';
-      figure.appendChild(img);
-      
-      // キャプション
-      if (imageCaption) {
-        const figcaption = document.createElement('figcaption');
-        figcaption.className = 'image-caption';
-        figcaption.textContent = imageCaption;
-        figcaption.style.fontSize = '0.875rem';
-        figcaption.style.color = '#6b7280';
-        figcaption.style.marginTop = '0.5rem';
-        figcaption.style.textAlign = 'center';
-        figure.appendChild(figcaption);
-      }
-      
-      range.insertNode(figure);
-      range.setStartAfter(figure);
-      range.setEndAfter(figure);
+    if (selection) {
       selection.removeAllRanges();
       selection.addRange(range);
-      
-      handleInput();
-      setShowImageModal(false);
-      setImageUrl('');
-      setImageCaption('');
-      setImageCopyright('');
     }
+    
+    handleInput();
+    setSavedRange(null);
+    setShowImageModal(false);
+    setImageUrl('');
+    setImageCaption('');
+    setImageCopyright('');
   };
 
   // テーブル挿入
@@ -1094,7 +1142,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             🔗
           </ToolbarButton>
           
-          <ToolbarButton onClick={() => setShowImageModal(true)} title="画像を挿入">
+          <ToolbarButton onClick={openImageModal} title="画像を挿入">
             🖼️
           </ToolbarButton>
 
