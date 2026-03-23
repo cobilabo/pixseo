@@ -97,6 +97,23 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     });
   }, [value]);
 
+  // .image-figure に削除ボタンを注入（保存時には除去される）
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const figures = editorRef.current.querySelectorAll<HTMLElement>('figure.image-figure');
+    figures.forEach(figure => {
+      if (figure.querySelector('.image-figure-delete-btn')) return;
+      figure.style.position = 'relative';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'image-figure-delete-btn';
+      btn.setAttribute('data-action', 'delete-figure');
+      btn.title = '画像を削除';
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+      figure.appendChild(btn);
+    });
+  }, [value]);
+
   // 既存のHTMLブロックを検出して初期化
   useEffect(() => {
     if (!editorRef.current) return;
@@ -157,6 +174,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             if (editorRef.current) {
               const html = editorRef.current.innerHTML;
               onChange(html);
+            }
+          }
+          return;
+        }
+
+        if (action === 'delete-figure') {
+          const figure = button.closest('figure.image-figure');
+          if (figure) {
+            figure.remove();
+            if (editorRef.current) {
+              // 削除ボタンを除去してから保存
+              const clone = editorRef.current.cloneNode(true) as HTMLElement;
+              clone.querySelectorAll('.image-figure-delete-btn').forEach(b => b.remove());
+              onChange(clone.innerHTML);
             }
           }
           return;
@@ -469,7 +500,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   const handleInput = () => {
     if (editorRef.current) {
-      const html = editorRef.current.innerHTML;
+      // 保存前に注入した画像削除ボタンを除去してクリーンなHTMLを保存
+      const clone = editorRef.current.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('.image-figure-delete-btn').forEach(btn => btn.remove());
+      const html = clone.innerHTML;
       onChange(html);
     }
   };
@@ -1853,7 +1887,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
         /* 画像関連 */
         [contenteditable="true"] .image-figure {
+          position: relative;
           margin: 1.5rem 0;
+          min-height: 60px;
         }
 
         [contenteditable="true"] .image-copyright {
@@ -1867,6 +1903,38 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           color: #6b7280;
           margin-top: 0.5rem;
           text-align: center;
+        }
+
+        /* 画像削除ボタン */
+        [contenteditable="true"] .image-figure-delete-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(239, 68, 68, 0.85);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          opacity: 0;
+          transition: opacity 0.15s;
+          z-index: 10;
+          padding: 0;
+          line-height: 1;
+        }
+
+        [contenteditable="true"] .image-figure:hover .image-figure-delete-btn,
+        [contenteditable="true"] .image-figure-delete-btn:focus {
+          opacity: 1;
+        }
+
+        [contenteditable="true"] .image-figure-delete-btn:hover {
+          background: rgba(220, 38, 38, 1);
+          opacity: 1;
         }
 
         /* HTMLブロック共通 */
