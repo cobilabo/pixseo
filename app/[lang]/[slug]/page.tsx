@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
 import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
+import { SIDEBAR_ARTICLE_FETCH_LIMIT } from '@/lib/constants/sidebar-content';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
@@ -145,9 +146,9 @@ export default async function FixedPage({ params }: PageProps) {
   let allCategoriesWithCount: any[] = [];
   if (showSidebar) {
     [popularArticles, recommendedArticles, recentArticles, allCategoriesWithCount] = await Promise.all([
-      getPopularArticlesServer(5, mediaId),
-      getRecommendedArticlesServer(5, mediaId),
-      getRecentArticlesServer(10, mediaId),
+      getPopularArticlesServer(SIDEBAR_ARTICLE_FETCH_LIMIT, mediaId),
+      getRecommendedArticlesServer(SIDEBAR_ARTICLE_FETCH_LIMIT, mediaId),
+      getRecentArticlesServer(SIDEBAR_ARTICLE_FETCH_LIMIT, mediaId),
       getCategoriesWithCountServer({ mediaId }),
     ]);
   }

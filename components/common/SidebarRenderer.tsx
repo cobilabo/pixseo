@@ -1,4 +1,5 @@
 import { SideContentItem, SideContentHtmlItem } from '@/types/theme';
+import { normalizeSideContentDisplayCount, DEFAULT_SIDE_CONTENT_DISPLAY_COUNT } from '@/lib/constants/sidebar-content';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
 import RecentArticles from './RecentArticles';
@@ -25,8 +26,8 @@ interface SidebarRendererProps {
 // デフォルトのサイドコンテンツ設定
 const getDefaultSideContentItems = (): SideContentItem[] => {
   return [
-    { id: 'default-popular', type: 'popularArticles', isEnabled: true, order: 0, displayCount: 5 },
-    { id: 'default-recommended', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: 5 },
+    { id: 'default-popular', type: 'popularArticles', isEnabled: true, order: 0, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
+    { id: 'default-recommended', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
   ];
 };
 
@@ -91,7 +92,7 @@ export default function SidebarRenderer({
       {enabledItems.map((item) => {
         switch (item.type) {
           case 'recentArticles':
-            const limitedRecent = recentArticles.slice(0, item.displayCount || 5);
+            const limitedRecent = recentArticles.slice(0, normalizeSideContentDisplayCount(item.displayCount));
             if (limitedRecent.length === 0) return null;
             return (
               <RecentArticles
@@ -102,7 +103,7 @@ export default function SidebarRenderer({
               />
             );
           case 'popularArticles':
-            const limitedPopular = popularArticles.slice(0, item.displayCount || 5);
+            const limitedPopular = popularArticles.slice(0, normalizeSideContentDisplayCount(item.displayCount));
             if (limitedPopular.length === 0) return null;
             return (
               <PopularArticles
@@ -113,7 +114,7 @@ export default function SidebarRenderer({
               />
             );
           case 'recommendedArticles':
-            const limitedRecommended = recommendedArticles.slice(0, item.displayCount || 5);
+            const limitedRecommended = recommendedArticles.slice(0, normalizeSideContentDisplayCount(item.displayCount));
             if (limitedRecommended.length === 0) return null;
             return (
               <RecommendedArticles

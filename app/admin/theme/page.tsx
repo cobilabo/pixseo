@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, TransitionAnimation } from '@/types/theme';
+import {
+  SIDE_CONTENT_DISPLAY_COUNT_OPTIONS,
+  DEFAULT_SIDE_CONTENT_DISPLAY_COUNT,
+  normalizeSideContentDisplayCount,
+  normalizeSideContentItemsDisplayCounts,
+} from '@/lib/constants/sidebar-content';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -289,8 +295,8 @@ export default function ThemePage() {
       if (migratedSideContentItems.length === 0 && fetchedTheme.sideContentHtmlItems?.length > 0) {
         // 新形式が空で、旧形式にデータがある場合は移行
         const defaultItems: SideContentItem[] = [
-          { id: 'default-popular', type: 'popularArticles', isEnabled: true, order: 0, displayCount: 5 },
-          { id: 'default-recommended', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: 5 },
+          { id: 'default-popular', type: 'popularArticles', isEnabled: true, order: 0, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
+          { id: 'default-recommended', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
         ];
         // 旧形式のHTMLアイテムを新形式に変換
         const migratedHtmlItems: SideContentItem[] = fetchedTheme.sideContentHtmlItems.map((item: SideContentHtmlItem, index: number) => ({
@@ -303,6 +309,8 @@ export default function ThemePage() {
         }));
         migratedSideContentItems = [...defaultItems, ...migratedHtmlItems];
       }
+
+      migratedSideContentItems = normalizeSideContentItemsDisplayCounts(migratedSideContentItems) ?? [];
       
       // デフォルト値とマージ
       setTheme({
@@ -360,6 +368,7 @@ export default function ThemePage() {
       const currentSettings = extractCurrentLayoutSettings(theme);
       const themeToSave: Theme = {
         ...theme,
+        sideContentItems: normalizeSideContentItemsDisplayCounts(theme.sideContentItems) ?? [],
         themeSettings: {
           ...theme.themeSettings,
           [theme.layoutTheme]: currentSettings,
@@ -1019,8 +1028,8 @@ export default function ThemePage() {
   // サイドコンテンツ項目（新形式）関連の関数
   const getDefaultSideContentItems = (): SideContentItem[] => {
     return [
-      { id: 'popular-articles', type: 'popularArticles', isEnabled: true, order: 0, displayCount: 5 },
-      { id: 'recommended-articles', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: 5 },
+      { id: 'popular-articles', type: 'popularArticles', isEnabled: true, order: 0, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
+      { id: 'recommended-articles', type: 'recommendedArticles', isEnabled: true, order: 1, displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT },
     ];
   };
 
@@ -1039,7 +1048,7 @@ export default function ThemePage() {
       type,
       isEnabled: true,
       order: currentItems.length,
-      ...(type === 'recentArticles' || type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: 5 } : {}),
+      ...(type === 'recentArticles' || type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT } : {}),
       ...(type === 'html' ? { title: '', htmlCode: '' } : {}),
     };
     setTheme(prev => ({
@@ -2090,11 +2099,11 @@ export default function ThemePage() {
                             <div className="flex items-center gap-4">
                               <label className="text-sm font-medium text-gray-700">表示件数</label>
                               <select
-                                value={item.displayCount || 5}
-                                onChange={(e) => updateSideContentItem(item.id, { displayCount: parseInt(e.target.value) })}
+                                value={normalizeSideContentDisplayCount(item.displayCount)}
+                                onChange={(e) => updateSideContentItem(item.id, { displayCount: parseInt(e.target.value, 10) })}
                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                               >
-                                {[3, 5, 10, 15, 20].map(num => (
+                                {SIDE_CONTENT_DISPLAY_COUNT_OPTIONS.map((num) => (
                                   <option key={num} value={num} className="text-gray-900">{num}件</option>
                                 ))}
                               </select>
