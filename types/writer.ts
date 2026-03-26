@@ -9,6 +9,10 @@ export interface Writer {
   handleName: string; // ハンドルネーム
   bio?: string; // 紹介文（オプショナル）
   mediaId: string; // サービスID
+  /** メインライターか（API応答用・mediaTenants.mainWriterId と照合） */
+  isMainWriter?: boolean;
+  /** 同一メディアのライター人数（単体取得API用） */
+  writerCountForMedia?: number;
   createdAt?: Date;
   updatedAt?: Date;
   // 多言語フィールド

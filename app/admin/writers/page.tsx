@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
-import { apiGet } from '@/lib/api-client';
+import { apiGet, fetchWithMediaId } from '@/lib/api-client';
 import { Writer } from '@/types/writer';
 import { Article } from '@/types/article';
 import { useToast } from '@/contexts/ToastContext';
@@ -63,7 +63,7 @@ export default function WritersPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/writers/${id}`, {
+      const response = await fetchWithMediaId(`/api/admin/writers/${id}`, {
         method: 'DELETE',
       });
 
@@ -71,7 +71,8 @@ export default function WritersPage() {
         showSuccess('ライターを削除しました');
         fetchWriters();
       } else {
-        throw new Error('削除に失敗しました');
+        const err = await response.json().catch(() => ({}));
+        showError((err as { error?: string }).error || '削除に失敗しました');
       }
     } catch (error) {
       console.error('Error deleting writer:', error);
@@ -160,6 +161,9 @@ export default function WritersPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           アイコン
                         </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                          メイン
+                        </th>
                         <th 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                           onClick={() => handleSort('handleName')}
@@ -210,6 +214,15 @@ export default function WritersPage() {
                               <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                             )}
                           </td>
+                          <td className="px-6 py-4 text-center">
+                            {writer.isMainWriter ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-900">
+                                メイン
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-sm">—</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900">{writer.handleName}</div>
                           </td>
@@ -230,6 +243,8 @@ export default function WritersPage() {
                             <ActionButtons
                               editHref={`/writers/${writer.id}/edit`}
                               onDelete={() => handleDelete(writer.id, writer.handleName)}
+                              deleteDisabled={!!writer.isMainWriter}
+                              deleteDisabledTitle="メインライターは削除できません"
                             />
                           </td>
                         </tr>

@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { getOrRepairMainWriterId, setMainWriterId } from '@/lib/admin/writers-main-writer';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,12 @@ export async function GET(request: NextRequest) {
     }
     
     const snapshot = await query.get();
-    
+
+    let mainWriterId: string | null = null;
+    if (mediaId) {
+      mainWriterId = await getOrRepairMainWriterId(mediaId);
+    }
+
     const writers = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -40,6 +46,7 @@ export async function GET(request: NextRequest) {
         handleName: data.handleName,
         bio: data.bio || '',
         mediaId: data.mediaId,
+        isMainWriter: mediaId ? doc.id === mainWriterId : false,
         createdAt: data.createdAt?.toDate?.() || new Date(),
         updatedAt: data.updatedAt?.toDate?.() || new Date(),
       };
@@ -63,7 +70,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { icon, iconAlt, backgroundImage, backgroundImageAlt, handleName, bio, mediaId } = body;
+    const { icon, iconAlt, backgroundImage, backgroundImageAlt, handleName, bio, mediaId, isMainWriter } = body;
     
     if (!handleName || !mediaId) {
       return NextResponse.json(
@@ -113,13 +120,21 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    const beforeSnap = await adminDb.collection('writers').where('mediaId', '==', mediaId).get();
+    const isFirstWriterForMedia = beforeSnap.empty;
+
     const docRef = await adminDb.collection('writers').add(writerData);
-    
+
+    if (isFirstWriterForMedia) {
+      await setMainWriterId(mediaId, docRef.id);
+    } else if (isMainWriter === true) {
+      await setMainWriterId(mediaId, docRef.id);
+    }
+
     return NextResponse.json({
       id: docRef.id,
-      ...writerData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      handleName,
+      isMainWriter: isFirstWriterForMedia || isMainWriter === true,
     });
   } catch (error: any) {
     console.error('Error creating writer:', error);

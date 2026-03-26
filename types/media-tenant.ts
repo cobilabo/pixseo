@@ -64,6 +64,8 @@ export interface MediaTenant {
   isActive: boolean;
   allowIndexing: boolean;    // SEOインデックス許可（デフォルト：false）
   previewAuth?: PreviewAuth; // プレビューサイトのベーシック認証設定
+  /** このメディアでメイン表示するライター（writers の doc ID・1人のみ） */
+  mainWriterId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

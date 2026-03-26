@@ -5,9 +5,16 @@ import Link from 'next/link';
 interface ActionButtonsProps {
   editHref: string;
   onDelete: () => void;
+  deleteDisabled?: boolean;
+  deleteDisabledTitle?: string;
 }
 
-export default function ActionButtons({ editHref, onDelete }: ActionButtonsProps) {
+export default function ActionButtons({
+  editHref,
+  onDelete,
+  deleteDisabled = false,
+  deleteDisabledTitle = '削除できません',
+}: ActionButtonsProps) {
   return (
     <div className="flex justify-end gap-2">
       {/* 編集ボタン */}
@@ -23,9 +30,15 @@ export default function ActionButtons({ editHref, onDelete }: ActionButtonsProps
       
       {/* 削除ボタン */}
       <button
-        onClick={onDelete}
-        className="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors"
-        title="削除"
+        type="button"
+        onClick={deleteDisabled ? undefined : onDelete}
+        disabled={deleteDisabled}
+        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+          deleteDisabled
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-red-100 text-red-600 hover:bg-red-200'
+        }`}
+        title={deleteDisabled ? deleteDisabledTitle : '削除'}
       >
         <svg className="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

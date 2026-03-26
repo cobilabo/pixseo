@@ -9,11 +9,13 @@ import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import { Writer } from '@/types/writer';
 import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
+import { fetchWithMediaId } from '@/lib/api-client';
 
 export default function EditWriterPage({ params }: { params: { id: string } }) {
   const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [writerCountForMedia, setWriterCountForMedia] = useState(1);
   const [formData, setFormData] = useState({
     iconUrl: '',
     iconAlt: '',
@@ -21,12 +23,13 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
     backgroundImageAlt: '',
     handleName: '',
     bio: '',
+    isMainWriter: false,
   });
 
   useEffect(() => {
     const fetchWriter = async () => {
       try {
-        const response = await fetch(`/api/admin/writers/${params.id}`);
+        const response = await fetchWithMediaId(`/api/admin/writers/${params.id}`);
         if (response.ok) {
           const data: Writer = await response.json();
           setFormData({
@@ -36,7 +39,9 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
             backgroundImageAlt: data.backgroundImageAlt || '',
             handleName: data.handleName || '',
             bio: data.bio || '',
+            isMainWriter: data.isMainWriter ?? false,
           });
+          setWriterCountForMedia(data.writerCountForMedia ?? 1);
         }
       } catch (error) {
         console.error('Error fetching writer:', error);
@@ -55,7 +60,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/admin/writers/${params.id}`, {
+      const response = await fetchWithMediaId(`/api/admin/writers/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -67,14 +72,16 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
           backgroundImageAlt: formData.backgroundImageAlt,
           handleName: formData.handleName,
           bio: formData.bio,
+          isMainWriter:
+            writerCountForMedia === 1 ? true : formData.isMainWriter,
         }),
       });
 
       if (response.ok) {
         showSuccessAndNavigate('ライターを更新しました', '/admin/writers');
       } else {
-        const error = await response.json();
-        throw new Error(error.error || 'ライター更新に失敗しました');
+        const error = await response.json().catch(() => ({}));
+        throw new Error((error as { error?: string }).error || 'ライター更新に失敗しました');
       }
     } catch (error: any) {
       console.error('Error updating writer:', error);
@@ -106,6 +113,26 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
                   onAltChange={(alt) => setFormData({ ...formData, backgroundImageAlt: alt })}
                   label="背景画像"
                 />
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={writerCountForMedia === 1 ? true : formData.isMainWriter}
+                      disabled={writerCountForMedia === 1}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isMainWriter: e.target.checked })
+                      }
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                    <span className="text-sm font-medium text-gray-900">メインライターに設定</span>
+                  </label>
+                  {writerCountForMedia === 1 ? (
+                    <p className="text-xs text-gray-500">
+                      ライターが1名のみのときは常にメインです。メインを外すには別のライターを追加してください。
+                    </p>
+                  ) : null}
+                </div>
 
                 <FloatingInput
                   label="ハンドルネーム *"
