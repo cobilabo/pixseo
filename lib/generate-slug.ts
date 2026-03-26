@@ -1,4 +1,36 @@
 /**
+ * OpenAI の返答を URL スラッグ向けに正規化する
+ */
+export function normalizeOpenAISlugOutput(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * OpenAI が使えないときの記事・タイトル用フォールバック。
+ * 英数字のみ残し、空なら `${prefix}-${Date.now()}`。
+ */
+export function generateSlugFallbackFromTitle(
+  title: string,
+  prefix = 'post'
+): string {
+  let slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 40);
+
+  if (!slug) {
+    slug = `${prefix}-${Date.now()}`;
+  }
+
+  return slug;
+}
+
+/**
  * OpenAI APIを使用して日本語から英語のスラッグを生成
  */
 export async function generateEnglishSlug(
@@ -43,42 +75,22 @@ export async function generateEnglishSlug(
     }
 
     const data = await response.json();
-    let slug = data.choices?.[0]?.message?.content?.trim() || '';
+    const raw = data.choices?.[0]?.message?.content?.trim() || '';
+    const slug = normalizeOpenAISlugOutput(raw);
 
     if (!slug) {
       return generateFallbackSlug(name);
     }
 
-    // スラッグをクリーンアップ
-    slug = slug
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    return slug || generateFallbackSlug(name);
+    return slug;
   } catch (error) {
     console.error('[generateEnglishSlug] Error:', error);
     return generateFallbackSlug(name);
   }
 }
 
-/**
- * フォールバック用の簡易スラッグ生成（ローマ字変換）
- */
+/** タグ・カテゴリ用フォールバック（プレフィックス item） */
 function generateFallbackSlug(name: string): string {
-  // 日本語文字を削除して、英数字とハイフンのみに
-  let slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .substring(0, 30);
-  
-  // 完全に空の場合はタイムスタンプを使用
-  if (!slug) {
-    slug = `item-${Date.now()}`;
-  }
-  
-  return slug;
+  return generateSlugFallbackFromTitle(name, 'item');
 }
 

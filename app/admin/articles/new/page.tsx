@@ -25,7 +25,8 @@ function NewArticlePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentTenant } = useMediaTenant();
-  const { showSuccess, showError, showSuccessAndRedirect } = useToast();
+  const { showSuccess, showError, showWarning, showSuccessAndRedirect } =
+    useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -207,6 +208,12 @@ function NewArticlePageContent() {
       
       setFormData(prev => ({ ...prev, slug: generatedSlug }));
       setSlugError('');
+
+      if (data.usedFallback && !options?.silent) {
+        showWarning(
+          'AIが一時的に利用できなかったため、仮のスラッグを設定しました。必要に応じて編集してください。'
+        );
+      }
     } catch (error) {
       const isRateLimit =
         error instanceof Error && error.message === 'slug_generate_rate_limited';
