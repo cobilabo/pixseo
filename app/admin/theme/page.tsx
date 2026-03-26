@@ -2838,7 +2838,9 @@ export default function ThemePage() {
                   <div className="bg-gray-50 rounded-xl p-6 space-y-4">
                     <div>
                       <h3 className="text-sm font-semibold text-gray-800 mb-1">遷移アニメーション</h3>
-                      <p className="text-xs text-gray-500">ページ遷移時のアニメーション効果を設定します。</p>
+                      <p className="text-xs text-gray-500">
+                        有効にすると、ページ遷移時にフェードインに加え、遷移完了まで画面中央にローダーを表示します。
+                      </p>
                     </div>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors">
@@ -2858,7 +2860,7 @@ export default function ThemePage() {
                           }
                           className="accent-blue-600"
                         />
-                        <span className="text-sm font-medium text-gray-700">無し</span>
+                        <span className="text-sm font-medium text-gray-700">無効</span>
                       </label>
                       <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors">
                         <input
@@ -2877,7 +2879,7 @@ export default function ThemePage() {
                           }
                           className="accent-blue-600"
                         />
-                        <span className="text-sm font-medium text-gray-700">フェードイン</span>
+                        <span className="text-sm font-medium text-gray-700">有効</span>
                       </label>
                     </div>
                   </div>
