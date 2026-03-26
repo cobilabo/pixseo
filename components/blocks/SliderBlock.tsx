@@ -44,7 +44,7 @@ export default function SliderBlock({ block, lang = 'ja' as Lang }: SliderBlockP
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}>
             {Array.from({ length: columnCount }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-[16/10] bg-gray-200 rounded-lg" />
+                <div className="h-48 bg-gray-200 rounded-lg" />
                 <div className="mt-3 h-4 bg-gray-200 rounded w-3/4" />
                 <div className="mt-2 h-3 bg-gray-200 rounded w-1/2" />
               </div>
