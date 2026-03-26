@@ -74,6 +74,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'message.noWriterArticles': 'このライターの記事はまだありません',
     'message.noSearchResults': '記事が見つかりませんでした',
     'message.enterSearchKeyword': '検索キーワードを入力してください',
+    'message.searchEmptyHint': 'タグまたはカテゴリーから検索してください。',
     'message.notFound': 'ページが見つかりません',
     
     // メタ
@@ -162,6 +163,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'message.noWriterArticles': 'No articles by this writer yet',
     'message.noSearchResults': 'No articles found',
     'message.enterSearchKeyword': 'Enter search keyword',
+    'message.searchEmptyHint': 'Please search using tags or categories below.',
     'message.notFound': 'Page not found',
     
     // Meta
@@ -250,6 +252,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'message.noWriterArticles': '该作者暂无文章',
     'message.noSearchResults': '未找到文章',
     'message.enterSearchKeyword': '请输入搜索关键词',
+    'message.searchEmptyHint': '请使用侧边栏的标签或分类进行搜索。',
     'message.notFound': '页面未找到',
     
     // 元数据
@@ -338,6 +341,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'message.noWriterArticles': '이 작성자의 기사가 없습니다',
     'message.noSearchResults': '기사를 찾을 수 없습니다',
     'message.enterSearchKeyword': '검색 키워드를 입력하세요',
+    'message.searchEmptyHint': '사이드바에서 태그 또는 카테고리로 검색해 주세요.',
     'message.notFound': '페이지를 찾을 수 없습니다',
     
     // 메타

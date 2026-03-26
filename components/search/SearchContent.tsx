@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import SimpleSearch from '@/components/search/SimpleSearch';
 import ArticleCard from '@/components/articles/ArticleCard';
 import { Article } from '@/types/article';
 import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
@@ -159,11 +158,6 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
     }
   };
 
-  // キーワード検索フォームからの検索
-  const handleSearch = (searchKeyword: string) => {
-    handleKeywordSearch(searchKeyword);
-  };
-
   // 検索結果のタイトル
   const getSearchResultTitle = () => {
     switch (searchType) {
@@ -185,14 +179,11 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
     } else if (keyword) {
       return t('message.noSearchResults', lang);
     }
-    return t('message.enterSearchKeyword', lang);
+    return t('message.searchEmptyHint', lang);
   };
 
   return (
     <>
-      {/* シンプル検索（キーワード検索用） */}
-      <SimpleSearch onSearch={handleSearch} initialKeyword={keyword} lang={lang} />
-
       {/* タグ/カテゴリー検索時のバッジ表示 */}
       {(searchType === 'tag' || searchType === 'category') && searchLabel && (
         <div className="mb-6">
