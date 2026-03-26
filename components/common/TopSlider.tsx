@@ -142,18 +142,6 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
                     )}
-                    {article.categoryNames && article.categoryNames.length > 0 && (
-                      <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                        {article.categoryNames.map((name, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 text-[10px] font-semibold rounded bg-white/90 text-gray-800 backdrop-blur-sm"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                   <div className="mt-3 px-1">
                     <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
@@ -176,7 +164,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
           <>
             <button
               onClick={(e) => { e.preventDefault(); prev(); }}
-              className="absolute left-0 top-[30%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center -translate-x-1/2"
+              className="absolute left-2 top-[30%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:left-0 md:-translate-x-1/2"
               aria-label="前へ"
             >
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +174,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
 
             <button
               onClick={(e) => { e.preventDefault(); next(); }}
-              className="absolute right-0 top-[30%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center translate-x-1/2"
+              className="absolute right-2 top-[30%] z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:right-0 md:translate-x-1/2"
               aria-label="次へ"
             >
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
