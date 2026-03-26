@@ -136,27 +136,41 @@ function NewArticlePageContent() {
     fetchData();
   }, [searchParams, router]);
 
-  // タイトルが変更されたら自動的にスラッグを生成
+  // タイトルが変更されたら自動的にスラッグを生成（失敗時はトーストを出さない）
   useEffect(() => {
     if (formData.title && !formData.slug) {
-      generateSlugFromTitle(formData.title);
+      generateSlugFromTitle(formData.title, { silent: true });
     }
   }, [formData.title]);
 
-  const generateSlugFromTitle = async (title: string) => {
+  const resolveMediaId = () =>
+    currentTenant?.id ||
+    (typeof window !== 'undefined' ? localStorage.getItem('currentTenantId') : null) ||
+    '';
+
+  const generateSlugFromTitle = async (
+    title: string,
+    options?: { silent?: boolean }
+  ) => {
     if (!title.trim()) return;
+
+    const mediaId = resolveMediaId();
+    if (!mediaId) {
+      if (!options?.silent) {
+        showError(
+          'メディア（サイト）が選択されていません。画面上部でサイトを選択してから再度お試しください。'
+        );
+      }
+      return;
+    }
 
     setGeneratingSlug(true);
     try {
-      const currentTenantId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentTenantId') 
-        : null;
-
       const response = await fetch('/api/admin/articles/generate-slug', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-media-id': currentTenantId || '',
+          'x-media-id': mediaId,
         },
         body: JSON.stringify({ title }),
       });
@@ -168,15 +182,15 @@ function NewArticlePageContent() {
       const data = await response.json();
       let generatedSlug = data.slug;
       
-      // 重複チェック & 一意化
-      if (currentTenant) {
+      // 重複チェック & 一意化（API 側でも行うが、クライアントでも念のため）
+      if (mediaId) {
         let counter = 1;
         let checkSlug = generatedSlug;
         let isDuplicate = true;
         
         while (isDuplicate && counter < 100) {
           const checkResponse = await fetch(
-            `/api/admin/articles/check-slug?mediaId=${currentTenant.id}&slug=${encodeURIComponent(checkSlug)}`
+            `/api/admin/articles/check-slug?mediaId=${mediaId}&slug=${encodeURIComponent(checkSlug)}`
           );
           const checkData = await checkResponse.json();
           
@@ -194,13 +208,11 @@ function NewArticlePageContent() {
       setSlugError('');
     } catch (error) {
       console.error('Error generating slug:', error);
-      // エラー時はフォールバック（簡易的なスラッグ生成）
-      const fallbackSlug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .substring(0, 50);
-      setFormData(prev => ({ ...prev, slug: fallbackSlug }));
+      if (!options?.silent) {
+        showError(
+          'スラッグの生成に失敗しました。OpenAI API（OPENAI_API_KEY）の設定を確認するか、しばらくしてから再度お試しください。'
+        );
+      }
     } finally {
       setGeneratingSlug(false);
     }

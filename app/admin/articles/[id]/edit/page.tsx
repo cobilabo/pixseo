@@ -155,17 +155,24 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const generateSlugFromTitle = async (title: string) => {
     if (!title.trim()) return;
 
+    const mediaId =
+      currentTenant?.id ||
+      (typeof window !== 'undefined' ? localStorage.getItem('currentTenantId') : null) ||
+      '';
+    if (!mediaId) {
+      showError(
+        'メディア（サイト）が選択されていません。画面上部でサイトを選択してから再度お試しください。'
+      );
+      return;
+    }
+
     setGeneratingSlug(true);
     try {
-      const currentTenantId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentTenantId') 
-        : null;
-
       const response = await fetch('/api/admin/articles/generate-slug', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-media-id': currentTenantId || '',
+          'x-media-id': mediaId,
         },
         body: JSON.stringify({ 
           title,
@@ -997,7 +1004,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
           {/* スラッグ変更警告モーダル */}
           {showSlugWarning && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[200] p-4">
               <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-custom">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">⚠️ スラッグ変更の確認</h3>
                 <div className="mb-6 space-y-3">
