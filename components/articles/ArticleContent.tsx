@@ -629,7 +629,7 @@ if (typeof window !== 'undefined') {
       width: min(240px, 42vw) !important;
       min-width: 0 !important;
       max-width: min(240px, 42vw) !important;
-      aspect-ratio: 16 / 9 !important;
+      aspect-ratio: 4 / 3 !important;
       height: auto !important;
       min-height: 0 !important;
       max-height: none !important;

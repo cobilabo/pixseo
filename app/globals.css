@@ -377,7 +377,7 @@ body {
 .blogcard-thumbnail {
   position: relative !important;
   width: min(240px, 42vw) !important;
-  aspect-ratio: 16 / 9 !important;
+  aspect-ratio: 4 / 3 !important;
   height: auto !important;
   flex-shrink: 0 !important;
   overflow: hidden !important;

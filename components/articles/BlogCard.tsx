@@ -77,13 +77,13 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     );
   }
 
-  // ローディング中（サムネは 16:9 に合わせたプレースホルダー）
+  // ローディング中（サムネは 4:3 に合わせたプレースホルダー）
   if (loading) {
     return (
       <div className="my-4 block">
         <div className="flex items-center border border-gray-200 overflow-hidden animate-pulse min-h-[120px]">
           <div
-            className="bg-gray-200 flex-shrink-0 w-[min(240px,42vw)] aspect-video"
+            className="bg-gray-200 flex-shrink-0 w-[min(240px,42vw)] aspect-[4/3]"
             aria-hidden
           />
           <div className="flex-1 p-4 space-y-2 min-w-0">
@@ -107,7 +107,7 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         <span>関連記事</span>
       </div>
       <Link href={href} className="blogcard-link">
-        {/* サムネイル（16:9・contain で見切れ防止） */}
+        {/* サムネイル（4:3・contain で見切れ防止） */}
         <div className="blogcard-thumbnail">
           {data?.featuredImage ? (
             <Image
