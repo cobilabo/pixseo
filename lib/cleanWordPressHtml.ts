@@ -21,6 +21,16 @@ export function cleanWordPressHtml(html: string): string {
 
   // 目次プレースホルダーをシンプルなマーカーに正規化（depth-countingでネストdivを正確にマッチ）
   cleaned = normalizeTocPlaceholder(cleaned);
+
+  // 管理画面リッチテキストの画像ブロック（figure.image-figure）を保護（後続の figure→div / figcaption→p で壊れるのを防ぐ）
+  const imageFigurePlaceholders: string[] = [];
+  cleaned = cleaned.replace(
+    /<figure[^>]*\bimage-figure\b[^>]*>[\s\S]*?<\/figure>/gi,
+    (match) => {
+      imageFigurePlaceholders.push(match);
+      return `__IMAGE_FIGURE_PLACEHOLDER_${imageFigurePlaceholders.length - 1}__`;
+    }
+  );
   
   // HTMLブロック（カスタムエディタのHTMLブロック）を一時的に置換
   cleaned = cleaned.replace(/<div[^>]*class="html-block"[^>]*>[\s\S]*?<\/div>/gi, (match) => {
@@ -96,6 +106,10 @@ export function cleanWordPressHtml(html: string): string {
   
   htmlBlockPlaceholders.forEach((htmlBlock, index) => {
     cleaned = cleaned.replace(`__HTML_BLOCK_PLACEHOLDER_${index}__`, htmlBlock);
+  });
+
+  imageFigurePlaceholders.forEach((block, index) => {
+    cleaned = cleaned.replace(`__IMAGE_FIGURE_PLACEHOLDER_${index}__`, block);
   });
 
   return cleaned;

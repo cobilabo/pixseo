@@ -14,6 +14,9 @@ import ImageGenerator from './ImageGenerator';
 /** 目次プレースホルダー（エディタ内表示用・保存時は normalizeTocPlaceholder で簡略化されうる） */
 const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
 
+/** cleanWordPressHtml 適用済みの本文では div.image-figure + p.image-caption になることがある */
+const IMAGE_FIGURE_SELECTOR = 'figure.image-figure, div.image-figure';
+
 function ensureTocPlaceholderChrome(root: HTMLElement | null) {
   if (!root) return;
   const nodes = root.querySelectorAll<HTMLElement>(
@@ -130,7 +133,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
     if (!editorRef.current) return;
-    const figures = editorRef.current.querySelectorAll<HTMLElement>('figure.image-figure');
+    const figures = editorRef.current.querySelectorAll<HTMLElement>(IMAGE_FIGURE_SELECTOR);
     figures.forEach((figure) => {
       figure.style.position = 'relative';
       if (!figure.querySelector('.image-figure-edit-btn')) {
@@ -222,12 +225,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'edit-figure') {
-          const figure = button.closest('figure.image-figure') as HTMLElement | null;
+          const figure = button.closest(IMAGE_FIGURE_SELECTOR) as HTMLElement | null;
           if (figure && editorRef.current) {
             const img = figure.querySelector('img');
             if (img) {
               const copyEl = figure.querySelector('.image-copyright');
-              const capEl = figure.querySelector('figcaption');
+              const capEl = figure.querySelector('figcaption, p.image-caption');
               editingFigureRef.current = figure;
               setEditImageSrc(img.getAttribute('src') || '');
               setEditImageAlt(img.getAttribute('alt') || '');
@@ -240,7 +243,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'delete-figure') {
-          const figure = button.closest('figure.image-figure');
+          const figure = button.closest(IMAGE_FIGURE_SELECTOR);
           if (figure) {
             figure.remove();
             if (editorRef.current) {
@@ -604,10 +607,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     const captionText = editImageCaption.trim();
-    let capEl = figure.querySelector('figcaption') as HTMLElement | null;
+    let capEl = figure.querySelector(
+      'figcaption, p.image-caption'
+    ) as HTMLElement | null;
     if (captionText) {
       if (!capEl) {
-        capEl = document.createElement('figcaption');
+        const useFigcaption = figure.tagName.toLowerCase() === 'figure';
+        capEl = useFigcaption
+          ? document.createElement('figcaption')
+          : document.createElement('p');
         capEl.className = 'image-caption';
         capEl.style.fontSize = '0.875rem';
         capEl.style.color = '#6b7280';
