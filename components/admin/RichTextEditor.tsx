@@ -1,10 +1,36 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
 import ImageGenerator from './ImageGenerator';
 
+/** 目次プレースホルダー（エディタ内表示用・保存時は normalizeTocPlaceholder で簡略化されうる） */
+const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
+
+function ensureTocPlaceholderChrome(root: HTMLElement | null) {
+  if (!root) return;
+  const nodes = root.querySelectorAll<HTMLElement>(
+    '.toc-placeholder, [data-toc="auto"]'
+  );
+  nodes.forEach((el) => {
+    el.classList.add('not-prose');
+    const hasChrome = el.querySelector(
+      '.toc-placeholder-inner [data-action="delete-toc"]'
+    );
+    if (hasChrome) return;
+    el.setAttribute('contenteditable', 'false');
+    if (!el.getAttribute('data-toc')) el.setAttribute('data-toc', 'auto');
+    el.classList.add('toc-placeholder', 'not-prose');
+    el.innerHTML = TOC_PLACEHOLDER_EDITOR_INNER_HTML;
+  });
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -62,39 +88,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     fetchDesignSettings();
   }, [currentTenant]);
 
-  // 初期値をセット
-  useEffect(() => {
-    if (editorRef.current && !editorRef.current.hasAttribute('data-initialized')) {
-      editorRef.current.setAttribute('data-initialized', 'true');
-      const initialValue = value || '';
-      if (initialValue) {
-        editorRef.current.innerHTML = initialValue;
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // valueが外部から変更されたときにエディタを更新
-  useEffect(() => {
-    if (editorRef.current) {
-      const currentHtml = editorRef.current.innerHTML;
-      if (value !== currentHtml && value) {
-        editorRef.current.innerHTML = value;
-        editorRef.current.setAttribute('data-initialized', 'true');
-      }
-    }
-  }, [value]);
-
-  // 保存されたシンプルなTOCマーカーをエディタUI用のリッチHTMLに展開
-  useEffect(() => {
+  // 外部 value とエディタ DOM を同期し、目次プレースホルダーにエディタ用 UI を付与（useLayoutEffect で useEffect より先に確定）
+  useLayoutEffect(() => {
     if (!editorRef.current) return;
-
-    const tocElements = editorRef.current.querySelectorAll('.toc-placeholder');
-    tocElements.forEach((el) => {
-      if (el.querySelector('.toc-placeholder-inner')) return;
-      el.setAttribute('contenteditable', 'false');
-      el.innerHTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
-    });
+    const ed = editorRef.current;
+    const currentHtml = ed.innerHTML;
+    if (value && value !== currentHtml) {
+      ed.innerHTML = value;
+    }
+    ensureTocPlaceholderChrome(ed);
   }, [value]);
 
   // .image-figure に削除ボタンを注入（保存時には除去される）
@@ -767,10 +769,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     const tocBlock = document.createElement('div');
-    tocBlock.className = 'toc-placeholder';
+    tocBlock.className = 'toc-placeholder not-prose';
     tocBlock.setAttribute('contenteditable', 'false');
     tocBlock.setAttribute('data-toc', 'auto');
-    tocBlock.innerHTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
+    tocBlock.innerHTML = TOC_PLACEHOLDER_EDITOR_INNER_HTML;
 
     const selection = window.getSelection();
     let range: Range;
