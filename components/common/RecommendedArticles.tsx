@@ -29,10 +29,10 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-300">
         {t('section.recommendedArticles', lang)}
       </h2>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-300">
         {articles.map((article) => {
           const articleCategories = getArticleCategories(article.categoryIds || []);
           
@@ -43,7 +43,7 @@ export default function RecommendedArticles({ articles, categories = [], lang = 
               className="flex gap-3 py-4 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (
-                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 bg-white">
+                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-300 bg-white">
                   <Image
                     src={article.featuredImage}
                     alt={article.featuredImageAlt || getTitle(article)}
