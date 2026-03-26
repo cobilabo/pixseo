@@ -340,6 +340,23 @@
   transform: scale(1.06);
 }
 
+/* Sidebar article cards: no lift / image zoom on hover */
+.theme-furatto-default aside a[class*="block bg-white rounded-lg shadow-md"] {
+  transition: box-shadow 0.3s ease;
+}
+
+.theme-furatto-default aside a[class*="block bg-white rounded-lg shadow-md"]:hover {
+  transform: none;
+}
+
+.theme-furatto-default aside a[class*="block bg-white rounded-lg shadow-md"] img {
+  transition: none;
+}
+
+.theme-furatto-default aside a[class*="block bg-white rounded-lg shadow-md"]:hover img {
+  transform: none;
+}
+
 .theme-furatto-default a[class*="block bg-white rounded-lg shadow-md"] h3 {
   color: var(--ft-text);
   font-weight: 700;

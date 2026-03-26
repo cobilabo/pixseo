@@ -51,10 +51,10 @@ function SidebarArticleCard({
         <div className="w-full aspect-video bg-gradient-to-br from-gray-200 to-gray-300" aria-hidden />
       )}
       <div className="p-2.5">
-        <h3 className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug">{title}</h3>
+        <h3 className="text-xs font-semibold text-gray-900 line-clamp-3 mb-1.5 leading-snug">{title}</h3>
         {articleCategories.length > 0 ? (
           <div className="flex flex-wrap gap-1 mb-1.5">
-            {articleCategories.slice(0, 2).map((cat) => {
+            {articleCategories.slice(0, 1).map((cat) => {
               const categoryName = (cat as any)[`name_${lang}`] || cat.name;
               return (
                 <span
