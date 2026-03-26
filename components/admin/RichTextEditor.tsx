@@ -222,7 +222,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'edit-figure') {
-          const figure = button.closest('figure.image-figure');
+          const figure = button.closest('figure.image-figure') as HTMLElement | null;
           if (figure && editorRef.current) {
             const img = figure.querySelector('img');
             if (img) {
