@@ -555,7 +555,7 @@ function NewArticlePageContent() {
                       isDraft: selectedDate ? false : formData.isDraft,
                     });
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white [color-scheme:light] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {formData.isScheduled && (
                   <p className="mt-2 text-sm text-yellow-600">
@@ -632,8 +632,8 @@ function NewArticlePageContent() {
                 required
               />
 
-              {/* スラッグ - 自動生成ボタン付き・プレースホルダーなし */}
-              <div className="flex gap-2 items-end">
+              {/* スラッグ - AI 自動生成ボタン（編集画面と同様） */}
+              <div className="flex gap-2">
                 <div className="flex-1">
                   <FloatingInput
                     label="スラッグ（URL）"
@@ -675,9 +675,14 @@ function NewArticlePageContent() {
                   type="button"
                   onClick={generateSlug}
                   disabled={generatingSlug || !formData.title}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 h-12 mb-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-12 h-12 mb-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full hover:from-purple-700 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+                  title="スラッグ自動生成"
                 >
-                  {generatingSlug ? '生成中...' : '自動生成'}
+                  {generatingSlug ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Image src="/ai.svg" alt="AI" width={20} height={20} className="brightness-0 invert" />
+                  )}
                 </button>
               </div>
 

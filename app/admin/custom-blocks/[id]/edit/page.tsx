@@ -128,7 +128,7 @@ export default function EditCustomBlockPage() {
                 <textarea
                   value={formData.html}
                   onChange={(e) => setFormData({ ...formData, html: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   rows={12}
                   placeholder="<div>...</div>"
                   required
@@ -146,7 +146,7 @@ export default function EditCustomBlockPage() {
                 <textarea
                   value={formData.css}
                   onChange={(e) => setFormData({ ...formData, css: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   rows={8}
                   placeholder=".custom-block { ... }"
                 />

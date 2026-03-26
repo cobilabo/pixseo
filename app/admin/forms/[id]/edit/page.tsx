@@ -259,7 +259,7 @@ export default function EditFormPage() {
                             type: e.target.value as 'message' | 'redirect',
                           },
                         })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="message">メッセージを表示</option>
                         <option value="redirect">URLにリダイレクト</option>

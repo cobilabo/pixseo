@@ -575,7 +575,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                       isDraft: selectedDate ? false : formData.isDraft,
                     });
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-white [color-scheme:light] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {formData.isScheduled && (
                   <p className="mt-2 text-sm text-yellow-600">
@@ -695,7 +695,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   type="button"
                   onClick={handleGenerateSlug}
                   disabled={generatingSlug || !formData.title}
-                  className="w-12 h-12 mb-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full hover:from-purple-700 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-12 h-12 mb-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full hover:from-purple-700 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
                   title="スラッグ自動生成"
                 >
                   {generatingSlug ? (

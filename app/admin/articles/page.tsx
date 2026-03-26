@@ -488,7 +488,7 @@ function ArticlesPageContent() {
               <select
                 value={filterWriter}
                 onChange={(e) => setFilterWriter(e.target.value)}
-                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">ライター</option>
                 {writers.map(writer => (
@@ -500,7 +500,7 @@ function ArticlesPageContent() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">カテゴリー</option>
                 {categories.map(cat => (
@@ -512,7 +512,7 @@ function ArticlesPageContent() {
               <select
                 value={filterTag}
                 onChange={(e) => setFilterTag(e.target.value)}
-                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                className="px-3 py-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">タグ</option>
                 {tags.map(tag => (

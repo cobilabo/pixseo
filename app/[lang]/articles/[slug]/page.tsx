@@ -16,6 +16,10 @@ import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import {
+  formatArticleDate,
+  toIsoDateStringOrNow,
+} from '@/lib/article-date-display';
 import { 
   localizeSiteInfo, 
   localizeTheme, 
@@ -272,8 +276,8 @@ export default async function ArticlePage({ params }: PageProps) {
     description: article.aiSummary || article.excerpt || article.metaDescription || article.title || '',
     abstract: article.aiSummary || article.excerpt || '',
     image: rawArticle.featuredImage || '',
-    datePublished: rawArticle.publishedAt instanceof Date ? rawArticle.publishedAt.toISOString() : new Date().toISOString(),
-    dateModified: rawArticle.updatedAt instanceof Date ? rawArticle.updatedAt.toISOString() : new Date().toISOString(),
+    datePublished: toIsoDateStringOrNow(rawArticle.publishedAt),
+    dateModified: toIsoDateStringOrNow(rawArticle.updatedAt),
     inLanguage: LANG_REGIONS[lang],
     author: writer ? {
       '@type': 'Person',
@@ -364,18 +368,10 @@ export default async function ArticlePage({ params }: PageProps) {
           customTitle={article.title}
           customSubtitle=""
           customMeta={{
-            published: `${t('article.published', lang)}: ${
-              rawArticle.publishedAt ? (
-                rawArticle.publishedAt instanceof Date 
-                  ? rawArticle.publishedAt.toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
-                  : new Date((rawArticle.publishedAt as any).toDate()).toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
-              ) : '日付不明'
-            }`,
-            updated: rawArticle.updatedAt ? `${t('article.updated', lang)}: ${
-              rawArticle.updatedAt instanceof Date 
-                ? rawArticle.updatedAt.toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
-                : new Date((rawArticle.updatedAt as any).toDate()).toLocaleDateString(LANG_REGIONS[lang], { year: 'numeric', month: 'numeric', day: 'numeric' })
-            }` : undefined,
+            published: `${t('article.published', lang)}: ${formatArticleDate(rawArticle.publishedAt, lang)}`,
+            updated: rawArticle.updatedAt
+              ? `${t('article.updated', lang)}: ${formatArticleDate(rawArticle.updatedAt, lang)}`
+              : undefined,
             views: rawArticle.viewCount !== undefined ? t('article.viewCount', lang, { count: rawArticle.viewCount }) : undefined,
             readingTime: rawArticle.readingTime ? t('article.readingTime', lang, { minutes: rawArticle.readingTime }) : undefined,
           }}

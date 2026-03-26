@@ -10,6 +10,7 @@ import { TableOfContentsItem } from '@/types/article';
 import { InternalLinkStyle } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import InlineTableOfContents from './InlineTableOfContents';
+import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
 
 interface ArticleContentProps {
   content: string;
@@ -212,12 +213,24 @@ export default function ArticleContent({
         }
       }
 
-      // 画像を最適化（Next.js Image）
+      // 画像: next.config で許可されたホストのみ Next/Image（それ以外は <img> で未設定ホストエラーを防ぐ）
       if (domNode.name === 'img' && domNode.attribs?.src) {
         const { src, alt = '' } = domNode.attribs;
-        
-        // srcsetなどの不要な属性は除外し、srcとaltのみを使用
-        // 外部URLの場合はそのまま表示（next.config.jsで許可が必要）
+
+        if (!isSrcAllowedForNextImage(src)) {
+          return (
+            <span className="block my-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={alt}
+                className="rounded-lg w-full h-auto"
+                loading="lazy"
+              />
+            </span>
+          );
+        }
+
         return (
           <span className="block my-6">
             <Image
