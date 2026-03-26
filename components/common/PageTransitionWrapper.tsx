@@ -1,7 +1,10 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+
+/** ローダーが一瞬で消えないよう最低表示時間（ms） */
+const MIN_LOADER_MS = 220;
 
 /**
  * 内部リンククリックからパス／クエリが変わるまでの間、中央にローダーを表示する。
@@ -15,8 +18,41 @@ function NavigationRouteLoader() {
   const routeKeyRef = useRef(routeKey);
   routeKeyRef.current = routeKey;
 
-  useEffect(() => {
-    setNavigating(false);
+  const loaderArmedAtRef = useRef<number | null>(null);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const armLoader = () => {
+    loaderArmedAtRef.current = Date.now();
+    setNavigating(true);
+  };
+
+  /** 遷移完了（URL 確定）後、最低表示時間を満たしてからローダーを消す */
+  useLayoutEffect(() => {
+    if (clearTimerRef.current != null) {
+      clearTimeout(clearTimerRef.current);
+      clearTimerRef.current = null;
+    }
+
+    const armedAt = loaderArmedAtRef.current;
+    if (armedAt == null) {
+      return;
+    }
+
+    const elapsed = Date.now() - armedAt;
+    const wait = Math.max(0, MIN_LOADER_MS - elapsed);
+
+    clearTimerRef.current = setTimeout(() => {
+      clearTimerRef.current = null;
+      loaderArmedAtRef.current = null;
+      setNavigating(false);
+    }, wait);
+
+    return () => {
+      if (clearTimerRef.current != null) {
+        clearTimeout(clearTimerRef.current);
+        clearTimerRef.current = null;
+      }
+    };
   }, [routeKey]);
 
   useEffect(() => {
@@ -43,7 +79,7 @@ function NavigationRouteLoader() {
         return;
       }
 
-      setNavigating(true);
+      armLoader();
     };
 
     /** router.push / replace やフォーム送信など、<a> 以外のクライアント遷移でもローダーを出す */
@@ -64,14 +100,14 @@ function NavigationRouteLoader() {
 
     history.pushState = function (...args: Parameters<History['pushState']>) {
       if (shouldShowLoaderForUrl(args[2] as string | undefined)) {
-        setNavigating(true);
+        armLoader();
       }
       return origPush(...args);
     };
 
     history.replaceState = function (...args: Parameters<History['replaceState']>) {
       if (shouldShowLoaderForUrl(args[2] as string | undefined)) {
-        setNavigating(true);
+        armLoader();
       }
       return origReplace(...args);
     };
@@ -84,7 +120,7 @@ function NavigationRouteLoader() {
           const u = new URL(window.location.href);
           const nextKey = `${u.pathname}?${u.searchParams.toString()}`;
           if (nextKey !== before) {
-            setNavigating(true);
+            armLoader();
           }
         } catch {
           /* ignore */
