@@ -1723,7 +1723,9 @@ export default function ThemePage() {
                       </svg>
                       <div className="text-sm text-blue-700">
                         <p className="font-medium mb-1">SNS連携設定</p>
-                        <p className="text-blue-600">SNSアカウントを設定すると、サイトのサイドバーやフッターにSNSリンクが表示されます。</p>
+                        <p className="text-blue-600">
+                          X（Twitter）および Instagram のアカウントを設定すると、2カラムレイアウトでサイドバーが表示されるページのサイドバー内に、それぞれフォロー用のリンクカードが表示されます。
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1739,7 +1741,22 @@ export default function ThemePage() {
                     }))}
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    ※ 未入力の場合、サイドバーにX（Twitter）リンクは表示されません。「@」は不要です（例: pixseo_media）
+                    ※ 未入力の場合、X のリンクは表示されません。「@」は不要です（例: pixseo_media）
+                  </p>
+
+                  <FloatingInput
+                    label="Instagram ユーザー名"
+                    value={theme.snsSettings?.instagramUsername || ''}
+                    onChange={(value) => setTheme(prev => ({
+                      ...prev,
+                      snsSettings: {
+                        ...prev.snsSettings,
+                        instagramUsername: value,
+                      }
+                    }))}
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    ※ 未入力の場合、Instagram のリンクは表示されません。「@」は不要です（例: your_brand）
                   </p>
                 </div>
               )}

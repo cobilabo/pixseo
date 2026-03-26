@@ -17,7 +17,7 @@ import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
-import XLink from '@/components/common/XLink';
+import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
@@ -378,7 +378,7 @@ export default async function HomePage({ params }: PageProps) {
                   )}
 
                   {/* Xリンク */}
-                  {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
+                  <SidebarSnsLinks snsSettings={rawTheme.snsSettings} lang={lang} />
                 </aside>
               </div>
             </main>
@@ -581,7 +581,7 @@ export default async function HomePage({ params }: PageProps) {
             )}
 
             {/* Xリンク */}
-            {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
+            <SidebarSnsLinks snsSettings={rawTheme.snsSettings} lang={lang} />
           </aside>
         </div>
       </main>

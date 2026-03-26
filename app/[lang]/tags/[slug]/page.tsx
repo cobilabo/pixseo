@@ -20,7 +20,7 @@ import ArticleCard from '@/components/articles/ArticleCard';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import XLink from '@/components/common/XLink';
+import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import SearchWidget from '@/components/search/SearchWidget';
@@ -227,7 +227,7 @@ export default async function TagPage({ params }: PageProps) {
               lang={lang}
             />
             {footerBlocks.length > 0 && <SidebarBanners blocks={footerBlocks} />}
-            {rawTheme.snsSettings?.xUserId && <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />}
+            <SidebarSnsLinks snsSettings={rawTheme.snsSettings} lang={lang} />
           </aside>
         </div>
       </main>

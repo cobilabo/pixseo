@@ -149,7 +149,9 @@ export interface MenuSettings {
 
 // SNS設定の定義
 export interface SnsSettings {
-  xUserId?: string;           // X（Twitter）のユーザーID
+  xUserId?: string; // X（Twitter）のユーザーID（@なし）
+  /** Instagram のユーザー名（@なし・プロフィールURLの一部） */
+  instagramUsername?: string;
 }
 
 // 検索表示対象ページの定義

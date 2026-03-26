@@ -45,7 +45,7 @@ import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
-import XLink from '@/components/common/XLink';
+import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
@@ -507,10 +507,8 @@ export default async function ArticlePage({ params }: PageProps) {
               <SidebarBanners blocks={footerBlocks} />
             )}
 
-            {/* Xタイムライン */}
-            {rawTheme.snsSettings?.xUserId && (
-              <XLink username={rawTheme.snsSettings.xUserId} lang={lang} />
-            )}
+            {/* SNS リンク（X / Instagram） */}
+            <SidebarSnsLinks snsSettings={rawTheme.snsSettings} lang={lang} />
           </aside>
         </div>
       </main>
