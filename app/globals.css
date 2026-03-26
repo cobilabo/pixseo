@@ -360,13 +360,13 @@ body {
 
 .blogcard-link {
   display: flex !important;
-  align-items: stretch !important;
+  align-items: center !important;
   border: 1px solid #e5e7eb !important;
   border-top: none !important;
   overflow: hidden !important;
   text-decoration: none !important;
   background: #fff !important;
-  height: 150px !important;
+  min-height: 0 !important;
   transition: box-shadow 0.2s ease !important;
 }
 
@@ -376,29 +376,27 @@ body {
 
 .blogcard-thumbnail {
   position: relative !important;
-  width: 150px !important;
-  height: 150px !important;
+  width: min(240px, 42vw) !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
   flex-shrink: 0 !important;
   overflow: hidden !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
+  background: #f3f4f6 !important;
+  align-self: center !important;
 }
 
 .blogcard-thumbnail img {
-  object-fit: cover !important;
+  object-fit: contain !important;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
-  transition: transform 0.3s ease !important;
-}
-
-.blogcard-link:hover .blogcard-thumbnail img {
-  transform: scale(1.1) !important;
 }
 
 .blogcard-content {

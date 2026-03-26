@@ -77,13 +77,16 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     );
   }
 
-  // ローディング中
+  // ローディング中（サムネは 16:9 に合わせたプレースホルダー）
   if (loading) {
     return (
       <div className="my-4 block">
-        <div className="flex border border-gray-200 overflow-hidden animate-pulse" style={{ height: '150px' }}>
-          <div className="bg-gray-200 flex-shrink-0" style={{ width: '150px', height: '150px' }}></div>
-          <div className="flex-1 p-4 space-y-2">
+        <div className="flex items-center border border-gray-200 overflow-hidden animate-pulse min-h-[120px]">
+          <div
+            className="bg-gray-200 flex-shrink-0 w-[min(240px,42vw)] aspect-video"
+            aria-hidden
+          />
+          <div className="flex-1 p-4 space-y-2 min-w-0">
             <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
             <div className="h-3 bg-gray-200 rounded w-full"></div>
             <div className="h-2.5 bg-gray-200 rounded w-full"></div>
@@ -104,14 +107,15 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
         <span>関連記事</span>
       </div>
       <Link href={href} className="blogcard-link">
-        {/* サムネイル（正方形 150x150） */}
+        {/* サムネイル（16:9・contain で見切れ防止） */}
         <div className="blogcard-thumbnail">
           {data?.featuredImage ? (
             <Image
               src={data.featuredImage}
               alt={data.title || ''}
               fill
-              sizes="150px"
+              className="object-contain"
+              sizes="(max-width: 640px) 42vw, 240px"
             />
           ) : (
             <div style={{ 
