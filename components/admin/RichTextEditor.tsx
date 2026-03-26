@@ -62,6 +62,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [htmlBlockModes, setHtmlBlockModes] = useState<Record<string, 'source' | 'preview'>>({});
   const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
   const draggingBlockIdRef = useRef<string | null>(null);
+  /** 直近でエディタと一致させた本文（親の value との差分同期に使う） */
+  const lastCanonicalHtmlRef = useRef<string | undefined>(undefined);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   // デザイン設定を取得
   useEffect(() => {
@@ -89,14 +93,29 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   }, [currentTenant]);
 
   // 外部 value とエディタ DOM を同期し、目次プレースホルダーにエディタ用 UI を付与（useLayoutEffect で useEffect より先に確定）
+  // 親の value が簡略マーカーのままだと装飾後 DOM と常に不一致になり、毎回 innerHTML を潰すため
+  // 「親から渡された value が変わったときだけ」貼り直し、装飾後は onChange で親を揃える。
   useLayoutEffect(() => {
     if (!editorRef.current) return;
     const ed = editorRef.current;
-    const currentHtml = ed.innerHTML;
-    if (value && value !== currentHtml) {
+    const prevCanonical = lastCanonicalHtmlRef.current;
+    const valueChangedFromParent = prevCanonical !== value;
+
+    if (valueChangedFromParent && value != null && value !== ed.innerHTML) {
       ed.innerHTML = value;
     }
+
     ensureTocPlaceholderChrome(ed);
+
+    const clone = ed.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('.image-figure-delete-btn').forEach((b) => b.remove());
+    const canonical = clone.innerHTML;
+
+    if (canonical !== value) {
+      onChangeRef.current(canonical);
+    }
+
+    lastCanonicalHtmlRef.current = canonical;
   }, [value]);
 
   // .image-figure に削除ボタンを注入（保存時には除去される）

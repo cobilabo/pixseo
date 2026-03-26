@@ -1,5 +1,24 @@
 import { TableOfContentsItem } from '@/types/article';
 
+const TOC_MARKER_SNIPPET =
+  '<div class="toc-placeholder" data-toc="auto"></div>';
+
+/**
+ * Firestore に tableOfContents だけあり本文に目次マーカーが無い記事向け。
+ * 管理画面エディタで ensureTocPlaceholderChrome が効くよう先頭に簡略マーカーを付与する。
+ */
+export function ensureInlineTocPlaceholderForAdminEditor(
+  html: string,
+  toc?: TableOfContentsItem[] | null
+): string {
+  const body = html || '';
+  if (!toc || toc.length === 0) return body;
+  if (body.includes('toc-placeholder') || body.includes('data-toc=')) {
+    return body;
+  }
+  return `${TOC_MARKER_SNIPPET}\n${body}`;
+}
+
 /**
  * HTML本文から目次を自動生成
  */

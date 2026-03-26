@@ -16,7 +16,11 @@ import { Writer } from '@/types/writer';
 import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { generateTableOfContents, calculateReadingTime } from '@/lib/article-utils';
+import {
+  generateTableOfContents,
+  calculateReadingTime,
+  ensureInlineTocPlaceholderForAdminEditor,
+} from '@/lib/article-utils';
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 import FAQManager from '@/components/admin/FAQManager';
 import { FAQItem } from '@/types/article';
@@ -116,7 +120,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         
         setFormData({
           title: articleData.title,
-          content: articleData.content,
+          content: ensureInlineTocPlaceholderForAdminEditor(
+            articleData.content || '',
+            articleData.tableOfContents
+          ),
           excerpt: articleData.excerpt || '',
           slug: articleData.slug,
           writerId: articleData.writerId || '',
