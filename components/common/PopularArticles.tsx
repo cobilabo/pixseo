@@ -43,12 +43,12 @@ export default function PopularArticles({ articles, categories = [], lang = 'ja'
               className="flex gap-3 py-4 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (
-                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-300 bg-white">
+                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-300 bg-gray-100">
                   <Image
                     src={article.featuredImage}
                     alt={article.featuredImageAlt || getTitle(article)}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     sizes="80px"
                     loading="lazy"
                   />
