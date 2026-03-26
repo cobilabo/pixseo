@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import SimpleSearch from '@/components/search/SimpleSearch';
 import ArticleCard from '@/components/articles/ArticleCard';
 import { Article } from '@/types/article';
 import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
@@ -158,6 +159,19 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
     }
   };
 
+  const handleSearch = (searchKeyword: string) => {
+    const trimmed = searchKeyword.trim();
+    if (!trimmed) {
+      setArticles([]);
+      setKeyword('');
+      setSearchLabel('');
+      setSearchType('keyword');
+      setLoading(false);
+      return;
+    }
+    handleKeywordSearch(trimmed);
+  };
+
   // 検索結果のタイトル
   const getSearchResultTitle = () => {
     switch (searchType) {
@@ -179,11 +193,15 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
     } else if (keyword) {
       return t('message.noSearchResults', lang);
     }
-    return t('message.searchEmptyHint', lang);
+    return '';
   };
+
+  const hasSearchParams = Boolean(query || tagParam || categoryParam);
 
   return (
     <>
+      <SimpleSearch onSearch={handleSearch} initialKeyword={keyword} lang={lang} />
+
       {/* タグ/カテゴリー検索時のバッジ表示 */}
       {(searchType === 'tag' || searchType === 'category') && searchLabel && (
         <div className="mb-6">
@@ -227,7 +245,7 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
               ))}
             </div>
           </>
-        ) : (
+        ) : hasSearchParams ? (
           <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center text-gray-900">
             {faviconUrl ? (
               <div className="relative w-20 h-20 mb-4 opacity-30">
@@ -247,7 +265,7 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
               {getNoResultsMessage()}
             </p>
           </div>
-        )}
+        ) : null}
       </section>
     </>
   );
