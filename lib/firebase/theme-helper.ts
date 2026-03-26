@@ -1,5 +1,6 @@
 import { adminDb } from './admin';
 import { Theme, defaultTheme } from '@/types/theme';
+import { resolveFooterBlocksForDisplay } from '@/lib/theme/footer-blocks';
 
 // Themeキャッシュ（15分間）
 const themeCache = new Map<string, { theme: Theme; timestamp: number }>();
@@ -66,6 +67,9 @@ export async function getTheme(mediaId: string): Promise<Theme> {
       ...savedTheme,
       searchSettings: mergedSearchSettings,
     };
+
+    // バナー（footerBlocks）：トップレベルと themeSettings の不整合を解消し、画像URLが空のスロットを除外
+    theme.footerBlocks = resolveFooterBlocksForDisplay(theme);
 
     // キャッシュに保存
     themeCache.set(mediaId, {

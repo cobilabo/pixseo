@@ -10,6 +10,7 @@ import {
   normalizeSideContentDisplayCount,
   normalizeSideContentItemsDisplayCounts,
 } from '@/lib/constants/sidebar-content';
+import { filterValidFooterBlocks } from '@/lib/theme/footer-blocks';
 import { Page } from '@/types/page';
 import { Category } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -311,11 +312,16 @@ export default function ThemePage() {
       }
 
       migratedSideContentItems = normalizeSideContentItemsDisplayCounts(migratedSideContentItems) ?? [];
-      
+
+      const layoutKey = fetchedTheme.layoutTheme || 'cobi';
+      const mergedFooterBlocks =
+        fetchedTheme.footerBlocks ?? fetchedTheme.themeSettings?.[layoutKey]?.footerBlocks;
+
       // デフォルト値とマージ
       setTheme({
         ...defaultTheme,
         ...fetchedTheme,
+        footerBlocks: filterValidFooterBlocks(mergedFooterBlocks),
         menuSettings: {
           ...defaultTheme.menuSettings,
           ...fetchedTheme.menuSettings,

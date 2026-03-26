@@ -5,6 +5,7 @@ import { defaultTheme } from '@/types/theme';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS, Lang } from '@/types/lang';
 import { clearThemeCache } from '@/lib/firebase/theme-helper';
+import { syncFooterBlocksInTheme } from '@/lib/theme/footer-blocks';
 import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
@@ -99,6 +100,10 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     let { theme } = body;
+
+    if (theme) {
+      theme = syncFooterBlocksInTheme(theme);
+    }
 
     if (!theme) {
       return NextResponse.json(
