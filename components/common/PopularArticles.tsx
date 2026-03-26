@@ -40,16 +40,16 @@ export default function PopularArticles({ articles, categories = [], lang = 'ja'
             <Link
               key={article.id}
               href={`/${lang}/articles/${article.slug}`}
-              className="flex gap-3 py-4 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity group"
+              className="flex gap-3 items-start py-4 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (
-                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-300 bg-gray-100">
+                <div className="relative w-[120px] flex-shrink-0 aspect-video rounded-xl overflow-hidden border border-gray-300 bg-gray-100">
                   <Image
                     src={article.featuredImage}
                     alt={article.featuredImageAlt || getTitle(article)}
                     fill
-                    className="object-contain"
-                    sizes="80px"
+                    className="object-cover"
+                    sizes="120px"
                     loading="lazy"
                   />
                 </div>
