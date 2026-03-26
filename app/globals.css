@@ -360,7 +360,8 @@ body {
 
 .blogcard-link {
   display: flex !important;
-  align-items: center !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
   border: 1px solid #e5e7eb !important;
   border-top: none !important;
   overflow: hidden !important;
@@ -389,6 +390,23 @@ body {
   align-self: center !important;
 }
 
+@media (max-width: 639px) {
+  .blogcard-link {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .blogcard-thumbnail {
+    width: 100% !important;
+    max-width: none !important;
+    align-self: stretch !important;
+  }
+
+  .blogcard-content {
+    justify-content: flex-start !important;
+  }
+}
+
 .blogcard-thumbnail img {
   object-fit: contain !important;
   width: 100% !important;
@@ -409,28 +427,51 @@ body {
   overflow: hidden !important;
   margin: 0 !important;
   border: none !important;
+  gap: 8px !important;
 }
 
 .blogcard-meta {
   font-size: 12px !important;
   color: #6b7280 !important;
-  margin: 0 0 4px 0 !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   line-height: 1.4 !important;
   font-weight: normal !important;
 }
 
+.blogcard-meta-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: auto !important;
+  margin-bottom: 0 !important;
+}
+
+.blogcard-writer {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #6b7280 !important;
+}
+
 .blogcard-date {
+  flex-shrink: 0 !important;
   color: #6b7280 !important;
   font-weight: 500 !important;
+  text-align: right !important;
 }
 
 .blogcard-title {
   font-size: 15px !important;
   font-weight: 700 !important;
   color: #111827 !important;
-  margin: 5px 0 10px 0 !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   line-height: 1.4 !important;
@@ -450,7 +491,7 @@ body {
   line-height: 1.5 !important;
   font-weight: normal !important;
   display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
+  -webkit-line-clamp: 3 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
 }

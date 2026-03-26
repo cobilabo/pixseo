@@ -77,19 +77,19 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
     );
   }
 
-  // ローディング中（サムネは 4:3 に合わせたプレースホルダー）
+  // ローディング中（モバイルは縦並び・サムネ全幅 / sm以上は横並び）
   if (loading) {
     return (
       <div className="my-4 block">
-        <div className="flex items-center border border-gray-200 overflow-hidden animate-pulse min-h-[120px]">
-          <div
-            className="bg-gray-200 flex-shrink-0 w-[min(240px,42vw)] aspect-[4/3]"
-            aria-hidden
-          />
+        <div className="flex flex-col sm:flex-row sm:items-stretch border border-gray-200 overflow-hidden animate-pulse min-h-[120px]">
+          <div className="bg-gray-200 w-full sm:w-[min(240px,42vw)] sm:flex-shrink-0 aspect-[4/3]" aria-hidden />
           <div className="flex-1 p-4 space-y-2 min-w-0">
-            <div className="h-2.5 bg-gray-200 rounded w-1/3"></div>
             <div className="h-3 bg-gray-200 rounded w-full"></div>
             <div className="h-2.5 bg-gray-200 rounded w-full"></div>
+            <div className="flex justify-between gap-2 pt-1">
+              <div className="h-2 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-2 bg-gray-200 rounded w-1/4"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
               alt={data.title || ''}
               fill
               className="object-contain"
-              sizes="(max-width: 640px) 42vw, 240px"
+              sizes="(max-width: 639px) 100vw, 240px"
             />
           ) : (
             <div style={{ 
@@ -133,32 +133,22 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
           )}
         </div>
 
-        {/* コンテンツ */}
+        {/* コンテンツ: タイトル → 要約 → ライター（左）・日付（右） */}
         <div className="blogcard-content">
-          {/* 最上段: 投稿日・ライター名 */}
-          <p className="blogcard-meta">
-            {data?.publishedDate && (
-              <span className="blogcard-date">{data.publishedDate}</span>
-            )}
-            {data?.publishedDate && data?.writerName && (
-              <span style={{ margin: '0 4px' }}>|</span>
-            )}
-            {data?.writerName && (
-              <span>{data.writerName}</span>
-            )}
-          </p>
-          
-          {/* 中段: タイトル */}
-          <div className="blogcard-title">
-            {data?.title || '記事'}
-          </div>
-          
-          {/* 最下段: 見出し（メタディスクリプション） */}
-          {data?.metaDescription && (
-            <p className="blogcard-description">
-              {data.metaDescription}
-            </p>
-          )}
+          <div className="blogcard-title">{data?.title || '記事'}</div>
+          {data?.metaDescription ? (
+            <p className="blogcard-description">{data.metaDescription}</p>
+          ) : null}
+          {data?.writerName || data?.publishedDate ? (
+            <div className="blogcard-meta blogcard-meta-footer">
+              <span className="blogcard-writer">{data?.writerName ?? ''}</span>
+              {data?.publishedDate ? (
+                <time className="blogcard-date" dateTime={data.publishedDate}>
+                  {data.publishedDate}
+                </time>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </Link>
     </div>
