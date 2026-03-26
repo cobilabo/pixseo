@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 /**
@@ -12,6 +12,8 @@ function NavigationRouteLoader() {
   const [navigating, setNavigating] = useState(false);
 
   const routeKey = `${pathname}?${searchParams.toString()}`;
+  const routeKeyRef = useRef(routeKey);
+  routeKeyRef.current = routeKey;
 
   useEffect(() => {
     setNavigating(false);
@@ -44,8 +46,60 @@ function NavigationRouteLoader() {
       setNavigating(true);
     };
 
+    /** router.push / replace やフォーム送信など、<a> 以外のクライアント遷移でもローダーを出す */
+    const shouldShowLoaderForUrl = (urlArg: string | URL | null | undefined) => {
+      if (urlArg == null || urlArg === '') return false;
+      try {
+        const next = typeof urlArg === 'string' ? new URL(urlArg, window.location.href) : urlArg;
+        const cur = new URL(window.location.href);
+        if (next.origin !== cur.origin) return false;
+        return next.pathname !== cur.pathname || next.search !== cur.search;
+      } catch {
+        return false;
+      }
+    };
+
+    const origPush = history.pushState.bind(history);
+    const origReplace = history.replaceState.bind(history);
+
+    history.pushState = function (...args: Parameters<History['pushState']>) {
+      if (shouldShowLoaderForUrl(args[2] as string | undefined)) {
+        setNavigating(true);
+      }
+      return origPush(...args);
+    };
+
+    history.replaceState = function (...args: Parameters<History['replaceState']>) {
+      if (shouldShowLoaderForUrl(args[2] as string | undefined)) {
+        setNavigating(true);
+      }
+      return origReplace(...args);
+    };
+
+    /** 戻る／進む */
+    const onPopState = () => {
+      const before = routeKeyRef.current;
+      queueMicrotask(() => {
+        try {
+          const u = new URL(window.location.href);
+          const nextKey = `${u.pathname}?${u.searchParams.toString()}`;
+          if (nextKey !== before) {
+            setNavigating(true);
+          }
+        } catch {
+          /* ignore */
+        }
+      });
+    };
+
     document.addEventListener('click', onClick, true);
-    return () => document.removeEventListener('click', onClick, true);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      document.removeEventListener('click', onClick, true);
+      window.removeEventListener('popstate', onPopState);
+      history.pushState = origPush;
+      history.replaceState = origReplace;
+    };
   }, []);
 
   if (!navigating) return null;
