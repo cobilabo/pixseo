@@ -20,9 +20,16 @@ function SidebarArticleCard({
   lang: Lang;
 }) {
   const title = (article as any)[`title_${lang}`] || article.title;
-  const excerptRaw = (article as any)[`excerpt_${lang}`] || article.excerpt;
-  const excerpt = typeof excerptRaw === 'string' ? excerptRaw.trim() : '';
   const articleCategories = categories.filter((cat) => (article.categoryIds || []).includes(cat.id));
+  const publishedLabel = formatDate(article.publishedAt);
+  const publishedIso = (() => {
+    if (!article.publishedAt) return undefined;
+    const d =
+      article.publishedAt instanceof Date
+        ? article.publishedAt
+        : new Date((article.publishedAt as any).toDate?.() || article.publishedAt);
+    return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+  })();
 
   return (
     <Link
@@ -45,50 +52,36 @@ function SidebarArticleCard({
       )}
       <div className="p-2.5">
         <h3 className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug">{title}</h3>
-        {excerpt.length > 0 ? (
-          <p className="text-[11px] text-gray-600 mb-2 line-clamp-2">{excerpt}</p>
-        ) : null}
-        <div className="space-y-1 text-[10px] text-gray-500">
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
-            <span>
-              {t('article.publishedAt', lang)}: {formatDate(article.publishedAt)}
-            </span>
-            {article.updatedAt ? (
-              <>
-                <span>•</span>
-                <span>
-                  {t('article.updatedAt', lang)}: {formatDate(article.updatedAt)}
+        {articleCategories.length > 0 ? (
+          <div className="flex flex-wrap gap-1 mb-1.5">
+            {articleCategories.slice(0, 2).map((cat) => {
+              const categoryName = (cat as any)[`name_${lang}`] || cat.name;
+              return (
+                <span
+                  key={cat.id}
+                  className="px-1 py-0.5 rounded text-[10px] font-medium"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
+                    color: 'var(--primary-color, #3b82f6)',
+                  }}
+                >
+                  {categoryName}
                 </span>
-              </>
-            ) : null}
+              );
+            })}
           </div>
-          {(article.viewCount !== undefined || articleCategories.length > 0) && (
-            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              {article.viewCount !== undefined ? (
-                <span>{t('article.viewCount', lang, { count: (article.viewCount ?? 0).toLocaleString() })}</span>
-              ) : null}
-              {article.viewCount !== undefined && articleCategories.length > 0 ? <span>•</span> : null}
-              {articleCategories.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {articleCategories.slice(0, 2).map((cat) => {
-                    const categoryName = (cat as any)[`name_${lang}`] || cat.name;
-                    return (
-                      <span
-                        key={cat.id}
-                        className="px-1 py-0.5 rounded text-[10px] font-medium"
-                        style={{
-                          backgroundColor: 'color-mix(in srgb, var(--primary-color, #3b82f6) 15%, white)',
-                          color: 'var(--primary-color, #3b82f6)',
-                        }}
-                      >
-                        {categoryName}
-                      </span>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-          )}
+        ) : null}
+        <div className="flex justify-between items-center gap-2 text-[10px] text-gray-500">
+          <span className="min-w-0 flex-1 truncate text-left">
+            {article.viewCount !== undefined
+              ? t('article.viewCount', lang, { count: (article.viewCount ?? 0).toLocaleString() })
+              : ''}
+          </span>
+          {publishedLabel ? (
+            <time dateTime={publishedIso} className="shrink-0 tabular-nums text-right">
+              {publishedLabel}
+            </time>
+          ) : null}
         </div>
       </div>
     </Link>
