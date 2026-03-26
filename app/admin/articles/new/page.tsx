@@ -136,13 +136,6 @@ function NewArticlePageContent() {
     fetchData();
   }, [searchParams, router]);
 
-  // タイトルが変更されたら自動的にスラッグを生成（失敗時はトーストを出さない）
-  useEffect(() => {
-    if (formData.title && !formData.slug) {
-      generateSlugFromTitle(formData.title, { silent: true });
-    }
-  }, [formData.title]);
-
   const resolveMediaId = () =>
     currentTenant?.id ||
     (typeof window !== 'undefined' ? localStorage.getItem('currentTenantId') : null) ||
@@ -176,6 +169,14 @@ function NewArticlePageContent() {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          if (!options?.silent) {
+            showError(
+              'スラッグ生成の利用上限に達しました。しばらく待ってから「自動生成」を再度お試しください。'
+            );
+          }
+          throw new Error('slug_generate_rate_limited');
+        }
         throw new Error('スラッグの生成に失敗しました');
       }
 
@@ -207,8 +208,12 @@ function NewArticlePageContent() {
       setFormData(prev => ({ ...prev, slug: generatedSlug }));
       setSlugError('');
     } catch (error) {
-      console.error('Error generating slug:', error);
-      if (!options?.silent) {
+      const isRateLimit =
+        error instanceof Error && error.message === 'slug_generate_rate_limited';
+      if (!isRateLimit) {
+        console.error('Error generating slug:', error);
+      }
+      if (!options?.silent && !isRateLimit) {
         showError(
           'スラッグの生成に失敗しました。OpenAI API（OPENAI_API_KEY）の設定を確認するか、しばらくしてから再度お試しください。'
         );

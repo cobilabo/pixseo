@@ -181,6 +181,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          showError(
+            'スラッグ生成の利用上限に達しました。しばらく待ってから再度お試しください。'
+          );
+          throw new Error('slug_generate_rate_limited');
+        }
         throw new Error('スラッグの生成に失敗しました');
       }
 
@@ -212,8 +218,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setFormData(prev => ({ ...prev, slug: generatedSlug }));
       setSlugError('');
     } catch (error) {
-      console.error('Error generating slug:', error);
-      showError('スラッグの生成に失敗しました');
+      const isRateLimit =
+        error instanceof Error && error.message === 'slug_generate_rate_limited';
+      if (!isRateLimit) {
+        console.error('Error generating slug:', error);
+        showError('スラッグの生成に失敗しました');
+      }
     } finally {
       setGeneratingSlug(false);
     }
