@@ -11,6 +11,7 @@ import { InternalLinkStyle } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import InlineTableOfContents from './InlineTableOfContents';
 import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
+import { htmlAttribsToReactProps } from '@/lib/html-attribs-to-react';
 
 interface ArticleContentProps {
   content: string;
@@ -247,35 +248,42 @@ export default function ArticleContent({
 
       // 内部リンクを修正（the-ayumi.jp → 現在のホスト）
       if (domNode.name === 'a' && domNode.attribs?.href) {
-        const { href, ...rest } = domNode.attribs;
-        
+        const { href, ...anchorAttribs } = domNode.attribs;
+
         // the-ayumi.jpへのリンクを現在のホストに変換
         let newHref = href;
         if (href.includes('the-ayumi.jp')) {
           // /2024/01/10/disability-certificate/ のような相対パスに変換
           newHref = href.replace(/https?:\/\/the-ayumi\.jp/, '');
         }
-        
+
         // 内部記事リンクかどうかチェック
-        const isInternalArticleLink = checkIsInternalArticleLink(newHref, siteHost);
-        
+        const isInternalArticleLink = checkIsInternalArticleLink(
+          newHref,
+          siteHost
+        );
+
         // ブログカード形式で表示する場合
         if (internalLinkStyle === 'blogcard' && isInternalArticleLink) {
           // 親がp要素の場合、ブロック要素として表示するために適切に処理
           return <BlogCard href={newHref} lang={lang} />;
         }
-        
+
         // リンクの内容を抽出
-        const linkText = domNode.children
-          ?.map((child: any) => {
-            if (typeof child === 'string') return child;
-            if (child.type === 'text') return child.data;
-            return '';
-          })
-          .join('') || '';
-        
+        const linkText =
+          domNode.children
+            ?.map((child: any) => {
+              if (typeof child === 'string') return child;
+              if (child.type === 'text') return child.data;
+              return '';
+            })
+            .join('') || '';
+
+        // HTML の style 文字列・class を React 用に変換（style 文字列は React 19 で #62 エラーになる）
+        const linkProps = htmlAttribsToReactProps(anchorAttribs);
+
         return (
-          <a href={newHref} {...rest}>
+          <a href={newHref} {...linkProps}>
             {linkText}
           </a>
         );
