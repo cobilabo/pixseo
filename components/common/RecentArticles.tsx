@@ -32,7 +32,7 @@ export default function RecentArticles({ articles, categories = [], lang = 'ja' 
       <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
         {t('section.recentArticles', lang)}
       </h2>
-      <div className="space-y-4">
+      <div className="divide-y divide-gray-200">
         {articles.map((article) => {
           const articleCategories = getArticleCategories(article.categoryIds || []);
           
@@ -40,10 +40,10 @@ export default function RecentArticles({ articles, categories = [], lang = 'ja' 
             <Link
               key={article.id}
               href={`/${lang}/articles/${article.slug}`}
-              className="flex gap-3 hover:opacity-70 transition-opacity group"
+              className="flex gap-3 py-4 first:pt-0 last:pb-0 hover:opacity-70 transition-opacity group"
             >
               {article.featuredImage && (
-                <div className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden">
+                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 bg-white">
                   <Image
                     src={article.featuredImage}
                     alt={article.featuredImageAlt || getTitle(article)}
