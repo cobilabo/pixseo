@@ -121,6 +121,7 @@ export default function ImageGenerator({ onImageGenerated, articleTitle, article
       )}
 
       <button
+        type="button"
         onClick={handleGenerate}
         disabled={generating}
         className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"

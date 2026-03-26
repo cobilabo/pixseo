@@ -49,7 +49,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [imageUrl, setImageUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageCaption, setImageCaption] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
   const [imageCopyright, setImageCopyright] = useState('');
+  const [showImageEditModal, setShowImageEditModal] = useState(false);
+  const [editImageSrc, setEditImageSrc] = useState('');
+  const [editImageAlt, setEditImageAlt] = useState('');
+  const [editImageCaption, setEditImageCaption] = useState('');
+  const [editImageCopyright, setEditImageCopyright] = useState('');
+  const editingFigureRef = useRef<HTMLElement | null>(null);
   const [showTableModal, setShowTableModal] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
@@ -108,7 +115,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     ensureTocPlaceholderChrome(ed);
 
     const clone = ed.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('.image-figure-delete-btn').forEach((b) => b.remove());
+    clone
+      .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
+      .forEach((b) => b.remove());
     const canonical = clone.innerHTML;
 
     if (canonical !== value) {
@@ -118,20 +127,32 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     lastCanonicalHtmlRef.current = canonical;
   }, [value]);
 
-  // .image-figure に削除ボタンを注入（保存時には除去される）
+  // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
     if (!editorRef.current) return;
     const figures = editorRef.current.querySelectorAll<HTMLElement>('figure.image-figure');
-    figures.forEach(figure => {
-      if (figure.querySelector('.image-figure-delete-btn')) return;
+    figures.forEach((figure) => {
       figure.style.position = 'relative';
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'image-figure-delete-btn';
-      btn.setAttribute('data-action', 'delete-figure');
-      btn.title = '画像を削除';
-      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
-      figure.appendChild(btn);
+      if (!figure.querySelector('.image-figure-edit-btn')) {
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'image-figure-edit-btn';
+        editBtn.setAttribute('data-action', 'edit-figure');
+        editBtn.title = '画像の設定を編集';
+        editBtn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+        figure.appendChild(editBtn);
+      }
+      if (!figure.querySelector('.image-figure-delete-btn')) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'image-figure-delete-btn';
+        btn.setAttribute('data-action', 'delete-figure');
+        btn.title = '画像を削除';
+        btn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+        figure.appendChild(btn);
+      }
     });
   }, [value]);
 
@@ -200,6 +221,24 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           return;
         }
 
+        if (action === 'edit-figure') {
+          const figure = button.closest('figure.image-figure');
+          if (figure && editorRef.current) {
+            const img = figure.querySelector('img');
+            if (img) {
+              const copyEl = figure.querySelector('.image-copyright');
+              const capEl = figure.querySelector('figcaption');
+              editingFigureRef.current = figure;
+              setEditImageSrc(img.getAttribute('src') || '');
+              setEditImageAlt(img.getAttribute('alt') || '');
+              setEditImageCaption(capEl?.textContent?.trim() || '');
+              setEditImageCopyright(copyEl?.textContent?.trim() || '');
+              setShowImageEditModal(true);
+            }
+          }
+          return;
+        }
+
         if (action === 'delete-figure') {
           const figure = button.closest('figure.image-figure');
           if (figure) {
@@ -207,7 +246,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             if (editorRef.current) {
               // 削除ボタンを除去してから保存
               const clone = editorRef.current.cloneNode(true) as HTMLElement;
-              clone.querySelectorAll('.image-figure-delete-btn').forEach(b => b.remove());
+              clone
+                .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
+                .forEach((b) => b.remove());
               onChange(clone.innerHTML);
             }
           }
@@ -521,12 +562,81 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   const handleInput = () => {
     if (editorRef.current) {
-      // 保存前に注入した画像削除ボタンを除去してクリーンなHTMLを保存
+      // 保存前に注入した画像編集・削除ボタンを除去してクリーンなHTMLを保存
       const clone = editorRef.current.cloneNode(true) as HTMLElement;
-      clone.querySelectorAll('.image-figure-delete-btn').forEach(btn => btn.remove());
+      clone
+        .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
+        .forEach((btn) => btn.remove());
       const html = clone.innerHTML;
       onChange(html);
     }
+  };
+
+  const applyImageFigureEdit = () => {
+    const figure = editingFigureRef.current;
+    if (!figure || !editorRef.current) return;
+    const img = figure.querySelector('img');
+    if (!img) return;
+
+    const srcTrim = editImageSrc.trim();
+    if (!srcTrim) {
+      alert('画像のURLを入力してください');
+      return;
+    }
+
+    img.setAttribute('src', srcTrim);
+    img.setAttribute('alt', editImageAlt.trim());
+
+    const copyrightText = editImageCopyright.trim();
+    let copyEl = figure.querySelector('.image-copyright');
+    if (copyrightText) {
+      if (!copyEl) {
+        copyEl = document.createElement('div');
+        copyEl.className = 'image-copyright';
+        (copyEl as HTMLElement).style.fontSize = '0.75rem';
+        (copyEl as HTMLElement).style.color = '#6b7280';
+        (copyEl as HTMLElement).style.marginBottom = '0.5rem';
+        figure.insertBefore(copyEl, img);
+      }
+      copyEl.textContent = copyrightText;
+    } else {
+      copyEl?.remove();
+    }
+
+    const captionText = editImageCaption.trim();
+    let capEl = figure.querySelector('figcaption') as HTMLElement | null;
+    if (captionText) {
+      if (!capEl) {
+        capEl = document.createElement('figcaption');
+        capEl.className = 'image-caption';
+        capEl.style.fontSize = '0.875rem';
+        capEl.style.color = '#6b7280';
+        capEl.style.marginTop = '0.5rem';
+        capEl.style.textAlign = 'center';
+        figure.appendChild(capEl);
+      }
+      capEl.textContent = captionText;
+    } else {
+      capEl?.remove();
+    }
+
+    editingFigureRef.current = null;
+    setShowImageEditModal(false);
+    setEditImageSrc('');
+    setEditImageAlt('');
+    setEditImageCaption('');
+    setEditImageCopyright('');
+    handleInput();
+    editorRef.current.focus();
+  };
+
+  const closeImageEditModal = () => {
+    editingFigureRef.current = null;
+    setShowImageEditModal(false);
+    setEditImageSrc('');
+    setEditImageAlt('');
+    setEditImageCaption('');
+    setEditImageCopyright('');
   };
 
   // HTMLフォーマッター（ブロック編集用）
@@ -701,10 +811,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       figure.appendChild(copyright);
     }
     
-    // 画像
+    // 画像（alt 専用入力があれば優先、なければキャプションを代替テキストに使う）
     const img = document.createElement('img');
     img.src = url;
-    img.alt = imageCaption || '';
+    img.alt =
+      imageAlt.trim() !== '' ? imageAlt.trim() : imageCaption || '';
     img.style.width = '100%';
     img.style.height = 'auto';
     img.style.borderRadius = '0.5rem';
@@ -737,6 +848,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     setShowImageModal(false);
     setImageUrl('');
     setImageCaption('');
+    setImageAlt('');
     setImageCopyright('');
   };
 
@@ -1295,6 +1407,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             {/* タブ切り替え */}
             <div className="flex gap-2 mb-4">
               <button
+                type="button"
                 onClick={() => setImageInputMethod('upload')}
                 className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
                   imageInputMethod === 'upload' 
@@ -1305,6 +1418,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 アップロード
               </button>
               <button
+                type="button"
                 onClick={() => setImageInputMethod('ai')}
                 className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
                   imageInputMethod === 'ai' 
@@ -1315,6 +1429,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 🎨 AI生成
               </button>
               <button
+                type="button"
                 onClick={() => setImageInputMethod('url')}
                 className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
                   imageInputMethod === 'url' 
@@ -1360,6 +1475,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   placeholder="著作権表記（例：©企業名）"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
                 />
+
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+                />
+                <p className="text-xs text-gray-500 mb-3">
+                  SEO・アクセシビリティ用。キャプションと別の説明にしたい場合に入力してください。
+                </p>
                 
                 {/* キャプション */}
                 <input
@@ -1372,6 +1501,16 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               </div>
             ) : imageInputMethod === 'ai' ? (
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3"
+                />
                 <ImageGenerator
                   onImageGenerated={(url) => {
                     setImageUrl(url);
@@ -1381,6 +1520,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                     setShowImageModal(false);
                     setImageUrl('');
                     setImageCaption('');
+                    setImageAlt('');
                     setImageCopyright('');
                   }}
                   articleTitle=""
@@ -1405,6 +1545,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                   placeholder="著作権表記（例：©企業名）"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
                 />
+
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+                />
+                <p className="text-xs text-gray-500 mb-3">
+                  SEO・アクセシビリティ用。キャプションと別の説明にしたい場合に入力してください。
+                </p>
                 
                 {/* キャプション */}
                 <input
@@ -1416,6 +1570,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 />
                 
                 <button
+                  type="button"
                   onClick={handleImageUrlInsert}
                   disabled={!imageUrl}
                   className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1427,14 +1582,86 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
             <div className="mt-4">
               <button
+                type="button"
                 onClick={() => {
                   setShowImageModal(false);
                   setImageUrl('');
                   setImageCaption('');
+                  setImageAlt('');
                   setImageCopyright('');
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
                 disabled={uploadingImage}
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 挿入済み画像の編集 */}
+      {showImageEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom text-gray-900">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">画像の設定を編集</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              画像URL・代替テキスト・キャプション・著作権表記を変更できます。
+            </p>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">画像URL</label>
+            <input
+              type="url"
+              value={editImageSrc}
+              onChange={(e) => setEditImageSrc(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-gray-900"
+            />
+
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+            </label>
+            <input
+              type="text"
+              value={editImageAlt}
+              onChange={(e) => setEditImageAlt(e.target.value)}
+              placeholder="スクリーンリーダー・SEO用"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            />
+
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              著作権表記<span className="text-gray-400 font-normal">任意</span>
+            </label>
+            <input
+              type="text"
+              value={editImageCopyright}
+              onChange={(e) => setEditImageCopyright(e.target.value)}
+              placeholder="例：©企業名"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            />
+
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              キャプション<span className="text-gray-400 font-normal">任意</span>
+            </label>
+            <input
+              type="text"
+              value={editImageCaption}
+              onChange={(e) => setEditImageCaption(e.target.value)}
+              placeholder="画像下に表示する説明"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+            />
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={applyImageFigureEdit}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+              >
+                反映
+              </button>
+              <button
+                type="button"
+                onClick={closeImageEditModal}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
               >
                 キャンセル
               </button>
@@ -1481,12 +1708,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={insertTable}
                 className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
               >
                 挿入
               </button>
               <button
+                type="button"
                 onClick={() => setShowTableModal(false)}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
               >
@@ -1924,6 +2153,38 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           color: #6b7280;
           margin-top: 0.5rem;
           text-align: center;
+        }
+
+        /* 画像編集ボタン */
+        [contenteditable="true"] .image-figure-edit-btn {
+          position: absolute;
+          top: 8px;
+          right: 44px;
+          background: rgba(37, 99, 235, 0.9);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          opacity: 0;
+          transition: opacity 0.15s;
+          z-index: 10;
+          padding: 0;
+          line-height: 1;
+        }
+
+        [contenteditable="true"] .image-figure:hover .image-figure-edit-btn,
+        [contenteditable="true"] .image-figure-edit-btn:focus {
+          opacity: 1;
+        }
+
+        [contenteditable="true"] .image-figure-edit-btn:hover {
+          background: rgba(29, 78, 216, 1);
+          opacity: 1;
         }
 
         /* 画像削除ボタン */
