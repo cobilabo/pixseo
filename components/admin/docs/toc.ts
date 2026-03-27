@@ -3,7 +3,6 @@ export type TocChild = { id: string; label: string };
 export type TocSection = {
   id: string;
   label: string;
-  superAdminOnly?: boolean;
   children?: TocChild[];
 };
 
@@ -54,15 +53,6 @@ export const DOC_TOC: TocSection[] = [
   },
   { id: 'media', label: 'メディアライブラリ' },
   {
-    id: 'super-admin',
-    label: 'サービス・クライアント',
-    superAdminOnly: true,
-    children: [
-      { id: 'super-service', label: 'サービス' },
-      { id: 'super-clients', label: 'クライアント' },
-    ],
-  },
-  {
     id: 'site-import',
     label: 'サイトインポート',
     children: [
@@ -70,12 +60,3 @@ export const DOC_TOC: TocSection[] = [
     ],
   },
 ];
-
-export function filterDocToc(
-  toc: TocSection[],
-  isSuperAdmin: boolean
-): TocSection[] {
-  return toc
-    .filter((s) => !s.superAdminOnly || isSuperAdmin)
-    .map((s) => ({ ...s }));
-}

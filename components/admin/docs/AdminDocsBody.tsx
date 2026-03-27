@@ -1,10 +1,6 @@
 'use client';
 
-export default function AdminDocsBody({
-  isSuperAdmin,
-}: {
-  isSuperAdmin: boolean;
-}) {
+export default function AdminDocsBody() {
   return (
     <article className="prose prose-gray max-w-none prose-headings:scroll-mt-28 prose-h2:text-xl prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-h3:text-lg prose-a:text-blue-600">
       <div className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm not-prose">
@@ -21,15 +17,10 @@ export default function AdminDocsBody({
         <p>
           管理画面は<strong>サービス（メディア／テナント）</strong>単位でコンテンツが分かれています。左メニュー（ダッシュボード以外の通常画面）で編集するデータは、現在選択されているサービスにだけ保存されます。
         </p>
-        <h3>運用管理者と一般ユーザー</h3>
-        <ul>
-          <li>
-            <strong>運用管理者（super_admin）</strong>は、画面上部のプルダウンで<strong>複数サービスを切り替え</strong>られます。切り替え後はページが再読み込みされ、そのサービスのデータが表示されます。
-          </li>
-          <li>
-            一般の管理者は、割り当てられたサービスだけが対象です（プルダウンは表示されない場合があります）。
-          </li>
-        </ul>
+        <h3>サービスの選択</h3>
+        <p>
+          画面上部に<strong>サービス（テナント）の切り替え</strong>がある場合は、選んだサービスに紐づくデータが表示されます。切り替え後にページが再読み込みされることがあります。表示されない場合は、割り当てられたサービスだけが対象です。
+        </p>
         <h3>よく使う導線</h3>
         <ul>
           <li>
@@ -42,7 +33,7 @@ export default function AdminDocsBody({
             <strong>見た目を変える</strong>: 「テーマ」でレイアウト・色・メニューなどを変更し、右下の保存で反映します。
           </li>
           <li>
-            <strong>公開サイトを確認</strong>: super_admin はテナント選択横の「外部リンク」アイコンからプレビュー／本番URLを別タブで開けます。
+            <strong>公開サイトを確認</strong>: 管理画面のサイドバーなどにサイト表示用のリンクがある場合は、別タブでプレビュー／本番URLを開けます。
           </li>
         </ul>
       </section>
@@ -50,7 +41,7 @@ export default function AdminDocsBody({
       <section id="dashboard">
         <h2>ダッシュボード</h2>
         <p>
-          現在のサービスについて、<strong>記事数・カテゴリー数・タグ数</strong>をカード表示します。テナントを切り替えると数値が変わります。
+          現在のサービスについて、<strong>記事数・カテゴリー数・タグ数</strong>をカード表示します。サービスを切り替えられる場合は、切り替え後に数値が更新されます。
         </p>
         <h3>クイックアクション</h3>
         <p>画面中段のボタンから、次の画面へすぐ移動できます。</p>
@@ -70,8 +61,7 @@ export default function AdminDocsBody({
       <section id="accounts">
         <h2>アカウント</h2>
         <p>
-          現在のサービスに紐づく<strong>管理者ユーザー</strong>の一覧です。システム用アカウントや super_admin
-          は一覧に出ない仕様になっています。
+          現在のサービスに紐づく<strong>管理者ユーザー</strong>の一覧です。システム用など、一部のアカウントは表示されない場合があります。
         </p>
         <h3>一覧でできること</h3>
         <ul>
@@ -81,7 +71,7 @@ export default function AdminDocsBody({
         </ul>
         <h3>運用上の注意</h3>
         <p>
-          誰がどのサービスを操作できるかは、ユーザーのロールとサービス紐づけで決まります。権限が足りない場合は運用管理者に依頼してください。
+          誰がどのサービスを操作できるかは、ユーザーのロールとサービス紐づけで決まります。権限が足りない場合は、貴社の管理者に依頼してください。
         </p>
       </section>
 
@@ -174,7 +164,7 @@ export default function AdminDocsBody({
         </p>
         <ul>
           <li>既存の予約は読み込み時に各スロットへ展開されます。</li>
-          <li>保存後、スケジューラー側の実行条件（クラウド側のジョブ）に従って動きます。期待どおり動かない場合は運用管理者に確認してください。</li>
+          <li>保存後、スケジューラー側の実行条件（クラウド側のジョブ）に従って動きます。期待どおり動かない場合は、サイトの管理者またはサポートに確認してください。</li>
         </ul>
       </section>
 
@@ -431,47 +421,6 @@ export default function AdminDocsBody({
           </li>
         </ul>
       </section>
-
-      {isSuperAdmin && (
-        <section id="super-admin">
-          <h2>サービス・クライアント（運用管理者向け）</h2>
-          <p>
-            左の管理メニューに「サービス」「クライアント」が出るのは <code>super_admin</code>{' '}
-            権限のときのみです。
-          </p>
-
-          <h3 id="super-service">サービス</h3>
-          <ul>
-            <li>
-              <strong>一覧</strong>: テナント名・スラッグ・カスタムドメイン・プレビューURL・有効／無効を確認。
-            </li>
-            <li>
-              <strong>新規作成</strong>: 新しい公開サイト単位を追加。スラッグはプレビュー用サブドメイン等に関わります。
-            </li>
-            <li>
-              <strong>編集</strong>: ドメイン設定や詳細パラメータ（画面の項目に従う）。
-            </li>
-            <li>
-              <strong>有効トグル</strong>: 無効にすると公開・管理の扱いが変わる場合があります。運用ルールに従ってください。
-            </li>
-            <li>
-              <strong>削除</strong>: 取り消し不可のため、依存データの有無を確認してから実行します。
-            </li>
-          </ul>
-          <p>画面上部のテナントプルダウンで切り替えたサービスが、他メニューの編集対象になります。</p>
-
-          <h3 id="super-clients">クライアント</h3>
-          <p>契約先・組織単位のマスタです。クライアント名・連絡先・ロゴなどを登録し、運用単位でユーザーやサービスと紐づけます。</p>
-          <ul>
-            <li>
-              <strong>新規・編集</strong>: フォームに従い入力。
-            </li>
-            <li>
-              <strong>削除</strong>: 確認のうえ実行。関連するサービスやアカウントがある場合は事前に整理が必要です。
-            </li>
-          </ul>
-        </section>
-      )}
 
       <section id="site-import">
         <h2>サイトインポート</h2>
