@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { MenuSettings, NavigationItem } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import { getNavigationItemUrl } from '@/lib/navigation-url';
 import LanguageSelector from '@/components/common/LanguageSelector';
 
 const getItemLabel = (item: NavigationItem, lang: Lang): string => {
@@ -51,20 +52,6 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
 
   // 有効な追加メニューのみフィルタリング（後方互換性）
   const validCustomMenus = menuSettings.customMenus?.filter(menu => menu.label && menu.url) || [];
-
-  // ナビゲーション項目のURLを生成
-  const getNavigationUrl = (item: NavigationItem): string => {
-    switch (item.type) {
-      case 'top':
-        return `/${lang}`;
-      case 'search':
-        return `/${lang}/search`;
-      case 'page':
-        return item.pageSlug === 'home' ? `/${lang}` : `/${lang}/${item.pageSlug || ''}`;
-      default:
-        return `/${lang}`;
-    }
-  };
 
   const menuPanel = (
     <>
@@ -133,7 +120,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                   {menuSettings.navigationItems!.map((item) => (
                     <li key={item.id}>
                       <Link
-                        href={getNavigationUrl(item)}
+                        href={getNavigationItemUrl(item, lang)}
                         onClick={onClose}
                         className="block text-lg font-medium hover:opacity-70 transition-opacity"
                       >

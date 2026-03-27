@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Category } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { NavigationItem, GlobalMenuDesign, GlobalMenuHoverEffect, ThemeLayoutId } from '@/types/theme';
+import { getNavigationItemUrl } from '@/lib/navigation-url';
 
 const DEFAULT_DESIGN: GlobalMenuDesign = {
   height: 192,
@@ -28,21 +29,6 @@ interface CategoryBarProps {
   globalMenuDesign?: GlobalMenuDesign;
   layoutTheme?: ThemeLayoutId;
 }
-
-const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
-  switch (item.type) {
-    case 'top':
-      return `/${lang}`;
-    case 'search':
-      return `/${lang}/search`;
-    case 'page':
-      return item.pageSlug ? `/${lang}/${item.pageSlug}` : `/${lang}`;
-    case 'category':
-      return item.categorySlug ? `/${lang}/categories/${item.categorySlug}` : `/${lang}`;
-    default:
-      return `/${lang}`;
-  }
-};
 
 const getNavItemLabel = (item: NavigationItem, lang: Lang): string => {
   const langKey = `label_${lang}` as keyof NavigationItem;
@@ -84,7 +70,7 @@ export default function CategoryBar({ categories, excludeCategoryId, variant = '
             <div className="flex overflow-x-auto scrollbar-hide" style={{ gap: `${d.gap}px` }}>
               {globalNavItems.map((item) => {
                 const label = getNavItemLabel(item, lang);
-                const url = getNavItemUrl(item, lang);
+                const url = getNavigationItemUrl(item, lang);
                 const matchedCategory = item.type === 'category' && item.categoryId
                   ? categories.find(cat => cat.id === item.categoryId)
                   : null;

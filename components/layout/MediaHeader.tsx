@@ -8,27 +8,13 @@ import { SiteInfo } from '@/lib/firebase/media-tenant-helper';
 import { MenuSettings, NavigationItem, ThemeLayoutId } from '@/types/theme';
 import { Lang, SUPPORTED_LANGS } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import { getNavigationItemUrl } from '@/lib/navigation-url';
 import HamburgerMenu from './HamburgerMenu';
 import SearchPanel from './SearchPanel';
 
 const LANG_SHORT: Record<Lang, string> = { ja: 'JA', en: 'EN', zh: 'ZH', ko: 'KO' };
 
 const FURATTO_LOGO_URL = 'https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/articles/1762645192138_5s2s79ph8wr.jpg';
-
-const getNavItemUrl = (item: NavigationItem, lang: Lang): string => {
-  switch (item.type) {
-    case 'top':
-      return `/${lang}`;
-    case 'search':
-      return `/${lang}/search`;
-    case 'page':
-      return item.pageSlug ? `/${lang}/${item.pageSlug}` : `/${lang}`;
-    case 'category':
-      return item.categorySlug ? `/${lang}/categories/${item.categorySlug}` : `/${lang}`;
-    default:
-      return `/${lang}`;
-  }
-};
 
 const getNavItemLabel = (item: NavigationItem, lang: Lang): string => {
   const langKey = `label_${lang}` as keyof NavigationItem;
@@ -182,7 +168,7 @@ export default function MediaHeader({
                     {globalNavItems.map((item) => (
                       <Link
                         key={item.id}
-                        href={getNavItemUrl(item, lang)}
+                        href={getNavigationItemUrl(item, lang)}
                         className="furatto-header-nav-link px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
                       >
                         {getNavItemLabel(item, lang)}
