@@ -26,6 +26,16 @@ export const DOC_TOC: TocSection[] = [
   { id: 'writers', label: 'ライター' },
   { id: 'site', label: 'サイト' },
   {
+    id: 'preview-url',
+    label: 'プレビューURLと本番の違い',
+    children: [
+      { id: 'preview-url-basics', label: 'URLと役割' },
+      { id: 'preview-url-access-seo', label: 'アクセス制御と検索' },
+      { id: 'preview-url-content', label: '表示されるコンテンツ' },
+      { id: 'preview-url-cache', label: 'キャッシュの仕組み' },
+    ],
+  },
+  {
     id: 'pages',
     label: 'ページ',
     children: [
