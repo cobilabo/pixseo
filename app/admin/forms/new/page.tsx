@@ -240,10 +240,10 @@ export default function NewFormPage() {
                   )}
 
                   {/* メール通知設定（管理者向け） */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-md font-bold text-gray-900 mb-4">メール通知設定（管理者向け）</h4>
-                  
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-bold text-gray-900">メール通知設定（管理者向け）</h4>
+
+                    <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
                         id="emailEnabled"
@@ -255,9 +255,9 @@ export default function NewFormPage() {
                             enabled: e.target.checked,
                           },
                         })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <label htmlFor="emailEnabled" className="text-sm text-gray-700">
+                      <label htmlFor="emailEnabled" className="text-sm leading-snug text-gray-700">
                         送信時にメール通知を受け取る
                       </label>
                     </div>
@@ -293,11 +293,13 @@ export default function NewFormPage() {
                   </div>
 
                   {/* 自動返信メール設定（送信者向け） */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-md font-bold text-gray-900 mb-4">自動返信メール設定（送信者向け）</h4>
-                    <p className="text-xs text-gray-500 mb-4">フォームにメールアドレス入力欄がある場合、送信者に自動で確認メールを送信します。</p>
-                    
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-bold text-gray-900">自動返信メール設定（送信者向け）</h4>
+                    <p className="text-xs text-gray-500">
+                      フォームにメールアドレス入力欄がある場合、送信者に自動で確認メールを送信します。
+                    </p>
+
+                    <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
                         id="autoReplyEnabled"
@@ -309,9 +311,9 @@ export default function NewFormPage() {
                             enabled: e.target.checked,
                           },
                         })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <label htmlFor="autoReplyEnabled" className="text-sm text-gray-700">
+                      <label htmlFor="autoReplyEnabled" className="text-sm leading-snug text-gray-700">
                         自動返信メールを送信する
                       </label>
                     </div>
