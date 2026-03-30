@@ -172,37 +172,37 @@ export default function MediaHeader({
               </button>
             </div>
 
-            {/* PC: ロゴ左 + メニュー中央 + 検索・言語右 */}
+            {/* PC: ロゴ左 + ナビ + 検索(中央) + 言語右 */}
             <div className="hidden lg:flex items-center px-8 h-14">
               <div className="flex-shrink-0">
                 {furattoLogoElement}
               </div>
 
-              {globalNavItems.length > 0 && (
-                <nav className="flex-1 flex items-center justify-center" aria-label="Global navigation">
-                  <div className="flex items-center gap-1">
-                    {globalNavItems.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={getNavigationItemUrl(item, lang)}
-                        className="furatto-header-nav-link px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
-                      >
-                        {getNavItemLabel(item, lang)}
-                      </Link>
-                    ))}
-                  </div>
-                </nav>
-              )}
+              {/* 中央エリア: ナビ + 検索フィールド */}
+              <div className="flex-1 flex items-center justify-center gap-4">
+                {globalNavItems.length > 0 && (
+                  <nav className="flex items-center" aria-label="Global navigation">
+                    <div className="flex items-center gap-1">
+                      {globalNavItems.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={getNavigationItemUrl(item, lang)}
+                          className="furatto-header-nav-link px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
+                        >
+                          {getNavItemLabel(item, lang)}
+                        </Link>
+                      ))}
+                    </div>
+                  </nav>
+                )}
 
-              {/* 右側：検索 + 言語切り替え */}
-              <div className="flex-shrink-0 flex items-center gap-3">
                 <form onSubmit={handleHeaderSearch} className="furatto-header-search relative">
                   <input
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
                     placeholder={t('search.keywordPlaceholder', lang)}
-                    className="furatto-header-search-input w-[180px] pl-3 pr-8 py-1.5 text-xs rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
+                    className="furatto-header-search-input w-[200px] pl-3 pr-8 py-1.5 text-xs rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white focus:w-[260px] transition-all"
                   />
                   <button
                     type="submit"
@@ -214,40 +214,41 @@ export default function MediaHeader({
                     </svg>
                   </button>
                 </form>
+              </div>
 
-                <div className="relative" ref={langRef}>
-                  <button
-                    onClick={() => setIsLangOpen(!isLangOpen)}
-                    className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                    aria-label="言語を選択"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
-                    </svg>
-                    <span>{LANG_SHORT[lang]}</span>
-                    <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+              {/* 右側：言語切り替え */}
+              <div className="flex-shrink-0 relative" ref={langRef}>
+                <button
+                  onClick={() => setIsLangOpen(!isLangOpen)}
+                  className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                  aria-label="言語を選択"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
+                  </svg>
+                  <span>{LANG_SHORT[lang]}</span>
+                  <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-                  {isLangOpen && (
-                    <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
-                      {SUPPORTED_LANGS.map((l) => (
-                        <button
-                          key={l}
-                          onClick={() => handleLangChange(l)}
-                          className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
-                            l === lang ? 'font-semibold' : 'font-normal'
-                          }`}
-                        >
-                          <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
-                          {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {isLangOpen && (
+                  <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+                    {SUPPORTED_LANGS.map((l) => (
+                      <button
+                        key={l}
+                        onClick={() => handleLangChange(l)}
+                        className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
+                          l === lang ? 'font-semibold' : 'font-normal'
+                        }`}
+                      >
+                        <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
+                        {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

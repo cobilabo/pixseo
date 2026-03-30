@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 
@@ -32,11 +33,8 @@ export default function FurattoMediaSearchHero({
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [isTagOpen, setIsTagOpen] = useState(false);
-  const [isCatOpen, setIsCatOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
-  const [selectedCat, setSelectedCat] = useState<CategoryItem | null>(null);
   const tagRef = useRef<HTMLDivElement>(null);
-  const catRef = useRef<HTMLDivElement>(null);
 
   const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists);
 
@@ -44,9 +42,6 @@ export default function FurattoMediaSearchHero({
     const handleClickOutside = (event: MouseEvent) => {
       if (tagRef.current && !tagRef.current.contains(event.target as Node)) {
         setIsTagOpen(false);
-      }
-      if (catRef.current && !catRef.current.contains(event.target as Node)) {
-        setIsCatOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -63,12 +58,6 @@ export default function FurattoMediaSearchHero({
     setSelectedTag(tag);
     setIsTagOpen(false);
     router.push(`/${lang}/search?tag=${encodeURIComponent(tag.name)}`);
-  };
-
-  const handleCatSelect = (cat: CategoryItem) => {
-    setSelectedCat(cat);
-    setIsCatOpen(false);
-    router.push(`/${lang}/categories/${cat.slug}`);
   };
 
   return (
@@ -107,15 +96,14 @@ export default function FurattoMediaSearchHero({
           </div>
         </form>
 
-        {/* タグ検索 + カテゴリー検索 */}
-        <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-          {/* タグ検索 */}
-          {tags.length > 0 && (
-            <div ref={tagRef} className="relative flex-1">
+        {/* タグ検索（プルダウン） */}
+        {tags.length > 0 && (
+          <div className="mb-5 max-w-2xl mx-auto">
+            <div ref={tagRef} className="relative">
               <button
                 type="button"
-                onClick={() => { setIsTagOpen(!isTagOpen); setIsCatOpen(false); }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm text-sm shadow-md hover:bg-white transition-all"
+                onClick={() => setIsTagOpen(!isTagOpen)}
+                className="w-full sm:w-auto inline-flex items-center justify-between gap-2 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-sm text-sm shadow-md hover:bg-white transition-all"
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +119,7 @@ export default function FurattoMediaSearchHero({
               </button>
 
               {isTagOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full sm:w-72 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                   <ul>
                     {tags.map((tag) => (
                       <li key={tag.id}>
@@ -153,54 +141,28 @@ export default function FurattoMediaSearchHero({
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* カテゴリー検索 */}
-          {visibleCategories.length > 0 && (
-            <div ref={catRef} className="relative flex-1">
-              <button
-                type="button"
-                onClick={() => { setIsCatOpen(!isCatOpen); setIsTagOpen(false); }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm text-sm shadow-md hover:bg-white transition-all"
-              >
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* カテゴリー検索（角丸ボタン一覧） */}
+        {visibleCategories.length > 0 && (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-2">
+              {visibleCategories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/${lang}/categories/${cat.slug}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/85 backdrop-blur-sm text-sm font-medium text-gray-700 shadow-sm hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all"
+                >
+                  <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
-                  <span className={selectedCat ? 'text-gray-800' : 'text-gray-500'}>
-                    {selectedCat ? selectedCat.name : t('search.categorySearch', lang)}
-                  </span>
-                </span>
-                <svg className={`w-4 h-4 text-gray-400 transition-transform ${isCatOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isCatOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                  <ul>
-                    {visibleCategories.map((cat) => (
-                      <li key={cat.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleCatSelect(cat)}
-                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 transition-colors flex items-center gap-2 ${
-                            selectedCat?.id === cat.id ? 'bg-amber-50 text-amber-700 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                          </svg>
-                          <span>{cat.name}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                  {cat.name}
+                </Link>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
