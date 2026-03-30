@@ -20,6 +20,7 @@ import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks, hasFullWid
 import SliderBlock from '@/components/blocks/SliderBlock';
 import HTMLBlock from '@/components/blocks/HTMLBlock';
 import SearchWidget from '@/components/search/SearchWidget';
+import FurattoMediaSearchHero from '@/components/search/FurattoMediaSearchHero';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
@@ -283,6 +284,15 @@ export default async function FixedPage({ params }: PageProps) {
           globalNavItems={rawTheme.menuSettings?.globalNavItems}
           globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
           layoutTheme={rawTheme.layoutTheme}
+        />
+      )}
+
+      {/* ふらっとテーマ メディアページ専用 検索ヒーロー */}
+      {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' && (
+        <FurattoMediaSearchHero
+          lang={lang}
+          tags={sidebarTags}
+          categories={categories}
         />
       )}
 

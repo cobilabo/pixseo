@@ -620,6 +620,38 @@
   transition-timing-function: unset;
 }
 
+/* ===== Furatto Header Search ===== */
+.furatto-header-search-input {
+  font-size: 0.8125rem;
+  color: var(--ft-text);
+}
+
+.furatto-header-search-input::placeholder {
+  color: var(--ft-text-light);
+  font-size: 0.75rem;
+}
+
+.furatto-header-search-input:focus {
+  box-shadow: 0 0 0 2px rgba(91, 127, 94, 0.15);
+}
+
+/* ===== Furatto Media Search Hero ===== */
+.furatto-media-search-hero {
+  margin-top: 48px;
+}
+
+@media (min-width: 1024px) {
+  .furatto-media-search-hero {
+    margin-top: 56px;
+  }
+}
+
+.furatto-media-search-watermark {
+  font-size: clamp(6rem, 18vw, 16rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
 /* ===== Responsive Adjustments ===== */
 @media (max-width: 767px) {
   .theme-furatto-default .prose h2 {

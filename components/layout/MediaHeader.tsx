@@ -127,12 +127,21 @@ export default function MediaHeader({
     </Link>
   );
 
+  const [headerKeyword, setHeaderKeyword] = useState('');
+
+  const handleHeaderSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!headerKeyword.trim()) return;
+    router.push(`/${lang}/search?q=${encodeURIComponent(headerKeyword.trim())}`);
+    setHeaderKeyword('');
+  };
+
   if (isFuratto) {
     return (
       <>
         <header className="furatto-header fixed top-0 left-0 right-0 z-50">
           <div className="furatto-header-inner">
-            {/* Mobile: ハンバーガー左 + ロゴ中央 */}
+            {/* Mobile: ハンバーガー左 + ロゴ中央 + 検索右 */}
             <div className="flex items-center justify-between lg:hidden px-3 h-12">
               <button
                 onClick={toggleMenu}
@@ -152,11 +161,18 @@ export default function MediaHeader({
                 {furattoLogoElement}
               </div>
 
-              {/* 右側のスペーサー（バランス用） */}
-              <div className="w-9 h-9 flex-shrink-0" />
+              <button
+                onClick={toggleSearch}
+                className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                aria-label={t('common.search', lang)}
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
             </div>
 
-            {/* PC: ロゴ左 + メニュー中央 */}
+            {/* PC: ロゴ左 + メニュー中央 + 検索・言語右 */}
             <div className="hidden lg:flex items-center px-8 h-14">
               <div className="flex-shrink-0">
                 {furattoLogoElement}
@@ -178,9 +194,28 @@ export default function MediaHeader({
                 </nav>
               )}
 
-              {/* 右側：言語切り替え */}
-              <div className="flex-shrink-0 flex items-center justify-end w-[120px]" ref={langRef}>
-                <div className="relative">
+              {/* 右側：検索 + 言語切り替え */}
+              <div className="flex-shrink-0 flex items-center gap-3">
+                <form onSubmit={handleHeaderSearch} className="furatto-header-search relative">
+                  <input
+                    type="text"
+                    value={headerKeyword}
+                    onChange={(e) => setHeaderKeyword(e.target.value)}
+                    placeholder={t('search.keywordPlaceholder', lang)}
+                    className="furatto-header-search-input w-[180px] pl-3 pr-8 py-1.5 text-xs rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
+                    aria-label={t('common.search', lang)}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </form>
+
+                <div className="relative" ref={langRef}>
                   <button
                     onClick={() => setIsLangOpen(!isLangOpen)}
                     className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
@@ -224,6 +259,13 @@ export default function MediaHeader({
           menuSettings={menuSettings}
           menuBackgroundColor={menuBackgroundColor}
           menuTextColor={menuTextColor}
+          lang={lang}
+        />
+
+        {/* モバイル検索パネル（ふらっと専用） */}
+        <SearchPanel
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
           lang={lang}
         />
       </>
