@@ -622,27 +622,43 @@
 
 /* ===== Furatto Header Search ===== */
 .furatto-header-search-input {
-  font-size: 0.8125rem;
   color: var(--ft-text);
 }
 
 .furatto-header-search-input::placeholder {
   color: var(--ft-text-light);
-  font-size: 0.75rem;
 }
 
 .furatto-header-search-input:focus {
   box-shadow: 0 0 0 2px rgba(91, 127, 94, 0.15);
 }
 
+/* PC下段ナビ */
+.furatto-header-nav {
+  min-height: 36px;
+}
+
 /* ===== Furatto Media Search Hero ===== */
+/* モバイル: 上段(44px) + 検索バー段(≈36px) */
 .furatto-media-search-hero {
-  margin-top: 48px;
+  margin-top: 80px;
+}
+
+/* PC: 上段(56px) + ナビ段(36px) */
+@media (min-width: 1024px) {
+  .furatto-media-search-hero {
+    margin-top: 92px;
+  }
+}
+
+/* ヘッダークリアランス調整（2段構成対応） */
+.theme-furatto-default .furatto-header + div.relative:not([class*="-mb-40"]) {
+  padding-top: 6rem !important;
 }
 
 @media (min-width: 1024px) {
-  .furatto-media-search-hero {
-    margin-top: 56px;
+  .theme-furatto-default .furatto-header + div.relative:not([class*="-mb-40"]) {
+    padding-top: 7rem !important;
   }
 }
 

@@ -141,115 +141,134 @@ export default function MediaHeader({
       <>
         <header className="furatto-header fixed top-0 left-0 right-0 z-50">
           <div className="furatto-header-inner">
-            {/* Mobile: ハンバーガー左 + ロゴ中央 + 検索右 */}
-            <div className="flex items-center justify-between lg:hidden px-3 h-12">
-              <button
-                onClick={toggleMenu}
-                className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                aria-label={t('common.menu', lang)}
-              >
-                <Image
-                  src="/menu.svg"
-                  alt={t('common.menu', lang)}
-                  width={22}
-                  height={22}
-                  className="w-[22px] h-[22px]"
-                />
-              </button>
+            {/* ===== モバイル ===== */}
+            <div className="lg:hidden">
+              {/* 上段: ハンバーガー + ロゴ */}
+              <div className="flex items-center justify-between px-3 h-11">
+                <button
+                  onClick={toggleMenu}
+                  className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                  aria-label={t('common.menu', lang)}
+                >
+                  <Image
+                    src="/menu.svg"
+                    alt={t('common.menu', lang)}
+                    width={22}
+                    height={22}
+                    className="w-[22px] h-[22px]"
+                  />
+                </button>
 
-              <div className="absolute left-1/2 -translate-x-1/2 max-w-[calc(100%-100px)]">
-                {furattoLogoElement}
+                <div className="absolute left-1/2 -translate-x-1/2">
+                  {furattoLogoElement}
+                </div>
+
+                <div className="w-9 h-9 flex-shrink-0" />
               </div>
 
-              <button
-                onClick={toggleSearch}
-                className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                aria-label={t('common.search', lang)}
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* PC: ロゴ左 + ナビ + 検索(中央) + 言語右 */}
-            <div className="hidden lg:flex items-center px-8 h-14">
-              <div className="flex-shrink-0">
-                {furattoLogoElement}
-              </div>
-
-              {/* 中央エリア: ナビ + 検索フィールド */}
-              <div className="flex-1 flex items-center justify-center gap-4">
-                {globalNavItems.length > 0 && (
-                  <nav className="flex items-center" aria-label="Global navigation">
-                    <div className="flex items-center gap-1">
-                      {globalNavItems.map((item) => (
-                        <Link
-                          key={item.id}
-                          href={getNavigationItemUrl(item, lang)}
-                          className="furatto-header-nav-link px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
-                        >
-                          {getNavItemLabel(item, lang)}
-                        </Link>
-                      ))}
-                    </div>
-                  </nav>
-                )}
-
-                <form onSubmit={handleHeaderSearch} className="furatto-header-search relative">
+              {/* 下段: 検索フィールド（中央） */}
+              <div className="px-3 pb-2">
+                <form onSubmit={handleHeaderSearch} className="relative">
                   <input
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
                     placeholder={t('search.keywordPlaceholder', lang)}
-                    className="furatto-header-search-input w-[200px] pl-3 pr-8 py-1.5 text-xs rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white focus:w-[260px] transition-all"
+                    className="furatto-header-search-input w-full pl-3 pr-9 py-1.5 text-sm rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
                     aria-label={t('common.search', lang)}
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
                 </form>
               </div>
+            </div>
 
-              {/* 右側：言語切り替え */}
-              <div className="flex-shrink-0 relative" ref={langRef}>
-                <button
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                  aria-label="言語を選択"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
-                  </svg>
-                  <span>{LANG_SHORT[lang]}</span>
-                  <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+            {/* ===== PC ===== */}
+            <div className="hidden lg:block">
+              {/* 上段: ロゴ + 検索フィールド(中央) + 言語 */}
+              <div className="flex items-center px-8 h-14">
+                <div className="flex-shrink-0">
+                  {furattoLogoElement}
+                </div>
 
-                {isLangOpen && (
-                  <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
-                    {SUPPORTED_LANGS.map((l) => (
-                      <button
-                        key={l}
-                        onClick={() => handleLangChange(l)}
-                        className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
-                          l === lang ? 'font-semibold' : 'font-normal'
-                        }`}
+                <div className="flex-1 flex justify-center">
+                  <form onSubmit={handleHeaderSearch} className="furatto-header-search relative w-full max-w-md">
+                    <input
+                      type="text"
+                      value={headerKeyword}
+                      onChange={(e) => setHeaderKeyword(e.target.value)}
+                      placeholder={t('search.keywordPlaceholder', lang)}
+                      className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
+                      aria-label={t('common.search', lang)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+
+                <div className="flex-shrink-0 relative" ref={langRef}>
+                  <button
+                    onClick={() => setIsLangOpen(!isLangOpen)}
+                    className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                    aria-label="言語を選択"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
+                    </svg>
+                    <span>{LANG_SHORT[lang]}</span>
+                    <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isLangOpen && (
+                    <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+                      {SUPPORTED_LANGS.map((l) => (
+                        <button
+                          key={l}
+                          onClick={() => handleLangChange(l)}
+                          className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
+                            l === lang ? 'font-semibold' : 'font-normal'
+                          }`}
+                        >
+                          <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
+                          {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 下段: ナビゲーションメニュー */}
+              {globalNavItems.length > 0 && (
+                <nav className="furatto-header-nav flex items-center justify-center border-t border-gray-100 px-8" aria-label="Global navigation">
+                  <div className="flex items-center gap-0.5">
+                    {globalNavItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={getNavigationItemUrl(item, lang)}
+                        className="furatto-header-nav-link px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap"
                       >
-                        <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
-                        {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
-                      </button>
+                        {getNavItemLabel(item, lang)}
+                      </Link>
                     ))}
                   </div>
-                )}
-              </div>
+                </nav>
+              )}
             </div>
           </div>
         </header>
@@ -260,13 +279,6 @@ export default function MediaHeader({
           menuSettings={menuSettings}
           menuBackgroundColor={menuBackgroundColor}
           menuTextColor={menuTextColor}
-          lang={lang}
-        />
-
-        {/* モバイル検索パネル（ふらっと専用） */}
-        <SearchPanel
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
           lang={lang}
         />
       </>
