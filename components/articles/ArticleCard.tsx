@@ -5,7 +5,7 @@ import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 
 interface ArticleCardProps {
-  article: Article;
+  article: Article & { categoryNames?: string[] };
   lang?: Lang;
 }
 
@@ -35,6 +35,15 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
         </div>
       )}
       <div className="p-4">
+        {article.categoryNames && article.categoryNames.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {article.categoryNames.slice(0, 2).map((name, i) => (
+              <span key={i} className="article-card-category-badge px-2 py-0.5 rounded text-[11px] font-medium" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-color, #E08A3C) 15%, white)', color: 'var(--primary-color, #E08A3C)' }}>
+                {name}
+              </span>
+            ))}
+          </div>
+        )}
         <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
           {article.title}
         </h3>

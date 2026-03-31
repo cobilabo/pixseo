@@ -49,15 +49,11 @@ export default function TagSearchDropdown({
 
   return (
     <div ref={dropdownRef} className="relative">
-      <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
-        {t('search.tagSearch', lang)}
-      </label>
-      
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between border border-gray-300 rounded-lg bg-white hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`w-full flex items-center justify-between border-none rounded-lg bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
           isCompact ? 'px-3 py-2 text-sm' : 'px-4 py-3'
         }`}
       >
@@ -76,7 +72,7 @@ export default function TagSearchDropdown({
 
       {/* ドロップダウンメニュー */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-sm max-h-60 overflow-y-auto">
           {tags.length === 0 ? (
             <div className={`text-gray-500 text-center ${isCompact ? 'px-3 py-2 text-sm' : 'px-4 py-3'}`}>
               {t('search.noTags', lang)}

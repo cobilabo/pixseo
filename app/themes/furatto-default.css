@@ -739,6 +739,10 @@
 }
 
 /* h3 */
+.theme-furatto-default .article-content h3 {
+  color: var(--ft-text) !important;
+}
+
 .theme-furatto-default .article-content h3::after {
   background-color: var(--ft-primary) !important;
 }

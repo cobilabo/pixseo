@@ -294,11 +294,49 @@ export default async function CategoryPage({ params }: PageProps) {
       )}
 
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
-        {footerTextLinkSections.length > 0 ? (
+        {rawTheme.layoutTheme === 'furatto' ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="text-lg font-bold mb-3">{siteInfo.name}</h3>
+                {siteInfo.description && (
+                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">{siteInfo.description}</p>
+                )}
+              </div>
+              <div className="text-right">
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">メニュー</h4>
+                <ul className="space-y-2">
+                  {(rawTheme.menuSettings?.globalNavItems || []).map((item: any) => (
+                    <li key={item.id}>
+                      <a href={item.type === 'fixedPage' ? `/${lang}/${item.slug || ''}` : item.type === 'external' ? item.url : `/${lang}/${item.type === 'articles' ? 'articles' : item.slug || ''}`} className="text-sm text-gray-300 hover:text-white transition-colors">
+                        {item[`label_${lang}`] || item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="text-right">
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">カテゴリー</h4>
+                <ul className="space-y-2">
+                  {categories.filter(cat => !(cat as any).isHiddenFromLists).slice(0, 10).map(cat => (
+                    <li key={cat.id}>
+                      <a href={`/${lang}/categories/${cat.slug}`} className="text-sm text-gray-300 hover:text-white transition-colors">
+                        {cat.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-gray-600 mt-8 pt-6">
+              <p className="text-gray-400 text-xs text-center">
+                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+              </p>
+            </div>
+          </div>
+        ) : footerTextLinkSections.length > 0 ? (
           <div className="py-12">
             <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} />
-
-            {/* コピーライト */}
             <div className="w-full border-t border-gray-700 pt-6">
               <p className="text-gray-400 text-sm text-center">
                 © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.

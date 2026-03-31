@@ -28,6 +28,7 @@ interface ArticleListItem {
   publishedAt?: Date;
   updatedAt?: Date;
   viewCount?: number;
+  categoryNames?: string[];
 }
 
 export default function ArticleBlock({ block, lang = 'ja' as Lang }: ArticleBlockProps) {

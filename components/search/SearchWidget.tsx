@@ -113,7 +113,7 @@ export default function SearchWidget({
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder={t('search.keywordPlaceholder', lang)}
-                className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
+                className={`w-full border-none bg-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white text-black ${
                   isCompact ? 'pl-3 pr-10 py-2 text-sm' : 'pl-4 pr-12 py-3'
                 }`}
               />
@@ -154,9 +154,6 @@ export default function SearchWidget({
         if (categoryDisplayType === 'list') {
           return (
             <div key={key}>
-              <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
-                {t('search.categorySearch', lang)}
-              </label>
               <div className="flex flex-wrap gap-2">
                 {visibleCategories.map((cat) => (
                   <button

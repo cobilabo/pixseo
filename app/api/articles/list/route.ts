@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecentArticlesServer, getPopularArticlesServer, getArticlesServer, getCategoryServer } from '@/lib/firebase/articles-server';
+import { getRecentArticlesServer, getPopularArticlesServer, getArticlesServer, getCategoryServer, getCategoriesServer } from '@/lib/firebase/articles-server';
 import { getMediaIdFromHost } from '@/lib/firebase/media-tenant-helper';
 import { localizeArticle } from '@/lib/i18n/localize';
 import { Lang, isValidLang } from '@/types/lang';
@@ -46,6 +46,14 @@ export async function GET(request: NextRequest) {
       articles = await getRecentArticlesServer(limit, mediaId || undefined);
     }
     
+    // 全記事のcategoryIdsを集めてカテゴリ名を一括取得
+    const allCatIds = [...new Set(articles.flatMap(a => a.categoryIds || []))];
+    const allCats = allCatIds.length > 0 ? await getCategoriesServer(allCatIds) : [];
+    const catNameMap = new Map(allCats.map(c => {
+      const localized = (c as any)[`name_${lang}`] || c.name;
+      return [c.id, localized];
+    }));
+
     // 多言語化
     const localizedArticles = articles.map(article => localizeArticle(article, lang));
     
@@ -60,6 +68,7 @@ export async function GET(request: NextRequest) {
       publishedAt: article.publishedAt,
       updatedAt: article.updatedAt,
       viewCount: article.viewCount,
+      categoryNames: (article.categoryIds || []).map((id: string) => catNameMap.get(id)).filter(Boolean),
     }));
     
     return NextResponse.json({
