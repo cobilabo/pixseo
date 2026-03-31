@@ -558,6 +558,11 @@
   border: 1px solid var(--ft-border-light);
 }
 
+/* ===== Loading Spinner ===== */
+.theme-furatto-default .animate-spin {
+  border-top-color: var(--ft-primary) !important;
+}
+
 /* ===== Scroll to Top Button ===== */
 .theme-furatto-default button[class*="fixed bottom-"] {
   background-color: var(--ft-primary) !important;
