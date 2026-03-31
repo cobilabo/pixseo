@@ -699,14 +699,22 @@
   }
 }
 
+/* PC watermark (single line) */
+.furatto-media-search-watermark {
+  font-size: clamp(8rem, 24vw, 22rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+/* SP watermark (2 lines: KEY large, WORD smaller) */
 .furatto-wm-key {
-  font-size: clamp(6rem, 32vw, 18rem);
-  letter-spacing: 0.15em;
+  font-size: 48vw;
+  letter-spacing: 0.12em;
 }
 
 .furatto-wm-word {
-  font-size: clamp(8rem, 42vw, 26rem);
-  letter-spacing: 0.08em;
+  font-size: 32vw;
+  letter-spacing: 0.06em;
 }
 
 /* ===== Responsive Adjustments ===== */
@@ -725,45 +733,58 @@
     border-radius: var(--ft-radius);
   }
 
-  /* SP Footer: site info centered, then menu+category 2-col */
+  /* SP Footer: site info centered, menu+category side by side */
   .theme-furatto-default footer .grid {
+    display: grid !important;
     grid-template-columns: 1fr !important;
-    text-align: center !important;
+    gap: 0 !important;
   }
 
   .theme-furatto-default footer .grid > div:first-child {
     text-align: center !important;
-    padding-bottom: 1.25rem;
-    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2),
   .theme-furatto-default footer .grid > div:nth-child(3) {
-    display: inline-block;
+    float: left;
     width: 50%;
-    vertical-align: top;
+    box-sizing: border-box;
+    font-size: 0.75rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2) {
     text-align: left !important;
+    padding-right: 0.5rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2) ul {
     text-align: left !important;
   }
 
+  .theme-furatto-default footer .grid > div:nth-child(2) h4 {
+    font-size: 0.75rem;
+  }
+
   .theme-furatto-default footer .grid > div:nth-child(3) {
     text-align: right !important;
+    padding-left: 0.5rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(3) ul {
     text-align: right !important;
   }
 
+  .theme-furatto-default footer .grid > div:nth-child(3) h4 {
+    font-size: 0.75rem;
+  }
+
   .theme-furatto-default footer .border-t {
-    margin-top: 1.5rem !important;
-    padding-top: 1rem !important;
+    margin-top: 1rem !important;
+    padding-top: 0.75rem !important;
+    clear: both;
   }
 }
 
