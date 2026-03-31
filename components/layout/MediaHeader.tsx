@@ -227,7 +227,7 @@ export default function MediaHeader({
                       href={`https://www.instagram.com/${instagramUsername}/`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="furatto-header-ig-btn w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors"
+                      className="furatto-header-ig-btn w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white hover:opacity-80 transition-opacity"
                       aria-label="Instagram"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
