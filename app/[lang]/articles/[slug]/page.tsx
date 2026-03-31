@@ -358,8 +358,28 @@ export default async function ArticlePage({ params }: PageProps) {
         snsSettings={rawTheme.snsSettings}
       />
 
-      {/* FV（ファーストビュー）- アイキャッチ画像 */}
-      {rawArticle.featuredImage && (
+      {/* FV（ファーストビュー） */}
+      {rawTheme.layoutTheme === 'furatto' ? (
+        <section className="relative w-full overflow-hidden" style={{ paddingTop: '108px', paddingBottom: '48px', marginBottom: '-40px', zIndex: 1 }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
+          <div className="relative z-10 flex flex-col items-center justify-center px-4 text-white">
+            {article.title && (
+              <h1 className="font-bold text-center mb-2 drop-shadow-lg" style={{ fontSize: '1.5em' }}>
+                {article.title}
+              </h1>
+            )}
+            <div className="flex flex-col md:flex-row md:gap-2 text-sm text-center md:text-left text-gray-100 drop-shadow-md">
+              <span>{t('article.published', lang)}: {formatArticleDate(rawArticle.publishedAt, lang)}</span>
+              {rawArticle.updatedAt && <span className="hidden md:inline">•</span>}
+              {rawArticle.updatedAt && <span>{t('article.updated', lang)}: {formatArticleDate(rawArticle.updatedAt, lang)}</span>}
+              {rawArticle.viewCount !== undefined && <span className="hidden md:inline">•</span>}
+              {rawArticle.viewCount !== undefined && <span>{t('article.viewCount', lang, { count: rawArticle.viewCount })}</span>}
+              {rawArticle.readingTime && <span className="hidden md:inline">•</span>}
+              {rawArticle.readingTime && <span>{t('article.readingTime', lang, { minutes: rawArticle.readingTime })}</span>}
+            </div>
+          </div>
+        </section>
+      ) : rawArticle.featuredImage ? (
         <FirstView 
           settings={{
             imageUrl: rawArticle.featuredImage,
@@ -378,7 +398,7 @@ export default async function ArticlePage({ params }: PageProps) {
           }}
           showCustomContent={true}
         />
-      )}
+      ) : null}
 
       {/* カテゴリーバー / グローバルメニュー */}
       <CategoryBar 
@@ -534,11 +554,49 @@ export default async function ArticlePage({ params }: PageProps) {
 
       {/* フッター */}
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
-        {footerTextLinkSections.length > 0 ? (
+        {rawTheme.layoutTheme === 'furatto' ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="text-lg font-bold mb-3">{siteInfo.name}</h3>
+                {siteInfo.description && (
+                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">{siteInfo.description}</p>
+                )}
+              </div>
+              <div className="text-right">
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">メニュー</h4>
+                <ul className="space-y-2">
+                  {(rawTheme.menuSettings?.globalNavItems || []).map((item: any) => (
+                    <li key={item.id}>
+                      <a href={item.type === 'fixedPage' ? `/${lang}/${item.slug || ''}` : item.type === 'external' ? item.url : `/${lang}/${item.type === 'articles' ? 'articles' : item.slug || ''}`} className="text-sm text-gray-300 hover:text-white transition-colors">
+                        {item[`label_${lang}`] || item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="text-right">
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">カテゴリー</h4>
+                <ul className="space-y-2">
+                  {headerCategories.filter(cat => !(cat as any).isHiddenFromLists).slice(0, 10).map(cat => (
+                    <li key={cat.id}>
+                      <a href={`/${lang}/categories/${cat.slug}`} className="text-sm text-gray-300 hover:text-white transition-colors">
+                        {cat.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-gray-600 mt-8 pt-6">
+              <p className="text-gray-400 text-xs text-center">
+                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+              </p>
+            </div>
+          </div>
+        ) : footerTextLinkSections.length > 0 ? (
           <div className="py-12">
             <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} />
-
-            {/* コピーライト */}
             <div className="w-full border-t border-gray-700 pt-6">
               <p className="text-gray-400 text-sm text-center">
                 © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
@@ -546,13 +604,11 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto px-0 py-12">
+          <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="text-center space-y-4">
               <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
               {siteInfo.description && (
-                <p className="text-gray-300 max-w-2xl mx-auto whitespace-pre-line">
-                  {siteInfo.description}
-                </p>
+                <p className="text-gray-300 max-w-2xl mx-auto whitespace-pre-line">{siteInfo.description}</p>
               )}
               <p className="text-gray-400 text-sm pt-4">
                 © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.

@@ -197,23 +197,6 @@
 }
 
 /* ===== FirstView ===== */
-.theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden {
-  background: linear-gradient(135deg, #E08A3C 0%, #F0A050 40%, #F5C040 100%) !important;
-  height: 360px !important;
-}
-
-.theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden img {
-  display: none !important;
-}
-
-.theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden .absolute.inset-0 {
-  background: transparent !important;
-}
-
-.theme-furatto-default .relative.w-full.h-\[700px\] {
-  height: 360px !important;
-}
-
 .theme-furatto-default .relative.w-full h1 {
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -726,4 +709,26 @@
   .theme-furatto-default article.bg-white.rounded-lg.shadow-md {
     border-radius: var(--ft-radius);
   }
+}
+
+/* ===== Override theme customCss blue colors for furatto ===== */
+.theme-furatto-default article .article-content h2 {
+  color: var(--ft-text) !important;
+  border-bottom-color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .article-content h2::after {
+  background-color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .article-content h3::after {
+  background-color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .article-content h4 {
+  border-bottom-color: var(--ft-primary) !important;
+}
+
+.theme-furatto-default .article-content ol > li::before {
+  color: var(--ft-primary) !important;
 }

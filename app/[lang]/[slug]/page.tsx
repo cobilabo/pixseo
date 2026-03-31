@@ -434,7 +434,7 @@ export default async function FixedPage({ params }: PageProps) {
                     <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">{siteInfo.description}</p>
                   )}
                 </div>
-                <div>
+                <div className="text-right">
                   <h4 className="text-sm font-semibold mb-3 text-gray-200">メニュー</h4>
                   <ul className="space-y-2">
                     {(rawTheme.menuSettings?.globalNavItems || []).map((item: any) => (
@@ -446,7 +446,7 @@ export default async function FixedPage({ params }: PageProps) {
                     ))}
                   </ul>
                 </div>
-                <div>
+                <div className="text-right">
                   <h4 className="text-sm font-semibold mb-3 text-gray-200">カテゴリー</h4>
                   <ul className="space-y-2">
                     {categories.filter(cat => !(cat as any).isHiddenFromLists).slice(0, 10).map(cat => (
