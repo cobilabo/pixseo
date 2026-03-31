@@ -355,6 +355,7 @@ export default async function ArticlePage({ params }: PageProps) {
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
         layoutTheme={rawTheme.layoutTheme}
+        snsSettings={rawTheme.snsSettings}
       />
 
       {/* FV（ファーストビュー）- アイキャッチ画像 */}

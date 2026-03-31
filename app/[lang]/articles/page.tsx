@@ -192,6 +192,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
         layoutTheme={rawTheme.layoutTheme}
+        snsSettings={rawTheme.snsSettings}
       />
 
       {/* カテゴリーバー / グローバルメニュー */}

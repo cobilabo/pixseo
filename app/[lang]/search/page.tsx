@@ -173,6 +173,7 @@ export default async function SearchPage({ params }: PageProps) {
           menuTextColor={rawTheme.menuTextColor}
           lang={lang}
           layoutTheme={rawTheme.layoutTheme}
+          snsSettings={rawTheme.snsSettings}
         />
 
       {/* カテゴリーバー / グローバルメニュー */}

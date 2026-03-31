@@ -146,7 +146,7 @@ export default async function WriterPage({ params }: PageProps) {
         <FirstView settings={{ imageUrl: rawWriter.backgroundImage || '', catchphrase: '', description: '' }} writerIcon={rawWriter.icon} customTitle={writer.handleName} customSubtitle="" customMeta={t('meta.articlesCount', lang, { count: localizedArticles.length })} showCustomContent={true} />
       )}
 
-      <MediaHeader siteName={siteInfo.name} siteInfo={rawSiteInfo} menuSettings={theme.menuSettings} menuBackgroundColor={rawTheme.menuBackgroundColor} menuTextColor={rawTheme.menuTextColor} lang={lang} layoutTheme={rawTheme.layoutTheme} />
+      <MediaHeader siteName={siteInfo.name} siteInfo={rawSiteInfo} menuSettings={theme.menuSettings} menuBackgroundColor={rawTheme.menuBackgroundColor} menuTextColor={rawTheme.menuTextColor} lang={lang} layoutTheme={rawTheme.layoutTheme} snsSettings={rawTheme.snsSettings} />
       {/* カテゴリーバー / グローバルメニュー */}
       <CategoryBar 
         categories={headerCategories} 

@@ -274,6 +274,7 @@ export default async function FixedPage({ params }: PageProps) {
         menuTextColor={rawTheme.menuTextColor}
         lang={lang}
         layoutTheme={rawTheme.layoutTheme}
+        snsSettings={rawTheme.snsSettings}
       />
 
       {/* カテゴリーバー / グローバルメニュー */}
