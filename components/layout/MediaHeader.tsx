@@ -305,8 +305,8 @@ export default function MediaHeader({
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
           menuSettings={menuSettings}
-          menuBackgroundColor={menuBackgroundColor}
-          menuTextColor={menuTextColor}
+          menuBackgroundColor={isFuratto ? '#E08A3C' : menuBackgroundColor}
+          menuTextColor={isFuratto ? '#ffffff' : menuTextColor}
           lang={lang}
         />
       </>

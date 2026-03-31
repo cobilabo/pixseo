@@ -292,9 +292,9 @@ export default async function FixedPage({ params }: PageProps) {
       {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' ? (
         <section className="furatto-media-search-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          <div className="absolute inset-x-0 bottom-0 flex items-start justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '0%' }}>
-            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
-              KEYWORD
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '10%' }}>
+            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest text-center leading-none">
+              KEY<br className="sm:hidden" />WORD
             </span>
           </div>
 
@@ -360,15 +360,17 @@ export default async function FixedPage({ params }: PageProps) {
               <aside className="w-full lg:w-[30%] space-y-6">
                 {/* 検索ウィジェット（ふらっとテーマ専用・サイドバー表示の場合） */}
                 {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.sidebar && (
-                  <SearchWidget
-                    searchSettings={rawTheme.searchSettings}
-                    mediaId={mediaId || undefined}
-                    lang={lang}
-                    tags={sidebarTags}
-                    categories={categories}
-                    popularTags={popularSearchTags}
-                    variant="compact"
-                  />
+                  <div className={params.slug === 'media' ? 'hidden lg:block' : ''}>
+                    <SearchWidget
+                      searchSettings={rawTheme.searchSettings}
+                      mediaId={mediaId || undefined}
+                      lang={lang}
+                      tags={sidebarTags}
+                      categories={categories}
+                      popularTags={popularSearchTags}
+                      variant="compact"
+                    />
+                  </div>
                 )}
 
                 {/* サイドコンテンツ（設定に基づく） */}

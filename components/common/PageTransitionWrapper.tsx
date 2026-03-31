@@ -149,7 +149,8 @@ function NavigationRouteLoader() {
     >
       <div className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-8 py-6 shadow-lg">
         <div
-          className="h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"
+          className="h-10 w-10 animate-spin rounded-full border-2 border-gray-200"
+          style={{ borderTopColor: 'var(--primary-color, #3b82f6)' }}
           aria-hidden
         />
         <span className="text-xs font-medium text-gray-600">読み込み中</span>

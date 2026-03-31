@@ -194,7 +194,7 @@ export default async function SearchPage({ params }: PageProps) {
           <div className="flex-1 lg:w-[70%]">
             {/* 検索コンテンツ */}
             <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
-              <SearchContent faviconUrl={rawSiteInfo.faviconUrl} mediaId={mediaId || undefined} lang={lang} tags={tags} />
+              <SearchContent faviconUrl={rawSiteInfo.faviconUrl} mediaId={mediaId || undefined} lang={lang} tags={tags} layoutTheme={rawTheme.layoutTheme} />
             </Suspense>
             </div>
 

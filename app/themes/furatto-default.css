@@ -700,8 +700,8 @@
 }
 
 .furatto-media-search-watermark {
-  font-size: clamp(8rem, 24vw, 22rem);
-  line-height: 1;
+  font-size: clamp(5rem, 24vw, 22rem);
+  line-height: 0.9;
   letter-spacing: 0.08em;
 }
 
@@ -719,6 +719,29 @@
 
   .theme-furatto-default article.bg-white.rounded-lg.shadow-md {
     border-radius: var(--ft-radius);
+  }
+
+  /* SP Footer: 1-column, centered, with dividers */
+  .theme-furatto-default footer .grid {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+
+  .theme-furatto-default footer .grid > div {
+    text-align: center !important;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .theme-furatto-default footer .grid > div:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .theme-furatto-default footer .grid > div ul {
+    text-align: center !important;
   }
 }
 

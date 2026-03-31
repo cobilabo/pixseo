@@ -21,12 +21,13 @@ interface SearchContentProps {
   mediaId?: string;
   lang?: Lang;
   tags?: LocalizedTag[];
+  layoutTheme?: string;
 }
 
 // 検索タイプの定義
 type SearchType = 'keyword' | 'tag' | 'category';
 
-export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags = [] }: SearchContentProps) {
+export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags = [], layoutTheme }: SearchContentProps) {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const tagParam = searchParams.get('tag') || '';       // タグ名パラメータ
@@ -200,7 +201,9 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
 
   return (
     <>
-      <SimpleSearch onSearch={handleSearch} initialKeyword={keyword} lang={lang} />
+      {layoutTheme !== 'furatto' && (
+        <SimpleSearch onSearch={handleSearch} initialKeyword={keyword} lang={lang} />
+      )}
 
       {/* タグ/カテゴリー検索時のバッジ表示 */}
       {(searchType === 'tag' || searchType === 'category') && searchLabel && (
