@@ -128,14 +128,13 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                   href={`/${lang}/articles/${article.slug}`}
                   className="block group"
                 >
-                  {/* 新着記事カード(ArticleCard)と同じ高さ(h-48)に揃え、object-contain でサムネ全体を枠内に収める（3列時の狭い枠+object-coverだと左右が強く切れるため） */}
-                  <div className="relative h-48 w-full overflow-hidden rounded-lg bg-gray-100">
+                  <div className="relative w-full overflow-hidden rounded-xl bg-gray-100" style={{ aspectRatio: '16 / 9' }}>
                     {article.featuredImage ? (
                       <Image
                         src={article.featuredImage}
                         alt={article.featuredImageAlt || article.title}
                         fill
-                        className="object-contain object-center transition-opacity duration-300 group-hover:opacity-95"
+                        className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
                         sizes={`(max-width: 640px) 100vw, (max-width: 1024px) 50vw, ${Math.round(100 / effectiveCols)}vw`}
                         priority={index === 0}
                       />
