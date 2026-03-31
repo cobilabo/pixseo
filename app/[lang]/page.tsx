@@ -288,26 +288,31 @@ export default async function HomePage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        <MediaHeader
-          siteName={siteInfo.name}
-          siteInfo={rawSiteInfo}
-          menuSettings={theme.menuSettings}
-          menuBackgroundColor={rawTheme.menuBackgroundColor}
-          menuTextColor={rawTheme.menuTextColor}
-          lang={lang}
-          layoutTheme={rawTheme.layoutTheme}
-          snsSettings={rawTheme.snsSettings}
-        />
+        {/* cobi テーマのホームではヘッダー・カテゴリバーを非表示（LP用途） */}
+        {rawTheme.layoutTheme !== 'cobi' && (
+          <>
+            <MediaHeader
+              siteName={siteInfo.name}
+              siteInfo={rawSiteInfo}
+              menuSettings={theme.menuSettings}
+              menuBackgroundColor={rawTheme.menuBackgroundColor}
+              menuTextColor={rawTheme.menuTextColor}
+              lang={lang}
+              layoutTheme={rawTheme.layoutTheme}
+              snsSettings={rawTheme.snsSettings}
+            />
 
-        {/* カテゴリーバー / グローバルメニュー */}
-        {showGlobalNav && (
-          <CategoryBar 
-            categories={categories} 
-            lang={lang} 
-            globalNavItems={rawTheme.menuSettings?.globalNavItems}
-            globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
-            layoutTheme={rawTheme.layoutTheme}
-          />
+            {/* カテゴリーバー / グローバルメニュー */}
+            {showGlobalNav && (
+              <CategoryBar 
+                categories={categories} 
+                lang={lang} 
+                globalNavItems={rawTheme.menuSettings?.globalNavItems}
+                globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
+                layoutTheme={rawTheme.layoutTheme}
+              />
+            )}
+          </>
         )}
 
         {/* fullWidthTop スライダー（ヘッダー直下・横幅いっぱい） */}
