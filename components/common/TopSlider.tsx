@@ -144,6 +144,15 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                     )}
                   </div>
                   <div className="p-3">
+                    {article.categoryNames && article.categoryNames.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-1.5">
+                        {article.categoryNames.slice(0, 2).map((name, i) => (
+                          <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-color, #E08A3C) 15%, white)', color: 'var(--primary-color, #E08A3C)' }}>
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
                       {article.title}
                     </h3>

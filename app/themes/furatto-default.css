@@ -725,12 +725,17 @@
 /* h2 */
 .theme-furatto-default article .article-content h2 {
   color: var(--ft-text) !important;
-  border-bottom: none !important;
-  padding-bottom: 0.75rem !important;
+  border-bottom: 2px solid var(--ft-primary) !important;
+  padding-bottom: 0.5rem !important;
 }
 
 .theme-furatto-default .article-content h2::after {
-  background-color: var(--ft-primary) !important;
+  display: none !important;
+}
+
+/* 記事内画像のシャドウ除去 */
+.theme-furatto-default .article-content img {
+  box-shadow: none !important;
 }
 
 /* h3 */
@@ -748,7 +753,7 @@
   color: var(--ft-primary) !important;
 }
 
-/* primary-color CSS variable override */
-.theme-furatto-default .article-content {
+/* primary-color CSS variable override (global scope for all components) */
+.theme-furatto-default {
   --primary-color: var(--ft-primary);
 }

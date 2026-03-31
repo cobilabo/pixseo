@@ -360,15 +360,15 @@ export default async function ArticlePage({ params }: PageProps) {
 
       {/* FV（ファーストビュー） */}
       {rawTheme.layoutTheme === 'furatto' ? (
-        <section className="relative w-full overflow-hidden" style={{ paddingTop: '120px', paddingBottom: '80px', marginBottom: '-40px', zIndex: 1 }}>
+        <section className="furatto-article-hero relative w-full overflow-hidden" style={{ paddingTop: '120px', paddingBottom: '48px' }}>
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          <div className="relative z-10 flex flex-col items-center justify-center px-4 text-white">
+          <div className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-8 text-white max-w-4xl mx-auto">
             {article.title && (
-              <h1 className="font-bold text-center mb-2 drop-shadow-lg" style={{ fontSize: '1.5em' }}>
+              <h1 className="font-bold text-center mb-3 drop-shadow-lg text-xl sm:text-2xl md:text-3xl leading-snug">
                 {article.title}
               </h1>
             )}
-            <div className="flex flex-col md:flex-row md:gap-2 text-sm text-center md:text-left text-gray-100 drop-shadow-md">
+            <div className="flex flex-col md:flex-row md:gap-2 text-sm text-center md:text-left text-white/80 drop-shadow-md">
               <span>{t('article.published', lang)}: {formatArticleDate(rawArticle.publishedAt, lang)}</span>
               {rawArticle.updatedAt && <span className="hidden md:inline">•</span>}
               {rawArticle.updatedAt && <span>{t('article.updated', lang)}: {formatArticleDate(rawArticle.updatedAt, lang)}</span>}
@@ -400,18 +400,20 @@ export default async function ArticlePage({ params }: PageProps) {
         />
       ) : null}
 
-      {/* カテゴリーバー / グローバルメニュー */}
-      <CategoryBar 
-        categories={headerCategories} 
-        variant="half" 
-        lang={lang} 
-        globalNavItems={rawTheme.menuSettings?.globalNavItems}
-        globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
-        layoutTheme={rawTheme.layoutTheme}
-      />
+      {/* カテゴリーバー / グローバルメニュー（ふらっとテーマでは記事ページでスキップ） */}
+      {rawTheme.layoutTheme !== 'furatto' && (
+        <CategoryBar 
+          categories={headerCategories} 
+          variant="half" 
+          lang={lang} 
+          globalNavItems={rawTheme.menuSettings?.globalNavItems}
+          globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
+          layoutTheme={rawTheme.layoutTheme}
+        />
+      )}
 
-      {/* メインコンテンツエリア以降（背景色付き・前面・カテゴリーパネルの下半分に重なる） */}
-      <div className="relative -mt-24 pt-16 md:pt-32" style={{ backgroundColor: rawTheme.backgroundColor || '#f9fafb', zIndex: 10 }}>
+      {/* メインコンテンツエリア以降（背景色付き・前面） */}
+      <div className={`relative ${rawTheme.layoutTheme === 'furatto' ? 'pt-8' : '-mt-24 pt-16 md:pt-32'}`} style={{ backgroundColor: rawTheme.backgroundColor || '#f9fafb', zIndex: 10 }}>
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
