@@ -711,24 +711,44 @@
   }
 }
 
-/* ===== Override theme customCss blue colors for furatto ===== */
+/* ===== Article Content Styling for furatto ===== */
+
+/* YouTube / Google Maps responsive embed */
+.theme-furatto-default .youtube_iframe,
+.theme-furatto-default .gmap_iframe {
+  aspect-ratio: 16 / 9;
+  max-width: 1000px;
+  width: 100%;
+  height: auto;
+}
+
+/* h2 */
 .theme-furatto-default article .article-content h2 {
   color: var(--ft-text) !important;
-  border-bottom-color: var(--ft-primary) !important;
+  border-bottom: none !important;
+  padding-bottom: 0.75rem !important;
 }
 
 .theme-furatto-default .article-content h2::after {
   background-color: var(--ft-primary) !important;
 }
 
+/* h3 */
 .theme-furatto-default .article-content h3::after {
   background-color: var(--ft-primary) !important;
 }
 
+/* h4 */
 .theme-furatto-default .article-content h4 {
   border-bottom-color: var(--ft-primary) !important;
 }
 
+/* list markers */
 .theme-furatto-default .article-content ol > li::before {
   color: var(--ft-primary) !important;
+}
+
+/* primary-color CSS variable override */
+.theme-furatto-default .article-content {
+  --primary-color: var(--ft-primary);
 }

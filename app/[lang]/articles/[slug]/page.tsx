@@ -360,7 +360,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
       {/* FV（ファーストビュー） */}
       {rawTheme.layoutTheme === 'furatto' ? (
-        <section className="relative w-full overflow-hidden" style={{ paddingTop: '108px', paddingBottom: '48px', marginBottom: '-40px', zIndex: 1 }}>
+        <section className="relative w-full overflow-hidden" style={{ paddingTop: '120px', paddingBottom: '80px', marginBottom: '-40px', zIndex: 1 }}>
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
           <div className="relative z-10 flex flex-col items-center justify-center px-4 text-white">
             {article.title && (

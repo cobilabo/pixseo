@@ -126,7 +126,8 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
               >
                 <Link
                   href={`/${lang}/articles/${article.slug}`}
-                  className="block group rounded-2xl bg-white shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                  className="block group rounded-2xl bg-white overflow-hidden transition-shadow"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
                 >
                   <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
                     {article.featuredImage ? (
