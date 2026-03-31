@@ -385,7 +385,7 @@ export default async function HomePage({ params }: PageProps) {
             </main>
           ) : (
             // 1カラムレイアウト（サイドバー非表示時）
-            <main className={`max-w-4xl mx-auto ${rawHomePage.showPanel !== false ? 'px-4 sm:px-6 lg:px-8 py-12' : ''}`}>
+            <main className={rawHomePage.showPanel !== false ? 'max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12' : ''}>
               {/* 検索ウィジェット（ふらっとテーマ専用） */}
               {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.topPage && (
                 <div className="mb-6">
