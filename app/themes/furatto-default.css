@@ -386,7 +386,7 @@
   box-shadow: var(--ft-shadow);
 }
 
-.theme-furatto-default aside .sidebar-custom-html > div {
+.theme-furatto-default aside .sidebar-custom-html > div:not(.elementor-widget-container) {
   border-radius: var(--ft-radius) !important;
   border: 1px solid var(--ft-border-light) !important;
   box-shadow: var(--ft-shadow) !important;
