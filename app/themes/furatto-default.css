@@ -36,11 +36,11 @@
 }
 
 .theme-furatto-default a {
-  color: var(--ft-primary);
+  color: var(--ft-text);
 }
 
 .theme-furatto-default a:hover {
-  color: var(--ft-primary-dark);
+  color: var(--ft-primary);
 }
 
 /* ===== Furatto Integrated Header ===== */
@@ -93,7 +93,7 @@
 }
 
 .furatto-header .furatto-header-nav-link:hover {
-  color: var(--ft-primary-dark);
+  color: var(--ft-primary);
   background-color: transparent;
 }
 
@@ -229,7 +229,7 @@
 }
 
 .theme-furatto-default .prose h2 {
-  color: var(--ft-primary-dark);
+  color: var(--ft-text);
   border-bottom: none;
   border-left: 5px solid var(--ft-primary);
   padding-left: 16px;
@@ -282,14 +282,14 @@
 }
 
 .theme-furatto-default .prose a {
-  color: var(--ft-primary);
+  color: var(--ft-text);
   text-decoration-color: var(--ft-accent-light);
   text-underline-offset: 3px;
   font-weight: 500;
 }
 
 .theme-furatto-default .prose a:hover {
-  color: var(--ft-primary-dark);
+  color: var(--ft-primary);
   text-decoration-color: var(--ft-accent);
 }
 
@@ -379,7 +379,7 @@
 
 /* ===== Section Headings (Related Articles etc.) ===== */
 .theme-furatto-default section h2.text-xl.font-bold {
-  color: var(--ft-primary-dark);
+  color: var(--ft-text);
 }
 
 .theme-furatto-default section .text-xs.text-gray-500.uppercase {
@@ -395,7 +395,8 @@
 }
 
 .theme-furatto-default aside h3 {
-  color: var(--ft-primary-dark);
+  color: var(--ft-text);
+  text-align: center;
 }
 
 /* ===== Search Widget (sidebar category search) ===== */
@@ -437,11 +438,11 @@
 
 /* ===== Breadcrumbs ===== */
 .theme-furatto-default nav[aria-label] a {
-  color: var(--ft-primary);
+  color: var(--ft-text-sub);
 }
 
 .theme-furatto-default nav[aria-label] a:hover {
-  color: var(--ft-primary-dark);
+  color: var(--ft-primary);
 }
 
 /* ===== Category / Tag Badges ===== */
