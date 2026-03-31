@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lang } from '@/types/lang';
@@ -13,40 +13,20 @@ interface CategoryItem {
   isHiddenFromLists?: boolean;
 }
 
-interface TagItem {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 interface FurattoMediaSearchHeroProps {
   lang: Lang;
-  tags?: TagItem[];
+  tags?: unknown[];
   categories?: CategoryItem[];
 }
 
 export default function FurattoMediaSearchHero({
   lang,
-  tags = [],
   categories = [],
 }: FurattoMediaSearchHeroProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
-  const [isTagOpen, setIsTagOpen] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
-  const tagRef = useRef<HTMLDivElement>(null);
 
   const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (tagRef.current && !tagRef.current.contains(event.target as Node)) {
-        setIsTagOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleKeywordSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,20 +34,14 @@ export default function FurattoMediaSearchHero({
     router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
   };
 
-  const handleTagSelect = (tag: TagItem) => {
-    setSelectedTag(tag);
-    setIsTagOpen(false);
-    router.push(`/${lang}/search?tag=${encodeURIComponent(tag.name)}`);
-  };
-
   return (
     <section className="furatto-media-search-hero relative overflow-hidden">
       {/* グラデーション背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
 
-      {/* すかしテキスト KEYWORD */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true">
-        <span className="furatto-media-search-watermark text-white/[0.08] font-black tracking-widest whitespace-nowrap">
+      {/* すかしテキスト KEYWORD — エリア上部に見切れる配置 */}
+      <div className="absolute inset-x-0 -top-[0.35em] flex justify-center pointer-events-none select-none" aria-hidden="true">
+        <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
           KEYWORD
         </span>
       </div>
@@ -95,54 +69,6 @@ export default function FurattoMediaSearchHero({
             </button>
           </div>
         </form>
-
-        {/* タグ検索（プルダウン） */}
-        {tags.length > 0 && (
-          <div className="mb-5 max-w-2xl mx-auto">
-            <div ref={tagRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setIsTagOpen(!isTagOpen)}
-                className="w-full sm:w-auto inline-flex items-center justify-between gap-2 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-sm text-sm shadow-md hover:bg-white transition-all"
-              >
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <span className={selectedTag ? 'text-gray-800' : 'text-gray-500'}>
-                    {selectedTag ? selectedTag.name : t('search.tagSearch', lang)}
-                  </span>
-                </span>
-                <svg className={`w-4 h-4 text-gray-400 transition-transform ${isTagOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isTagOpen && (
-                <div className="absolute z-50 w-full sm:w-72 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                  <ul>
-                    {tags.map((tag) => (
-                      <li key={tag.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleTagSelect(tag)}
-                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 transition-colors flex items-center gap-2 ${
-                            selectedTag?.id === tag.id ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <span>{tag.name}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* カテゴリー検索（角丸ボタン一覧） */}
         {visibleCategories.length > 0 && (

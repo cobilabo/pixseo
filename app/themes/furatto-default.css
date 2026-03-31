@@ -664,7 +664,7 @@
 }
 
 .furatto-media-search-watermark {
-  font-size: clamp(6rem, 18vw, 16rem);
+  font-size: clamp(8rem, 24vw, 22rem);
   line-height: 1;
   letter-spacing: 0.08em;
 }
