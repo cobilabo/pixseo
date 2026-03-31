@@ -121,12 +121,19 @@ export default async function CategoryPage({ params }: PageProps) {
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => ({ ...localizeCategory(cat, lang), articleCount: cat.articleCount }));
-  const localizedArticles = articles.map(art => localizeArticle(art, lang));
+  const localizedArticlesRaw = articles.map(art => localizeArticle(art, lang));
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
   const localizedRecommendedArticles = recommendedArticles.length > 0
     ? recommendedArticles.map(art => localizeArticle(art, lang))
     : localizedPopularArticles;
+
+  // カテゴリ名マップ
+  const catNameMap = new Map(categories.map(c => [c.id, c.name]));
+  const localizedArticles = localizedArticlesRaw.map(art => ({
+    ...art,
+    categoryNames: (art.categoryIds || []).map((id: string) => catNameMap.get(id)).filter(Boolean) as string[],
+  }));
   
   // タグのローカライズ（SearchWidget用）
   const sidebarTags = allTags

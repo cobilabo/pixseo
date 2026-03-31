@@ -130,6 +130,8 @@ export interface RelatedArticle {
   slug: string;
   publishedAt?: Date;
   mediaId: string;
+  categoryIds?: string[];
+  categoryNames?: string[];
 }
 
 

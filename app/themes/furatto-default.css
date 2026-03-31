@@ -386,6 +386,12 @@
   box-shadow: var(--ft-shadow);
 }
 
+.theme-furatto-default aside .sidebar-custom-html > div {
+  border-radius: var(--ft-radius) !important;
+  border: 1px solid var(--ft-border-light) !important;
+  box-shadow: var(--ft-shadow) !important;
+}
+
 .theme-furatto-default aside h2,
 .theme-furatto-default aside h3 {
   color: var(--ft-text);

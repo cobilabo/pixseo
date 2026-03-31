@@ -254,6 +254,15 @@ export default async function ArticlePage({ params }: PageProps) {
     ? allCategories.filter(cat => cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang))
     : allCategories.map(cat => localizeCategory(cat, lang));
 
+  // カテゴリ名マップ（関連記事・カテゴリページ用）
+  const catNameMap = new Map(headerCategories.map(c => [c.id, c.name]));
+
+  // 関連記事にカテゴリ名を付与
+  const relatedArticlesWithCats = relatedArticles.map(art => ({
+    ...art,
+    categoryNames: (art.categoryIds || []).map((id: string) => catNameMap.get(id)).filter(Boolean) as string[],
+  }));
+
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
   
@@ -501,8 +510,8 @@ export default async function ArticlePage({ params }: PageProps) {
             )}
 
             {/* 関連記事 */}
-            {relatedArticles.length > 0 && (
-              <RelatedArticles articles={relatedArticles} lang={lang} />
+            {relatedArticlesWithCats.length > 0 && (
+              <RelatedArticles articles={relatedArticlesWithCats} lang={lang} />
             )}
           </div>
 
