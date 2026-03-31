@@ -699,9 +699,13 @@
   }
 }
 
-.furatto-media-search-watermark {
-  font-size: clamp(5rem, 24vw, 22rem);
-  line-height: 0.9;
+.furatto-wm-key {
+  font-size: clamp(6rem, 32vw, 18rem);
+  letter-spacing: 0.15em;
+}
+
+.furatto-wm-word {
+  font-size: clamp(8rem, 42vw, 26rem);
   letter-spacing: 0.08em;
 }
 
@@ -721,27 +725,45 @@
     border-radius: var(--ft-radius);
   }
 
-  /* SP Footer: 1-column, centered, with dividers */
+  /* SP Footer: site info centered, then menu+category 2-col */
   .theme-furatto-default footer .grid {
     grid-template-columns: 1fr !important;
     text-align: center !important;
   }
 
-  .theme-furatto-default footer .grid > div {
+  .theme-furatto-default footer .grid > div:first-child {
     text-align: center !important;
-    padding-bottom: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 
-  .theme-furatto-default footer .grid > div:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+  .theme-furatto-default footer .grid > div:nth-child(2),
+  .theme-furatto-default footer .grid > div:nth-child(3) {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
   }
 
-  .theme-furatto-default footer .grid > div ul {
-    text-align: center !important;
+  .theme-furatto-default footer .grid > div:nth-child(2) {
+    text-align: left !important;
+  }
+
+  .theme-furatto-default footer .grid > div:nth-child(2) ul {
+    text-align: left !important;
+  }
+
+  .theme-furatto-default footer .grid > div:nth-child(3) {
+    text-align: right !important;
+  }
+
+  .theme-furatto-default footer .grid > div:nth-child(3) ul {
+    text-align: right !important;
+  }
+
+  .theme-furatto-default footer .border-t {
+    margin-top: 1.5rem !important;
+    padding-top: 1rem !important;
   }
 }
 
@@ -794,4 +816,9 @@
 /* primary-color CSS variable override (global scope for all components) */
 .theme-furatto-default {
   --primary-color: var(--ft-primary);
+}
+
+/* ローディングスピナー等がtheme外にある場合にも適用 */
+body:has(.theme-furatto-default) {
+  --primary-color: #E08A3C;
 }

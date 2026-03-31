@@ -292,10 +292,9 @@ export default async function FixedPage({ params }: PageProps) {
       {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' ? (
         <section className="furatto-media-search-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '10%' }}>
-            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest text-center leading-none">
-              KEY<br className="sm:hidden" />WORD
-            </span>
+          <div className="absolute inset-0 flex flex-col items-center justify-start pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ paddingTop: '2%' }}>
+            <span className="furatto-wm-key text-white/[0.12] font-black tracking-widest leading-none">KEY</span>
+            <span className="furatto-wm-word text-white/[0.12] font-black tracking-widest leading-none" style={{ marginTop: '-0.05em' }}>WORD</span>
           </div>
 
           <FurattoMediaSearchHero
