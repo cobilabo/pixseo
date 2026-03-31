@@ -93,6 +93,6 @@ export default function FurattoMediaSearchHero({
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }
