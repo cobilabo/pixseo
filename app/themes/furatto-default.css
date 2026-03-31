@@ -197,12 +197,21 @@
 }
 
 /* ===== FirstView ===== */
+.theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden {
+  background: linear-gradient(135deg, #E08A3C 0%, #F0A050 40%, #F5C040 100%) !important;
+  height: 360px !important;
+}
+
+.theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden img {
+  display: none !important;
+}
+
 .theme-furatto-default .fixed.top-0.left-0.right-0.overflow-hidden .absolute.inset-0 {
-  background: linear-gradient(
-    180deg,
-    rgba(62, 44, 26, 0.45) 0%,
-    rgba(62, 44, 26, 0.65) 100%
-  ) !important;
+  background: transparent !important;
+}
+
+.theme-furatto-default .relative.w-full.h-\[700px\] {
+  height: 360px !important;
 }
 
 .theme-furatto-default .relative.w-full h1 {
@@ -457,7 +466,9 @@
   background-color: var(--ft-primary) !important;
 }
 
-.theme-furatto-default .text-blue-600 {
+.theme-furatto-default .text-blue-600,
+.theme-furatto-default .hover\:text-blue-600:hover,
+.theme-furatto-default .group-hover\:text-blue-600:hover {
   color: var(--ft-primary) !important;
 }
 
@@ -674,12 +685,12 @@
 
 /* ===== Furatto Media Search Hero ===== */
 .furatto-media-search-hero {
-  margin-top: 96px;
+  padding-top: 96px;
 }
 
 @media (min-width: 1024px) {
   .furatto-media-search-hero {
-    margin-top: 108px;
+    padding-top: 108px;
   }
 }
 

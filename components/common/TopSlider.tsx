@@ -163,7 +163,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
           <>
             <button
               onClick={(e) => { e.preventDefault(); prev(); }}
-              className="absolute left-2 top-[28%] -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:left-0 md:-translate-x-1/2"
+              className="absolute left-2 top-[37%] -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:left-0 md:-translate-x-1/2"
               aria-label="前へ"
             >
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
 
             <button
               onClick={(e) => { e.preventDefault(); next(); }}
-              className="absolute right-2 top-[28%] -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:right-0 md:translate-x-1/2"
+              className="absolute right-2 top-[37%] -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 shadow-md text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all flex items-center justify-center md:right-0 md:translate-x-1/2"
               aria-label="次へ"
             >
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -396,6 +396,17 @@ export default async function ArticlePage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
+            {/* ふらっとテーマ: サムネイル画像を角丸で表示 */}
+            {rawTheme.layoutTheme === 'furatto' && rawArticle.featuredImage && (
+              <div className="mb-6 overflow-hidden rounded-2xl shadow-md">
+                <img
+                  src={rawArticle.featuredImage}
+                  alt={article.featuredImageAlt || article.title}
+                  className="w-full h-auto object-cover"
+                  style={{ aspectRatio: '16 / 9' }}
+                />
+              </div>
+            )}
             {/* 検索ウィジェット（ふらっとテーマ専用・記事ページ表示の場合） */}
             {rawTheme.layoutTheme === 'furatto' && rawTheme.searchSettings?.displayPages?.articlePages && (
               <div className="mb-6">
