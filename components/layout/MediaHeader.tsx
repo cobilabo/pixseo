@@ -185,23 +185,14 @@ export default function MediaHeader({
 
               {/* 下段: 検索フィールド（中央） */}
               <div className="px-3 pb-3">
-                <form onSubmit={handleHeaderSearch} className="relative">
+                <form onSubmit={handleHeaderSearch}>
                   <input
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
                     placeholder="行きたい場所、キーワードなど"
-                    className="furatto-header-search-input w-full pl-3 pr-9 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
+                    className="furatto-header-search-input w-full px-4 py-2 text-sm text-center rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
-                    aria-label={t('common.search', lang)}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
                 </form>
               </div>
             </div>
@@ -215,23 +206,14 @@ export default function MediaHeader({
 
               {/* 中央: 検索 + ナビ（画面中央に配置） */}
               <div className="flex flex-col items-center gap-1 py-1">
-                <form onSubmit={handleHeaderSearch} className="furatto-header-search relative w-full max-w-md">
+                <form onSubmit={handleHeaderSearch} className="furatto-header-search w-full max-w-md">
                   <input
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
                     placeholder="行きたい場所、キーワードなど"
-                    className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
+                    className="furatto-header-search-input w-full px-4 py-2 text-sm text-center rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
-                    aria-label={t('common.search', lang)}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
                 </form>
 
                 {globalNavItems.length > 0 && (
