@@ -394,6 +394,7 @@
   box-shadow: var(--ft-shadow);
 }
 
+.theme-furatto-default aside h2,
 .theme-furatto-default aside h3 {
   color: var(--ft-text);
   text-align: center;
@@ -637,6 +638,11 @@
 /* PC下段ナビ */
 .furatto-header-nav {
   min-height: 36px;
+}
+
+/* ===== Main Content Area Background ===== */
+.theme-furatto-default > div.relative[style] {
+  background-color: var(--ft-bg) !important;
 }
 
 /* ===== Furatto Media Search Hero ===== */

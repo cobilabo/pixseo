@@ -288,21 +288,43 @@ export default async function FixedPage({ params }: PageProps) {
         />
       )}
 
-      {/* ふらっとテーマ メディアページ専用 検索ヒーロー */}
-      {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' && (
-        <FurattoMediaSearchHero
-          lang={lang}
-          tags={sidebarTags}
-          categories={categories}
-        />
-      )}
+      {/* ふらっとテーマ メディアページ: 検索ヒーロー + スライダーをグラデーションで統合 */}
+      {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' ? (
+        <section className="furatto-media-search-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
+          <div className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '-40%' }}>
+            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
+              KEYWORD
+            </span>
+          </div>
 
-      {/* fullWidthTop スライダー（ヘッダー直下・横幅いっぱい） */}
-      {pageFullWidthSliders.map(block => (
-        <div key={block.id} className="relative" style={{ zIndex: 10 }}>
-          <SliderBlock block={block} lang={lang} />
-        </div>
-      ))}
+          <FurattoMediaSearchHero
+            lang={lang}
+            tags={sidebarTags}
+            categories={categories}
+            noBackground
+          />
+
+          {pageFullWidthSliders.length > 0 && (
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+              {pageFullWidthSliders.map(block => (
+                <div key={block.id}>
+                  <SliderBlock block={block} lang={lang} />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {/* fullWidthTop スライダー（ヘッダー直下・横幅いっぱい） */}
+          {pageFullWidthSliders.map(block => (
+            <div key={block.id} className="relative" style={{ zIndex: 10 }}>
+              <SliderBlock block={block} lang={lang} />
+            </div>
+          ))}
+        </>
+      )}
 
       {/* メインコンテンツエリア */}
       <div 

@@ -217,7 +217,7 @@ export default function SearchWidget({
 
   return (
     <div className={`bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`}>
-      <h3 className={`font-bold text-gray-900 ${isCompact ? 'text-sm mb-3' : 'text-lg mb-4'}`}>
+      <h3 className={`font-bold text-gray-900 text-lg ${isCompact ? 'mb-3' : 'mb-4'}`}>
         {t('common.search', lang)}
       </h3>
 
