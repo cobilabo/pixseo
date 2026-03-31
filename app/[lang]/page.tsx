@@ -319,9 +319,9 @@ export default async function HomePage({ params }: PageProps) {
 
         {/* メインコンテンツエリア */}
         <div 
-          className={`relative ${showGlobalNav && !homeHasFullWidthSlider ? '-mt-24 pt-16 md:pt-32' : ''}`}
+          className={`relative ${showGlobalNav && rawTheme.layoutTheme !== 'cobi' && !homeHasFullWidthSlider ? '-mt-24 pt-16 md:pt-32' : ''}`}
           style={{ 
-            backgroundColor: rawHomePage.backgroundColor || rawTheme.backgroundColor, 
+            backgroundColor: rawHomePage.showPanel !== false ? (rawHomePage.backgroundColor || rawTheme.backgroundColor) : 'transparent', 
             zIndex: 10 
           }}
         >
