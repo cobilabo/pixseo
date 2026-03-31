@@ -20,8 +20,8 @@
   --ft-text-light: #A0A0A0;
   --ft-border: #E8E2D9;
   --ft-border-light: #F0EBE3;
-  --ft-footer-bg: #3E2C1A;
-  --ft-footer-text: #D8D4C8;
+  --ft-footer-bg: #2D2D2D;
+  --ft-footer-text: #C8C8C8;
   --ft-hover-bg: #FFF3E8;
   --ft-shadow: 0 2px 12px rgba(90, 70, 50, 0.08);
   --ft-shadow-lg: 0 8px 30px rgba(90, 70, 50, 0.12);
@@ -61,15 +61,14 @@
   padding: 0;
 }
 
-/* PC: h-14 = 56px, Mobile: h-12 = 48px */
 .furatto-logo-img {
   width: auto;
-  height: 48px;
+  height: 52px;
 }
 
 @media (min-width: 1024px) {
   .furatto-logo-img {
-    height: 56px;
+    height: 68px;
   }
 }
 
@@ -502,10 +501,24 @@
 .theme-furatto-default footer {
   background-color: var(--ft-footer-bg) !important;
   color: var(--ft-footer-text) !important;
+  font-size: 0.8125rem;
+}
+
+.theme-furatto-default footer > div {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .theme-furatto-default footer > div {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 .theme-furatto-default footer h3 {
   color: #ffffff;
+  font-size: 1.125rem;
 }
 
 .theme-furatto-default footer a {
@@ -522,7 +535,7 @@
 }
 
 .theme-furatto-default footer .text-gray-400 {
-  color: #A89C90 !important;
+  color: #8A8A8A !important;
 }
 
 .theme-furatto-default footer .border-gray-700 {

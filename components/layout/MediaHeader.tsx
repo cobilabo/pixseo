@@ -207,101 +207,112 @@ export default function MediaHeader({
             </div>
 
             {/* ===== PC ===== */}
-            <div className="hidden lg:block">
-              {/* 上段: ロゴ + 検索フィールド(中央) + 言語 */}
-              <div className="flex items-center justify-between px-8 py-3">
-                <div className="flex-shrink-0">
-                  {furattoLogoElement}
-                </div>
-
-                <div className="flex-1 flex justify-center">
-                  <form onSubmit={handleHeaderSearch} className="furatto-header-search relative w-full max-w-md">
-                    <input
-                      type="text"
-                      value={headerKeyword}
-                      onChange={(e) => setHeaderKeyword(e.target.value)}
-                      placeholder={t('search.keywordPlaceholder', lang)}
-                      className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
-                    />
-                    <button
-                      type="submit"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
-                      aria-label={t('common.search', lang)}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
-                  </form>
-                </div>
-
-                <div className="flex-shrink-0 flex items-center gap-2">
-                  {instagramUsername && (
-                    <a
-                      href={`https://www.instagram.com/${instagramUsername}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="furatto-header-ig-btn w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 hover:opacity-80 transition-opacity"
-                      aria-label="Instagram"
-                    >
-                      <svg className="w-4 h-4" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                      </svg>
-                    </a>
-                  )}
-
-                  <div className="relative" ref={langRef}>
-                    <button
-                      onClick={() => setIsLangOpen(!isLangOpen)}
-                      className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                      aria-label="言語を選択"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
-                      </svg>
-                      <span>{LANG_SHORT[lang]}</span>
-                      <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-
-                    {isLangOpen && (
-                      <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
-                        {SUPPORTED_LANGS.map((l) => (
-                          <button
-                            key={l}
-                            onClick={() => handleLangChange(l)}
-                            className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
-                              l === lang ? 'font-semibold' : 'font-normal'
-                            }`}
-                          >
-                            <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
-                            {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="hidden lg:flex items-stretch px-8">
+              {/* 左: ロゴ（ヘッダー全体の上下中央） */}
+              <div className="flex items-center flex-shrink-0 pr-6">
+                {furattoLogoElement}
               </div>
 
-              {/* 下段: ナビゲーションメニュー */}
-              {globalNavItems.length > 0 && (
-                <nav className="furatto-header-nav flex items-center justify-center px-8" aria-label="Global navigation">
-                  <div className="flex items-center gap-1">
-                    {globalNavItems.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={getNavigationItemUrl(item, lang)}
-                        className="furatto-header-nav-link px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap"
+              {/* 右: 検索 + ボタン + ナビ */}
+              <div className="flex-1 flex flex-col min-w-0">
+                {/* 上段: 検索フィールド + アイコン + 公式サイトボタン */}
+                <div className="flex items-center gap-4 py-3">
+                  <div className="flex-1 flex justify-center">
+                    <form onSubmit={handleHeaderSearch} className="furatto-header-search relative w-full max-w-md">
+                      <input
+                        type="text"
+                        value={headerKeyword}
+                        onChange={(e) => setHeaderKeyword(e.target.value)}
+                        placeholder={t('search.keywordPlaceholder', lang)}
+                        className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ft-primary)] transition-colors"
+                        aria-label={t('common.search', lang)}
                       >
-                        {getNavItemLabel(item, lang)}
-                      </Link>
-                    ))}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </button>
+                    </form>
                   </div>
-                </nav>
-              )}
+
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    {instagramUsername && (
+                      <a
+                        href={`https://www.instagram.com/${instagramUsername}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="furatto-header-ig-btn w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 hover:opacity-80 transition-opacity"
+                        aria-label="Instagram"
+                      >
+                        <svg className="w-4 h-4" fill="white" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                        </svg>
+                      </a>
+                    )}
+
+                    <div className="relative" ref={langRef}>
+                      <button
+                        onClick={() => setIsLangOpen(!isLangOpen)}
+                        className="furatto-lang-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                        aria-label="言語を選択"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.6 9h16.8M3.6 15h16.8M12 3c2.2 2.5 3.5 5.5 3.5 9s-1.3 6.5-3.5 9c-2.2-2.5-3.5-5.5-3.5-9s1.3-6.5 3.5-9z" />
+                        </svg>
+                        <span>{LANG_SHORT[lang]}</span>
+                        <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {isLangOpen && (
+                        <div className="furatto-lang-dropdown absolute top-full mt-1 right-0 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+                          {SUPPORTED_LANGS.map((l) => (
+                            <button
+                              key={l}
+                              onClick={() => handleLangChange(l)}
+                              className={`furatto-lang-option block w-full text-left px-4 py-2 text-sm transition-colors ${
+                                l === lang ? 'font-semibold' : 'font-normal'
+                              }`}
+                            >
+                              <span className="mr-2 text-xs opacity-60">{LANG_SHORT[l]}</span>
+                              {l === 'ja' ? '日本語' : l === 'en' ? 'English' : l === 'zh' ? '中文' : '한국어'}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <Link
+                      href={`/${lang}/home`}
+                      className="ml-1 px-4 py-1.5 text-xs font-semibold rounded-full bg-[var(--ft-primary)] text-white hover:bg-[var(--ft-primary-dark)] transition-colors whitespace-nowrap"
+                    >
+                      公式サイトはこちら
+                    </Link>
+                  </div>
+                </div>
+
+                {/* 下段: ナビゲーションメニュー */}
+                {globalNavItems.length > 0 && (
+                  <nav className="furatto-header-nav flex items-center justify-center" aria-label="Global navigation">
+                    <div className="flex items-center gap-1">
+                      {globalNavItems.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={getNavigationItemUrl(item, lang)}
+                          className="furatto-header-nav-link px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap"
+                        >
+                          {getNavItemLabel(item, lang)}
+                        </Link>
+                      ))}
+                    </div>
+                  </nav>
+                )}
+              </div>
             </div>
           </div>
         </header>
