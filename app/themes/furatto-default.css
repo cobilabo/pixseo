@@ -733,31 +733,24 @@
     border-radius: var(--ft-radius);
   }
 
-  /* SP Footer: site info centered, menu+category side by side */
+  /* SP Footer: site info full width, menu+category side by side */
   .theme-furatto-default footer .grid {
     display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0 0.5rem !important;
   }
 
   .theme-furatto-default footer .grid > div:first-child {
+    grid-column: 1 / -1;
     text-align: center !important;
     padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .theme-furatto-default footer .grid > div:nth-child(2),
-  .theme-furatto-default footer .grid > div:nth-child(3) {
-    float: left;
-    width: 50%;
-    box-sizing: border-box;
-    font-size: 0.75rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2) {
     text-align: left !important;
-    padding-right: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2) ul {
@@ -765,12 +758,12 @@
   }
 
   .theme-furatto-default footer .grid > div:nth-child(2) h4 {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(3) {
     text-align: right !important;
-    padding-left: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .theme-furatto-default footer .grid > div:nth-child(3) ul {
@@ -778,13 +771,13 @@
   }
 
   .theme-furatto-default footer .grid > div:nth-child(3) h4 {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .theme-furatto-default footer .border-t {
+    grid-column: 1 / -1;
     margin-top: 1rem !important;
     padding-top: 0.75rem !important;
-    clear: both;
   }
 }
 

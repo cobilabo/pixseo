@@ -247,7 +247,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
+        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
       ) : (
         <div 
           className="prose prose-lg max-w-none"
