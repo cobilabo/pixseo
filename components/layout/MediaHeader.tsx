@@ -147,7 +147,7 @@ export default function MediaHeader({
             {/* ===== モバイル ===== */}
             <div className="lg:hidden">
               {/* 上段: ハンバーガー + ロゴ */}
-              <div className="flex items-center justify-between px-3 h-11">
+              <div className="flex items-center justify-between px-3 py-3">
                 <button
                   onClick={toggleMenu}
                   className="relative w-9 h-9 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
@@ -184,14 +184,14 @@ export default function MediaHeader({
               </div>
 
               {/* 下段: 検索フィールド（中央） */}
-              <div className="px-3 pb-2">
+              <div className="px-3 pb-3">
                 <form onSubmit={handleHeaderSearch} className="relative">
                   <input
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
                     placeholder={t('search.keywordPlaceholder', lang)}
-                    className="furatto-header-search-input w-full pl-3 pr-9 py-1.5 text-sm rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
+                    className="furatto-header-search-input w-full pl-3 pr-9 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                   />
                   <button
                     type="submit"
@@ -209,7 +209,7 @@ export default function MediaHeader({
             {/* ===== PC ===== */}
             <div className="hidden lg:block">
               {/* 上段: ロゴ + 検索フィールド(中央) + 言語 */}
-              <div className="flex items-center px-8 h-14">
+              <div className="flex items-center justify-between px-8 py-3">
                 <div className="flex-shrink-0">
                   {furattoLogoElement}
                 </div>
@@ -221,7 +221,7 @@ export default function MediaHeader({
                       value={headerKeyword}
                       onChange={(e) => setHeaderKeyword(e.target.value)}
                       placeholder={t('search.keywordPlaceholder', lang)}
-                      className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full border border-gray-200 bg-gray-50/80 focus:outline-none focus:border-[var(--ft-primary)] focus:bg-white transition-all"
+                      className="furatto-header-search-input w-full pl-4 pr-10 py-2 text-sm rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                     />
                     <button
                       type="submit"
@@ -288,13 +288,13 @@ export default function MediaHeader({
 
               {/* 下段: ナビゲーションメニュー */}
               {globalNavItems.length > 0 && (
-                <nav className="furatto-header-nav flex items-center justify-center border-t border-gray-100 px-8" aria-label="Global navigation">
-                  <div className="flex items-center gap-0.5">
+                <nav className="furatto-header-nav flex items-center justify-center px-8" aria-label="Global navigation">
+                  <div className="flex items-center gap-1">
                     {globalNavItems.map((item) => (
                       <Link
                         key={item.id}
                         href={getNavigationItemUrl(item, lang)}
-                        className="furatto-header-nav-link px-5 py-2 text-sm font-medium transition-colors whitespace-nowrap"
+                        className="furatto-header-nav-link px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap"
                       >
                         {getNavItemLabel(item, lang)}
                       </Link>

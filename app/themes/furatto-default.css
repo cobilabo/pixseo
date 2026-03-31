@@ -52,8 +52,9 @@
   background-color: #ffffff;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--ft-border-light);
-  box-shadow: 0 1px 4px rgba(90, 70, 50, 0.04);
+  box-shadow: 0 2px 8px rgba(90, 70, 50, 0.06);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
 .furatto-logo-link {
@@ -625,6 +626,8 @@
 /* ===== Furatto Header Search ===== */
 .furatto-header-search-input {
   color: var(--ft-text);
+  border: none !important;
+  background-color: #f3f4f6 !important;
 }
 
 .furatto-header-search-input::placeholder {
@@ -633,11 +636,22 @@
 
 .furatto-header-search-input:focus {
   box-shadow: 0 0 0 2px rgba(224, 138, 60, 0.15);
+  background-color: #ffffff !important;
 }
 
 /* PC下段ナビ */
 .furatto-header-nav {
-  min-height: 36px;
+  min-height: 44px;
+  border-top: none !important;
+}
+
+/* FVスライダー ドットを白に */
+.furatto-media-search-hero .top-slider-dot {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.furatto-media-search-hero .top-slider-dot.w-6 {
+  background-color: #ffffff !important;
 }
 
 /* ===== Main Content Area Background ===== */
@@ -646,26 +660,24 @@
 }
 
 /* ===== Furatto Media Search Hero ===== */
-/* モバイル: 上段(44px) + 検索バー段(≈36px) */
 .furatto-media-search-hero {
-  margin-top: 80px;
+  margin-top: 96px;
 }
 
-/* PC: 上段(56px) + ナビ段(36px) */
 @media (min-width: 1024px) {
   .furatto-media-search-hero {
-    margin-top: 92px;
+    margin-top: 108px;
   }
 }
 
 /* ヘッダークリアランス調整（2段構成対応） */
 .theme-furatto-default .furatto-header + div.relative:not([class*="-mb-40"]) {
-  padding-top: 6rem !important;
+  padding-top: 7rem !important;
 }
 
 @media (min-width: 1024px) {
   .theme-furatto-default .furatto-header + div.relative:not([class*="-mb-40"]) {
-    padding-top: 7rem !important;
+    padding-top: 8rem !important;
   }
 }
 

@@ -126,9 +126,9 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
               >
                 <Link
                   href={`/${lang}/articles/${article.slug}`}
-                  className="block group"
+                  className="block group rounded-2xl bg-white shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                 >
-                  <div className="relative w-full overflow-hidden rounded-xl bg-gray-100" style={{ aspectRatio: '16 / 9' }}>
+                  <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
                     {article.featuredImage ? (
                       <Image
                         src={article.featuredImage}
@@ -142,8 +142,8 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                       <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
                     )}
                   </div>
-                  <div className="mt-3 px-1">
-                    <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  <div className="p-3">
+                    <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
                       {article.title}
                     </h3>
                     {article.publishedAt && (
@@ -191,7 +191,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
             <button
               key={index}
               onClick={(e) => { e.preventDefault(); goTo(index); }}
-              className={`rounded-full transition-all ${
+              className={`top-slider-dot rounded-full transition-all ${
                 index === currentPage
                   ? 'w-6 h-2 bg-gray-800'
                   : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
