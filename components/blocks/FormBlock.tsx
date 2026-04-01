@@ -145,7 +145,7 @@ export default function FormBlock({ block, lang = 'ja' }: FormBlockProps) {
   }
 
   return (
-    <div className="my-6" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
+    <div className="my-6 form-block" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
       {config.showTitle !== false && (
         <h3 className="text-xl font-bold text-gray-900 mb-4">{getLangField(form, 'name', lang)}</h3>
       )}

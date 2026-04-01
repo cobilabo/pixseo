@@ -273,7 +273,7 @@ export default async function HomePage({ params }: PageProps) {
       </article>
     );
 
-    const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : '';
+    const themeClass = rawTheme.layoutTheme === 'furatto' ? 'theme-furatto-default' : rawTheme.layoutTheme === 'cobi' ? 'theme-cobi' : '';
 
     return (
       <div className={`min-h-screen ${themeClass}`} style={{ backgroundColor: rawTheme.backgroundColor }}>

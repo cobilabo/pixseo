@@ -573,5 +573,10 @@ body {
   height: 1rem;
 }
 
+/* Theme: cobi */
+.theme-cobi .form-block {
+  background-color: #111113;
+}
+
 /* Theme: furatto-default (LUXUNA-inspired) */
 @import './themes/furatto-default.css';
