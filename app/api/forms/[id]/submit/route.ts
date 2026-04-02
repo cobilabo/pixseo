@@ -109,18 +109,25 @@ export async function POST(
       `[FormSubmit] ${formId} mail flags: autoReply=${autoReplyOn} submitterEmail=${submitterEmail ? 'ok' : 'missing'} adminNotify=${adminNotifyOn}`
     );
 
+    // サーバーレスではレスポンス返却後にプロセスが終了しうるため、メール送信は必ず await する
+    const emailTasks: Promise<void>[] = [];
+
     // 管理者通知メール
     if (adminNotifyOn) {
       const subject = form.emailNotification!.subject || `【${form.name}】新しいフォーム送信`;
       const html = buildAdminNotificationHtml(form.name, submissionData, fieldsMeta);
 
-      sendEmail({
-        from: fromAddr,
-        to: form.emailNotification!.to,
-        subject,
-        html,
-        replyTo: submitterEmail || undefined,
-      }).catch(err => console.error('[Email] Admin notification failed:', err));
+      emailTasks.push(
+        sendEmail({
+          from: fromAddr,
+          to: form.emailNotification!.to,
+          subject,
+          html,
+          replyTo: submitterEmail || undefined,
+        }).then((r) => {
+          if (!r.success) console.error('[Email] Admin notification failed:', r.error);
+        })
+      );
     }
 
     // 自動返信メール
@@ -135,15 +142,23 @@ export async function POST(
 
         const html = buildAutoReplyHtml(autoReplyBody, form.name, submissionData, fieldsMeta, lang);
 
-        sendEmail({
-          from: fromAddr,
-          to: submitterEmail,
-          subject: autoReplySubject,
-          html,
-        }).catch(err => console.error('[Email] Auto-reply failed:', err));
+        emailTasks.push(
+          sendEmail({
+            from: fromAddr,
+            to: submitterEmail,
+            subject: autoReplySubject,
+            html,
+          }).then((r) => {
+            if (!r.success) console.error('[Email] Auto-reply failed:', r.error);
+          })
+        );
       } else {
         console.warn('[Email] Auto-reply enabled but no email field found in submission data');
       }
+    }
+
+    if (emailTasks.length > 0) {
+      await Promise.all(emailTasks);
     }
 
     const response: any = {
