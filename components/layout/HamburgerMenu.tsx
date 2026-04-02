@@ -134,13 +134,13 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                     </Link>
                   </li>
                   <li>
-                    <Link
-                      href={`/${lang}/contact`}
+                    <a
+                      href={`/${lang}/#contact`}
                       onClick={onClose}
                       className="block text-lg font-medium hover:opacity-70 transition-opacity"
                     >
                       {COBI_CONTACT_LABEL[lang]}
-                    </Link>
+                    </a>
                   </li>
                 </>
               ) : hasNavigationItems ? (
@@ -212,14 +212,14 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
           {/* cobi: ファビコン揺りかごアニメーション / それ以外: 言語セレクター */}
           {isCobi ? (
             faviconUrl ? (
-              <div className="px-8 py-6 flex justify-center">
+              <div className="px-8 py-12 flex justify-center">
                 <Image
                   src={faviconUrl}
                   alt="Logo"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
-                  style={{ animation: 'cobi-cradle 3s ease-in-out infinite' }}
+                  width={80}
+                  height={80}
+                  className="w-20 h-20"
+                  style={{ animation: 'cobi-cradle 2s ease-in-out infinite' }}
                   unoptimized={faviconUrl.endsWith('.svg')}
                 />
               </div>

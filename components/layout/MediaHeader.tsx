@@ -316,8 +316,50 @@ export default function MediaHeader({
     );
   }
 
-  const LANG_FLAGS: Record<Lang, string> = {
-    ja: '🇯🇵', en: '🇺🇸', zh: '🇨🇳', ko: '🇰🇷',
+  const FlagIcon = ({ code, size = 28 }: { code: Lang; size?: number }) => {
+    const flags: Record<Lang, React.ReactNode> = {
+      ja: (
+        <svg viewBox="0 0 28 28" width={size} height={size}>
+          <circle cx="14" cy="14" r="14" fill="#f5f5f5"/>
+          <circle cx="14" cy="14" r="5.5" fill="#BC002D"/>
+        </svg>
+      ),
+      en: (
+        <svg viewBox="0 0 28 28" width={size} height={size}>
+          <circle cx="14" cy="14" r="14" fill="#002868"/>
+          <g clipPath="url(#us-clip)">
+            <rect y="2" width="28" height="2.4" fill="#BF0A30"/>
+            <rect y="6.8" width="28" height="2.4" fill="#BF0A30"/>
+            <rect y="11.6" width="28" height="2.4" fill="#BF0A30"/>
+            <rect y="16.4" width="28" height="2.4" fill="#BF0A30"/>
+            <rect y="21.2" width="28" height="2.4" fill="#BF0A30"/>
+            <rect y="0" width="28" height="28" fill="white" opacity="0.35"/>
+            <rect x="0" y="0" width="13" height="14" fill="#002868"/>
+          </g>
+          <clipPath id="us-clip"><circle cx="14" cy="14" r="14"/></clipPath>
+        </svg>
+      ),
+      zh: (
+        <svg viewBox="0 0 28 28" width={size} height={size}>
+          <circle cx="14" cy="14" r="14" fill="#DE2910"/>
+          <polygon points="7,5.5 8.2,9.2 5,7 9,7 5.8,9.2" fill="#FFDE00"/>
+          <polygon points="11.5,3 12,4.5 10.5,3.7 12.5,3.7 11,4.5" fill="#FFDE00"/>
+          <polygon points="13.5,5 14,6.5 12.5,5.7 14.5,5.7 13,6.5" fill="#FFDE00"/>
+          <polygon points="13.5,8.5 14,10 12.5,9.2 14.5,9.2 13,10" fill="#FFDE00"/>
+          <polygon points="11.5,11 12,12.5 10.5,11.7 12.5,11.7 11,12.5" fill="#FFDE00"/>
+        </svg>
+      ),
+      ko: (
+        <svg viewBox="0 0 28 28" width={size} height={size}>
+          <circle cx="14" cy="14" r="14" fill="#FFFFFF"/>
+          <circle cx="14" cy="14" r="5" fill="#C60C30"/>
+          <path d="M14,9 A5,5 0 0,1 14,19 A2.5,2.5 0 0,0 14,14 A2.5,2.5 0 0,1 14,9Z" fill="#003478"/>
+          <rect x="4" y="5" width="2" height="7" rx="0.5" fill="#000" transform="rotate(32 5 8.5)" opacity="0.7"/>
+          <rect x="22" y="16" width="2" height="7" rx="0.5" fill="#000" transform="rotate(32 23 19.5)" opacity="0.7"/>
+        </svg>
+      ),
+    };
+    return <>{flags[code]}</>;
   };
 
   const cobiFlagSelector = (
@@ -327,20 +369,20 @@ export default function MediaHeader({
         className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
         aria-label="言語を選択"
       >
-        <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-lg leading-none bg-gray-100">
-          {LANG_FLAGS[lang]}
+        <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
+          <FlagIcon code={lang} />
         </span>
       </button>
       {isLangOpen && (
-        <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-gray-200 py-2 min-w-[52px] z-50">
-          {SUPPORTED_LANGS.filter(l => l !== lang).map((l) => (
+        <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[52px] z-50">
+          {SUPPORTED_LANGS.filter(l => l !== lang).map((l, i, arr) => (
             <button
               key={l}
               onClick={() => handleLangChange(l)}
-              className="w-full flex items-center justify-center py-2 hover:bg-gray-50 transition-colors"
+              className={`w-full flex items-center justify-center py-2.5 hover:bg-gray-100 transition-colors ${i === 0 ? 'rounded-t-xl' : ''} ${i === arr.length - 1 ? 'rounded-b-xl' : ''}`}
             >
-              <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-lg leading-none">
-                {LANG_FLAGS[l]}
+              <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
+                <FlagIcon code={l} />
               </span>
             </button>
           ))}

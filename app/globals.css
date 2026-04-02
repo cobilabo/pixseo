@@ -758,11 +758,6 @@ body {
 }
 
 /* 送信ボタン */
-@keyframes cobi-submit-spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
 .form-block--cobi-submit {
   position: relative;
   display: block;
@@ -784,31 +779,11 @@ body {
 
 .form-block--cobi-submit--active {
   opacity: 1;
-  border-color: transparent;
+  border-color: #555;
 }
 
-.form-block--cobi-submit--active::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200%;
-  aspect-ratio: 1;
-  background: conic-gradient(from 0deg, transparent 0%, transparent 55%, rgba(255, 255, 255, 0.6) 75%, transparent 85%, transparent 100%);
-  animation: cobi-submit-spin 2.5s linear infinite;
-  transform-origin: center center;
-}
-
-.form-block--cobi-submit--active::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 9999px;
-  background: #000;
-}
-
-.form-block--cobi-submit--active:hover::after {
-  background: #111;
+.form-block--cobi-submit--active:hover {
+  background: #1a1a1a;
 }
 
 .form-block--cobi-submit span {
@@ -822,8 +797,8 @@ body {
 
 .form-block--cobi-submit--success {
   opacity: 1;
-  border-color: #22c55e;
-  background: #22c55e;
+  border-color: #444;
+  background: #333;
   color: #fff;
   animation: cobi-submit-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -984,9 +959,11 @@ body {
 
 /* cobi: cradle rocking animation for favicon */
 @keyframes cobi-cradle {
-  0%, 100% { transform: rotate(0deg); }
+  0% { transform: rotate(0deg); }
   25% { transform: rotate(12deg); }
+  50% { transform: rotate(0deg); }
   75% { transform: rotate(-12deg); }
+  100% { transform: rotate(0deg); }
 }
 
 /* Theme: furatto-default (LUXUNA-inspired) */

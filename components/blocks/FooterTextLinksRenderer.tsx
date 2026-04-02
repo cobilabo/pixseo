@@ -47,7 +47,7 @@ export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja
               alt={siteInfo.name}
               width={120}
               height={32}
-              className={`h-8 w-auto ${isCobi ? '' : 'brightness-0 invert'}`}
+              className="h-8 w-auto brightness-0 invert"
               unoptimized={siteInfo.logoUrl.endsWith('.svg')}
             />
           ) : (
