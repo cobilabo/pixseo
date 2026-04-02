@@ -97,26 +97,35 @@ export async function POST(
     });
 
     const fromAddr = resolveFromAddress(form);
+    const submitterEmail = findSubmitterEmail(submissionData, fields);
+    const adminNotifyOn =
+      !!form.emailNotification?.enabled &&
+      Array.isArray(form.emailNotification.to) &&
+      form.emailNotification.to.length > 0;
+    const autoReplyOn = !!form.autoReply?.enabled;
+
+    // メール分岐の可視化（[Email] が1行も出ない場合の切り分け用。本文・アドレスは出さない）
+    console.info(
+      `[FormSubmit] ${formId} mail flags: autoReply=${autoReplyOn} submitterEmail=${submitterEmail ? 'ok' : 'missing'} adminNotify=${adminNotifyOn}`
+    );
 
     // 管理者通知メール
-    if (form.emailNotification?.enabled && form.emailNotification.to?.length > 0) {
-      const subject = form.emailNotification.subject || `【${form.name}】新しいフォーム送信`;
+    if (adminNotifyOn) {
+      const subject = form.emailNotification!.subject || `【${form.name}】新しいフォーム送信`;
       const html = buildAdminNotificationHtml(form.name, submissionData, fieldsMeta);
-      const recipientEmail = findSubmitterEmail(submissionData, fields);
 
       sendEmail({
         from: fromAddr,
-        to: form.emailNotification.to,
+        to: form.emailNotification!.to,
         subject,
         html,
-        replyTo: recipientEmail || undefined,
+        replyTo: submitterEmail || undefined,
       }).catch(err => console.error('[Email] Admin notification failed:', err));
     }
 
     // 自動返信メール
-    if (form.autoReply?.enabled) {
-      const recipientEmail = findSubmitterEmail(submissionData, fields);
-      if (recipientEmail) {
+    if (autoReplyOn) {
+      if (submitterEmail) {
         const autoReplyBody = lang !== 'ja' && form.autoReply[`body_${lang}`]
           ? form.autoReply[`body_${lang}`]
           : form.autoReply.body;
@@ -128,7 +137,7 @@ export async function POST(
 
         sendEmail({
           from: fromAddr,
-          to: recipientEmail,
+          to: submitterEmail,
           subject: autoReplySubject,
           html,
         }).catch(err => console.error('[Email] Auto-reply failed:', err));
@@ -166,9 +175,13 @@ function findSubmitterEmail(
 ): string | null {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const byType = fields.find((f: any) => f.type === 'email');
-  if (byType && data[byType.id] && emailRegex.test(String(data[byType.id]))) {
-    return String(data[byType.id]);
+  // type=email が複数ある場合は、最初の非空・有効な値を採用
+  for (const f of fields) {
+    if (f.type !== 'email') continue;
+    const raw = data[f.id];
+    if (raw != null && String(raw).trim() !== '' && emailRegex.test(String(raw))) {
+      return String(raw).trim();
+    }
   }
 
   const emailLabelPattern = /メール|email|e-mail/i;
