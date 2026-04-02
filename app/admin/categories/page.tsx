@@ -287,7 +287,7 @@ export default function CategoriesPage() {
                               type="number"
                               value={category.order || 0}
                               onChange={(e) => handleOrderChange(category.id, parseInt(e.target.value) || 0)}
-                              className="w-16 text-center text-sm border border-gray-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-16 text-center text-sm text-gray-900 border border-gray-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               min={0}
                             />
                           </td>

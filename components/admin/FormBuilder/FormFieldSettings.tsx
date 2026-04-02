@@ -7,6 +7,7 @@
 
 import { FormField } from '@/types/block';
 import FloatingInput from '../FloatingInput';
+import { Toggle } from '../common';
 
 interface FormFieldSettingsProps {
   field: FormField;
@@ -52,17 +53,12 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
 
         {/* 共通設定: 必須 */}
         {!['display-text', 'display-image', 'display-html'].includes(field.type) && (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="required"
-              checked={field.required}
-              onChange={(e) => onUpdate({ required: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-900">必須入力</span>
+            <Toggle
+              checked={!!field.required}
+              onChange={(checked) => onUpdate({ required: checked })}
             />
-            <label htmlFor="required" className="text-sm text-gray-700">
-              必須入力
-            </label>
           </div>
         )}
 
@@ -115,17 +111,13 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
         )}
 
         {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox') && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              選択肢（1行に1つ）
-            </label>
-            <textarea
-              value={((field as any).config?.options || []).join('\n')}
-              onChange={(e) => updateConfig({ options: e.target.value.split('\n').filter(o => o.trim()) })}
-              rows={5}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <FloatingInput
+            label="選択肢（1行に1つ）"
+            value={((field as any).config?.options || []).join('\n')}
+            onChange={(value) => updateConfig({ options: value.split('\n').filter((o: string) => o.trim()) })}
+            multiline
+            rows={5}
+          />
         )}
 
         {field.type === 'agreement' && (
@@ -135,18 +127,14 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
               value={(field as any).config?.text || ''}
               onChange={(value) => updateConfig({ text: value })}
             />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                同意文（詳細・折りたたみ表示）
-              </label>
-              <textarea
-                value={(field as any).config?.consentBody || ''}
-                onChange={(e) => updateConfig({ consentBody: e.target.value })}
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholder="利用規約やプライバシーポリシーなどの詳細テキストを入力してください。折りたたみで表示されます。"
-              />
-            </div>
+            <FloatingInput
+              label="同意文（詳細・折りたたみ表示）"
+              value={(field as any).config?.consentBody || ''}
+              onChange={(value) => updateConfig({ consentBody: value })}
+              multiline
+              rows={6}
+              placeholder="利用規約やプライバシーポリシーなどの詳細テキストを入力してください。折りたたみで表示されます。"
+            />
           </>
         )}
 
@@ -169,7 +157,7 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
                 }
               }}
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm text-gray-900"
               placeholder='{"選択肢1": ["サブ1-1", "サブ1-2"]}'
             />
           </div>
@@ -186,17 +174,13 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
         )}
 
         {field.type === 'display-html' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              HTML
-            </label>
-            <textarea
-              value={(field as any).config?.html || ''}
-              onChange={(e) => updateConfig({ html: e.target.value })}
-              rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-            />
-          </div>
+          <FloatingInput
+            label="HTML"
+            value={(field as any).config?.html || ''}
+            onChange={(value) => updateConfig({ html: value })}
+            multiline
+            rows={8}
+          />
         )}
       </div>
 

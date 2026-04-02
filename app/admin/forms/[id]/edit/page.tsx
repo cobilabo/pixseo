@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
+import FloatingSelect from '@/components/admin/FloatingSelect';
+import { Toggle } from '@/components/admin/common';
 import FormBuilder from '@/components/admin/FormBuilder';
 import { FormField } from '@/types/block';
 import { Form } from '@/types/form';
@@ -228,17 +230,12 @@ export default function EditFormPage() {
                     />
 
                     {/* ステータス */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="isActive"
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900">フォームを公開する</span>
+                      <Toggle
                         checked={formData.isActive}
-                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        onChange={(checked) => setFormData({ ...formData, isActive: checked })}
                       />
-                      <label htmlFor="isActive" className="text-sm text-gray-700">
-                        フォームを公開する
-                      </label>
                     </div>
 
                     {/* 送信後の設定 */}
@@ -246,25 +243,21 @@ export default function EditFormPage() {
                       <h4 className="text-md font-bold text-gray-900 mb-4">送信後の設定</h4>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        送信後の動作
-                      </label>
-                      <select
-                        value={formData.afterSubmit.type}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          afterSubmit: {
-                            ...formData.afterSubmit,
-                            type: e.target.value as 'message' | 'redirect',
-                          },
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="message">メッセージを表示</option>
-                        <option value="redirect">URLにリダイレクト</option>
-                      </select>
-                    </div>
+                    <FloatingSelect
+                      label="送信後の動作"
+                      value={formData.afterSubmit.type}
+                      onChange={(value) => setFormData({
+                        ...formData,
+                        afterSubmit: {
+                          ...formData.afterSubmit,
+                          type: value as 'message' | 'redirect',
+                        },
+                      })}
+                      options={[
+                        { value: 'message', label: 'メッセージを表示' },
+                        { value: 'redirect', label: 'URLにリダイレクト' },
+                      ]}
+                    />
 
                     {formData.afterSubmit.type === 'message' ? (
                       <FloatingInput
@@ -298,23 +291,18 @@ export default function EditFormPage() {
                     <div className="space-y-4 pt-4 border-t border-gray-200">
                       <h4 className="text-md font-bold text-gray-900">メール通知設定（管理者向け）</h4>
 
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          id="emailEnabled"
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-900">送信時にメール通知を受け取る</span>
+                        <Toggle
                           checked={formData.emailNotification.enabled}
-                          onChange={(e) => setFormData({
+                          onChange={(checked) => setFormData({
                             ...formData,
                             emailNotification: {
                               ...formData.emailNotification,
-                              enabled: e.target.checked,
+                              enabled: checked,
                             },
                           })}
-                          className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
-                        <label htmlFor="emailEnabled" className="text-sm leading-snug text-gray-700">
-                          送信時にメール通知を受け取る
-                        </label>
                       </div>
 
                       {formData.emailNotification.enabled && (
@@ -354,23 +342,18 @@ export default function EditFormPage() {
                         フォームにメールアドレス入力欄がある場合、送信者に自動で確認メールを送信します。
                       </p>
 
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          id="autoReplyEnabled"
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-900">自動返信メールを送信する</span>
+                        <Toggle
                           checked={formData.autoReply.enabled}
-                          onChange={(e) => setFormData({
+                          onChange={(checked) => setFormData({
                             ...formData,
                             autoReply: {
                               ...formData.autoReply,
-                              enabled: e.target.checked,
+                              enabled: checked,
                             },
                           })}
-                          className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
-                        <label htmlFor="autoReplyEnabled" className="text-sm leading-snug text-gray-700">
-                          自動返信メールを送信する
-                        </label>
                       </div>
 
                       {formData.autoReply.enabled && (
