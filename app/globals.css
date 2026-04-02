@@ -627,10 +627,16 @@ body {
 
 .form-block--cobi-desc {
   font-size: clamp(0.85rem, 1.5vw, 0.95rem);
-  color: #a1a1aa;
+  color: #71717a;
   line-height: 2;
   max-width: 700px;
   margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .form-block--cobi-desc br {
+    display: none;
+  }
 }
 
 /* cobi: ローディング / エラー状態 */
@@ -921,13 +927,14 @@ body {
 .cobi-required-badge {
   display: inline-block;
   margin-left: 6px;
-  padding: 1px 6px;
+  padding: 1px 8px;
   font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.4;
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  border-radius: 4px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
   vertical-align: middle;
   letter-spacing: 0.05em;
 }

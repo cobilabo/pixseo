@@ -8,71 +8,70 @@ export const dynamic = 'force-dynamic';
 const TARGET_LANGS: Lang[] = ['en', 'zh', 'ko'];
 
 async function translateFormFields(fields: any[]): Promise<any[]> {
-  const result = [];
-  for (const field of fields) {
-    const newField = { ...field, config: { ...field.config } };
+  type Job = { fieldIdx: number; target: 'field' | 'config'; key: string; lang: Lang; text: string; context: string };
+  const jobs: Job[] = [];
+
+  const fieldsCopy = fields.map(f => ({ ...f, config: { ...f.config } }));
+
+  for (let i = 0; i < fieldsCopy.length; i++) {
+    const field = fieldsCopy[i];
+    const cfg = field.config || {};
 
     if (field.label) {
-      newField.label_ja = field.label;
+      field.label_ja = field.label;
+      for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'field', key: 'label', lang, text: field.label, context: 'フォームフィールドのラベル' });
+    }
+    if (cfg.placeholder) {
+      cfg.placeholder_ja = cfg.placeholder;
+      for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'config', key: 'placeholder', lang, text: cfg.placeholder, context: 'フォームフィールドのプレースホルダー' });
+    }
+    if (cfg.text) {
+      cfg.text_ja = cfg.text;
+      for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'config', key: 'text', lang, text: cfg.text, context: 'フォーム同意文' });
+    }
+    if (cfg.consentBody) {
+      cfg.consentBody_ja = cfg.consentBody;
+      for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'config', key: 'consentBody', lang, text: cfg.consentBody, context: 'フォーム同意文（詳細）' });
+    }
+    if (cfg.content) {
+      cfg.content_ja = cfg.content;
+      for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'config', key: 'content', lang, text: cfg.content, context: 'フォーム表示テキスト' });
+    }
+    if (cfg.options?.length) {
+      cfg.options_ja = cfg.options;
       for (const lang of TARGET_LANGS) {
-        try {
-          newField[`label_${lang}`] = await translateText(field.label, lang, 'フォームフィールドのラベル');
-        } catch { newField[`label_${lang}`] = field.label; }
+        jobs.push({ fieldIdx: i, target: 'config', key: `options_array`, lang, text: cfg.options.join('\n---\n'), context: 'フォーム選択肢（各行は---で区切られた個別の選択肢）' });
       }
     }
-
-    if (field.config?.placeholder) {
-      newField.config.placeholder_ja = field.config.placeholder;
-      for (const lang of TARGET_LANGS) {
-        try {
-          newField.config[`placeholder_${lang}`] = await translateText(field.config.placeholder, lang, 'フォームフィールドのプレースホルダー');
-        } catch { newField.config[`placeholder_${lang}`] = field.config.placeholder; }
-      }
-    }
-
-    if (field.config?.options?.length) {
-      newField.config.options_ja = field.config.options;
-      for (const lang of TARGET_LANGS) {
-        try {
-          const translated = [];
-          for (const opt of field.config.options) {
-            translated.push(await translateText(opt, lang, 'フォーム選択肢'));
-          }
-          newField.config[`options_${lang}`] = translated;
-        } catch { newField.config[`options_${lang}`] = field.config.options; }
-      }
-    }
-
-    if (field.config?.text) {
-      newField.config.text_ja = field.config.text;
-      for (const lang of TARGET_LANGS) {
-        try {
-          newField.config[`text_${lang}`] = await translateText(field.config.text, lang, 'フォーム同意文');
-        } catch { newField.config[`text_${lang}`] = field.config.text; }
-      }
-    }
-
-    if (field.config?.consentBody) {
-      newField.config.consentBody_ja = field.config.consentBody;
-      for (const lang of TARGET_LANGS) {
-        try {
-          newField.config[`consentBody_${lang}`] = await translateText(field.config.consentBody, lang, 'フォーム同意文（詳細）');
-        } catch { newField.config[`consentBody_${lang}`] = field.config.consentBody; }
-      }
-    }
-
-    if (field.config?.content) {
-      newField.config.content_ja = field.config.content;
-      for (const lang of TARGET_LANGS) {
-        try {
-          newField.config[`content_${lang}`] = await translateText(field.config.content, lang, 'フォーム表示テキスト');
-        } catch { newField.config[`content_${lang}`] = field.config.content; }
-      }
-    }
-
-    result.push(newField);
   }
-  return result;
+
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+    const batch = jobs.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(job => translateText(job.text, job.lang, job.context))
+    );
+
+    results.forEach((result, idx) => {
+      const job = batch[idx];
+      const field = fieldsCopy[job.fieldIdx];
+      const translated = result.status === 'fulfilled' ? result.value : job.text;
+
+      if (result.status === 'rejected') {
+        console.error(`[Form Translation] Failed: field=${job.key} lang=${job.lang}`, result.reason);
+      }
+
+      if (job.key === 'options_array') {
+        field.config[`options_${job.lang}`] = translated.split('\n---\n');
+      } else if (job.target === 'field') {
+        field[`${job.key}_${job.lang}`] = translated;
+      } else {
+        field.config[`${job.key}_${job.lang}`] = translated;
+      }
+    });
+  }
+
+  return fieldsCopy;
 }
 
 // フォーム取得
@@ -115,59 +114,88 @@ export async function PUT(
   try {
     const body = await request.json();
 
+    const hasApiKey = !!process.env.OPENAI_API_KEY;
+    if (!hasApiKey) {
+      console.warn('[Form Save] OPENAI_API_KEY is not set — translations will be skipped');
+    }
+
+    let translationFailCount = 0;
+
     const updateData: any = {
       updatedAt: new Date(),
     };
 
+    const metaJobs: Array<{ path: string[]; lang: Lang; text: string; context: string }> = [];
+
     if (body.name !== undefined) {
       updateData.name = body.name;
       updateData.name_ja = body.name;
-      for (const lang of TARGET_LANGS) {
-        try {
-          updateData[`name_${lang}`] = await translateText(body.name, lang, 'フォーム名');
-        } catch { updateData[`name_${lang}`] = body.name; }
-      }
+      for (const lang of TARGET_LANGS) metaJobs.push({ path: [`name_${lang}`], lang, text: body.name, context: 'フォーム名' });
     }
     if (body.description !== undefined) updateData.description = body.description;
-    if (body.fields !== undefined) {
-      updateData.fields = await translateFormFields(body.fields);
-    }
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.emailNotification !== undefined) updateData.emailNotification = body.emailNotification;
     if (body.autoReply !== undefined) {
       updateData.autoReply = { ...body.autoReply };
       if (body.autoReply.subject) {
         updateData.autoReply.subject_ja = body.autoReply.subject;
-        for (const lang of TARGET_LANGS) {
-          try {
-            updateData.autoReply[`subject_${lang}`] = await translateText(body.autoReply.subject, lang, '自動返信メールの件名');
-          } catch { updateData.autoReply[`subject_${lang}`] = body.autoReply.subject; }
-        }
+        for (const lang of TARGET_LANGS) metaJobs.push({ path: ['autoReply', `subject_${lang}`], lang, text: body.autoReply.subject, context: '自動返信メールの件名' });
       }
       if (body.autoReply.body) {
         updateData.autoReply.body_ja = body.autoReply.body;
-        for (const lang of TARGET_LANGS) {
-          try {
-            updateData.autoReply[`body_${lang}`] = await translateText(body.autoReply.body, lang, '自動返信メールの本文');
-          } catch { updateData.autoReply[`body_${lang}`] = body.autoReply.body; }
-        }
+        for (const lang of TARGET_LANGS) metaJobs.push({ path: ['autoReply', `body_${lang}`], lang, text: body.autoReply.body, context: '自動返信メールの本文' });
       }
     }
     if (body.afterSubmit !== undefined) {
       updateData.afterSubmit = body.afterSubmit;
       if (body.afterSubmit.message) {
         updateData.afterSubmit.message_ja = body.afterSubmit.message;
-        for (const lang of TARGET_LANGS) {
-          try {
-            updateData.afterSubmit[`message_${lang}`] = await translateText(body.afterSubmit.message, lang, 'フォーム送信完了メッセージ');
-          } catch { updateData.afterSubmit[`message_${lang}`] = body.afterSubmit.message; }
-        }
+        for (const lang of TARGET_LANGS) metaJobs.push({ path: ['afterSubmit', `message_${lang}`], lang, text: body.afterSubmit.message, context: 'フォーム送信完了メッセージ' });
       }
+    }
+
+    if (hasApiKey && metaJobs.length > 0) {
+      const results = await Promise.allSettled(
+        metaJobs.map(j => translateText(j.text, j.lang, j.context))
+      );
+      results.forEach((result, idx) => {
+        const job = metaJobs[idx];
+        const translated = result.status === 'fulfilled' ? result.value : job.text;
+        if (result.status === 'rejected') {
+          translationFailCount++;
+          console.error(`[Form Meta Translation] Failed: path=${job.path.join('.')} lang=${job.lang}`, result.reason);
+        }
+        if (job.path.length === 1) {
+          updateData[job.path[0]] = translated;
+        } else {
+          updateData[job.path[0]][job.path[1]] = translated;
+        }
+      });
+    } else if (!hasApiKey) {
+      metaJobs.forEach((job) => {
+        if (job.path.length === 1) {
+          updateData[job.path[0]] = job.text;
+        } else {
+          updateData[job.path[0]][job.path[1]] = job.text;
+        }
+      });
+    }
+
+    if (body.fields !== undefined) {
+      updateData.fields = hasApiKey ? await translateFormFields(body.fields) : body.fields;
     }
 
     await adminDb.collection('forms').doc(params.id).update(updateData);
 
-    return NextResponse.json({ success: true });
+    const translationStatus = !hasApiKey
+      ? 'skipped (OPENAI_API_KEY not configured)'
+      : translationFailCount > 0
+        ? `partial (${translationFailCount} translations failed)`
+        : 'success';
+
+    console.log(`[Form Save] Complete. Translation status: ${translationStatus}`);
+
+    return NextResponse.json({ success: true, translationStatus });
   } catch (error) {
     console.error('[API] Error updating form:', error);
     return NextResponse.json(

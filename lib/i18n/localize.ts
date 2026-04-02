@@ -245,6 +245,20 @@ export function localizeTheme(theme: any, lang: Lang) {
           label: customMenuFields.label || menu.label || '',
         };
       }) || [],
+      navigationItems: theme.menuSettings.navigationItems?.map((item: any) => {
+        const itemFields = localizeFields(item, lang, ['label']);
+        return {
+          ...item,
+          label: itemFields.label || item.label || '',
+        };
+      }) || [],
+      globalNavItems: theme.menuSettings.globalNavItems?.map((item: any) => {
+        const itemFields = localizeFields(item, lang, ['label']);
+        return {
+          ...item,
+          label: itemFields.label || item.label || '',
+        };
+      }) || [],
     };
   }
   

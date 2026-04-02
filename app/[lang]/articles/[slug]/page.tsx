@@ -574,7 +574,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 )}
               </div>
               <div className="text-right">
-                <h4 className="text-sm font-semibold mb-3 text-gray-200">メニュー</h4>
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('common.menu', lang)}</h4>
                 <ul className="space-y-2">
                   {(rawTheme.menuSettings?.globalNavItems || []).map((item: any) => (
                     <li key={item.id}>
@@ -586,7 +586,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 </ul>
               </div>
               <div className="text-right">
-                <h4 className="text-sm font-semibold mb-3 text-gray-200">カテゴリー</h4>
+                <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('nav.categories', lang)}</h4>
                 <ul className="space-y-2">
                   {headerCategories.filter(cat => !(cat as any).isHiddenFromLists).slice(0, 10).map(cat => (
                     <li key={cat.id}>

@@ -21,7 +21,7 @@ const UI_STRINGS: Record<string, Record<Lang, string>> = {
   selectDefault: { ja: '選択してください', en: 'Please select', zh: '请选择', ko: '선택해 주세요' },
   contactLabel: { ja: 'CONTACT', en: 'CONTACT', zh: 'CONTACT', ko: 'CONTACT' },
   contactTitle: { ja: 'お問い合わせ', en: 'Contact Us', zh: '联系我们', ko: '문의하기' },
-  contactDesc: { ja: 'ご質問・ご相談がございましたら、お気軽にお問い合わせください。', en: 'Feel free to contact us with any questions or inquiries.', zh: '如有任何问题或咨询，请随时与我们联系。', ko: '질문이나 상담이 있으시면 편하게 문의해 주세요.' },
+  contactDesc: { ja: 'ご質問・ご相談は、お気軽にお問い合わせください。<br>なお、入力確認画面や自動返信メールはございません。<br>ご入力内容を確認の上、送信ボタンを押して下さい。', en: 'Please feel free to contact us with any questions or inquiries.<br>Please note that there is no confirmation screen or automatic reply email.<br>Please review your input and press the submit button.', zh: '如有任何问题或咨询，请随时与我们联系。<br>请注意，没有输入确认页面或自动回复邮件。<br>请确认您的输入内容后点击提交按钮。', ko: '질문이나 상담은 편하게 문의해 주세요.<br>입력 확인 화면이나 자동 답장 메일은 없습니다.<br>입력 내용을 확인하신 후 전송 버튼을 눌러주세요.' },
   consentToggle: { ja: '同意内容を確認する', en: 'View consent details', zh: '查看同意内容', ko: '동의 내용 확인' },
   required: { ja: '必須', en: 'Required', zh: '必填', ko: '필수' },
 };
@@ -177,7 +177,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
           <div className="form-block--cobi-header">
             <p><span className="form-block--cobi-label">{ui('contactLabel', lang)}</span></p>
             <h3 className="form-block--cobi-title">{ui('contactTitle', lang)}</h3>
-            <p className="form-block--cobi-desc">{ui('contactDesc', lang)}</p>
+            <p className="form-block--cobi-desc" dangerouslySetInnerHTML={{ __html: ui('contactDesc', lang) }} />
           </div>
 
           <form onSubmit={handleSubmit} className="form-block--cobi-form">
