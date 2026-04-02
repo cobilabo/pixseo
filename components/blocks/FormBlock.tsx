@@ -23,6 +23,7 @@ const UI_STRINGS: Record<string, Record<Lang, string>> = {
   contactTitle: { ja: 'お問い合わせ', en: 'Contact Us', zh: '联系我们', ko: '문의하기' },
   contactDesc: { ja: 'ご質問・ご相談がございましたら、お気軽にお問い合わせください。', en: 'Feel free to contact us with any questions or inquiries.', zh: '如有任何问题或咨询，请随时与我们联系。', ko: '질문이나 상담이 있으시면 편하게 문의해 주세요.' },
   consentToggle: { ja: '同意内容を確認する', en: 'View consent details', zh: '查看同意内容', ko: '동의 내용 확인' },
+  required: { ja: '必須', en: 'Required', zh: '必填', ko: '필수' },
 };
 
 function ui(key: string, lang: Lang): string {
@@ -296,7 +297,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
           {label && (
             <label className="cobi-field-label">
               {label}
-              {field.required && <span className="text-red-400 ml-1">*</span>}
+              {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
             </label>
           )}
         </div>
@@ -322,7 +323,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
           {label && (
             <label className="cobi-field-label">
               {label}
-              {field.required && <span className="text-red-400 ml-1">*</span>}
+              {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
             </label>
           )}
         </div>
@@ -348,7 +349,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
           {label && (
             <label className="cobi-field-label">
               {label}
-              {field.required && <span className="text-red-400 ml-1">*</span>}
+              {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
             </label>
           )}
         </div>
@@ -362,7 +363,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
         {label && (
           <p className="text-sm text-gray-300 mb-2">
             {label}
-            {field.required && <span className="text-red-400 ml-1">*</span>}
+            {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
           </p>
         )}
         <div className="space-y-2">
@@ -390,7 +391,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
         {label && (
           <p className="text-sm text-gray-300 mb-2">
             {label}
-            {field.required && <span className="text-red-400 ml-1">*</span>}
+            {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
           </p>
         )}
         <div className="space-y-2">
@@ -472,7 +473,7 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
         {label && (
           <label className="cobi-field-label">
             {label}
-            {field.required && <span className="text-red-400 ml-1">*</span>}
+            {field.required && <span className="cobi-required-badge">{ui('required', lang)}</span>}
           </label>
         )}
       </div>
@@ -520,7 +521,7 @@ function FormFieldRenderer({ field, value, onChange, lang }: FormFieldRendererPr
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
-          {field.required && <span className="text-red-600 ml-1">*</span>}
+          {field.required && <span className="default-required-badge">{ui('required', lang)}</span>}
         </label>
       )}
 
