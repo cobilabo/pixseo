@@ -8,9 +8,10 @@ import FormBlock from './FormBlock';
 interface RowBlockProps {
   block: Block;
   lang?: Lang;
+  layoutTheme?: string;
 }
 
-export default function RowBlock({ block, lang = 'ja' }: RowBlockProps) {
+export default function RowBlock({ block, lang = 'ja', layoutTheme }: RowBlockProps) {
   const config = block.config as RowBlockConfig;
   const gap = config.gap ?? 40;
   const columns = config.columns || [];
@@ -48,6 +49,7 @@ export default function RowBlock({ block, lang = 'ja' }: RowBlockProps) {
                 } as FormBlockConfig,
               }}
               lang={lang}
+              layoutTheme={layoutTheme}
             />
           ) : col.html ? (
             <div dangerouslySetInnerHTML={{ __html: localizeHtmlLinks((lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html, lang) }} />

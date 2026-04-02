@@ -20,6 +20,7 @@ interface BlockRendererProps {
   isMobile?: boolean;
   showPanel?: boolean;
   lang?: Lang;
+  layoutTheme?: string;
   excludeFullWidthSliders?: boolean;
   excludeFullWidthBottomBlocks?: boolean;
   searchData?: {
@@ -54,7 +55,7 @@ export function getFullWidthBottomBlocks(blocks: Block[]): Block[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, searchData }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, layoutTheme, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, searchData }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
@@ -84,7 +85,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
         let blockContent;
         switch (block.type) {
           case 'form':
-            blockContent = <FormBlock block={block} lang={lang} />;
+            blockContent = <FormBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
             break;
           case 'html':
             blockContent = <HTMLBlock block={block} lang={lang} />;
@@ -102,7 +103,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
             blockContent = <SliderBlock block={block} lang={lang} />;
             break;
           case 'row':
-            blockContent = <RowBlock block={block} lang={lang} />;
+            blockContent = <RowBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
             break;
           case 'search':
             blockContent = (
