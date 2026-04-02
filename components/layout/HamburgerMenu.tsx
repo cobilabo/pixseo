@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { MenuSettings, NavigationItem } from '@/types/theme';
+import Image from 'next/image';
+import { MenuSettings, NavigationItem, ThemeLayoutId } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import { getNavigationItemUrl } from '@/lib/navigation-url';
@@ -19,6 +20,10 @@ const getMenuLabel = (menu: any, field: string, lang: Lang): string => {
   return menu[langKey] || menu[field] || '';
 };
 
+const COBI_CONTACT_LABEL: Record<Lang, string> = {
+  ja: 'CONTACT', en: 'CONTACT', zh: 'CONTACT', ko: 'CONTACT',
+};
+
 interface HamburgerMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,9 +31,12 @@ interface HamburgerMenuProps {
   menuBackgroundColor: string;
   menuTextColor: string;
   lang?: Lang;
+  layoutTheme?: ThemeLayoutId;
+  faviconUrl?: string;
 }
 
-export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackgroundColor, menuTextColor, lang = 'ja' }: HamburgerMenuProps) {
+export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackgroundColor, menuTextColor, lang = 'ja', layoutTheme, faviconUrl }: HamburgerMenuProps) {
+  const isCobi = layoutTheme === 'cobi';
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -114,8 +122,28 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
           {/* メニューリスト */}
           <nav className="flex-1 px-8 py-4">
             <ul className="space-y-6">
-              {hasNavigationItems ? (
-                // 新形式：ナビゲーション項目を使用
+              {isCobi ? (
+                <>
+                  <li>
+                    <Link
+                      href={`/${lang}`}
+                      onClick={onClose}
+                      className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                    >
+                      {getMenuLabel(menuSettings, 'topLabel', lang) || t('nav.top', lang)}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={`/${lang}/contact`}
+                      onClick={onClose}
+                      className="block text-lg font-medium hover:opacity-70 transition-opacity"
+                    >
+                      {COBI_CONTACT_LABEL[lang]}
+                    </Link>
+                  </li>
+                </>
+              ) : hasNavigationItems ? (
                 <>
                   {menuSettings.navigationItems!.map((item) => (
                     <li key={item.id}>
@@ -130,9 +158,7 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                   ))}
                 </>
               ) : (
-                // 後方互換性：旧形式のメニュー設定を使用
                 <>
-                  {/* トップ */}
                   <li>
                     <Link
                       href={`/${lang}`}
@@ -142,8 +168,6 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       {getMenuLabel(menuSettings, 'topLabel', lang) || t('nav.top', lang)}
                     </Link>
                   </li>
-
-                  {/* 記事一覧 */}
                   <li>
                     <Link
                       href={`/${lang}/articles`}
@@ -153,8 +177,6 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       {getMenuLabel(menuSettings, 'articlesLabel', lang) || t('nav.articles', lang)}
                     </Link>
                   </li>
-
-                  {/* 検索 */}
                   <li>
                     <Link
                       href={`/${lang}/search`}
@@ -164,15 +186,11 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
                       {getMenuLabel(menuSettings, 'searchLabel', lang) || t('nav.search', lang)}
                     </Link>
                   </li>
-
-                  {/* 区切り線 */}
                   {validCustomMenus.length > 0 && (
                     <li className="pt-4 pb-2">
                       <div className="border-t opacity-30" style={{ borderColor: menuTextColor }} />
                     </li>
                   )}
-
-                  {/* 追加メニュー */}
                   {validCustomMenus.map((menu, index) => (
                     <li key={index}>
                       <Link
@@ -191,10 +209,26 @@ export default function HamburgerMenu({ isOpen, onClose, menuSettings, menuBackg
             </ul>
           </nav>
 
-          {/* 言語セレクター */}
-          <div className="px-8 py-6 border-t" style={{ borderColor: `${menuTextColor}33` }}>
-            <LanguageSelector currentLang={lang} variant="sidebar" menuTextColor={menuTextColor} menuBackgroundColor={menuBackgroundColor} />
-          </div>
+          {/* cobi: ファビコン揺りかごアニメーション / それ以外: 言語セレクター */}
+          {isCobi ? (
+            faviconUrl ? (
+              <div className="px-8 py-6 flex justify-center">
+                <Image
+                  src={faviconUrl}
+                  alt="Logo"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10"
+                  style={{ animation: 'cobi-cradle 3s ease-in-out infinite' }}
+                  unoptimized={faviconUrl.endsWith('.svg')}
+                />
+              </div>
+            ) : null
+          ) : (
+            <div className="px-8 py-6 border-t" style={{ borderColor: `${menuTextColor}33` }}>
+              <LanguageSelector currentLang={lang} variant="sidebar" menuTextColor={menuTextColor} menuBackgroundColor={menuBackgroundColor} />
+            </div>
+          )}
         </div>
       </div>
     </>

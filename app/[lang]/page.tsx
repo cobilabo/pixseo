@@ -415,6 +415,7 @@ export default async function HomePage({ params }: PageProps) {
                   siteInfo={siteInfo}
                   sections={footerTextLinkSections}
                   lang={lang}
+                  layoutTheme={rawTheme.layoutTheme}
                 />
                 <div className="w-full border-t border-gray-700 pt-6">
                   <p className="text-gray-400 text-sm text-center">
@@ -599,7 +600,7 @@ export default async function HomePage({ params }: PageProps) {
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
-            <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} />
+            <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} layoutTheme={rawTheme.layoutTheme} />
 
             {/* コピーライト */}
             <div className="w-full border-t border-gray-700 pt-6">

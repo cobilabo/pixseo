@@ -13,6 +13,7 @@ import { Lang } from '@/types/lang';
 const UI_STRINGS: Record<string, Record<Lang, string>> = {
   submit: { ja: '送信する', en: 'Submit', zh: '提交', ko: '제출' },
   submitting: { ja: '送信中...', en: 'Submitting...', zh: '提交中...', ko: '제출 중...' },
+  submitted: { ja: '送信完了しました', en: 'Sent successfully', zh: '发送成功', ko: '전송 완료되었습니다' },
   loading: { ja: '読み込み中...', en: 'Loading...', zh: '加载中...', ko: '로딩 중...' },
   notFound: { ja: 'フォームが見つかりません', en: 'Form not found', zh: '未找到表单', ko: '양식을 찾을 수 없습니다' },
   inactive: { ja: 'このフォームは現在ご利用いただけません', en: 'This form is currently unavailable', zh: '此表单目前不可用', ko: '이 양식은 현재 사용할 수 없습니다' },
@@ -141,15 +142,8 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
     );
   }
 
-  if (submitted) {
+  if (submitted && !isCobi) {
     const message = getLangField(form.afterSubmit, 'message', lang) || ui('defaultSuccess', lang);
-    if (isCobi) {
-      return (
-        <div className="form-block--cobi-status form-block--cobi-status--success">
-          <p className="whitespace-pre-wrap">{message}</p>
-        </div>
-      );
-    }
     return (
       <div className="my-6 p-6 bg-green-50 rounded-lg border border-green-200">
         <p className="text-green-800 text-center whitespace-pre-wrap">{message}</p>
@@ -199,10 +193,19 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
 
             <button
               type="submit"
-              disabled={submitting}
-              className={`form-block--cobi-submit ${isButtonActive ? 'form-block--cobi-submit--active' : ''}`}
+              disabled={submitting || submitted}
+              className={`form-block--cobi-submit ${submitted ? 'form-block--cobi-submit--success' : isButtonActive ? 'form-block--cobi-submit--active' : ''}`}
             >
-              <span>{submitting ? ui('submitting', lang) : ui('submit', lang)}</span>
+              {submitted ? (
+                <span className="inline-flex items-center gap-2">
+                  <svg className="w-5 h-5 cobi-submit-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {ui('submitted', lang)}
+                </span>
+              ) : (
+                <span>{submitting ? ui('submitting', lang) : ui('submit', lang)}</span>
+              )}
             </button>
           </form>
         </div>

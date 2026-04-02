@@ -479,6 +479,7 @@ export default async function FixedPage({ params }: PageProps) {
                 siteInfo={siteInfo}
                 sections={footerTextLinkSections}
                 lang={lang}
+                layoutTheme={rawTheme.layoutTheme}
               />
               <div className="w-full border-t border-gray-700 pt-6">
                 <p className="text-gray-400 text-sm text-center">

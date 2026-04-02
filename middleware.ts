@@ -132,7 +132,12 @@ export async function middleware(request: NextRequest) {
   
   // すでに言語パスが含まれている場合
   if (firstSegment && isValidLang(firstSegment)) {
-    // 有効な言語なのでそのまま
+    // /[lang]/home → /[lang] にリダイレクト（home固定ページは / で表示）
+    if (pathSegments[1] === 'home') {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${firstSegment}`;
+      return NextResponse.redirect(url, { status: 301 });
+    }
     return NextResponse.next();
   }
   

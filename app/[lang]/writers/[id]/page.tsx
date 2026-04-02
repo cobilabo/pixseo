@@ -216,7 +216,7 @@ export default async function WriterPage({ params }: PageProps) {
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
         {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
-            <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} />
+            <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} layoutTheme={rawTheme.layoutTheme} />
 
             {/* コピーライト */}
             <div className="w-full border-t border-gray-700 pt-6">

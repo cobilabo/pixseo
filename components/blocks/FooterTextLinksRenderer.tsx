@@ -8,13 +8,15 @@ interface FooterTextLinksRendererProps {
   siteInfo: any;
   lang?: Lang;
   className?: string;
+  layoutTheme?: string;
 }
 
 /**
  * テキストリンクセクションを表示するコンポーネント
  * 左カラム（ロゴ+説明）+ セクションのグリッドレイアウト
  */
-export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja', className = '' }: FooterTextLinksRendererProps) {
+export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja', className = '', layoutTheme }: FooterTextLinksRendererProps) {
+  const isCobi = layoutTheme === 'cobi';
   // 有効なセクション（タイトルまたはリンクがある）のみフィルタリング
   const validSections = sections.filter(
     section => section.title || (section.links && section.links.some(link => link.text && link.url))
@@ -35,7 +37,7 @@ export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja
               alt={`${siteInfo.name} アイコン`}
               width={32}
               height={32}
-              className="w-8 h-8 brightness-0 invert"
+              className={`w-8 h-8 ${isCobi ? '' : 'brightness-0 invert'}`}
               unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
             />
           )}
@@ -45,7 +47,7 @@ export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja
               alt={siteInfo.name}
               width={120}
               height={32}
-              className="h-8 w-auto brightness-0 invert"
+              className={`h-8 w-auto ${isCobi ? '' : 'brightness-0 invert'}`}
               unoptimized={siteInfo.logoUrl.endsWith('.svg')}
             />
           ) : (

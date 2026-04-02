@@ -81,21 +81,24 @@ export default function MediaHeader({
 
   const globalNavItems = menuSettings.globalNavItems || [];
   const isFuratto = layoutTheme === 'furatto';
+  const isCobi = layoutTheme === 'cobi';
   const logoHref = siteInfo?.logoLinkPath ? `/${lang}${siteInfo.logoLinkPath}` : `/${lang}`;
   const instagramUsername = snsSettings?.instagramUsername?.trim();
+
+  const headerIconUrl = isCobi ? siteInfo?.symbolUrl : siteInfo?.faviconUrl;
 
   const logoElement = (
     <Link href={logoHref} className="flex items-center flex-shrink-0">
       <div className="flex items-center gap-3">
-        {siteInfo?.faviconUrl && (
+        {headerIconUrl && (
           <Image
-            src={siteInfo.faviconUrl}
+            src={headerIconUrl}
             alt={`${siteName} アイコン`}
             width={32}
             height={32}
             className="w-8 h-8"
             priority
-            unoptimized={siteInfo.faviconUrl.endsWith('.svg')}
+            unoptimized={headerIconUrl.endsWith('.svg')}
           />
         )}
         {siteInfo?.logoUrl ? (
@@ -313,6 +316,39 @@ export default function MediaHeader({
     );
   }
 
+  const LANG_FLAGS: Record<Lang, string> = {
+    ja: '🇯🇵', en: '🇺🇸', zh: '🇨🇳', ko: '🇰🇷',
+  };
+
+  const cobiFlagSelector = (
+    <div className="relative" ref={langRef}>
+      <button
+        onClick={() => setIsLangOpen(!isLangOpen)}
+        className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+        aria-label="言語を選択"
+      >
+        <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-lg leading-none bg-gray-100">
+          {LANG_FLAGS[lang]}
+        </span>
+      </button>
+      {isLangOpen && (
+        <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-gray-200 py-2 min-w-[52px] z-50">
+          {SUPPORTED_LANGS.filter(l => l !== lang).map((l) => (
+            <button
+              key={l}
+              onClick={() => handleLangChange(l)}
+              className="w-full flex items-center justify-center py-2 hover:bg-gray-50 transition-colors"
+            >
+              <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-lg leading-none">
+                {LANG_FLAGS[l]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <header className="fixed top-4 left-0 right-0 z-50">
@@ -336,20 +372,22 @@ export default function MediaHeader({
 
               {logoElement}
 
-              {/* 右：検索アイコン */}
-              <button
-                onClick={toggleSearch}
-                className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-                aria-label={t('common.search', lang)}
-              >
-                <Image
-                  src="/search.svg"
-                  alt={t('common.search', lang)}
-                  width={24}
-                  height={24}
-                  className="w-6 h-6"
-                />
-              </button>
+              {/* 右：cobi は国旗言語選択、それ以外は検索アイコン */}
+              {isCobi ? cobiFlagSelector : (
+                <button
+                  onClick={toggleSearch}
+                  className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
+                  aria-label={t('common.search', lang)}
+                >
+                  <Image
+                    src="/search.svg"
+                    alt={t('common.search', lang)}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -362,13 +400,17 @@ export default function MediaHeader({
         menuBackgroundColor={menuBackgroundColor}
         menuTextColor={menuTextColor}
         lang={lang}
+        layoutTheme={layoutTheme}
+        faviconUrl={siteInfo?.faviconUrl}
       />
 
-      <SearchPanel
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        lang={lang}
-      />
+      {!isCobi && (
+        <SearchPanel
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          lang={lang}
+        />
+      )}
     </>
   );
 }
