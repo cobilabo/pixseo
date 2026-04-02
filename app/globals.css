@@ -582,10 +582,10 @@ body {
 
 .form-block--cobi {
   background-color: #111113;
-  padding: 80px 20px;
+  padding: 100px 24px;
   margin: 0 -9999px;
-  padding-left: calc(20px + 9999px);
-  padding-right: calc(20px + 9999px);
+  padding-left: calc(24px + 9999px);
+  padding-right: calc(24px + 9999px);
 }
 
 .form-block--cobi-inner {
@@ -593,25 +593,38 @@ body {
   margin: 0 auto;
 }
 
+.form-block--cobi-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
 .form-block--cobi-label {
-  display: block;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: #888;
-  margin-bottom: 8px;
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding: 6px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .form-block--cobi-title {
-  font-size: 1.75rem;
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
   font-weight: 700;
-  color: #fff;
-  margin-bottom: 12px;
+  color: #fafafa;
+  margin-bottom: 20px;
 }
 
 .form-block--cobi-desc {
-  font-size: 0.875rem;
-  color: #888;
-  line-height: 1.7;
+  font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+  color: #a1a1aa;
+  line-height: 2;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .form-block--cobi-form {
@@ -636,7 +649,7 @@ body {
 .cobi-field-input {
   display: block;
   width: 100%;
-  padding: 22px 16px 8px;
+  padding: 28px 16px 10px;
   font-size: 0.9375rem;
   color: #fff;
   background: transparent;
@@ -685,22 +698,27 @@ body {
 /* フォーカス時・入力済み時: ラベルを上に縮小 */
 .cobi-field-input:focus ~ .cobi-field-label,
 .cobi-field-input:not(:placeholder-shown) ~ .cobi-field-label {
-  top: 10px;
+  top: 12px;
   transform: translateY(0) scale(0.75);
   color: #888;
 }
 
 .cobi-field-box--textarea .cobi-field-input:focus ~ .cobi-field-label,
 .cobi-field-box--textarea .cobi-field-input:not(:placeholder-shown) ~ .cobi-field-label {
-  top: 6px;
+  top: 8px;
   transform: translateY(0) scale(0.75);
 }
 
-/* select: 値があるとき */
-.cobi-field-box--has-value .cobi-field-label {
-  top: 10px;
+/* select: ラベル常時上部 */
+.cobi-field-box--select .cobi-field-label {
+  top: 12px;
   transform: translateY(0) scale(0.75);
   color: #888;
+}
+
+/* select: 未選択時のプレースホルダー */
+.cobi-field-select--empty {
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* 送信ボタン */

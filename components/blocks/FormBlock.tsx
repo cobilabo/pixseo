@@ -155,8 +155,8 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
       <section id="contact" className="form-block form-block--cobi">
         <div className="form-block--cobi-inner">
           {/* ヘッダー */}
-          <div className="text-center mb-10">
-            <span className="form-block--cobi-label">{ui('contactLabel', lang)}</span>
+          <div className="form-block--cobi-header">
+            <p><span className="form-block--cobi-label">{ui('contactLabel', lang)}</span></p>
             <h3 className="form-block--cobi-title">{ui('contactTitle', lang)}</h3>
             <p className="form-block--cobi-desc">{ui('contactDesc', lang)}</p>
           </div>
@@ -289,14 +289,14 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
   if (field.type === 'select') {
     return (
       <div className="cobi-field">
-        <div className={`cobi-field-box ${value ? 'cobi-field-box--has-value' : ''}`}>
+        <div className="cobi-field-box cobi-field-box--select">
           <select
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             required={field.required}
-            className="cobi-field-input cobi-field-select"
+            className={`cobi-field-input cobi-field-select ${!value ? 'cobi-field-select--empty' : ''}`}
           >
-            <option value="">{' '}</option>
+            <option value="">{ui('selectDefault', lang)}</option>
             {options.map((option: string, idx: number) => (
               <option key={idx} value={origOptions[idx] || option}>{option}</option>
             ))}
