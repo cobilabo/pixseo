@@ -374,7 +374,7 @@ export default function MediaHeader({
         </span>
       </button>
       {isLangOpen && (
-        <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[52px] z-50">
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[52px] z-50">
           {SUPPORTED_LANGS.filter(l => l !== lang).map((l, i, arr) => (
             <button
               key={l}
