@@ -112,36 +112,42 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
     }
   };
 
+  const statusCls = isCobi ? 'form-block--cobi-status' : 'my-6 p-6 bg-gray-50 rounded-lg border border-gray-200';
+  const statusTextCls = isCobi ? '' : 'text-sm text-gray-500 text-center';
+
   if (loading) {
     return (
-      <div className="my-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-sm text-gray-500 text-center">{ui('loading', lang)}</p>
+      <div className={statusCls}>
+        <p className={statusTextCls}>{ui('loading', lang)}</p>
       </div>
     );
   }
 
   if (!config.formId || !form) {
     return (
-      <div className="my-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-sm text-gray-500 text-center">
-          {ui('notFound', lang)}
-        </p>
+      <div className={statusCls}>
+        <p className={statusTextCls}>{ui('notFound', lang)}</p>
       </div>
     );
   }
 
   if (!form.isActive) {
     return (
-      <div className="my-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-sm text-gray-500 text-center">
-          {ui('inactive', lang)}
-        </p>
+      <div className={statusCls}>
+        <p className={statusTextCls}>{ui('inactive', lang)}</p>
       </div>
     );
   }
 
   if (submitted) {
     const message = getLangField(form.afterSubmit, 'message', lang) || ui('defaultSuccess', lang);
+    if (isCobi) {
+      return (
+        <div className="form-block--cobi-status form-block--cobi-status--success">
+          <p className="whitespace-pre-wrap">{message}</p>
+        </div>
+      );
+    }
     return (
       <div className="my-6 p-6 bg-green-50 rounded-lg border border-green-200">
         <p className="text-green-800 text-center whitespace-pre-wrap">{message}</p>
@@ -151,6 +157,17 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
 
   /* ── cobi テーマ ── */
   if (isCobi) {
+    const allRequiredFilled = form.fields
+      .filter(f => f.required)
+      .every(f => {
+        const v = formData[f.id];
+        if (f.type === 'checkbox') return v && v.length > 0;
+        if (f.type === 'agreement') return v === true;
+        return v && String(v).trim() !== '';
+      });
+
+    const isButtonActive = allRequiredFilled && !submitting;
+
     return (
       <section id="contact" className="form-block form-block--cobi">
         <div className="form-block--cobi-inner">
@@ -181,9 +198,9 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
             <button
               type="submit"
               disabled={submitting}
-              className="form-block--cobi-submit"
+              className={`form-block--cobi-submit ${isButtonActive ? 'form-block--cobi-submit--active' : ''}`}
             >
-              {submitting ? ui('submitting', lang) : ui('submit', lang)}
+              <span>{submitting ? ui('submitting', lang) : ui('submit', lang)}</span>
             </button>
           </form>
         </div>

@@ -598,6 +598,11 @@ body {
   margin-bottom: 48px;
 }
 
+.form-block--cobi-header p,
+.form-block--cobi-header h3 {
+  margin: 0;
+}
+
 .form-block--cobi-label {
   display: inline-block;
   font-size: 13px;
@@ -627,6 +632,30 @@ body {
   margin: 0 auto;
 }
 
+/* cobi: ローディング / エラー状態 */
+.form-block--cobi-status {
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.form-block--cobi-status p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #a1a1aa;
+}
+
+.form-block--cobi-status--success {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.form-block--cobi-status--success p {
+  color: #6ee7b7;
+}
+
 .form-block--cobi-form {
   display: flex;
   flex-direction: column;
@@ -649,7 +678,7 @@ body {
 .cobi-field-input {
   display: block;
   width: 100%;
-  padding: 28px 16px 10px;
+  padding: 32px 16px 10px;
   font-size: 0.9375rem;
   color: #fff;
   background: transparent;
@@ -691,27 +720,27 @@ body {
 }
 
 .cobi-field-box--textarea .cobi-field-label {
-  top: 18px;
+  top: 22px;
   transform: translateY(0);
 }
 
 /* フォーカス時・入力済み時: ラベルを上に縮小 */
 .cobi-field-input:focus ~ .cobi-field-label,
 .cobi-field-input:not(:placeholder-shown) ~ .cobi-field-label {
-  top: 12px;
+  top: 8px;
   transform: translateY(0) scale(0.75);
   color: #888;
 }
 
 .cobi-field-box--textarea .cobi-field-input:focus ~ .cobi-field-label,
 .cobi-field-box--textarea .cobi-field-input:not(:placeholder-shown) ~ .cobi-field-label {
-  top: 8px;
+  top: 6px;
   transform: translateY(0) scale(0.75);
 }
 
 /* select: ラベル常時上部 */
 .cobi-field-box--select .cobi-field-label {
-  top: 12px;
+  top: 8px;
   transform: translateY(0) scale(0.75);
   color: #888;
 }
@@ -722,7 +751,13 @@ body {
 }
 
 /* 送信ボタン */
+@keyframes cobi-submit-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
 .form-block--cobi-submit {
+  position: relative;
   display: block;
   width: 100%;
   max-width: 320px;
@@ -735,16 +770,46 @@ body {
   border: 1px solid #333;
   border-radius: 9999px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  overflow: hidden;
+  opacity: 0.4;
+  transition: opacity 0.3s;
 }
 
-.form-block--cobi-submit:hover {
-  background: #1a1a1a;
-  border-color: #555;
+.form-block--cobi-submit--active {
+  opacity: 1;
+  border-color: transparent;
+}
+
+.form-block--cobi-submit--active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  background: conic-gradient(from 0deg, transparent 0%, transparent 55%, rgba(255, 255, 255, 0.6) 75%, transparent 85%, transparent 100%);
+  animation: cobi-submit-spin 2.5s linear infinite;
+  transform-origin: center center;
+}
+
+.form-block--cobi-submit--active::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 9999px;
+  background: #000;
+}
+
+.form-block--cobi-submit--active:hover::after {
+  background: #111;
+}
+
+.form-block--cobi-submit span {
+  position: relative;
+  z-index: 1;
 }
 
 .form-block--cobi-submit:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
