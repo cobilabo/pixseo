@@ -129,18 +129,31 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
                   buttonTitle="説明文をAI自動生成"
                 />
 
-                <FeaturedImageUpload
-                  value={formData.imageUrl}
-                  onChange={(url) => setFormData({ ...formData, imageUrl: url })}
-                  alt={formData.imageAlt}
-                  onAltChange={(alt) => setFormData({ ...formData, imageAlt: alt })}
-                  label="カテゴリー画像"
-                  showImageGenerator={true}
-                  imageGeneratorTitle={`${formData.name}カテゴリー`}
-                  imageGeneratorContent={formData.description}
+              <FeaturedImageUpload
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                alt={formData.imageAlt}
+                onAltChange={(alt) => setFormData({ ...formData, imageAlt: alt })}
+                label="カテゴリー画像"
+                showImageGenerator={true}
+                imageGeneratorTitle={`${formData.name}カテゴリー`}
+                imageGeneratorContent={formData.description}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  表示順（小さいほど先に表示）
+                </label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min={0}
                 />
               </div>
-            </form>
+            </div>
+          </form>
 
             {/* フローティング: おすすめトグル */}
             <div className="fixed bottom-32 right-8 w-32 z-50">

@@ -19,7 +19,7 @@ import {
   EmptyState,
 } from '@/components/admin/common';
 
-type SortColumn = 'name' | 'slug' | 'articleCount' | 'isRecommended' | 'isHiddenFromLists';
+type SortColumn = 'name' | 'slug' | 'articleCount' | 'isRecommended' | 'isHiddenFromLists' | 'order';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
@@ -31,7 +31,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortColumn, setSortColumn] = useState<SortColumn>('order');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
@@ -115,6 +115,29 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleOrderChange = async (id: string, newOrder: number) => {
+    try {
+      const response = await fetch(`/api/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order: newOrder }),
+      });
+
+      if (response.ok) {
+        setCategories(prev =>
+          prev.map(cat => cat.id === id ? { ...cat, order: newOrder } : cat)
+        );
+      } else {
+        throw new Error('更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error updating category order:', error);
+      showError('表示順の更新に失敗しました');
+    }
+  };
+
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -150,6 +173,9 @@ export default function CategoriesPage() {
           break;
         case 'isHiddenFromLists':
           comparison = (a.isHiddenFromLists ? 1 : 0) - (b.isHiddenFromLists ? 1 : 0);
+          break;
+        case 'order':
+          comparison = (a.order || 0) - (b.order || 0);
           break;
       }
       
@@ -194,6 +220,15 @@ export default function CategoriesPage() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th 
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none w-20"
+                          onClick={() => handleSort('order')}
+                        >
+                          <div className="flex items-center justify-center">
+                            表示順
+                            <SortIcon column="order" currentColumn={sortColumn} direction={sortDirection} />
+                          </div>
+                        </th>
                         <th 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                           onClick={() => handleSort('name')}
@@ -247,6 +282,15 @@ export default function CategoriesPage() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {paginatedCategories.map((category) => (
                         <tr key={category.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap text-center w-20">
+                            <input
+                              type="number"
+                              value={category.order || 0}
+                              onChange={(e) => handleOrderChange(category.id, parseInt(e.target.value) || 0)}
+                              className="w-16 text-center text-sm border border-gray-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              min={0}
+                            />
+                          </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900">
                               {category.name}

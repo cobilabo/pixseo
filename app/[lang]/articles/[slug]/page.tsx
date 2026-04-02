@@ -43,6 +43,7 @@ import AuthorProfile from '@/components/articles/AuthorProfile';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
+import FurattoFooter from '@/components/layout/FurattoFooter';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
@@ -563,48 +564,17 @@ export default async function ArticlePage({ params }: PageProps) {
       )}
 
       {/* フッター */}
+      {rawTheme.layoutTheme === 'furatto' ? (
+        <FurattoFooter
+          siteInfo={siteInfo}
+          menuSettings={rawTheme.menuSettings}
+          categories={headerCategories}
+          lang={lang}
+          footerBackgroundColor={rawTheme.footerBackgroundColor}
+        />
+      ) : (
       <footer style={{ backgroundColor: rawTheme.footerBackgroundColor }} className="text-white">
-        {rawTheme.layoutTheme === 'furatto' ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <h3 className="text-lg font-bold mb-3">{siteInfo.name}</h3>
-                {siteInfo.description && (
-                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">{siteInfo.description}</p>
-                )}
-              </div>
-              <div className="text-right">
-                <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('common.menu', lang)}</h4>
-                <ul className="space-y-2">
-                  {(rawTheme.menuSettings?.globalNavItems || []).map((item: any) => (
-                    <li key={item.id}>
-                      <a href={item.type === 'fixedPage' ? `/${lang}/${item.slug || ''}` : item.type === 'external' ? item.url : `/${lang}/${item.type === 'articles' ? 'articles' : item.slug || ''}`} className="text-sm text-gray-300 hover:text-white transition-colors">
-                        {item[`label_${lang}`] || item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="text-right">
-                <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('nav.categories', lang)}</h4>
-                <ul className="space-y-2">
-                  {headerCategories.filter(cat => !(cat as any).isHiddenFromLists).slice(0, 10).map(cat => (
-                    <li key={cat.id}>
-                      <a href={`/${lang}/categories/${cat.slug}`} className="text-sm text-gray-300 hover:text-white transition-colors">
-                        {cat.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="border-t border-gray-600 mt-8 pt-6">
-              <p className="text-gray-400 text-xs text-center">
-                © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
-              </p>
-            </div>
-          </div>
-        ) : footerTextLinkSections.length > 0 ? (
+        {footerTextLinkSections.length > 0 ? (
           <div className="py-12">
             <FooterTextLinksRenderer sections={footerTextLinkSections} siteInfo={siteInfo} lang={lang} layoutTheme={rawTheme.layoutTheme} />
             <div className="w-full border-t border-gray-700 pt-6">
@@ -627,6 +597,7 @@ export default async function ArticlePage({ params }: PageProps) {
           </div>
         )}
       </footer>
+      )}
       </div>
 
       {/* 上に戻るボタン */}
