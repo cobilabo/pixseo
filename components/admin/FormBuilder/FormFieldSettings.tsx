@@ -129,13 +129,25 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
         )}
 
         {field.type === 'agreement' && (
-          <FloatingInput
-            label="同意テキスト"
-            value={(field as any).config?.text || ''}
-            onChange={(value) => updateConfig({ text: value })}
-            multiline
-            rows={3}
-          />
+          <>
+            <FloatingInput
+              label="同意テキスト（チェックボックスラベル）"
+              value={(field as any).config?.text || ''}
+              onChange={(value) => updateConfig({ text: value })}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                同意文（詳細・折りたたみ表示）
+              </label>
+              <textarea
+                value={(field as any).config?.consentBody || ''}
+                onChange={(e) => updateConfig({ consentBody: e.target.value })}
+                rows={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="利用規約やプライバシーポリシーなどの詳細テキストを入力してください。折りたたみで表示されます。"
+              />
+            </div>
+          </>
         )}
 
         {field.type === 'cascade' && (

@@ -22,6 +22,7 @@ const UI_STRINGS: Record<string, Record<Lang, string>> = {
   contactLabel: { ja: 'CONTACT', en: 'CONTACT', zh: 'CONTACT', ko: 'CONTACT' },
   contactTitle: { ja: 'お問い合わせ', en: 'Contact Us', zh: '联系我们', ko: '문의하기' },
   contactDesc: { ja: 'ご質問・ご相談がございましたら、お気軽にお問い合わせください。', en: 'Feel free to contact us with any questions or inquiries.', zh: '如有任何问题或咨询，请随时与我们联系。', ko: '질문이나 상담이 있으시면 편하게 문의해 주세요.' },
+  consentToggle: { ja: '同意内容を確認する', en: 'View consent details', zh: '查看同意内容', ko: '동의 내용 확인' },
 };
 
 function ui(key: string, lang: Lang): string {
@@ -420,17 +421,37 @@ function CobiFieldRenderer({ field, value, onChange, lang }: CobiFieldRendererPr
   }
 
   if (field.type === 'agreement') {
+    const consentBody = getLangField(cfg, 'consentBody', lang);
     return (
-      <div className="cobi-field">
-        <label className="flex items-start gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={value || false}
-            onChange={(e) => onChange(e.target.checked)}
-            required={field.required}
-            className="mt-1 w-4 h-4 text-white border-gray-500 rounded focus:ring-white bg-transparent"
-          />
-          <span className="text-sm text-gray-200">{getLangField(cfg, 'text', lang)}</span>
+      <div className="cobi-agreement">
+        {consentBody && (
+          <details className="cobi-agreement-details">
+            <summary className="cobi-agreement-toggle">
+              {ui('consentToggle', lang)}
+              <svg className="cobi-agreement-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </summary>
+            <div className="cobi-agreement-body">
+              <p>{consentBody}</p>
+            </div>
+          </details>
+        )}
+        <label className="cobi-agreement-label">
+          <span className="cobi-agreement-checkbox">
+            <input
+              type="checkbox"
+              checked={value || false}
+              onChange={(e) => onChange(e.target.checked)}
+              required={field.required}
+            />
+            <span className="cobi-agreement-check-icon">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </span>
+          <span className="cobi-agreement-text">{getLangField(cfg, 'text', lang)}</span>
         </label>
       </div>
     );

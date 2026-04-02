@@ -52,6 +52,15 @@ async function translateFormFields(fields: any[]): Promise<any[]> {
       }
     }
 
+    if (field.config?.consentBody) {
+      newField.config.consentBody_ja = field.config.consentBody;
+      for (const lang of TARGET_LANGS) {
+        try {
+          newField.config[`consentBody_${lang}`] = await translateText(field.config.consentBody, lang, 'フォーム同意文（詳細）');
+        } catch { newField.config[`consentBody_${lang}`] = field.config.consentBody; }
+      }
+    }
+
     if (field.config?.content) {
       newField.config.content_ja = field.config.content;
       for (const lang of TARGET_LANGS) {
