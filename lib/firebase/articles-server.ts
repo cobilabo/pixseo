@@ -884,7 +884,8 @@ export const getRecommendedArticlesServer = async (
       'recommendedArticles',
       limitCount,
       mediaId,
-      isPreview ? 'preview' : 'live'
+      isPreview ? 'preview' : 'live',
+      'sort-publishedAt'
     );
     
     // キャッシュから取得
@@ -968,10 +969,10 @@ export const getRecommendedArticlesServer = async (
       // プレビューモードでない場合のみ公開日チェック
       .filter(article => isPreview || !article.publishedAt || article.publishedAt <= now);
     
-    // 更新日順でソート（updatedAt がない場合は publishedAt をフォールバック）
+    // 公開日の降順（記事ブロック「新着＋おすすめカテゴリ」と /api/articles/list の並びに揃える）
     articles.sort((a, b) => {
-      const aTime = (a.updatedAt || a.publishedAt)?.getTime() || 0;
-      const bTime = (b.updatedAt || b.publishedAt)?.getTime() || 0;
+      const aTime = a.publishedAt?.getTime() || 0;
+      const bTime = b.publishedAt?.getTime() || 0;
       return bTime - aTime;
     });
     

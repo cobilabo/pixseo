@@ -56,6 +56,15 @@
       "collectionGroup": "articles",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "mediaId", "order": "ASCENDING" },
+        { "fieldPath": "categoryIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "isPublished", "order": "ASCENDING" },
         { "fieldPath": "mediaId", "order": "ASCENDING" },
         { "fieldPath": "tagIds", "arrayConfig": "CONTAINS" },
