@@ -32,7 +32,7 @@ let wpMediaUrlMapCache: Map<string, string> | null = null;
 let wpMediaUrlMapLoadedAt = 0;
 const WP_MEDIA_URL_MAP_TTL_MS = 10 * 60 * 1000;
 /** マップキー生成ロジック変更時に上げる（デプロイ直後に古い空/不十分なキャッシュを捨てる） */
-const WP_MEDIA_URL_MAP_VERSION = 2;
+const WP_MEDIA_URL_MAP_VERSION = 3;
 let wpMediaUrlMapCachedVersion = -1;
 
 /** mediaLibrary の wpOriginalUrl -> url（メモリキャッシュ付き） */
