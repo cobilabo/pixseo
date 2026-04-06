@@ -674,9 +674,15 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
     // キャッシュキー生成
     const cacheKey = generateCacheKey('writer', writerId);
     
-    // キャッシュから取得
+    // キャッシュから取得（WP 直 URL はマップ拡張後も効かせるため、ヒット時も置換を試す）
     const cached = cacheManager.get<Writer>(cacheKey, CACHE_TTL.LONG);
     if (cached) {
+      if (writerMayContainWpUploads(cached)) {
+        const w = { ...cached };
+        const map = await getWpMediaUrlMap();
+        if (map.size > 0) rewriteWriterWpMediaUrls(w, map);
+        return w;
+      }
       return cached;
     }
     

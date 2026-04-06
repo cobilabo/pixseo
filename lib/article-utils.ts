@@ -140,16 +140,51 @@ export function canonicalWpMediaUrl(href: string): string {
   }
 }
 
-function lookupWpReplacement(map: Map<string, string>, matched: string): string | undefined {
-  if (map.has(matched)) return map.get(matched);
-  const c = canonicalWpMediaUrl(matched);
-  if (map.has(c)) return map.get(c);
+/**
+ * WordPress が付ける -150x150 や -scaled を拡張子直前から除いた pathname バリエーション。
+ * ライターアイコン等のサムネ URL と mediaLibrary の wpOriginalUrl（フルサイズ）を繋ぐ。
+ */
+function wpPathnameVariants(pathname: string): string[] {
+  const dec = decodeURI(pathname);
+  const d1 = dec.replace(/-(\d+)x(\d+)(?=\.[^.]+$)/i, '');
+  const s1 = dec.replace(/-scaled(?=\.[^.]+$)/i, '');
+  const ds = d1.replace(/-scaled(?=\.[^.]+$)/i, '');
+  const sd = s1.replace(/-(\d+)x(\d+)(?=\.[^.]+$)/i, '');
+  return [...new Set([dec, d1, s1, ds, sd])];
+}
+
+/** マップ照合に使う URL キー（canonical・パーセントエンコード・サイズサフィックス除去） */
+function expandWpUploadUrlLookupKeys(href: string): string[] {
+  const keys = new Set<string>();
+  const push = (s: string) => {
+    const t = s.trim();
+    if (!t) return;
+    keys.add(t);
+    keys.add(canonicalWpMediaUrl(t));
+  };
+  push(href);
   try {
-    const u = new URL(matched.trim());
-    const encodedHref = `${u.protocol}//${u.host}${encodeURI(decodeURI(u.pathname))}${u.search}`;
-    if (map.has(encodedHref)) return map.get(encodedHref);
+    const u = new URL(href.trim());
+    const search = u.search;
+    for (const pathVar of wpPathnameVariants(u.pathname)) {
+      const rebuilt = `${u.protocol}//${u.hostname}${pathVar}${search}`;
+      push(rebuilt);
+      try {
+        keys.add(`${u.protocol}//${u.host}${encodeURI(pathVar)}${search}`);
+      } catch {
+        /* ignore */
+      }
+    }
   } catch {
-    /* ignore */
+    /* invalid URL */
+  }
+  return [...keys];
+}
+
+function lookupWpReplacement(map: Map<string, string>, matched: string): string | undefined {
+  for (const key of expandWpUploadUrlLookupKeys(matched)) {
+    const v = map.get(key);
+    if (v) return v;
   }
   return undefined;
 }
@@ -172,12 +207,14 @@ export function buildWpMediaReplacementMapFromDocs(docs: WpMapDoc[]): Map<string
     const wp = typeof d.wpOriginalUrl === 'string' ? d.wpOriginalUrl.trim() : '';
     const url = typeof d.url === 'string' ? d.url.trim() : '';
     if (!wp || !url) continue;
-    map.set(wp, url);
-    map.set(canonicalWpMediaUrl(wp), url);
+    for (const key of expandWpUploadUrlLookupKeys(wp)) {
+      map.set(key, url);
+    }
     if (wp.startsWith('http://')) {
       const https = wp.replace(/^http:\/\//i, 'https://');
-      map.set(https, url);
-      map.set(canonicalWpMediaUrl(https), url);
+      for (const key of expandWpUploadUrlLookupKeys(https)) {
+        map.set(key, url);
+      }
     }
   }
   return map;
