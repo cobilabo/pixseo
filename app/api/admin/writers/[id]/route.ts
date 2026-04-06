@@ -9,6 +9,7 @@ import {
   reassignArticlesWriter,
 } from '@/lib/admin/writers-main-writer';
 import { invalidateWriterServerCache } from '@/lib/cache-manager';
+import { revalidateWriterPublicPages } from '@/lib/admin/revalidate-writer-pages';
 
 /**
  * テキストが全て英語（アルファベット+スペース+記号）かどうかをチェック
@@ -41,12 +42,14 @@ export async function GET(
     const writersSnap = await adminDb.collection('writers').where('mediaId', '==', mediaId).get();
     const mainWriterId = await getOrRepairMainWriterId(mediaId);
 
+    const trim = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
+
     return NextResponse.json({
       id: doc.id,
-      icon: data.icon || data.iconUrl || '', // 互換性のため両方チェック
-      iconAlt: data.iconAlt || '',
-      backgroundImage: data.backgroundImage || '',
-      backgroundImageAlt: data.backgroundImageAlt || '',
+      icon: trim(data.icon) || trim(data.iconUrl) || '', // 互換性のため両方チェック
+      iconAlt: trim(data.iconAlt),
+      backgroundImage: trim(data.backgroundImage) || trim(data.backgroundImageUrl) || '',
+      backgroundImageAlt: trim(data.backgroundImageAlt),
       handleName: data.handleName,
       bio: data.bio || '',
       mediaId,
@@ -149,6 +152,11 @@ export async function PUT(
     
     await adminDb.collection('writers').doc(id).update(updateData);
     invalidateWriterServerCache(id);
+    try {
+      await revalidateWriterPublicPages(id);
+    } catch (e) {
+      console.warn('[writers PUT] revalidateWriterPublicPages:', e);
+    }
 
     const mediaId = existingMediaId;
 

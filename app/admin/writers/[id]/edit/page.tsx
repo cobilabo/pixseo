@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
@@ -11,7 +11,9 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 import { fetchWithMediaId } from '@/lib/api-client';
 
-export default function EditWriterPage({ params }: { params: { id: string } }) {
+export default function EditWriterPage() {
+  const params = useParams();
+  const writerId = (params?.id as string) || '';
   const { showSuccessAndNavigate, showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -29,14 +31,14 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchWriter = async () => {
       try {
-        const response = await fetchWithMediaId(`/api/admin/writers/${params.id}`);
+        const response = await fetchWithMediaId(`/api/admin/writers/${writerId}`);
         if (response.ok) {
           const data: Writer = await response.json();
           setFormData({
-            iconUrl: data.icon || '',
-            iconAlt: data.iconAlt || '',
-            backgroundImageUrl: data.backgroundImage || '',
-            backgroundImageAlt: data.backgroundImageAlt || '',
+            iconUrl: (data.icon || '').trim(),
+            iconAlt: (data.iconAlt || '').trim(),
+            backgroundImageUrl: (data.backgroundImage || '').trim(),
+            backgroundImageAlt: (data.backgroundImageAlt || '').trim(),
             handleName: data.handleName || '',
             bio: data.bio || '',
             isMainWriter: data.isMainWriter ?? false,
@@ -51,8 +53,9 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
       }
     };
 
+    if (!writerId) return;
     fetchWriter();
-  }, [params.id]);
+  }, [writerId]);
 
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
@@ -60,7 +63,7 @@ export default function EditWriterPage({ params }: { params: { id: string } }) {
     setLoading(true);
 
     try {
-      const response = await fetchWithMediaId(`/api/admin/writers/${params.id}`, {
+      const response = await fetchWithMediaId(`/api/admin/writers/${writerId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

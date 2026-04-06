@@ -5,6 +5,7 @@ import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { getOrRepairMainWriterId, setMainWriterId } from '@/lib/admin/writers-main-writer';
 import { invalidateWriterServerCache } from '@/lib/cache-manager';
+import { revalidateWriterPublicPages } from '@/lib/admin/revalidate-writer-pages';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,14 +37,16 @@ export async function GET(request: NextRequest) {
       mainWriterId = await getOrRepairMainWriterId(mediaId);
     }
 
+    const trim = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
+
     const writers = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
-        icon: data.icon || data.iconUrl || '', // 互換性のため両方チェック
-        iconAlt: data.iconAlt || '',
-        backgroundImage: data.backgroundImage || '',
-        backgroundImageAlt: data.backgroundImageAlt || '',
+        icon: trim(data.icon) || trim(data.iconUrl) || '', // 互換性のため両方チェック
+        iconAlt: trim(data.iconAlt),
+        backgroundImage: trim(data.backgroundImage) || trim(data.backgroundImageUrl) || '',
+        backgroundImageAlt: trim(data.backgroundImageAlt),
         handleName: data.handleName,
         bio: data.bio || '',
         mediaId: data.mediaId,
@@ -126,6 +129,11 @@ export async function POST(request: NextRequest) {
 
     const docRef = await adminDb.collection('writers').add(writerData);
     invalidateWriterServerCache(docRef.id);
+    try {
+      await revalidateWriterPublicPages(docRef.id);
+    } catch (e) {
+      console.warn('[writers POST] revalidateWriterPublicPages:', e);
+    }
 
     if (isFirstWriterForMedia) {
       await setMainWriterId(mediaId, docRef.id);

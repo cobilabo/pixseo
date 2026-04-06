@@ -41,10 +41,10 @@ export default function FeaturedImageUpload({
   const [generatingAlt, setGeneratingAlt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // valueが変わったらpreviewを更新
+  // valueが変わったらpreviewを更新（前後空白は URL として無効になり得るため除去）
   useEffect(() => {
-    console.log('[FeaturedImageUpload] useEffect - value changed to:', value);
-    setPreview(value);
+    const next = typeof value === 'string' ? value.trim() : value;
+    setPreview(next || undefined);
   }, [value]);
 
   // altが変わったらaltTextを更新
@@ -178,14 +178,17 @@ export default function FeaturedImageUpload({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div className="relative w-full" style={{ minHeight: '200px' }}>
+          <div className="relative w-full min-h-[200px] max-h-[400px] h-[300px]">
             <Image
               src={preview}
               alt={altText || label}
-              width={800}
-              height={600}
-              className="w-full h-auto object-contain"
-              style={{ maxHeight: '400px' }}
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 896px"
+              unoptimized={
+                typeof preview === 'string' &&
+                (/^https?:\/\//i.test(preview) || preview.startsWith('data:'))
+              }
             />
           </div>
           
