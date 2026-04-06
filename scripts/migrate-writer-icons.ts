@@ -23,11 +23,13 @@ const db = admin.firestore();
 const storage = admin.storage();
 const bucket = storage.bucket();
 
-const MEDIA_ID = 'vLXNATzVNoJc9dIGggPi';
+const DEFAULT_MEDIA_ID = 'vLXNATzVNoJc9dIGggPi';
 
-// コマンドライン引数
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dryRun');
+const mediaIdArg = args.find((a) => a.startsWith('--mediaId='));
+const MEDIA_ID = mediaIdArg ? mediaIdArg.slice('--mediaId='.length) : DEFAULT_MEDIA_ID;
+const ALL_WRITERS = args.includes('--allMedia');
 
 /**
  * 画像をダウンロード
@@ -37,6 +39,7 @@ async function downloadImage(url: string): Promise<Buffer | null> {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        Referer: 'https://the-ayumi.jp/',
       },
     });
     
@@ -116,12 +119,11 @@ async function main() {
   console.log('='.repeat(60));
   console.log(`\nDry run: ${DRY_RUN}\n`);
 
-  // ライターを取得
-  const writersSnapshot = await db.collection('writers')
-    .where('mediaId', '==', MEDIA_ID)
-    .get();
+  const writersSnapshot = ALL_WRITERS
+    ? await db.collection('writers').get()
+    : await db.collection('writers').where('mediaId', '==', MEDIA_ID).get();
 
-  console.log(`📝 Total writers: ${writersSnapshot.docs.length}\n`);
+  console.log(`📝 Total writers: ${writersSnapshot.docs.length} (allMedia=${ALL_WRITERS}, mediaId=${MEDIA_ID})\n`);
 
   let migratedCount = 0;
   let skippedCount = 0;
@@ -142,8 +144,11 @@ async function main() {
       continue;
     }
 
-    // 既にFirebase StorageのURLの場合はスキップ
-    if (iconUrl.includes('firebasestorage.googleapis.com') || iconUrl.includes('storage.googleapis.com')) {
+    if (
+      iconUrl.includes('firebasestorage.googleapis.com') ||
+      iconUrl.includes('storage.googleapis.com') ||
+      iconUrl.includes('.firebasestorage.app')
+    ) {
       console.log('  ⏭️ スキップ: 既にFirebase Storage');
       skippedCount++;
       continue;

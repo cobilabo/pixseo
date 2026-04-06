@@ -7,11 +7,17 @@ import {
   limit 
 } from 'firebase/firestore';
 import * as admin from 'firebase-admin';
-import { adminDb } from './admin';
+import { adminDb, getWpMediaUrlMap } from './admin';
 import { Article, Category, Tag } from '@/types/article';
 import { Writer } from '@/types/writer';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 import { isPreviewMode } from './media-tenant-helper';
+import {
+  articleMayContainWpUploads,
+  rewriteArticleWpMediaUrls,
+  rewriteWriterWpMediaUrls,
+  writerMayContainWpUploads,
+} from '@/lib/article-utils';
 
 // 非表示カテゴリーIDを取得（キャッシュ付き）
 const getHiddenCategoryIds = async (mediaId?: string): Promise<string[]> => {
@@ -115,6 +121,11 @@ export const getArticleServer = async (slug: string, mediaId?: string): Promise<
       if (article.publishedAt && article.publishedAt > now) {
         return null;
       }
+    }
+
+    if (articleMayContainWpUploads(article)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) rewriteArticleWpMediaUrls(article, map);
     }
     
     // キャッシュに保存
@@ -285,6 +296,13 @@ export const getArticlesServer = async (
     
     // limit適用
     articles = articles.slice(0, limitCount);
+
+    if (articles.some(articleMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const a of articles) rewriteArticleWpMediaUrls(a, map);
+      }
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, articles);
@@ -333,6 +351,13 @@ export const getSliderArticlesServer = async (mediaId?: string): Promise<Article
       })
       .filter(article => !article.publishedAt || article.publishedAt <= now)
       .sort((a, b) => (a.sliderOrder || 999) - (b.sliderOrder || 999));
+
+    if (articles.some(articleMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const a of articles) rewriteArticleWpMediaUrls(a, map);
+      }
+    }
 
     cacheManager.set(cacheKey, articles);
     return articles;
@@ -684,6 +709,11 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
       bio_ko: data?.bio_ko || data?.bio || '',
       mediaId: data?.mediaId || '',
     };
+
+    if (writerMayContainWpUploads(writer)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) rewriteWriterWpMediaUrls(writer, map);
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, writer);
@@ -734,7 +764,7 @@ export const getAdjacentArticlesServer = async (
         .limit(1)
         .get();
       
-      return await buildAdjacentArticlesResult(prevQuery, nextQuery);
+      return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     } else {
       const prevQuery = await prevQueryBuilder.get();
       
@@ -746,7 +776,7 @@ export const getAdjacentArticlesServer = async (
         .limit(1)
         .get();
       
-      return await buildAdjacentArticlesResult(prevQuery, nextQuery);
+      return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     }
   } catch (error) {
     console.error('[getAdjacentArticlesServer] Error fetching adjacent articles:', error);
@@ -755,7 +785,7 @@ export const getAdjacentArticlesServer = async (
 };
 
 // 前後の記事の結果を構築するヘルパー関数
-async function buildAdjacentArticlesResult(
+async function buildAdjacentArticlesResultAsync(
   prevQuery: FirebaseFirestore.QuerySnapshot,
   nextQuery: FirebaseFirestore.QuerySnapshot
 ): Promise<{ previousArticle: Article | null; nextArticle: Article | null }> {
@@ -788,6 +818,12 @@ async function buildAdjacentArticlesResult(
       relatedArticleIds: Array.isArray(data.relatedArticleIds) ? data.relatedArticleIds : [],
       readingTime: typeof data.readingTime === 'number' ? data.readingTime : undefined,
     } as Article;
+  }
+
+  const pair = [previousArticle, nextArticle].filter(Boolean) as Article[];
+  if (pair.some(articleMayContainWpUploads)) {
+    const map = await getWpMediaUrlMap();
+    if (map.size > 0) pair.forEach((a) => rewriteArticleWpMediaUrls(a, map));
   }
   
   return { previousArticle, nextArticle };
@@ -860,6 +896,13 @@ export const getArticlesByWriterServer = async (
     
     // limit適用
     articles = articles.slice(0, limitCount);
+
+    if (articles.some(articleMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const a of articles) rewriteArticleWpMediaUrls(a, map);
+      }
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, articles);
@@ -981,6 +1024,13 @@ export const getRecommendedArticlesServer = async (
     
     // limit適用
     articles = articles.slice(0, limitCount);
+
+    if (articles.some(articleMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const a of articles) rewriteArticleWpMediaUrls(a, map);
+      }
+    }
     
     // キャッシュに保存
     cacheManager.set(cacheKey, articles);

@@ -1,5 +1,6 @@
-import { adminDb } from './admin';
+import { adminDb, getWpMediaUrlMap } from './admin';
 import { Page } from '@/types/page';
+import { pageMayContainWpUploads, rewritePageWpMediaUrls } from '@/lib/article-utils';
 
 /**
  * 固定ページの取得（スラッグ指定・サーバーサイド）
@@ -21,12 +22,19 @@ export async function getPageServer(slug: string, mediaId?: string): Promise<Pag
     const doc = snapshot.docs[0];
     const data = doc.data();
     
-    return {
+    const page = {
       id: doc.id,
       ...data,
       publishedAt: data.publishedAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
     } as Page;
+
+    if (pageMayContainWpUploads(page)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) rewritePageWpMediaUrls(page, map);
+    }
+
+    return page;
   } catch (error) {
     console.error('[getPageServer] Error:', error);
     return null;
@@ -46,7 +54,7 @@ export async function getPagesServer(mediaId?: string): Promise<Page[]> {
     
     const snapshot = await query.get();
     
-    return snapshot.docs.map((doc) => {
+    const pages = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -55,6 +63,15 @@ export async function getPagesServer(mediaId?: string): Promise<Page[]> {
         updatedAt: data.updatedAt?.toDate() || new Date(),
       } as Page;
     });
+
+    if (pages.some(pageMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const p of pages) rewritePageWpMediaUrls(p, map);
+      }
+    }
+
+    return pages;
   } catch (error) {
     console.error('[getPagesServer] Error:', error);
     return [];
@@ -77,7 +94,7 @@ export async function getPublishedPagesServer(mediaId?: string): Promise<Page[]>
     
     const snapshot = await query.get();
     
-    return snapshot.docs.map((doc) => {
+    const pages = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -86,6 +103,15 @@ export async function getPublishedPagesServer(mediaId?: string): Promise<Page[]>
         updatedAt: data.updatedAt?.toDate() || new Date(),
       } as Page;
     });
+
+    if (pages.some(pageMayContainWpUploads)) {
+      const map = await getWpMediaUrlMap();
+      if (map.size > 0) {
+        for (const p of pages) rewritePageWpMediaUrls(p, map);
+      }
+    }
+
+    return pages;
   } catch (error) {
     console.error('[getPublishedPagesServer] Error:', error);
     return [];

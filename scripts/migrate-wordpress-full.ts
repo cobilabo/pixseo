@@ -412,8 +412,9 @@ async function replaceImageUrls(
 ): Promise<{ content: string; imageMap: Map<string, string>; imageCount: number }> {
   const imageMap = new Map<string, string>();
   
-  // WordPress画像URLのパターン
-  const wpImagePattern = /https?:\/\/the-ayumi\.jp\/wp-content\/uploads\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp|svg)/gi;
+  // WordPress画像URL（www 可・クエリ可・拡張子は大小無視）
+  const wpImagePattern =
+    /https?:\/\/(?:www\.)?the-ayumi\.jp\/wp-content\/uploads\/[^\s"'<>]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s"'<>]*)?/gi;
   
   const matches = content.match(wpImagePattern) || [];
   const uniqueUrls = [...new Set(matches)];
