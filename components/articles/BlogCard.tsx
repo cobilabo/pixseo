@@ -36,6 +36,21 @@ function extractSlugFromUrl(url: string): string | null {
   return null;
 }
 
+/** パス上のスラッグが % エンコードのまま残っている／二重エンコードされている場合に正規化 */
+function normalizeSlugForBlogcardApi(slug: string): string {
+  let s = slug;
+  for (let i = 0; i < 8; i++) {
+    try {
+      const next = decodeURIComponent(s);
+      if (next === s) break;
+      s = next;
+    } catch {
+      break;
+    }
+  }
+  return s;
+}
+
 export default function BlogCard({ href, lang }: BlogCardProps) {
   const [data, setData] = useState<BlogCardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,12 +58,14 @@ export default function BlogCard({ href, lang }: BlogCardProps) {
 
   useEffect(() => {
     const fetchArticleData = async () => {
-      const slug = extractSlugFromUrl(href);
-      if (!slug) {
+      const rawSlug = extractSlugFromUrl(href);
+      if (!rawSlug) {
         setError(true);
         setLoading(false);
         return;
       }
+
+      const slug = normalizeSlugForBlogcardApi(rawSlug);
 
       try {
         const response = await fetch(`/api/articles/blogcard?slug=${encodeURIComponent(slug)}&lang=${lang}`);

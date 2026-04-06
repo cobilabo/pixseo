@@ -866,8 +866,14 @@ function processInternalLinksForBlogCard(
     if (checkIsInternalArticleLink(normalizedHref, siteHost)) {
       internalLinkUrls.push(normalizedHref);
       // プレースホルダーdivに置換（dangerouslySetInnerHTMLで挿入後にReactコンポーネントで置換）
-      // 「参照：」等のプレフィックスも含めて置換される
-      return `<div class="blogcard-placeholder" data-href="${encodeURIComponent(normalizedHref)}"></div>`;
+      // href 内に既に % エンコードがある場合、encodeURIComponent だけだと % が二重化し API の slug がずれる
+      let hrefForAttr: string;
+      try {
+        hrefForAttr = encodeURIComponent(decodeURIComponent(normalizedHref));
+      } catch {
+        hrefForAttr = encodeURIComponent(normalizedHref);
+      }
+      return `<div class="blogcard-placeholder" data-href="${hrefForAttr}"></div>`;
     }
     
     return match;
