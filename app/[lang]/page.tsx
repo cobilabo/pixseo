@@ -304,7 +304,7 @@ export default async function HomePage({ params }: PageProps) {
           <CategoryBar 
             categories={categories} 
             lang={lang} 
-            globalNavItems={rawTheme.menuSettings?.globalNavItems}
+            globalNavItems={theme.menuSettings?.globalNavItems}
             globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
             layoutTheme={rawTheme.layoutTheme}
           />
@@ -364,7 +364,7 @@ export default async function HomePage({ params }: PageProps) {
 
                   {/* サイドコンテンツ（設定に基づく） */}
                   <SidebarRenderer
-                    sideContentItems={rawTheme.sideContentItems}
+                    sideContentItems={theme.sideContentItems ?? rawTheme.sideContentItems}
                     sideContentHtmlItems={rawTheme.sideContentHtmlItems}
                     recentArticles={localizedRecentArticles}
                     popularArticles={localizedPopularArticles}
@@ -478,7 +478,7 @@ export default async function HomePage({ params }: PageProps) {
       <CategoryBar 
         categories={categories} 
         lang={lang} 
-        globalNavItems={rawTheme.menuSettings?.globalNavItems}
+        globalNavItems={theme.menuSettings?.globalNavItems}
         globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
         layoutTheme={rawTheme.layoutTheme}
       />
@@ -569,7 +569,7 @@ export default async function HomePage({ params }: PageProps) {
 
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
-              sideContentItems={rawTheme.sideContentItems}
+              sideContentItems={theme.sideContentItems ?? rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
               recentArticles={localizedRecentArticles}
               popularArticles={localizedPopularArticles}

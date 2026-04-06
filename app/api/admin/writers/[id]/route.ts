@@ -8,6 +8,7 @@ import {
   setMainWriterId,
   reassignArticlesWriter,
 } from '@/lib/admin/writers-main-writer';
+import { invalidateWriterServerCache } from '@/lib/cache-manager';
 
 /**
  * テキストが全て英語（アルファベット+スペース+記号）かどうかをチェック
@@ -147,6 +148,7 @@ export async function PUT(
     }
     
     await adminDb.collection('writers').doc(id).update(updateData);
+    invalidateWriterServerCache(id);
 
     const mediaId = existingMediaId;
 
@@ -209,6 +211,7 @@ export async function DELETE(
 
     await reassignArticlesWriter(id, mainWriterId);
     await adminDb.collection('writers').doc(id).delete();
+    invalidateWriterServerCache(id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

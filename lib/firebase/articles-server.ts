@@ -663,6 +663,9 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
     }
     
     const data = writerDoc.data();
+    // 管理API GET と同じ解決順（Firestore に iconUrl のみ残っているレガシー対応）
+    const icon = (data?.icon || data?.iconUrl || '') as string;
+    const backgroundImage = (data?.backgroundImage || data?.backgroundImageUrl || '') as string;
     const writer: any = {
       id: writerDoc.id,
       handleName: data?.handleName || '',
@@ -670,9 +673,9 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
       handleName_en: data?.handleName_en || data?.handleName || '',
       handleName_zh: data?.handleName_zh || data?.handleName || '',
       handleName_ko: data?.handleName_ko || data?.handleName || '',
-      icon: data?.icon,
+      icon: icon || undefined,
       iconAlt: data?.iconAlt,
-      backgroundImage: data?.backgroundImage,
+      backgroundImage: backgroundImage || undefined,
       backgroundImageAlt: data?.backgroundImageAlt,
       bio: data?.bio,
       bio_ja: data?.bio_ja || data?.bio || '',

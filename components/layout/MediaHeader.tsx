@@ -93,7 +93,7 @@ export default function MediaHeader({
         {headerIconUrl && (
           <Image
             src={headerIconUrl}
-            alt={`${siteName} アイコン`}
+            alt={t('header.siteIconAlt', lang, { siteName })}
             width={32}
             height={32}
             className="w-8 h-8"
@@ -193,7 +193,7 @@ export default function MediaHeader({
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
-                    placeholder="行きたい場所、キーワードなど"
+                    placeholder={t('header.searchPlaceholder', lang)}
                     className="furatto-header-search-input w-full px-4 py-2 text-sm text-center rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                   />
                 </form>
@@ -214,7 +214,7 @@ export default function MediaHeader({
                     type="text"
                     value={headerKeyword}
                     onChange={(e) => setHeaderKeyword(e.target.value)}
-                    placeholder="行きたい場所、キーワードなど"
+                    placeholder={t('header.searchPlaceholder', lang)}
                     className="furatto-header-search-input w-full px-4 py-2 text-sm text-center rounded-full bg-gray-100 focus:outline-none focus:bg-white transition-all"
                   />
                 </form>
@@ -257,7 +257,7 @@ export default function MediaHeader({
                     <button
                       onClick={() => setIsLangOpen(!isLangOpen)}
                       className="furatto-lang-btn h-7 flex items-center gap-1.5 px-2.5 rounded-full text-xs font-medium transition-colors"
-                      aria-label="言語を選択"
+                      aria-label={t('common.selectLanguage', lang)}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
@@ -294,7 +294,7 @@ export default function MediaHeader({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-1 text-xs font-semibold rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
-                  Ayumiの公式サイトはこちら
+                  {t('header.ayumiOfficialSite', lang)}
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -367,7 +367,7 @@ export default function MediaHeader({
       <button
         onClick={() => setIsLangOpen(!isLangOpen)}
         className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity flex-shrink-0"
-        aria-label="言語を選択"
+        aria-label={t('common.selectLanguage', lang)}
       >
         <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
           <FlagIcon code={lang} />

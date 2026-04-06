@@ -29,7 +29,7 @@ async function getWriter(writerId: string): Promise<Writer | null> {
     return { 
       id: doc.id, 
       handleName: data?.handleName || '',
-      icon: data?.icon,
+      icon: (data?.icon || data?.iconUrl || undefined) as string | undefined,
     } as Writer;
   } catch (error) {
     console.error('Error fetching writer:', error);

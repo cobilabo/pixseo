@@ -15,6 +15,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'common.follow': 'をフォロー',
     'common.copy': 'コピー',
     'common.copied': 'コピーしました',
+    'common.selectLanguage': '言語を選択',
+    
+    // ヘッダー
+    'header.ayumiOfficialSite': 'Ayumiの公式サイトはこちら',
+    'header.searchPlaceholder': '行きたい場所、キーワードなど',
+    'header.siteIconAlt': '{siteName}のアイコン',
     
     // ナビゲーション
     'nav.top': 'トップ',
@@ -103,6 +109,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'common.follow': 'Follow',
     'common.copy': 'Copy',
     'common.copied': 'Copied',
+    'common.selectLanguage': 'Select language',
+    
+    // Header
+    'header.ayumiOfficialSite': 'Ayumi official website',
+    'header.searchPlaceholder': 'Places, keywords, and more',
+    'header.siteIconAlt': '{siteName} icon',
     
     // Navigation
     'nav.top': 'Top',
@@ -191,6 +203,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'common.follow': '关注',
     'common.copy': '复制',
     'common.copied': '已复制',
+    'common.selectLanguage': '选择语言',
+    
+    // 页头
+    'header.ayumiOfficialSite': 'Ayumi 官方网站',
+    'header.searchPlaceholder': '地点、关键词等',
+    'header.siteIconAlt': '{siteName} 图标',
     
     // 导航
     'nav.top': '首页',
@@ -279,6 +297,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     'common.follow': '팔로우',
     'common.copy': '복사',
     'common.copied': '복사됨',
+    'common.selectLanguage': '언어 선택',
+    
+    // 헤더
+    'header.ayumiOfficialSite': 'Ayumi 공식 사이트',
+    'header.searchPlaceholder': '장소, 키워드 등',
+    'header.siteIconAlt': '{siteName} 아이콘',
     
     // 내비게이션
     'nav.top': '홈',

@@ -416,7 +416,7 @@ export default async function ArticlePage({ params }: PageProps) {
           categories={headerCategories} 
           variant="half" 
           lang={lang} 
-          globalNavItems={rawTheme.menuSettings?.globalNavItems}
+          globalNavItems={theme.menuSettings?.globalNavItems}
           globalMenuDesign={rawTheme.menuSettings?.globalMenuDesign}
           layoutTheme={rawTheme.layoutTheme}
         />
@@ -536,7 +536,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
             {/* サイドコンテンツ（設定に基づく） */}
             <SidebarRenderer
-              sideContentItems={rawTheme.sideContentItems}
+              sideContentItems={theme.sideContentItems ?? rawTheme.sideContentItems}
               sideContentHtmlItems={rawTheme.sideContentHtmlItems}
               recentArticles={localizedRecentArticles}
               popularArticles={popularArticles}

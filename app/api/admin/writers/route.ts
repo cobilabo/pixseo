@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { getOrRepairMainWriterId, setMainWriterId } from '@/lib/admin/writers-main-writer';
+import { invalidateWriterServerCache } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
     const isFirstWriterForMedia = beforeSnap.empty;
 
     const docRef = await adminDb.collection('writers').add(writerData);
+    invalidateWriterServerCache(docRef.id);
 
     if (isFirstWriterForMedia) {
       await setMainWriterId(mediaId, docRef.id);

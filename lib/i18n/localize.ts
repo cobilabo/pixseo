@@ -42,6 +42,7 @@ export function localizeArticle(article: any, lang: Lang) {
     'metaTitle',
     'metaDescription',
     'aiSummary',
+    'featuredImageAlt',
   ];
   
   const localized = localizeFields(article, lang, multilangFields);
@@ -70,7 +71,6 @@ export function localizeArticle(article: any, lang: Lang) {
     tagIds: article.tagIds,
     relatedArticleIds: article.relatedArticleIds,
     featuredImage: article.featuredImage,
-    featuredImageAlt: article.featuredImageAlt,
     publishedAt: article.publishedAt,
     updatedAt: article.updatedAt,
     isPublished: article.isPublished,
@@ -82,6 +82,10 @@ export function localizeArticle(article: any, lang: Lang) {
     readingTime: article.readingTime,
     googleMapsUrl: article.googleMapsUrl,
     reservationUrl: article.reservationUrl,
+    featuredImageAlt:
+      localized.featuredImageAlt ||
+      article.featuredImageAlt ||
+      '',
   };
 }
 
@@ -149,6 +153,7 @@ export function localizePage(page: any, lang: Lang) {
     'excerpt',
     'metaTitle',
     'metaDescription',
+    'featuredImageAlt',
   ]);
   
   return {
@@ -160,7 +165,7 @@ export function localizePage(page: any, lang: Lang) {
     metaTitle: localized.metaTitle || page.metaTitle || localized.title || page.title || '',
     metaDescription: localized.metaDescription || page.metaDescription || localized.excerpt || page.excerpt || '',
     featuredImage: page.featuredImage,
-    featuredImageAlt: page.featuredImageAlt,
+    featuredImageAlt: localized.featuredImageAlt || page.featuredImageAlt || '',
     isPublished: page.isPublished,
     publishedAt: page.publishedAt,
     updatedAt: page.updatedAt,
@@ -260,6 +265,19 @@ export function localizeTheme(theme: any, lang: Lang) {
         };
       }) || [],
     };
+  }
+
+  // サイドコンテンツ（HTML ブロックのタイトル・本文）
+  if (theme.sideContentItems?.length) {
+    localized.sideContentItems = theme.sideContentItems.map((item: any) => {
+      if (item.type !== 'html') return item;
+      const hf = localizeFields(item, lang, ['title', 'htmlCode']);
+      return {
+        ...item,
+        title: hf.title || item.title || '',
+        htmlCode: hf.htmlCode || item.htmlCode || '',
+      };
+    });
   }
   
   return localized;

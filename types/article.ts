@@ -25,6 +25,10 @@ export interface Article {
   tagIds: string[];
   featuredImage?: string;
   featuredImageAlt?: string; // アイキャッチ画像のalt属性
+  featuredImageAlt_ja?: string;
+  featuredImageAlt_en?: string;
+  featuredImageAlt_zh?: string;
+  featuredImageAlt_ko?: string;
   targetAudience?: string; // 想定読者（ペルソナ）
   isPublished: boolean;
   isScheduled?: boolean;     // 予約公開待ち状態（true: 公開日が未来で公開待ち）

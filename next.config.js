@@ -27,6 +27,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '**.firebasestorage.app',
+      },
+      {
+        protocol: 'https',
         hostname: 'secure.gravatar.com',
       },
       {

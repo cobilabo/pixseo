@@ -1,0 +1,10 @@
+記事まわりの改善・調査スクリプト・ライター画像表示の修正
+
+- 多言語ページ・MediaHeader・型定義・翻訳まわりの更新
+- Firestore 調査用: URL エンコード・HTML エンティティのレポートスクリプト
+- タイトル/メタの HTML エンティティをデコードする一括スクリプト（he 依存）
+- 公開側 getWriterServer で icon と iconUrl（背景も同様）を管理 API と同順で解決
+- ライター保存 API でサーバー側ライターキャッシュを無効化
+- ContentBlock のライター取得でも iconUrl をフォールバック
+- next/image 用 remotePatterns に *.firebasestorage.app を追加
+- ロケール埋め系スクリプト（fill/report）を追加

@@ -104,6 +104,11 @@ export const generateCacheKey = (...parts: (string | number | undefined)[]): str
   return parts.filter(Boolean).join(':');
 };
 
+/** ライター更新APIなどから呼び出し、公開側 getWriterServer のメモリキャッシュを無効化する */
+export function invalidateWriterServerCache(writerId: string): void {
+  cacheManager.delete(generateCacheKey('writer', writerId));
+}
+
 // TTL定数（ミリ秒）
 export const CACHE_TTL = {
   SHORT: 3 * 60 * 1000,      // 3分

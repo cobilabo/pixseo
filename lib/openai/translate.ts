@@ -1,10 +1,86 @@
 import OpenAI from 'openai';
 import { Lang } from '@/types/lang';
 
-// OpenAI クライアントの初期化
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
+
+/** Strip NUL and lone UTF-16 surrogates so request JSON serializes reliably. */
+export function sanitizeOpenAIUserContent(text: string): string {
+  if (!text) return '';
+  let s = text.replace(/\u0000/g, '');
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const next = s.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        out += s[i] + s[i + 1];
+        i++;
+      } else {
+        out += '\ufffd';
+      }
+    } else if (c >= 0xdc00 && c <= 0xdfff) {
+      out += '\ufffd';
+    } else {
+      out += s[i];
+    }
+  }
+  return out;
+}
+
+const HTML_TRANSLATE_CHUNK = 42000;
+
+function chunkHtmlForTranslation(html: string, softMax: number): string[] {
+  if (html.length <= softMax) return [html];
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < html.length) {
+    if (html.length - start <= softMax) {
+      chunks.push(html.slice(start));
+      break;
+    }
+    const endLimit = start + softMax;
+    const slice = html.slice(start, endLimit);
+    const breakers = ['</p>', '</div>', '</section>', '</article>', '</li>', '\n\n'];
+    let bestEnd = -1;
+    for (const b of breakers) {
+      const idx = slice.lastIndexOf(b);
+      if (idx !== -1) {
+        const pos = start + idx + b.length;
+        if (pos - start >= softMax * 0.25) bestEnd = Math.max(bestEnd, pos);
+      }
+    }
+    const cut = bestEnd === -1 ? endLimit : bestEnd;
+    chunks.push(html.slice(start, cut));
+    start = cut;
+  }
+  return chunks;
+}
+
+async function translateArticleHtmlInChunks(
+  html: string,
+  targetLang: Lang
+): Promise<string> {
+  const sanitized = sanitizeOpenAIUserContent(html);
+  const chunks = chunkHtmlForTranslation(sanitized, HTML_TRANSLATE_CHUNK);
+  if (chunks.length === 1) {
+    return translateText(chunks[0], targetLang, '記事本文（HTML形式）');
+  }
+  const parts: string[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const ctx = `記事本文（HTML形式）。全${chunks.length}分割の第${i + 1}部。タグ構造を保ち、前後断片と連続するよう欠けた開始・終了タグを出さないこと。`;
+    parts.push(await translateText(chunks[i], targetLang, ctx));
+  }
+  return parts.join('\n');
+}
 
 /**
  * テキストを指定言語に翻訳
@@ -17,6 +93,8 @@ export async function translateText(
   if (!text || text.trim() === '') {
     return '';
   }
+
+  text = sanitizeOpenAIUserContent(text);
 
   // 日本語の場合はそのまま返す
   if (targetLang === 'ja') {
@@ -44,9 +122,9 @@ ${context ? `このテキストは${context}です。` : ''}
 
   try {
     const estimatedTokens = Math.ceil(text.length / 2);
-    const maxTokens = Math.min(Math.max(4000, estimatedTokens), 16000);
+    const maxTokens = Math.min(Math.max(4000, estimatedTokens), 8192);
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
@@ -125,10 +203,9 @@ export async function translateArticle(
   metaTitle: string;
   metaDescription: string;
 }> {
-  // 並列翻訳
   const [title, content, excerpt, metaTitle, metaDescription] = await Promise.all([
     translateText(article.title, targetLang, '記事タイトル'),
-    translateText(article.content, targetLang, '記事本文（HTML形式）'),
+    translateArticleHtmlInChunks(article.content, targetLang),
     translateText(article.excerpt, targetLang, '記事の要約'),
     translateText(article.metaTitle || article.title, targetLang, 'SEOメタタイトル'),
     translateText(article.metaDescription || article.excerpt, targetLang, 'SEOメタディスクリプション'),
@@ -187,8 +264,10 @@ export async function generateAISummary(
 4. 読者が記事の価値を即座に理解できる内容
 5. 専門用語は適度に使用し、分かりやすく説明する`;
 
+  const body = sanitizeOpenAIUserContent(content).slice(0, 24000);
+
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
@@ -197,7 +276,7 @@ export async function generateAISummary(
         },
         {
           role: 'user',
-          content: `記事内容:\n${content}`,
+          content: `記事内容:\n${body}`,
         },
       ],
       temperature: 0.7,

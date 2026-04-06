@@ -15,6 +15,10 @@ export interface Page {
   updatedAt: Date;
   featuredImage?: string;
   featuredImageAlt?: string; // アイキャッチ画像のalt属性
+  featuredImageAlt_ja?: string;
+  featuredImageAlt_en?: string;
+  featuredImageAlt_zh?: string;
+  featuredImageAlt_ko?: string;
   isPublished: boolean;
   // SEO（既存）
   metaTitle?: string;
