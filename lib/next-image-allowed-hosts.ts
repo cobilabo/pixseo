@@ -26,3 +26,19 @@ export function isSrcAllowedForNextImage(src: string): boolean {
     return false;
   }
 }
+
+/**
+ * Next の画像プロキシはサーバーから元 URL を取得する。the-ayumi.jp の /wp-content/ は
+ * サーバー向けに 403 となり 502 になることがあるため、ブラウザ直読み（unoptimized）にする。
+ */
+export function shouldLoadImageWithoutOptimizer(src: string | undefined | null): boolean {
+  if (!src || typeof src !== 'string') return false;
+  try {
+    const u = new URL(src.trim());
+    const h = u.hostname.toLowerCase();
+    const ayumi = h === 'the-ayumi.jp' || h.endsWith('.the-ayumi.jp');
+    return ayumi && u.pathname.includes('/wp-content/');
+  } catch {
+    return false;
+  }
+}

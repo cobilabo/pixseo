@@ -4,6 +4,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { shouldLoadImageWithoutOptimizer } from '@/lib/next-image-allowed-hosts';
 import { Block, ContentBlockConfig, CTAButtonConfig } from '@/types/block';
 import { getFilterStyle } from '@/lib/utils/filter-helpers';
 import { adminDb } from '@/lib/firebase/admin';
@@ -264,6 +265,8 @@ export default async function ContentBlock({ block, showPanel = true, isMobile =
                   alt={writer.handleName}
                   fill
                   className="object-cover rounded-full border-4 border-gray-200"
+                  sizes="128px"
+                  unoptimized={shouldLoadImageWithoutOptimizer(writer.icon)}
                 />
               ) : (
                 <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-300">

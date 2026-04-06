@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { FirstViewSettings } from '@/types/theme';
+import { shouldLoadImageWithoutOptimizer } from '@/lib/next-image-allowed-hosts';
 
 interface FirstViewProps {
   settings: FirstViewSettings;
@@ -30,6 +31,7 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
             priority
             className="object-cover"
             sizes="100vw"
+            unoptimized={shouldLoadImageWithoutOptimizer(settings.imageUrl)}
           />
           {/* オーバーレイ */}
           <div className="absolute inset-0 bg-black bg-opacity-60" />
@@ -49,6 +51,8 @@ export default function FirstView({ settings, customTitle, customSubtitle, showC
                     alt="Writer Icon"
                     fill
                     className="object-cover"
+                    sizes="192px"
+                    unoptimized={shouldLoadImageWithoutOptimizer(writerIcon)}
                   />
                 </div>
               )}

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Writer } from '@/types/writer';
 import { Lang } from '@/types/lang';
+import { shouldLoadImageWithoutOptimizer } from '@/lib/next-image-allowed-hosts';
 
 interface AuthorProfileProps {
   writer: Writer;
@@ -25,6 +26,8 @@ export default function AuthorProfile({ writer, lang = 'ja' }: AuthorProfileProp
             alt={writer.backgroundImageAlt || writer.handleName}
             fill
             className="object-cover"
+            sizes="100vw"
+            unoptimized={shouldLoadImageWithoutOptimizer(writer.backgroundImage)}
           />
         ) : (
           <div 
@@ -43,6 +46,8 @@ export default function AuthorProfile({ writer, lang = 'ja' }: AuthorProfileProp
               alt={writer.handleName}
               fill
               className="object-cover"
+              sizes="96px"
+              unoptimized={shouldLoadImageWithoutOptimizer(writer.icon)}
             />
           </div>
         ) : (
