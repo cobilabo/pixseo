@@ -9,10 +9,18 @@ if (!admin.apps.length) {
     ? admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY))
     : admin.credential.applicationDefault();
 
+  const projectId =
+    process.env.GCLOUD_PROJECT ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID ||
+    'pixseo-1eeef';
+  const storageBucket =
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`;
+
   admin.initializeApp({
     credential,
-    projectId: 'pixseo-1eeef',
-    storageBucket: 'pixseo-1eeef.firebasestorage.app',
+    projectId,
+    storageBucket,
   });
 }
 
@@ -23,9 +31,16 @@ export const adminStorage = admin.storage();
 let wpMediaUrlMapCache: Map<string, string> | null = null;
 let wpMediaUrlMapLoadedAt = 0;
 const WP_MEDIA_URL_MAP_TTL_MS = 10 * 60 * 1000;
+/** マップキー生成ロジック変更時に上げる（デプロイ直後に古い空/不十分なキャッシュを捨てる） */
+const WP_MEDIA_URL_MAP_VERSION = 2;
+let wpMediaUrlMapCachedVersion = -1;
 
 /** mediaLibrary の wpOriginalUrl -> url（メモリキャッシュ付き） */
 export async function getWpMediaUrlMap(): Promise<Map<string, string>> {
+  if (wpMediaUrlMapCachedVersion !== WP_MEDIA_URL_MAP_VERSION) {
+    wpMediaUrlMapCache = null;
+    wpMediaUrlMapCachedVersion = WP_MEDIA_URL_MAP_VERSION;
+  }
   const now = Date.now();
   if (wpMediaUrlMapCache && now - wpMediaUrlMapLoadedAt < WP_MEDIA_URL_MAP_TTL_MS) {
     return wpMediaUrlMapCache;

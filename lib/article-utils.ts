@@ -181,9 +181,72 @@ function expandWpUploadUrlLookupKeys(href: string): string[] {
   return [...keys];
 }
 
+/** uploads/ 以降の相対パス（拡張子・-150x150・-scaled 除去・小文字）— URL 完全一致が取れないときのフォールバックキー */
+const WP_STEM_REL_PREFIX = '__wpstemrel__:';
+const WP_STEM_FILE_PREFIX = '__wpstemfile__:';
+
+function wpUploadRelativeStem(href: string): string | null {
+  try {
+    const u = new URL(href.trim());
+    const lower = u.pathname.toLowerCase();
+    const marker = '/wp-content/uploads/';
+    const idx = lower.indexOf(marker);
+    if (idx === -1) return null;
+    let rel = u.pathname.slice(idx + marker.length);
+    try {
+      rel = decodeURIComponent(decodeURI(rel));
+    } catch {
+      try {
+        rel = decodeURI(rel);
+      } catch {
+        /* keep */
+      }
+    }
+    const noExt = rel.replace(/\.[^./]+$/i, '');
+    const stem = noExt
+      .replace(/-(\d+)x(\d+)$/i, '')
+      .replace(/-scaled$/i, '');
+    const norm = stem.replace(/\\/g, '/').toLowerCase().replace(/^\/+|\/+$/g, '');
+    return norm || null;
+  } catch {
+    return null;
+  }
+}
+
+function wpUploadFileStemOnly(href: string): string | null {
+  try {
+    const u = new URL(href.trim());
+    let seg = u.pathname.split('/').pop() || '';
+    try {
+      seg = decodeURIComponent(decodeURI(seg));
+    } catch {
+      try {
+        seg = decodeURI(seg);
+      } catch {
+        /* keep */
+      }
+    }
+    const noExt = seg.replace(/\.[^.]+$/i, '');
+    const stem = noExt.replace(/-(\d+)x(\d+)$/i, '').replace(/-scaled$/i, '');
+    return stem.toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
 function lookupWpReplacement(map: Map<string, string>, matched: string): string | undefined {
   for (const key of expandWpUploadUrlLookupKeys(matched)) {
     const v = map.get(key);
+    if (v) return v;
+  }
+  const relStem = wpUploadRelativeStem(matched);
+  if (relStem) {
+    const v = map.get(WP_STEM_REL_PREFIX + relStem);
+    if (v) return v;
+  }
+  const fileStem = wpUploadFileStemOnly(matched);
+  if (fileStem) {
+    const v = map.get(WP_STEM_FILE_PREFIX + fileStem);
     if (v) return v;
   }
   return undefined;
@@ -215,6 +278,17 @@ export function buildWpMediaReplacementMapFromDocs(docs: WpMapDoc[]): Map<string
       for (const key of expandWpUploadUrlLookupKeys(https)) {
         map.set(key, url);
       }
+    }
+    const relStem = wpUploadRelativeStem(wp);
+    if (relStem) map.set(WP_STEM_REL_PREFIX + relStem, url);
+    const fileStem = wpUploadFileStemOnly(wp);
+    if (fileStem) map.set(WP_STEM_FILE_PREFIX + fileStem, url);
+
+    const origName = typeof d.originalName === 'string' ? d.originalName.trim() : '';
+    if (origName) {
+      const noExt = origName.replace(/\.[^.]+$/i, '');
+      const ostem = noExt.replace(/-(\d+)x(\d+)$/i, '').replace(/-scaled$/i, '').toLowerCase();
+      if (ostem) map.set(WP_STEM_FILE_PREFIX + ostem, url);
     }
   }
   return map;
