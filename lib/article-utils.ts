@@ -290,6 +290,15 @@ export function rewriteWriterWpMediaUrls(writer: Writer, map: Map<string, string
   }
 }
 
+/**
+ * WP 閉鎖後は wp-content が 403 のため取得不能。置換に失敗したままの URL は渡さずプレースホルダー表示にする。
+ */
+export function clearStaleAyumiWpWriterMedia(writer: Writer): void {
+  const dead = (url: string) => /the-ayumi\.jp\/wp-content\//i.test(url);
+  if (writer.icon && dead(writer.icon)) writer.icon = undefined;
+  if (writer.backgroundImage && dead(writer.backgroundImage)) writer.backgroundImage = undefined;
+}
+
 function deepRewriteWpStrings(value: unknown, rewriter: (s: string) => string): unknown {
   if (typeof value === 'string') return rewriter(value);
   if (Array.isArray(value)) return value.map((x) => deepRewriteWpStrings(x, rewriter));

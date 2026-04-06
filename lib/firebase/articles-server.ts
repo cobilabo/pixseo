@@ -14,6 +14,7 @@ import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 import { isPreviewMode } from './media-tenant-helper';
 import {
   articleMayContainWpUploads,
+  clearStaleAyumiWpWriterMedia,
   rewriteArticleWpMediaUrls,
   rewriteWriterWpMediaUrls,
   writerMayContainWpUploads,
@@ -677,13 +678,13 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
     // キャッシュから取得（WP 直 URL はマップ拡張後も効かせるため、ヒット時も置換を試す）
     const cached = cacheManager.get<Writer>(cacheKey, CACHE_TTL.LONG);
     if (cached) {
-      if (writerMayContainWpUploads(cached)) {
-        const w = { ...cached };
+      const w = { ...cached };
+      if (writerMayContainWpUploads(w)) {
         const map = await getWpMediaUrlMap();
         if (map.size > 0) rewriteWriterWpMediaUrls(w, map);
-        return w;
       }
-      return cached;
+      clearStaleAyumiWpWriterMedia(w);
+      return w;
     }
     
     // Firestoreから取得
@@ -720,7 +721,8 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
       const map = await getWpMediaUrlMap();
       if (map.size > 0) rewriteWriterWpMediaUrls(writer, map);
     }
-    
+    clearStaleAyumiWpWriterMedia(writer);
+
     // キャッシュに保存
     cacheManager.set(cacheKey, writer);
     

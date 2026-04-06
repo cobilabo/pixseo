@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { shouldLoadImageWithoutOptimizer } from '@/lib/next-image-allowed-hosts';
 import { Block, ContentBlockConfig, CTAButtonConfig } from '@/types/block';
 import { getFilterStyle } from '@/lib/utils/filter-helpers';
-import { adminDb } from '@/lib/firebase/admin';
+import { getWriterServer } from '@/lib/firebase/articles-server';
 
 interface ContentBlockProps {
   block: Block;
@@ -24,14 +24,13 @@ interface Writer {
 
 async function getWriter(writerId: string): Promise<Writer | null> {
   try {
-    const doc = await adminDb.collection('writers').doc(writerId).get();
-    if (!doc.exists) return null;
-    const data = doc.data();
-    return { 
-      id: doc.id, 
-      handleName: data?.handleName || '',
-      icon: (data?.icon || data?.iconUrl || undefined) as string | undefined,
-    } as Writer;
+    const w = await getWriterServer(writerId);
+    if (!w) return null;
+    return {
+      id: w.id,
+      handleName: w.handleName || '',
+      icon: w.icon,
+    };
   } catch (error) {
     console.error('Error fetching writer:', error);
     return null;
