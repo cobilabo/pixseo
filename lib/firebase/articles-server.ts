@@ -14,7 +14,6 @@ import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache-manager';
 import { isPreviewMode } from './media-tenant-helper';
 import {
   articleMayContainWpUploads,
-  clearStaleAyumiWpWriterMedia,
   rewriteArticleWpMediaUrls,
   rewriteWriterWpMediaUrls,
   writerMayContainWpUploads,
@@ -683,7 +682,6 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
         const map = await getWpMediaUrlMap();
         if (map.size > 0) rewriteWriterWpMediaUrls(w, map);
       }
-      clearStaleAyumiWpWriterMedia(w);
       return w;
     }
     
@@ -721,7 +719,6 @@ export const getWriterServer = async (writerId: string): Promise<Writer | null> 
       const map = await getWpMediaUrlMap();
       if (map.size > 0) rewriteWriterWpMediaUrls(writer, map);
     }
-    clearStaleAyumiWpWriterMedia(writer);
 
     // キャッシュに保存
     cacheManager.set(cacheKey, writer);
