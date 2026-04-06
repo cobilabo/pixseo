@@ -90,6 +90,27 @@ function checkTriggers(script: ScriptItem, pathname: string): boolean {
   return triggers.some(trigger => checkSingleTrigger(trigger, normalizedPath, pathname));
 }
 
+/** BOM と先頭の HTML コメント（GTM 等でよくある）を除く */
+function stripLeadingHtmlNoise(code: string): string {
+  let s = code.trim();
+  if (s.charCodeAt(0) === 0xfeff) {
+    s = s.slice(1).trim();
+  }
+  for (let i = 0; i < 30; i++) {
+    const next = s.replace(/^\s*<!--[\s\S]*?-->\s*/, '').trim();
+    if (next === s) break;
+    s = next;
+  }
+  return s;
+}
+
+/** 先頭が <script になるよう、手前のマークアップを捨てる */
+function trimToFirstScriptOpen(code: string): string {
+  const idx = code.search(/<script\b/i);
+  if (idx <= 0) return code;
+  return code.slice(idx);
+}
+
 /**
  * スクリプト挿入コンポーネント
  * テーマ設定で設定されたスクリプトを動的に挿入する
@@ -154,9 +175,9 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return true;
   });
 
-  // スクリプトコードが<script>タグを含むかチェック
+  // スクリプトコードが <script で始まるか（属性・閉じタグ有無を考慮）
   const isScriptTag = (code: string): boolean => {
-    return code.trim().toLowerCase().startsWith('<script');
+    return /^\s*<script\b/i.test(code);
   };
 
   // <script>タグからsrcを抽出
@@ -187,10 +208,10 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return attrs;
   };
 
-  // <script>タグの中身を抽出
-  const extractInlineScript = (code: string): string => {
+  // <script>…</script> の内側のみ（閉じタグが無い場合は null。全文を JS として渡さない）
+  const extractInlineScript = (code: string): string | null => {
     const match = code.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
-    return match ? match[1].trim() : code;
+    return match ? match[1].trim() : null;
   };
 
   // スクリプトコードを取得（position=bothの場合は別々のコードを使用）
@@ -212,18 +233,19 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
   return (
     <>
       {filteredScripts.map((script) => {
-        const code = getScriptCode(script).trim();
-        
-        // コードが空の場合はスキップ
+        const raw = getScriptCode(script).trim();
+        if (!raw) return null;
+
+        let code = stripLeadingHtmlNoise(raw);
+        code = trimToFirstScriptOpen(code);
         if (!code) return null;
-        
+
         const strategy = getStrategy();
-        
+
         // <script src="...">形式の外部スクリプト
         if (isScriptTag(code)) {
           const src = extractSrc(code);
           if (src) {
-            // data-* などの追加属性を抽出
             const additionalAttrs = extractAttributes(code);
             return (
               <Script
@@ -235,8 +257,7 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
               />
             );
           }
-          
-          // インラインスクリプト（<script>タグ内のコード）
+
           const inlineCode = extractInlineScript(code);
           if (inlineCode) {
             return (
@@ -248,9 +269,29 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
               />
             );
           }
+
+          if (/^\s*</.test(code)) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(
+                '[ScriptInjector] スキップ: script タグの解釈に失敗しました（src または閉じタグ付きインラインを確認）',
+                script.id
+              );
+            }
+            return null;
+          }
         }
-        
-        // 純粋なJavaScriptコード
+
+        // 先頭が「タグ」なのに script として解釈できない → HTML を JS として実行しない（Unexpected token '<' 防止）
+        if (/^\s*</.test(code)) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(
+              '[ScriptInjector] スキップ: script タグとして解釈できないマークアップです（テーマのスクリプト設定を確認してください）',
+              script.id
+            );
+          }
+          return null;
+        }
+
         return (
           <Script
             key={`${script.id}-${position}`}
