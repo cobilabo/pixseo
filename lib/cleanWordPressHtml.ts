@@ -115,24 +115,49 @@ export function cleanWordPressHtml(html: string): string {
   return cleaned;
 }
 
+/**
+ * 本文中に残った目次プレースホルダー（エディタ装飾チャンクを含む可能性あり）を
+ * `<div class="toc-placeholder" data-toc="auto"></div>` 一本のシンプルな形に正規化する。
+ *
+ * 旧実装は class="toc-placeholder"（閉じクォート込み）でしか検出できず、
+ * class="toc-placeholder not-prose" のようにクラスが追加されるとすり抜けて
+ * エディタの装飾 HTML が Firestore に保存されていた。
+ * ここでは「toc-placeholder をクラストークンに含む div」または「data-toc 属性を持つ div」の
+ * どちらでもヒットするようにし、深さカウントで対応する </div> を検出して差し替える。
+ */
 function normalizeTocPlaceholder(html: string): string {
-  const marker = 'class="toc-placeholder"';
   const simple = '<div class="toc-placeholder" data-toc="auto"></div>';
+  // 開始タグ全体（属性を含む）を捕捉する。属性値に `>` は含めない想定。
+  const openTagRegex = /<div\b[^>]*>/gi;
   let result = html;
   let searchStart = 0;
 
   while (true) {
-    const markerPos = result.indexOf(marker, searchStart);
-    if (markerPos === -1) break;
+    openTagRegex.lastIndex = searchStart;
+    const openMatch = openTagRegex.exec(result);
+    if (!openMatch) break;
 
-    const divStart = result.lastIndexOf('<div', markerPos);
-    if (divStart === -1) { searchStart = markerPos + marker.length; continue; }
+    const openTag = openMatch[0];
+    const openTagStart = openMatch.index;
+    const openTagEnd = openTagStart + openTag.length;
 
-    const openTagEnd = result.indexOf('>', markerPos);
-    if (openTagEnd === -1) break;
+    // 目次プレースホルダー（外側コンテナ）の判定：
+    //   - class のどこかに `toc-placeholder`（単語境界）
+    //   - もしくは data-toc="auto" / data-toc 属性を持つ
+    const classMatch = /class\s*=\s*"([^"]*)"/i.exec(openTag);
+    const classTokens = classMatch ? classMatch[1].split(/\s+/) : [];
+    const isTocContainer =
+      classTokens.includes('toc-placeholder') || /\sdata-toc\s*=/.test(` ${openTag}`);
 
+    if (!isTocContainer) {
+      searchStart = openTagEnd;
+      continue;
+    }
+
+    // 対応する閉じタグを深さカウントで探す
     let depth = 1;
-    let pos = openTagEnd + 1;
+    let pos = openTagEnd;
+    let matched = false;
 
     while (depth > 0 && pos < result.length) {
       const nextOpen = result.indexOf('<div', pos);
@@ -140,23 +165,36 @@ function normalizeTocPlaceholder(html: string): string {
       if (nextClose === -1) break;
 
       if (nextOpen !== -1 && nextOpen < nextClose) {
+        const innerTagEnd = result.indexOf('>', nextOpen);
+        if (innerTagEnd === -1) break;
         depth++;
-        pos = result.indexOf('>', nextOpen) + 1;
+        pos = innerTagEnd + 1;
       } else {
         depth--;
         if (depth === 0) {
-          const endPos = nextClose + 6;
-          result = result.substring(0, divStart) + simple + result.substring(endPos);
-          searchStart = divStart + simple.length;
+          const endPos = nextClose + '</div>'.length;
+          result = result.substring(0, openTagStart) + simple + result.substring(endPos);
+          searchStart = openTagStart + simple.length;
+          matched = true;
           break;
         }
-        pos = nextClose + 6;
+        pos = nextClose + '</div>'.length;
       }
     }
 
-    if (depth !== 0) break;
+    if (!matched) {
+      searchStart = openTagEnd;
+    }
   }
 
   return result;
+}
+
+/**
+ * 外部（ArticleContent など）からも同じ正規化を呼び出せるよう公開するヘルパ。
+ */
+export function normalizeInlineTocPlaceholder(html: string): string {
+  if (!html) return html ?? '';
+  return normalizeTocPlaceholder(html);
 }
 

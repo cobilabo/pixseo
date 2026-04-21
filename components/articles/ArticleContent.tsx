@@ -9,7 +9,8 @@ import BlogCard from './BlogCard';
 import { TableOfContentsItem } from '@/types/article';
 import { InternalLinkStyle } from '@/types/theme';
 import { Lang } from '@/types/lang';
-import InlineTableOfContents from './InlineTableOfContents';
+import TableOfContents from './TableOfContents';
+import { normalizeInlineTocPlaceholder } from '@/lib/cleanWordPressHtml';
 import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
 import { htmlAttribsToReactProps } from '@/lib/html-attribs-to-react';
 
@@ -19,6 +20,31 @@ interface ArticleContentProps {
   internalLinkStyle?: InternalLinkStyle;
   lang?: Lang;
   siteHost?: string;
+  /** 目次プレースホルダーを記事本文中に差し替える際にヘッダに表示するファビコン */
+  faviconUrl?: string;
+}
+
+/**
+ * 本文 HTML の見出し <h2>/<h3>/<h4> に、目次と一致する id 属性を順番に注入する。
+ * dangerouslySetInnerHTML 経由で描画する分岐では html-react-parser の置換が走らないため、
+ * ID を事前に埋め込む必要がある。既に id が付与された見出しは尊重しスキップする。
+ */
+function injectHeadingIds(
+  html: string,
+  toc: TableOfContentsItem[] | undefined,
+): string {
+  if (!html) return html;
+  const tocItems = Array.isArray(toc) ? toc : [];
+  let headingIndex = 0;
+  return html.replace(/<(h2|h3|h4)\b([^>]*)>/gi, (match, tag, attrs) => {
+    const currentIndex = headingIndex++;
+    if (/\bid\s*=\s*["']/.test(attrs)) {
+      return match;
+    }
+    const tocItem = tocItems[currentIndex];
+    const id = tocItem?.id || `heading-${currentIndex}`;
+    return `<${tag}${attrs} id="${id}">`;
+  });
 }
 
 /**
@@ -105,7 +131,8 @@ export default function ArticleContent({
   tableOfContents, 
   internalLinkStyle = 'text',
   lang = 'ja',
-  siteHost = ''
+  siteHost = '',
+  faviconUrl,
 }: ArticleContentProps) {
   const [mounted, setMounted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -114,22 +141,30 @@ export default function ArticleContent({
   const { processedContent, contentSegments } = useMemo(() => {
     // HTMLブロックを実際のHTMLコンテンツに変換
     const htmlBlockProcessed = processHtmlBlocks(content);
-    
+
+    // エディタの目次プレースホルダー（装飾チャンク含む）をシンプルなマーカーに正規化
+    const tocNormalized = normalizeInlineTocPlaceholder(htmlBlockProcessed);
+
     // ショートコードを処理
-    const shortcodeProcessed = ShortCodeRenderer.process(htmlBlockProcessed);
-    
+    const shortcodeProcessed = ShortCodeRenderer.process(tocNormalized);
+
     // 内部リンクをブログカードプレースホルダーに変換（ブログカード形式の場合のみ）
-    const [processed, urls] = processInternalLinksForBlogCard(
-      shortcodeProcessed, 
-      internalLinkStyle, 
+    const [processed] = processInternalLinksForBlogCard(
+      shortcodeProcessed,
+      internalLinkStyle,
       siteHost
     );
-    
-    // コンテンツをセグメントに分割（BlogCard用）
-    const segments = splitContentByPlaceholders(processed);
-    
-    return { processedContent: processed, contentSegments: segments };
-  }, [content, internalLinkStyle, siteHost]);
+
+    // dangerouslySetInnerHTML ルートでも TOC クリック→スクロールが効くよう、
+    // 事前に見出しへ id 属性を注入しておく。html-react-parser ルートでは
+    // replace() が id を付けるが、先に入っていてもそちらが尊重される。
+    const withHeadingIds = injectHeadingIds(processed, tableOfContents);
+
+    // コンテンツをセグメントに分割（BlogCard と 目次プレースホルダー）
+    const segments = splitContentByPlaceholders(withHeadingIds);
+
+    return { processedContent: withHeadingIds, contentSegments: segments };
+  }, [content, internalLinkStyle, siteHost, tableOfContents]);
 
   useEffect(() => {
     setMounted(true);
@@ -289,11 +324,16 @@ export default function ArticleContent({
         );
       }
 
-      // 目次プレースホルダーをインライン目次コンポーネントに置換
-      if (domNode.name === 'div' && domNode.attribs?.class?.includes('toc-placeholder')) {
+      // 目次プレースホルダーを目次コンポーネントに置換
+      if (
+        domNode.name === 'div' &&
+        (domNode.attribs?.class?.split(/\s+/).includes('toc-placeholder') ||
+          domNode.attribs?.['data-toc'] === 'auto')
+      ) {
         return (
-          <InlineTableOfContents
+          <TableOfContents
             items={Array.isArray(tableOfContents) ? tableOfContents : []}
+            faviconUrl={faviconUrl}
             lang={lang}
           />
         );
@@ -362,56 +402,51 @@ export default function ArticleContent({
   const hasScriptTag = /<script[\s\S]*?>[\s\S]*?<\/script>/i.test(processedContent);
   const hasGoogleMapsIframe = /<iframe[\s\S]*?src=["'][^"']*(?:maps\.google\.com|google\.com\/maps)[^"']*["'][\s\S]*?>/i.test(processedContent);
   const hasInstagramEmbed = processedContent.includes('instagram-media');
-  
-  // ブログカードを含むセグメントをレンダリング
+
   const hasBlogCards = contentSegments.some(seg => seg.type === 'blogcard');
-  
-  // セグメントベースのレンダリング（ブログカードがある場合）
-  if (hasBlogCards && (hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed)) {
-    return (
-      <div ref={contentRef} className="prose prose-lg max-w-none article-content">
-        {contentSegments.map((segment, index) => {
-          if (segment.type === 'blogcard') {
-            return <BlogCard key={`blogcard-${index}`} href={segment.content} lang={lang} />;
-          }
-          return (
-            <div 
-              key={`segment-${index}`}
-              dangerouslySetInnerHTML={{ __html: segment.content }}
-            />
-          );
-        })}
-      </div>
-    );
-  }
-  
-  // スクリプトタグ、Googleマップのiframe、またはInstagram埋め込みが含まれている場合は、
-  // dangerouslySetInnerHTMLで直接挿入（これにより、スクリプトが正常に動作する）
-  if (hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed) {
-    return (
-      <div 
-        ref={contentRef}
-        className="prose prose-lg max-w-none article-content"
-        dangerouslySetInnerHTML={{ __html: processedContent }}
-      />
-    );
-  }
+  const hasTocPlaceholder = contentSegments.some(seg => seg.type === 'toc');
+  const mustBypassParser = hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed;
+  const mustSegment = hasBlogCards || hasTocPlaceholder || mustBypassParser;
 
-  // ブログカードを含むセグメントをレンダリング（スクリプトなしの場合）
-  if (hasBlogCards) {
+  const tocItems = Array.isArray(tableOfContents) ? tableOfContents : [];
+
+  const renderSegment = (segment: ContentSegment, index: number) => {
+    if (segment.type === 'blogcard') {
+      return <BlogCard key={`blogcard-${index}`} href={segment.content} lang={lang} />;
+    }
+    if (segment.type === 'toc') {
+      return (
+        <TableOfContents
+          key={`toc-${index}`}
+          items={tocItems}
+          faviconUrl={faviconUrl}
+          lang={lang}
+        />
+      );
+    }
+    // html セグメント：スクリプトや埋め込みがある場合は dangerouslySetInnerHTML、
+    // そうでなければ html-react-parser で React コンポーネントに変換する。
+    if (mustBypassParser) {
+      return (
+        <div
+          key={`segment-${index}`}
+          dangerouslySetInnerHTML={{ __html: segment.content }}
+        />
+      );
+    }
+    return <span key={`segment-${index}`}>{parse(segment.content, options)}</span>;
+  };
+
+  // セグメント分割が必要なケース（BlogCard / 目次プレースホルダー / 埋め込み）
+  if (mustSegment) {
     return (
       <div ref={contentRef} className="prose prose-lg max-w-none article-content">
-        {contentSegments.map((segment, index) => {
-          if (segment.type === 'blogcard') {
-            return <BlogCard key={`blogcard-${index}`} href={segment.content} lang={lang} />;
-          }
-          return <span key={`segment-${index}`}>{parse(segment.content, options)}</span>;
-        })}
+        {contentSegments.map(renderSegment)}
       </div>
     );
   }
 
-  // スクリプトタグや埋め込みコンテンツがない場合は、通常のパース処理
+  // 通常のパース処理
   return (
     <div ref={contentRef} className="prose prose-lg max-w-none article-content">
       {parse(processedContent, options)}
@@ -790,46 +825,46 @@ function extractYouTubeId(url: string): string | null {
  * @returns 内部記事リンクの場合true
  */
 interface ContentSegment {
-  type: 'html' | 'blogcard';
-  content: string; // HTML content or href for blogcard
+  type: 'html' | 'blogcard' | 'toc';
+  /** html: HTML 文字列 / blogcard: href / toc: 空文字 */
+  content: string;
 }
 
 /**
- * コンテンツをプレースホルダーで分割
+ * コンテンツを「blogcard プレースホルダー」と「目次プレースホルダー」で分割する。
+ * ※ 事前に normalizeInlineTocPlaceholder で目次は `TOC_MARKER_HTML` の形に揃えてあることを前提とする。
  */
 function splitContentByPlaceholders(html: string): ContentSegment[] {
   const segments: ContentSegment[] = [];
-  const placeholderRegex = /<div class="blogcard-placeholder" data-href="([^"]+)"><\/div>/g;
-  
+  // blogcard / toc のどちらかにマッチする regex を 1 本にまとめて左から順に処理する。
+  const combinedRegex = new RegExp(
+    '<div\\s+class="blogcard-placeholder"\\s+data-href="([^"]+)"\\s*></div>' +
+      '|' +
+      '<div\\s+class="toc-placeholder"\\s+data-toc="auto"\\s*></div>',
+    'gi',
+  );
+
   let lastIndex = 0;
-  let match;
-  
-  while ((match = placeholderRegex.exec(html)) !== null) {
-    // プレースホルダー前のHTML
+  let match: RegExpExecArray | null;
+
+  while ((match = combinedRegex.exec(html)) !== null) {
     if (match.index > lastIndex) {
-      segments.push({
-        type: 'html',
-        content: html.substring(lastIndex, match.index),
-      });
+      segments.push({ type: 'html', content: html.substring(lastIndex, match.index) });
     }
-    
-    // ブログカード
-    segments.push({
-      type: 'blogcard',
-      content: decodeURIComponent(match[1]),
-    });
-    
+
+    if (match[1] !== undefined) {
+      segments.push({ type: 'blogcard', content: decodeURIComponent(match[1]) });
+    } else {
+      segments.push({ type: 'toc', content: '' });
+    }
+
     lastIndex = match.index + match[0].length;
   }
-  
-  // 残りのHTML
+
   if (lastIndex < html.length) {
-    segments.push({
-      type: 'html',
-      content: html.substring(lastIndex),
-    });
+    segments.push({ type: 'html', content: html.substring(lastIndex) });
   }
-  
+
   return segments;
 }
 

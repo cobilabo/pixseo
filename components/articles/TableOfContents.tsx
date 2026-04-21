@@ -14,7 +14,8 @@ interface TableOfContentsProps {
 
 export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  // デフォルトで開いた状態にする（記事間で開閉挙動を統一）
+  const [isOpen, setIsOpen] = useState<boolean>(true);
 
   useEffect(() => {
     // 配列チェック

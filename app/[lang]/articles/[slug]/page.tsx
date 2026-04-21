@@ -472,6 +472,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 internalLinkStyle={theme.articleSettings?.internalLinkStyle || 'text'}
                 lang={lang}
                 siteHost={siteHost}
+                faviconUrl={rawSiteInfo.faviconUrl}
               />
             </article>
 
