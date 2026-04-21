@@ -605,6 +605,11 @@ if (typeof window !== 'undefined') {
     }
     /* 目次カード（TableOfContents）のスタイルを記事本文 CSS から保護する
        .article-content 内に描画されたときに h2/img/ul/li の装飾が漏れないようにリセット */
+    .article-content .toc-card,
+    .article-content .toc-card * {
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+    }
     .article-content .toc-card h2 {
       font-size: 1.125rem !important;
       line-height: 1.75rem !important;
@@ -615,6 +620,7 @@ if (typeof window !== 'undefined') {
       color: inherit !important;
       position: static !important;
       letter-spacing: normal !important;
+      white-space: nowrap !important;
     }
     .article-content .toc-card h2::before,
     .article-content .toc-card h2::after {
