@@ -90,12 +90,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = localizePage(rawPage, lang);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
 
-  const title = `${page.title} | ${siteInfo.name}`;
+  // 完全白紙モードのときは、タイトル欄の内容をそのままタイトルとして使用する
+  // （通常モードでは「ページタイトル | サイト名」の形で表示する）
+  const isBlankMode = (rawPage.layoutMode || 'default') === 'blank';
+  const title = isBlankMode ? page.title : `${page.title} | ${siteInfo.name}`;
   const description = page.metaDescription || page.excerpt || '';
+
+  // ページ個別のファビコンが設定されていればそれを優先、なければサイト共通のファビコン
+  const resolvedFaviconUrl = rawPage.faviconUrl || rawSiteInfo.faviconUrl;
 
   return {
     title,
     description,
+    icons: resolvedFaviconUrl ? {
+      icon: resolvedFaviconUrl,
+      apple: resolvedFaviconUrl,
+    } : undefined,
     alternates: {
       canonical: `https://${host}/${lang}/${params.slug}`,
       languages: {

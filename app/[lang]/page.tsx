@@ -90,19 +90,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const rawSiteInfo = await getSiteInfo(mediaId);
+  const [rawSiteInfo, rawHomePage] = await Promise.all([
+    getSiteInfo(mediaId),
+    getHomePage(mediaId),
+  ]);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
-  
+  const homePage = rawHomePage ? localizePage(rawHomePage, lang) : null;
+
+  // 完全白紙モードでホームページの title が入力されている場合は、
+  // サイト名ではなくページタイトルをそのままタイトルとして使用する
+  const isHomeBlankMode = (rawHomePage?.layoutMode || 'default') === 'blank';
+  const pageTitle = isHomeBlankMode && homePage?.title ? homePage.title : siteInfo.name;
+
+  // ホームページ個別にファビコンが設定されていればそれを優先、なければサイト共通のファビコン
+  const resolvedFaviconUrl = rawHomePage?.faviconUrl || siteInfo.faviconUrl;
+
   return {
-    title: siteInfo.name,
+    title: pageTitle,
     description: siteInfo.description || '',
     robots: {
       index: siteInfo.allowIndexing,
       follow: siteInfo.allowIndexing,
     },
-    icons: siteInfo.faviconUrl ? {
-      icon: siteInfo.faviconUrl,
-      apple: siteInfo.faviconUrl,
+    icons: resolvedFaviconUrl ? {
+      icon: resolvedFaviconUrl,
+      apple: resolvedFaviconUrl,
     } : undefined,
     alternates: {
       canonical: `https://${host}/${lang}`,
@@ -115,7 +127,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     },
     openGraph: {
-      title: siteInfo.name,
+      title: pageTitle,
       description: siteInfo.description || '',
       locale: LANG_REGIONS[lang],
       alternateLocale: SUPPORTED_LANGS.filter(l => l !== lang).map(l => LANG_REGIONS[l]),

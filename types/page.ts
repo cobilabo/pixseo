@@ -65,6 +65,9 @@ export interface Page {
   layoutMode?: LayoutMode;   // レイアウトモード（default: 通常, blank: 完全白紙）
   showGlobalNav?: boolean;   // グローバルナビゲーション表示（カテゴリーバー）
   showSidebar?: boolean;     // サイドバー表示
+
+  // ページ個別のファビコン（設定されている場合はサイト設定のファビコンより優先される）
+  faviconUrl?: string;
   
   // トップページ設定
   isHomePage?: boolean;      // トップページとして設定（slug='home'と連動）

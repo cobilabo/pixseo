@@ -15,6 +15,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
+import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 
 export default function NewPagePage() {
   const router = useRouter();
@@ -47,7 +48,9 @@ export default function NewPagePage() {
     showGlobalNav: false,
     showSidebar: false,
     isHomePage: false,
+    faviconUrl: '',
   });
+  const [showFaviconLibrary, setShowFaviconLibrary] = useState(false);
   
   // トップページ設定関連
   const [showHomePageDialog, setShowHomePageDialog] = useState(false);
@@ -632,6 +635,60 @@ export default function NewPagePage() {
                 rows={8}
               />
 
+              {/* ページ専用ファビコン */}
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">ページ専用ファビコン</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    設定した場合、このページのみサイト共通のファビコンではなくこの画像が表示されます。メディア管理に登録済みの画像から選択してください。
+                  </p>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <div className="relative w-16 h-16 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
+                    {formData.faviconUrl ? (
+                      <Image
+                        src={formData.faviconUrl}
+                        alt="Favicon Preview"
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <FloatingInput
+                      label="ファビコンURL"
+                      value={formData.faviconUrl}
+                      onChange={(value) => setFormData({ ...formData, faviconUrl: value })}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowFaviconLibrary(true)}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 text-sm"
+                      >
+                        メディアライブラリから選択
+                      </button>
+                      {formData.faviconUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, faviconUrl: '' })}
+                          className="px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 text-sm"
+                        >
+                          クリア
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* メタタイトル */}
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -839,6 +896,14 @@ export default function NewPagePage() {
             </div>
           </div>
         )}
+
+        {/* ファビコン用メディアライブラリモーダル */}
+        <MediaLibraryModal
+          isOpen={showFaviconLibrary}
+          onClose={() => setShowFaviconLibrary(false)}
+          onSelect={(url) => setFormData(prev => ({ ...prev, faviconUrl: url }))}
+          filterType="image"
+        />
       </AdminLayout>
     </AuthGuard>
   );
