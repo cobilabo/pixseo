@@ -603,7 +603,42 @@ if (typeof window !== 'undefined') {
       word-break: break-all !important;
       overflow-wrap: break-word !important;
     }
-    /* インライン目次のスタイルリセット */
+    /* 目次カード（TableOfContents）のスタイルを記事本文 CSS から保護する
+       .article-content 内に描画されたときに h2/img/ul/li の装飾が漏れないようにリセット */
+    .article-content .toc-card h2 {
+      font-size: 1.125rem !important;
+      line-height: 1.75rem !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-bottom: none !important;
+      color: inherit !important;
+      position: static !important;
+      letter-spacing: normal !important;
+    }
+    .article-content .toc-card h2::before,
+    .article-content .toc-card h2::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+      border: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    .article-content .toc-card img {
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    .article-content .toc-card ul,
+    .article-content .toc-card ol {
+      margin: 0 !important;
+      padding: 0 !important;
+      list-style: none !important;
+      counter-reset: none !important;
+    }
+    /* リスト項目の枠線・カウンタ装飾を打ち消し */
+    .article-content .toc-card li,
     .article-content .toc-inline li {
       border: none !important;
       border-radius: 0 !important;
@@ -613,9 +648,17 @@ if (typeof window !== 'undefined') {
       font-size: inherit !important;
       counter-increment: none !important;
     }
+    .article-content .toc-card li::before,
+    .article-content .toc-card li::after,
     .article-content .toc-inline li::before {
       display: none !important;
       content: none !important;
+    }
+    /* H3 レベル項目の点線区切りだけは TableOfContents 側で付けている border-b を残す */
+    .article-content .toc-card li.border-b {
+      border-bottom: 1px solid #e5e7eb !important;
+      padding-bottom: 0.5rem !important;
+      margin-bottom: 0.5rem !important;
     }
     /* BlogCard専用スタイルリセット */
     .article-content .blogcard-wrapper {
