@@ -604,26 +604,31 @@ if (typeof window !== 'undefined') {
       overflow-wrap: break-word !important;
     }
     /* 目次カード（TableOfContents）のスタイルを記事本文 CSS から保護する
-       .article-content 内に描画されたときに h2/img/ul/li の装飾が漏れないようにリセット */
-    .article-content .toc-card,
-    .article-content .toc-card * {
+       .article-content 内に描画されたときに h2/img/ul/li の装飾が漏れないようにリセット。
+       ※ テーマ側 (.theme-furatto-default article .article-content h2) との特異度比較で
+          勝てるようクラス重ね書き (.toc-card.toc-card) でスコアを底上げしている */
+    .article-content .toc-card.toc-card,
+    .article-content .toc-card.toc-card * {
       word-break: normal !important;
       overflow-wrap: normal !important;
     }
-    .article-content .toc-card h2 {
+    .article-content .toc-card.toc-card h2 {
       font-size: 1.125rem !important;
       line-height: 1.75rem !important;
       margin: 0 !important;
       padding: 0 !important;
       border: none !important;
+      border-top: none !important;
+      border-right: none !important;
       border-bottom: none !important;
+      border-left: none !important;
       color: inherit !important;
       position: static !important;
       letter-spacing: normal !important;
       white-space: nowrap !important;
     }
-    .article-content .toc-card h2::before,
-    .article-content .toc-card h2::after {
+    .article-content .toc-card.toc-card h2::before,
+    .article-content .toc-card.toc-card h2::after {
       display: none !important;
       content: none !important;
       background: none !important;
@@ -631,37 +636,49 @@ if (typeof window !== 'undefined') {
       width: 0 !important;
       height: 0 !important;
     }
-    .article-content .toc-card img {
+    .article-content .toc-card.toc-card img {
       margin: 0 !important;
       padding: 0 !important;
       border-radius: 0 !important;
+      box-shadow: none !important;
     }
-    .article-content .toc-card ul,
-    .article-content .toc-card ol {
+    .article-content .toc-card.toc-card ul,
+    .article-content .toc-card.toc-card ol {
       margin: 0 !important;
       padding: 0 !important;
       list-style: none !important;
       counter-reset: none !important;
     }
     /* リスト項目の枠線・カウンタ装飾を打ち消し */
-    .article-content .toc-card li,
+    .article-content .toc-card.toc-card li,
     .article-content .toc-inline li {
       border: none !important;
       border-radius: 0 !important;
       padding: 0 !important;
       margin-bottom: 0 !important;
       background: transparent !important;
-      font-size: inherit !important;
       counter-increment: none !important;
     }
-    .article-content .toc-card li::before,
-    .article-content .toc-card li::after,
+    /* Tailwind の levelStyles (text-sm / text-xs) を固定ピクセル値で適用し、
+       .article-content li の font-size: 0.9em が目次に漏れないようにする */
+    .article-content .toc-card.toc-card li.text-sm,
+    .article-content .toc-card.toc-card li.text-sm * {
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+    }
+    .article-content .toc-card.toc-card li.text-xs,
+    .article-content .toc-card.toc-card li.text-xs * {
+      font-size: 0.75rem !important;
+      line-height: 1rem !important;
+    }
+    .article-content .toc-card.toc-card li::before,
+    .article-content .toc-card.toc-card li::after,
     .article-content .toc-inline li::before {
       display: none !important;
       content: none !important;
     }
     /* H3 レベル項目の点線区切りだけは TableOfContents 側で付けている border-b を残す */
-    .article-content .toc-card li.border-b {
+    .article-content .toc-card.toc-card li.border-b {
       border-bottom: 1px solid #e5e7eb !important;
       padding-bottom: 0.5rem !important;
       margin-bottom: 0.5rem !important;
