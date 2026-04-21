@@ -66,8 +66,8 @@ interface PageProps {
   };
 }
 
-// ISR: 5分ごとに再生成
-export const revalidate = 600;
+// ISR: 30分ごとに再生成（記事更新時は revalidatePath で即時反映）
+export const revalidate = 1800;
 
 // 全言語パスを事前生成
 export async function generateStaticParams() {

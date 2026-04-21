@@ -6,6 +6,7 @@ import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sy
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
+import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -63,6 +64,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     // 📝 日本語版を即座に保存
     await articleRef.update(updateData);
+
+    // サーバーサイドメモリキャッシュと Vercel ISR キャッシュを即時無効化
+    const articleSlug: string | undefined = updateData.slug || existingData?.slug;
+    if (articleSlug) {
+      cacheManager.deletePattern(`^article:${articleSlug}`);
+    }
+    cacheManager.deletePattern('^articles');
+    cacheManager.deletePattern('^sliderArticles');
+    cacheManager.deletePattern('^related');
+    cacheManager.deletePattern('^recommendedArticles');
+    cacheManager.deletePattern('^sitemap-article-slugs');
+    cacheManager.deletePattern('^adjacent');
+    revalidateArticle(articleSlug || null);
     // 🎯 想定読者を履歴に追加
     if (updateData.targetAudience && (existingData?.mediaId || updateData.mediaId)) {
       try {

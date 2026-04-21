@@ -36,7 +36,8 @@ interface PageProps {
   };
 }
 
-export const revalidate = 300;
+// ISR: 30分ごとに再生成（カスタムページ更新時は revalidatePath で即時反映）
+export const revalidate = 1800;
 
 // 固定ページ取得
 async function getPageBySlug(slug: string, mediaId: string) {

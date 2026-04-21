@@ -32,8 +32,8 @@ interface PageProps {
   };
 }
 
-// ISR: 60秒ごとに再生成
-export const revalidate = 300;
+// ISR: 10分ごとに再生成（記事更新時は revalidatePath で即時反映）
+export const revalidate = 600;
 
 // 動的にメタデータを生成
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

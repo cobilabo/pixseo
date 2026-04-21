@@ -5,6 +5,7 @@ import { syncArticleToAlgolia } from '@/lib/algolia/sync';
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
+import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -205,12 +206,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // サーバーサイドメモリキャッシュと Vercel ISR キャッシュを即時無効化
+    cacheManager.deletePattern('^articles');
+    cacheManager.deletePattern('^sliderArticles');
+    cacheManager.deletePattern('^recommendedArticles');
+    cacheManager.deletePattern('^sitemap-article-slugs');
+    revalidateArticle((articleData.slug as string) || null);
+
     // ⚡ レスポンスを返す
     return NextResponse.json(
-      { 
-        id: docRef.id, 
+      {
+        id: docRef.id,
         message: articleData.isPublished ? '保存しました。翻訳とAlgolia登録が完了しました。' : '保存しました。'
-      }, 
+      },
       { status: 201 }
     );
   } catch (error) {

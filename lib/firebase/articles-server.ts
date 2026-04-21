@@ -833,6 +833,24 @@ export const getAdjacentArticlesServer = async (
   mediaId?: string
 ): Promise<{ previousArticle: Article | null; nextArticle: Article | null }> => {
   try {
+    // キャッシュキー: 基準になる記事 ID + publishedAt + mediaId
+    // publishedAt が変わらない限り前後関係は不変なので cacheManager で長めにキャッシュして
+    // リクエストごとの Firestore 呼び出し（2 クエリ）を削減する
+    const publishedAtMs = currentArticle.publishedAt instanceof Date
+      ? currentArticle.publishedAt.getTime()
+      : 0;
+    const cacheKey = generateCacheKey(
+      'adjacent',
+      currentArticle.id,
+      publishedAtMs,
+      mediaId || 'all'
+    );
+    const cached = cacheManager.get<{ previousArticle: Article | null; nextArticle: Article | null }>(
+      cacheKey,
+      CACHE_TTL.MEDIUM
+    );
+    if (cached) return cached;
+
     // Date を Firestore Timestamp に変換
     const currentPublishedAt = currentArticle.publishedAt instanceof Date 
       ? admin.firestore.Timestamp.fromDate(currentArticle.publishedAt)
@@ -847,42 +865,44 @@ export const getAdjacentArticlesServer = async (
       .orderBy('publishedAt', 'desc')
       .limit(1);
     
+    let result: { previousArticle: Article | null; nextArticle: Article | null };
     if (mediaId) {
       // mediaId フィルタを追加する場合は、別のクエリを作成
-      const prevQuery = await selectAdjacentFields(
-        articlesRef
-          .where('isPublished', '==', true)
-          .where('mediaId', '==', mediaId)
-          .where('publishedAt', '<', currentPublishedAt)
-          .orderBy('publishedAt', 'desc')
-          .limit(1)
-      ).get();
-      
-      // 次の記事を取得
-      const nextQuery = await selectAdjacentFields(
-        articlesRef
-          .where('isPublished', '==', true)
-          .where('mediaId', '==', mediaId)
-          .where('publishedAt', '>', currentPublishedAt)
-          .orderBy('publishedAt', 'asc')
-          .limit(1)
-      ).get();
-      
-      return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
+      const [prevQuery, nextQuery] = await Promise.all([
+        selectAdjacentFields(
+          articlesRef
+            .where('isPublished', '==', true)
+            .where('mediaId', '==', mediaId)
+            .where('publishedAt', '<', currentPublishedAt)
+            .orderBy('publishedAt', 'desc')
+            .limit(1)
+        ).get(),
+        selectAdjacentFields(
+          articlesRef
+            .where('isPublished', '==', true)
+            .where('mediaId', '==', mediaId)
+            .where('publishedAt', '>', currentPublishedAt)
+            .orderBy('publishedAt', 'asc')
+            .limit(1)
+        ).get(),
+      ]);
+      result = await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     } else {
-      const prevQuery = await selectAdjacentFields(prevQueryBuilder).get();
-      
-      // 次の記事を取得
-      const nextQuery = await selectAdjacentFields(
-        articlesRef
-          .where('isPublished', '==', true)
-          .where('publishedAt', '>', currentPublishedAt)
-          .orderBy('publishedAt', 'asc')
-          .limit(1)
-      ).get();
-      
-      return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
+      const [prevQuery, nextQuery] = await Promise.all([
+        selectAdjacentFields(prevQueryBuilder).get(),
+        selectAdjacentFields(
+          articlesRef
+            .where('isPublished', '==', true)
+            .where('publishedAt', '>', currentPublishedAt)
+            .orderBy('publishedAt', 'asc')
+            .limit(1)
+        ).get(),
+      ]);
+      result = await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     }
+
+    cacheManager.set(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('[getAdjacentArticlesServer] Error fetching adjacent articles:', error);
     return { previousArticle: null, nextArticle: null };
@@ -1144,6 +1164,74 @@ export const getRecommendedArticlesServer = async (
     return articles;
   } catch (error) {
     console.error('[getRecommendedArticlesServer] Error:', error);
+    return [];
+  }
+};
+
+/**
+ * サイトマップ専用: slug と更新日時のみを取得する超軽量クエリ。
+ * 記事本文や多言語タイトルなどは一切取得せず、Firestore -> サーバーの
+ * 転送量を最小化する（数千件に対応できる軽量版）。
+ */
+export type SitemapArticleEntry = {
+  slug: string;
+  publishedAt: Date | null;
+  updatedAt: Date | null;
+};
+
+export const getArticleSlugsForSitemap = async (
+  options: {
+    limit?: number;
+    mediaId?: string;
+  } = {}
+): Promise<SitemapArticleEntry[]> => {
+  try {
+    const limitCount = options.limit ?? 5000;
+
+    const cacheKey = generateCacheKey('sitemap-article-slugs', options.mediaId, limitCount);
+    const cached = cacheManager.get<SitemapArticleEntry[]>(cacheKey, CACHE_TTL.LONG);
+    if (cached) return cached;
+
+    let q: admin.firestore.Query = adminDb
+      .collection('articles')
+      .where('isPublished', '==', true);
+
+    if (options.mediaId) {
+      q = q.where('mediaId', '==', options.mediaId);
+    }
+
+    // slug / publishedAt / updatedAt のみ取得して転送量を最小化
+    let snapshot: admin.firestore.QuerySnapshot;
+    try {
+      snapshot = await q
+        .orderBy('publishedAt', 'desc')
+        .limit(limitCount)
+        .select('slug', 'publishedAt', 'updatedAt')
+        .get();
+    } catch (indexError) {
+      console.warn('[getArticleSlugsForSitemap] orderBy index unavailable, using fallback:', indexError);
+      snapshot = await q.select('slug', 'publishedAt', 'updatedAt').get();
+    }
+
+    const now = new Date();
+    const entries: SitemapArticleEntry[] = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        const publishedAt = data.publishedAt ? convertTimestamp(data.publishedAt) : null;
+        const updatedAt = data.updatedAt ? convertTimestamp(data.updatedAt) : null;
+        return {
+          slug: (data.slug as string) || '',
+          publishedAt,
+          updatedAt,
+        };
+      })
+      .filter((e) => e.slug && (!e.publishedAt || e.publishedAt <= now))
+      .slice(0, limitCount);
+
+    cacheManager.set(cacheKey, entries);
+    return entries;
+  } catch (error) {
+    console.error('[getArticleSlugsForSitemap] Error:', error);
     return [];
   }
 };

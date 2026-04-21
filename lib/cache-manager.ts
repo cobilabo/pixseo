@@ -117,3 +117,79 @@ export const CACHE_TTL = {
   VERY_LONG: 60 * 60 * 1000, // 1時間
 };
 
+/**
+ * Vercel ISR キャッシュ即時無効化ヘルパー
+ *
+ * ページ側の `export const revalidate` を長め（30分〜1時間）に設定した上で、
+ * 更新 API からこれらを呼ぶことで
+ *   - 通常時: CDN / ISR キャッシュヒットで Firestore 呼び出しゼロ
+ *   - 更新時: 即座にキャッシュ無効化 → 次回アクセスで再生成
+ * の両立を実現する。
+ *
+ * revalidatePath は next/cache に依存するため、このヘルパー群は
+ * Route Handler / Server Action からのみ呼ぶこと。
+ */
+import { revalidatePath } from 'next/cache';
+import { SUPPORTED_LANGS } from '@/types/lang';
+
+const runRevalidate = (path: string, type?: 'page' | 'layout') => {
+  try {
+    if (type) {
+      revalidatePath(path, type);
+    } else {
+      revalidatePath(path);
+    }
+  } catch (error) {
+    console.warn('[revalidate] failed to revalidate ' + path, error);
+  }
+};
+
+export function revalidateArticle(slug?: string | null): void {
+  SUPPORTED_LANGS.forEach((lang) => {
+    runRevalidate('/' + lang);
+    runRevalidate('/' + lang + '/articles');
+    if (slug) {
+      runRevalidate('/' + lang + '/articles/' + slug);
+    }
+  });
+  runRevalidate('/sitemap.xml');
+}
+
+export function revalidateCategorySlug(slug?: string | null): void {
+  SUPPORTED_LANGS.forEach((lang) => {
+    runRevalidate('/' + lang);
+    runRevalidate('/' + lang + '/articles');
+    if (slug) {
+      runRevalidate('/' + lang + '/categories/' + slug);
+    }
+  });
+  runRevalidate('/sitemap.xml');
+}
+
+export function revalidateTagSlug(slug?: string | null): void {
+  SUPPORTED_LANGS.forEach((lang) => {
+    runRevalidate('/' + lang);
+    runRevalidate('/' + lang + '/articles');
+    if (slug) {
+      runRevalidate('/' + lang + '/tags/' + slug);
+    }
+  });
+  runRevalidate('/sitemap.xml');
+}
+
+export function revalidateCustomPage(slug?: string | null): void {
+  SUPPORTED_LANGS.forEach((lang) => {
+    if (slug) {
+      runRevalidate('/' + lang + '/' + slug);
+    }
+  });
+  runRevalidate('/sitemap.xml');
+}
+
+export function revalidateSite(): void {
+  SUPPORTED_LANGS.forEach((lang) => {
+    runRevalidate('/' + lang, 'layout');
+  });
+  runRevalidate('/sitemap.xml');
+}
+

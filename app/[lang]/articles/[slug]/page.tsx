@@ -54,8 +54,8 @@ import SidebarRenderer from '@/components/common/SidebarRenderer';
 import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
 
-// ISR: 5分ごとに再生成
-export const revalidate = 600;
+// ISR: 1時間ごとに再生成（記事更新時は revalidatePath で即時反映）
+export const revalidate = 3600;
 
 interface PageProps {
   params: {

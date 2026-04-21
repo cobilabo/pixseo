@@ -70,32 +70,52 @@ const nextConfig = {
         ],
       },
       {
-        // 記事ページ：5分キャッシュ + stale-while-revalidate
-        source: '/media/articles/:slug*',
+        // 記事詳細ページ: 1時間キャッシュ + 1日 SWR（revalidatePath で即時更新）
+        source: '/:lang(ja|en|zh|ko)/articles/:slug+',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=60',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
           },
         ],
       },
       {
-        // カテゴリー・タグページ：5分キャッシュ
-        source: '/media/:path(categories|tags)/:slug*',
+        // カテゴリー・タグページ: 30分キャッシュ + 1日 SWR
+        source: '/:lang(ja|en|zh|ko)/:path(categories|tags)/:slug+',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=60',
+            value: 'public, s-maxage=1800, stale-while-revalidate=86400',
           },
         ],
       },
       {
-        // トップページ・記事一覧：1分キャッシュ（常に新鮮）
-        source: '/media/:path*',
+        // ライター詳細ページ: 1時間キャッシュ
+        source: '/:lang(ja|en|zh|ko)/writers/:id+',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=30',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        // 記事一覧ページ: 10分キャッシュ + 1時間 SWR
+        source: '/:lang(ja|en|zh|ko)/articles',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=600, stale-while-revalidate=3600',
+          },
+        ],
+      },
+      {
+        // 言語トップページ: 5分キャッシュ + 1時間 SWR
+        source: '/:lang(ja|en|zh|ko)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=3600',
           },
         ],
       },

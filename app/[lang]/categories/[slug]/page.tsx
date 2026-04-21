@@ -25,8 +25,8 @@ import SearchWidget from '@/components/search/SearchWidget';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 
-// ISR: 60秒ごとに再生成
-export const revalidate = 300;
+// ISR: 30分ごとに再生成（記事更新時は revalidatePath で即時反映）
+export const revalidate = 1800;
 
 interface PageProps {
   params: {

@@ -5,7 +5,7 @@ import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sy
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
-import { cacheManager } from '@/lib/cache-manager';
+import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -30,6 +30,8 @@ export async function DELETE(
       );
     }
 
+    const deletedSlug = (doc.data()?.slug as string | undefined) || null;
+
     await articleRef.delete();
     // Algoliaから削除
     try {
@@ -38,7 +40,10 @@ export async function DELETE(
       console.error(`[API DELETE /admin/articles/${id}] Algolia delete error:`, algoliaError);
       // Algoliaの削除エラーは致命的ではないので処理は続行
     }
-    
+
+    // Vercel ISR キャッシュを即時無効化
+    revalidateArticle(deletedSlug);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(`[API DELETE /admin/articles] Error:`, error);
@@ -169,6 +174,12 @@ export async function PUT(
     }
     cacheManager.deletePattern('^articles');
     cacheManager.deletePattern('^sliderArticles');
+    cacheManager.deletePattern('^sitemap-article-slugs');
+    cacheManager.deletePattern('^adjacent');
+
+    // Vercel ISR キャッシュを即時無効化（公開状態が変わった場合のみでも良いが、
+    // カテゴリー / タグ / タイトル変更でも一覧に影響があるため常に実行）
+    revalidateArticle(articleSlug || null);
 
     // 公開ステータスが変更された場合
     const isPublishedInBody = typeof body.isPublished === 'boolean';
