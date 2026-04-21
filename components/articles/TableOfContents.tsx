@@ -57,7 +57,7 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border-l-3 border-blue-600 p-5 mb-6">
+    <div className="toc-card not-prose bg-white rounded-xl shadow-md border-l-3 border-blue-600 p-5 mb-6">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between w-full ${isOpen ? 'mb-4 pb-3 border-b border-gray-200' : ''}`}
@@ -91,7 +91,7 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
       
       {isOpen && (
         <nav>
-          <ul className="space-y-0.5">
+          <ul className="toc-inline space-y-0.5">
             {items.map((item, index) => {
               // 各アイテムの安全チェック
               if (!item || !item.id || !item.text) {
