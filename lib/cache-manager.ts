@@ -129,8 +129,9 @@ export const CACHE_TTL = {
  * revalidatePath は next/cache に依存するため、このヘルパー群は
  * Route Handler / Server Action からのみ呼ぶこと。
  */
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { CACHE_TAGS } from './firebase/cached';
 
 const runRevalidate = (path: string, type?: 'page' | 'layout') => {
   try {
@@ -144,7 +145,18 @@ const runRevalidate = (path: string, type?: 'page' | 'layout') => {
   }
 };
 
+const runRevalidateTag = (tag: string) => {
+  try {
+    revalidateTag(tag);
+  } catch (error) {
+    console.warn('[revalidateTag] failed to revalidate tag ' + tag, error);
+  }
+};
+
 export function revalidateArticle(slug?: string | null): void {
+  // Vercel Data Cache (unstable_cache) の粒度無効化
+  runRevalidateTag(CACHE_TAGS.ARTICLES);
+
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);
     runRevalidate('/' + lang + '/articles');
@@ -156,6 +168,9 @@ export function revalidateArticle(slug?: string | null): void {
 }
 
 export function revalidateCategorySlug(slug?: string | null): void {
+  runRevalidateTag(CACHE_TAGS.CATEGORIES);
+  runRevalidateTag(CACHE_TAGS.ARTICLES);
+
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);
     runRevalidate('/' + lang + '/articles');
@@ -167,6 +182,9 @@ export function revalidateCategorySlug(slug?: string | null): void {
 }
 
 export function revalidateTagSlug(slug?: string | null): void {
+  runRevalidateTag(CACHE_TAGS.TAGS);
+  runRevalidateTag(CACHE_TAGS.ARTICLES);
+
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);
     runRevalidate('/' + lang + '/articles');
@@ -178,6 +196,8 @@ export function revalidateTagSlug(slug?: string | null): void {
 }
 
 export function revalidateCustomPage(slug?: string | null): void {
+  runRevalidateTag(CACHE_TAGS.SITE);
+
   SUPPORTED_LANGS.forEach((lang) => {
     if (slug) {
       runRevalidate('/' + lang + '/' + slug);
@@ -187,9 +207,35 @@ export function revalidateCustomPage(slug?: string | null): void {
 }
 
 export function revalidateSite(): void {
+  runRevalidateTag(CACHE_TAGS.SITE);
+  runRevalidateTag(CACHE_TAGS.THEME);
+
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang, 'layout');
   });
   runRevalidate('/sitemap.xml');
+}
+
+/**
+ * ライター更新 API などから呼び出して、ライター系のキャッシュを粒度無効化する。
+ * 記事一覧にはライター情報が含まれるため articles タグも一緒に無効化。
+ */
+export function revalidateWriter(writerId?: string | null): void {
+  runRevalidateTag(CACHE_TAGS.WRITERS);
+  runRevalidateTag(CACHE_TAGS.ARTICLES);
+
+  SUPPORTED_LANGS.forEach((lang) => {
+    if (writerId) {
+      runRevalidate('/' + lang + '/writers/' + writerId);
+    }
+  });
+}
+
+/**
+ * 検索ログ（サイドバーの人気検索タグ等）を強制的に再集計させたいときに呼ぶ。
+ * 通常は cron / 日次バッチで自然に revalidate されるので使わなくて良い。
+ */
+export function revalidateSearchLogs(): void {
+  runRevalidateTag(CACHE_TAGS.SEARCH_LOGS);
 }
 

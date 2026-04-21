@@ -2,16 +2,25 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { 
-  getRelatedArticlesServer, 
+import {
   getCategoriesServer,
   getTagsServer,
   getAdjacentArticlesServer,
 } from '@/lib/firebase/articles-server';
-import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getTagsServer as getAllTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getMediaIdFromHost, getArticleServer, getSiteInfo, getTheme, getPopularArticlesServer, getRecentArticlesServer, getWriterServer } from '@/lib/firebase/cached';
+import {
+  getMediaIdFromHost,
+  getArticleServer,
+  getSiteInfo,
+  getTheme,
+  getPopularArticlesServer,
+  getRecentArticlesServer,
+  getWriterServer,
+  getRelatedArticlesServer,
+  getAllCategoriesServer,
+  getCategoriesWithCountServer,
+  getAllTagsServer,
+  getPopularSearchTagsServer,
+} from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';

@@ -2,10 +2,21 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getWriterServer, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
+import {
+  getMediaIdFromHost,
+  getSiteInfo,
+  getTheme,
+  getWriterServer,
+  getPopularArticlesServer,
+  getRecommendedArticlesServer,
+  getRecentArticlesServer,
+  getArticlesByWriterServer,
+  getAllCategoriesServer,
+  getCategoriesWithCountServer,
+  getAllTagsServer as getTagsServer,
+  getPopularSearchTagsServer,
+} from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getArticlesByWriterServer } from '@/lib/firebase/articles-server';
-import { getCategoriesServer as getAllCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeWriter, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -20,8 +31,6 @@ import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import SearchWidget from '@/components/search/SearchWidget';
-import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';

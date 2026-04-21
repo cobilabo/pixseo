@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateCategorySlug } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,9 @@ export async function POST(request: NextRequest) {
 
     // Firestoreに保存
     const docRef = await adminDb.collection('categories').add(categoryData);
+
+    // Vercel Data Cache / ISR を即時無効化
+    revalidateCategorySlug(slug || null);
 
     return NextResponse.json({
       id: docRef.id,

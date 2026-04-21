@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateCategorySlug } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,11 @@ export async function PUT(
     
     // Firestoreを更新
     await categoryRef.update(updateData);
+
+    // Vercel Data Cache / ISR を即時無効化
+    const updatedSlug: string | undefined = (updateData.slug as string | undefined) ?? (categoryDoc.data()?.slug as string | undefined);
+    revalidateCategorySlug(updatedSlug || null);
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API PUT /admin/categories/:id] Error:', error);

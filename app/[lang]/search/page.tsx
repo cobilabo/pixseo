@@ -10,12 +10,20 @@ import FirstView from '@/components/layout/FirstView';
 import FooterContentRenderer from '@/components/blocks/FooterContentRenderer';
 import FooterTextLinksRenderer from '@/components/blocks/FooterTextLinksRenderer';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
+import {
+  getMediaIdFromHost,
+  getSiteInfo,
+  getTheme,
+  getPopularArticlesServer,
+  getRecommendedArticlesServer,
+  getRecentArticlesServer,
+  getAllCategoriesServer as getCategoriesServer,
+  getCategoriesWithCountServer,
+  getAllTagsServer as getTagsServer,
+  getPopularSearchTagsServer,
+  getArticlesServer,
+} from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getArticlesServer } from '@/lib/firebase/articles-server';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';

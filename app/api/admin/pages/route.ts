@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { Page } from '@/types/page';
 import { translateArticle } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateCustomPage } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
     }
     
     const docRef = await adminDb.collection('pages').add(pageData);
+    revalidateCustomPage((pageData.slug as string | undefined) || null);
     return NextResponse.json({ id: docRef.id }, { status: 201 });
   } catch (error) {
     console.error('[API] Error creating page:', error);

@@ -1,9 +1,17 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { adminDb } from "@/lib/firebase/admin";
+import { CACHE_TAGS } from "@/lib/firebase/cached";
 
 const LANGS = ["ja", "en", "zh", "ko"] as const;
 
 export async function revalidateWriterPublicPages(writerId: string): Promise<void> {
+  try {
+    revalidateTag(CACHE_TAGS.WRITERS);
+    revalidateTag(CACHE_TAGS.ARTICLES);
+  } catch (error) {
+    console.warn("[revalidateWriterPublicPages] revalidateTag failed:", error);
+  }
+
   for (const lang of LANGS) {
     revalidatePath(`/${lang}/writers/${writerId}`);
   }

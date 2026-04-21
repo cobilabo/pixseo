@@ -2,12 +2,20 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
+import {
+  getMediaIdFromHost,
+  getSiteInfo,
+  getTheme,
+  getPopularArticlesServer,
+  getRecommendedArticlesServer,
+  getRecentArticlesServer,
+  getAllCategoriesServer as getCategoriesServer,
+  getCategoriesWithCountServer,
+  getAllTagsServer as getTagsServer,
+  getPopularSearchTagsServer,
+} from '@/lib/firebase/cached';
 import { SIDEBAR_ARTICLE_FETCH_LIMIT } from '@/lib/constants/sidebar-content';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
-import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
-import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizePage, localizeTag, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';

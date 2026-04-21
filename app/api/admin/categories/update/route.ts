@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateCategorySlug } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +85,10 @@ export async function PUT(request: NextRequest) {
 
     // Firestoreに保存
     await categoryRef.update(updateData);
+
+    // Vercel Data Cache / ISR を即時無効化
+    const updatedSlug: string | undefined = (updateData.slug as string | undefined) ?? (categoryDoc.data()?.slug as string | undefined);
+    revalidateCategorySlug(updatedSlug || null);
 
     return NextResponse.json({
       message: 'Category updated successfully',

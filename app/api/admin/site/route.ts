@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateSite } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +70,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await adminDb.collection('mediaTenants').doc(mediaId).update(updateData);
+    revalidateSite();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Site] エラー:', error);

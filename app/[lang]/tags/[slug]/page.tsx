@@ -3,12 +3,20 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getTagServer } from '@/lib/firebase/cached';
-import { getArticlesServer } from '@/lib/firebase/articles-server';
-import { getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
-import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getMediaIdFromHost, getSiteInfo } from '@/lib/firebase/cached';
-import { getTheme } from '@/lib/firebase/cached';
+import {
+  getTagServer,
+  getArticlesServer,
+  getPopularArticlesServer,
+  getRecommendedArticlesServer,
+  getRecentArticlesServer,
+  getAllCategoriesServer as getCategoriesServer,
+  getCategoriesWithCountServer,
+  getMediaIdFromHost,
+  getSiteInfo,
+  getTheme,
+  getAllTagsServer as getTagsServer,
+  getPopularSearchTagsServer,
+} from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeTag, localizeArticle } from '@/lib/i18n/localize';
@@ -24,8 +32,6 @@ import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import SearchWidget from '@/components/search/SearchWidget';
-import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
 
 // ISR: 30分ごとに再生成（記事更新時は revalidatePath で即時反映）
 export const revalidate = 1800;

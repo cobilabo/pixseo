@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { Page } from '@/types/page';
 import { translateArticle } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { revalidateCustomPage } from '@/lib/cache-manager';
 
 // 固定ページ取得
 export async function GET(
@@ -102,7 +103,11 @@ export async function PUT(
     }
     
     await adminDb.collection('pages').doc(params.id).update(updateData);
-    
+
+    // Vercel Data Cache / ISR を即時無効化
+    const updatedSlug = (updateData.slug as string | undefined) ?? undefined;
+    revalidateCustomPage(updatedSlug || null);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[API] Error updating page:', error);
@@ -119,8 +124,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const docSnap = await adminDb.collection('pages').doc(params.id).get();
+    const deletedSlug = (docSnap.data()?.slug as string | undefined) || null;
     await adminDb.collection('pages').doc(params.id).delete();
-    
+
+    revalidateCustomPage(deletedSlug);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[API] Error deleting page:', error);

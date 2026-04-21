@@ -220,6 +220,11 @@ export async function DELETE(
     await reassignArticlesWriter(id, mainWriterId);
     await adminDb.collection('writers').doc(id).delete();
     invalidateWriterServerCache(id);
+    try {
+      await revalidateWriterPublicPages(mainWriterId);
+    } catch (e) {
+      console.warn('[writers DELETE] revalidateWriterPublicPages:', e);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

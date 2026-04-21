@@ -3,10 +3,18 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { getMediaIdFromHost, getSiteInfo, getTheme, getPopularArticlesServer, getRecommendedArticlesServer, getRecentArticlesServer } from '@/lib/firebase/cached';
-import { getCategoriesServer, getCategoriesWithCountServer } from '@/lib/firebase/categories-server';
-import { getTagsServer } from '@/lib/firebase/tags-server';
-import { getPopularSearchTagsServer } from '@/lib/firebase/search-log-server';
+import {
+  getMediaIdFromHost,
+  getSiteInfo,
+  getTheme,
+  getPopularArticlesServer,
+  getRecommendedArticlesServer,
+  getRecentArticlesServer,
+  getAllCategoriesServer as getCategoriesServer,
+  getCategoriesWithCountServer,
+  getAllTagsServer as getTagsServer,
+  getPopularSearchTagsServer,
+} from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';

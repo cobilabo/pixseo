@@ -7,6 +7,7 @@ import { SUPPORTED_LANGS, Lang } from '@/types/lang';
 import { clearThemeCache } from '@/lib/firebase/theme-helper';
 import { syncFooterBlocksInTheme } from '@/lib/theme/footer-blocks';
 import { revalidatePath } from 'next/cache';
+import { revalidateSite } from '@/lib/cache-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -250,8 +251,9 @@ export async function PUT(request: NextRequest) {
     });
 
     clearThemeCache(mediaId);
-    // フロントエンドのルートキャッシュを無効化
+    // フロントエンドのルートキャッシュ + Vercel Data Cache を無効化
     revalidatePath('/', 'layout');
+    revalidateSite();
 
     return NextResponse.json({ 
       message: 'デザイン設定を更新しました',
