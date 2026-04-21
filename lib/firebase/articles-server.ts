@@ -19,6 +19,78 @@ import {
   writerMayContainWpUploads,
 } from '@/lib/article-utils';
 
+/**
+ * 一覧系クエリで取得するフィールド群（本文 content を含めないことで
+ * Firestore -> サーバー間の転送量を大幅に削減する）。
+ *
+ * 詳細ページ用の getArticleServer では .select() を使わずに
+ * 全フィールド取得する。
+ */
+const ARTICLE_LIST_FIELDS: string[] = [
+  'mediaId',
+  'slug',
+  'writerId',
+  'categoryIds',
+  'tagIds',
+  'featuredImage',
+  'featuredImageAlt',
+  'featuredImageAlt_ja',
+  'featuredImageAlt_en',
+  'featuredImageAlt_zh',
+  'featuredImageAlt_ko',
+  'isPublished',
+  'isScheduled',
+  'isFeatured',
+  'sliderOrder',
+  'publishedAt',
+  'updatedAt',
+  'createdAt',
+  'viewCount',
+  'likeCount',
+  'readingTime',
+  'relatedArticleIds',
+  'title',
+  'title_ja',
+  'title_en',
+  'title_zh',
+  'title_ko',
+  'excerpt',
+  'excerpt_ja',
+  'excerpt_en',
+  'excerpt_zh',
+  'excerpt_ko',
+];
+
+/**
+ * 前後記事ナビゲーション用の最小フィールド（さらに軽量）。
+ */
+const ARTICLE_ADJACENT_FIELDS: string[] = [
+  'mediaId',
+  'slug',
+  'isPublished',
+  'publishedAt',
+  'updatedAt',
+  'viewCount',
+  'categoryIds',
+  'featuredImage',
+  'title',
+  'title_ja',
+  'title_en',
+  'title_zh',
+  'title_ko',
+];
+
+/**
+ * admin.firestore.Query に .select() を安全に適用するヘルパー。
+ * プロジェクション（投影クエリ）を適用することで、Firestore が返す
+ * ドキュメントに含めるフィールドを制限し、egress を抑える。
+ */
+const selectListFields = (q: admin.firestore.Query): admin.firestore.Query =>
+  q.select(...ARTICLE_LIST_FIELDS);
+
+const selectAdjacentFields = (q: admin.firestore.Query): admin.firestore.Query =>
+  q.select(...ARTICLE_ADJACENT_FIELDS);
+
 // 非表示カテゴリーIDを取得（キャッシュ付き）
 const getHiddenCategoryIds = async (mediaId?: string): Promise<string[]> => {
   const cacheKey = generateCacheKey('hiddenCategoryIds', mediaId || 'all');
@@ -212,15 +284,22 @@ export const getArticlesServer = async (
         if (offsetCount > 0) {
           indexedQuery = indexedQuery.offset(offsetCount);
         }
-        indexedQuery = indexedQuery.limit(limitCount * 2);
-        snapshot = await indexedQuery.get();
+        // 非表示カテゴリー除外や日付フィルタでこぼれる可能性を考慮して
+        // 少しだけバッファを持たせるが、従来の limit * 2 よりは絞る
+        const fetchLimit = options.excludeHiddenCategories
+          ? Math.max(limitCount + 10, Math.ceil(limitCount * 1.3))
+          : limitCount;
+        indexedQuery = indexedQuery.limit(fetchLimit);
+        snapshot = await selectListFields(indexedQuery).get();
         useIndexSort = true;
       } catch (indexError) {
         console.warn('[getArticlesServer] Index not available, using fallback:', indexError);
-        snapshot = await q.get();
+        snapshot = await selectListFields(q).get();
       }
     } else {
-      snapshot = await q.get();
+      // category/tag 絞り込みは Firestore 側の orderBy/limit が複合インデックス必須なので
+      // 全件取得してから JS でソート。select で本文を除外して egress を抑える。
+      snapshot = await selectListFields(q).get();
     }
     
     const now = new Date();
@@ -329,7 +408,8 @@ export const getSliderArticlesServer = async (mediaId?: string): Promise<Article
       q = q.where('mediaId', '==', mediaId);
     }
 
-    const snapshot = await q.get();
+    // 本文 content などの重いフィールドを含めずに取得して egress を削減
+    const snapshot = await selectListFields(q).get();
     const now = new Date();
 
     let articles = snapshot.docs
@@ -423,10 +503,15 @@ export const getRelatedArticlesServer = async (
     if (relatedArticleIds && relatedArticleIds.length > 0) {
       const articlesRef = adminDb.collection('articles');
       
-      // 各IDごとに取得
-      const docs = await Promise.all(
-        relatedArticleIds.slice(0, limitCount).map(id => articlesRef.doc(id).get())
-      );
+      // 各 ID ごとに、本文を含まない軽量フィールドのみを取得
+      const ids = relatedArticleIds.slice(0, limitCount);
+      const snapshot = ids.length > 0
+        ? await selectListFields(
+            articlesRef.where(admin.firestore.FieldPath.documentId(), 'in', ids)
+          ).get()
+        : { docs: [] as FirebaseFirestore.QueryDocumentSnapshot[] };
+      const byId = new Map(snapshot.docs.map(d => [d.id, d]));
+      const docs = ids.map(id => byId.get(id)).filter(Boolean) as FirebaseFirestore.QueryDocumentSnapshot[];
       
       const now = new Date();
       articles = docs
@@ -464,14 +549,26 @@ export const getRelatedArticlesServer = async (
     // 2. 足りない場合は自動で補完
     if (articles.length < limitCount) {
       const articlesRef = adminDb.collection('articles');
-      let q = articlesRef.where('isPublished', '==', true);
+      let q: admin.firestore.Query = articlesRef.where('isPublished', '==', true);
       
       // mediaIdが指定されている場合はフィルタリング
       if (mediaId) {
-        q = q.where('mediaId', '==', mediaId) as any;
+        q = q.where('mediaId', '==', mediaId);
       }
       
-      const snapshot = await q.get();
+      // 公開日降順で必要件数の 5 倍程度のみ取得 (関連度ソート余地確保)。
+      // 全件取得していた旧実装は記事数増加に伴い egress が爆発するため、
+      // インデックスが使える場合は Firestore 側で limit をかける。
+      const autoFetchLimit = Math.max((limitCount - articles.length) * 5, 10);
+      let snapshot: FirebaseFirestore.QuerySnapshot;
+      try {
+        snapshot = await selectListFields(
+          q.orderBy('publishedAt', 'desc').limit(autoFetchLimit)
+        ).get();
+      } catch (indexError) {
+        console.warn('[getRelatedArticlesServer] Index not available, using fallback:', indexError);
+        snapshot = await selectListFields(q).get();
+      }
       
       // すでに選択されているIDを除外
       const excludeIds = [excludeArticleId, ...articles.map(a => a.id)];
@@ -743,7 +840,7 @@ export const getAdjacentArticlesServer = async (
     
     const articlesRef = adminDb.collection('articles');
     
-    // 前の記事を取得
+    // 前の記事を取得（本文 content は不要なので軽量フィールドのみ取得）
     const prevQueryBuilder = articlesRef
       .where('isPublished', '==', true)
       .where('publishedAt', '<', currentPublishedAt)
@@ -751,35 +848,38 @@ export const getAdjacentArticlesServer = async (
       .limit(1);
     
     if (mediaId) {
-      // mediaIdフィルタを追加する場合は、別のクエリを作成
-      const prevQuery = await articlesRef
-        .where('isPublished', '==', true)
-        .where('mediaId', '==', mediaId)
-        .where('publishedAt', '<', currentPublishedAt)
-        .orderBy('publishedAt', 'desc')
-        .limit(1)
-        .get();
+      // mediaId フィルタを追加する場合は、別のクエリを作成
+      const prevQuery = await selectAdjacentFields(
+        articlesRef
+          .where('isPublished', '==', true)
+          .where('mediaId', '==', mediaId)
+          .where('publishedAt', '<', currentPublishedAt)
+          .orderBy('publishedAt', 'desc')
+          .limit(1)
+      ).get();
       
       // 次の記事を取得
-      const nextQuery = await articlesRef
-        .where('isPublished', '==', true)
-        .where('mediaId', '==', mediaId)
-        .where('publishedAt', '>', currentPublishedAt)
-        .orderBy('publishedAt', 'asc')
-        .limit(1)
-        .get();
+      const nextQuery = await selectAdjacentFields(
+        articlesRef
+          .where('isPublished', '==', true)
+          .where('mediaId', '==', mediaId)
+          .where('publishedAt', '>', currentPublishedAt)
+          .orderBy('publishedAt', 'asc')
+          .limit(1)
+      ).get();
       
       return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     } else {
-      const prevQuery = await prevQueryBuilder.get();
+      const prevQuery = await selectAdjacentFields(prevQueryBuilder).get();
       
       // 次の記事を取得
-      const nextQuery = await articlesRef
-        .where('isPublished', '==', true)
-        .where('publishedAt', '>', currentPublishedAt)
-        .orderBy('publishedAt', 'asc')
-        .limit(1)
-        .get();
+      const nextQuery = await selectAdjacentFields(
+        articlesRef
+          .where('isPublished', '==', true)
+          .where('publishedAt', '>', currentPublishedAt)
+          .orderBy('publishedAt', 'asc')
+          .limit(1)
+      ).get();
       
       return await buildAdjacentArticlesResultAsync(prevQuery, nextQuery);
     }
@@ -866,12 +966,12 @@ export const getArticlesByWriterServer = async (
     let useIndexSort = false;
     
     try {
-      const indexedQuery = query.orderBy('publishedAt', 'desc').limit(limitCount * 2);
-      snapshot = await indexedQuery.get();
+      const indexedQuery = query.orderBy('publishedAt', 'desc').limit(limitCount);
+      snapshot = await selectListFields(indexedQuery).get();
       useIndexSort = true;
     } catch (indexError) {
       console.warn('[getArticlesByWriterServer] Index not available, using fallback:', indexError);
-      snapshot = await query.get();
+      snapshot = await selectListFields(query).get();
     }
     
     const nowWriter = new Date();
@@ -985,9 +1085,10 @@ export const getRecommendedArticlesServer = async (
     // array-contains-anyで効率的にフィルタリング（最大10カテゴリー）
     const categoryIdsToQuery = recommendedCategoryIds.slice(0, 10);
     articlesQuery = articlesQuery.where('categoryIds', 'array-contains-any', categoryIdsToQuery);
-    articlesQuery = articlesQuery.orderBy('publishedAt', 'desc').limit(limitCount * 2);
+    articlesQuery = articlesQuery.orderBy('publishedAt', 'desc').limit(limitCount);
     
-    const snapshot = await articlesQuery.get();
+    // 本文 content を含めない軽量取得で egress を削減
+    const snapshot = await selectListFields(articlesQuery).get();
     
     const now = new Date();
     
@@ -1067,7 +1168,7 @@ export const getArticlesCountServer = async (
       return cached;
     }
     
-    // Firestoreから取得
+    // Firestore から取得
     const articlesRef = adminDb.collection('articles');
     let q: admin.firestore.Query = articlesRef;
     
@@ -1081,11 +1182,16 @@ export const getArticlesCountServer = async (
       q = q.where('mediaId', '==', mediaId);
     }
     
-    const snapshot = await q.get();
-    
-    // プレビューモードでない場合は公開日チェック
-    let count = snapshot.size;
-    if (!isPreview) {
+    let count: number;
+    if (isPreview) {
+      // プレビュー時は公開日チェックが不要なので Firestore の count() 集計を利用
+      // → ドキュメント本体を転送せず件数のみ取得でき egress がほぼゼロ
+      const aggregate = await q.count().get();
+      count = aggregate.data().count;
+    } else {
+      // 公開日が未来の予約公開記事を除外する必要があるため、
+      // publishedAt と isPublished のみを select して最小限の転送で集計
+      const snapshot = await q.select('publishedAt', 'isPublished').get();
       const now = new Date();
       count = snapshot.docs.filter(doc => {
         const data = doc.data();

@@ -33,37 +33,42 @@ export async function GET(request: NextRequest) {
 
     console.log(`[Cron] Current JST time: Day ${currentDayOfWeek}, Time ${currentTime}`);
 
-    // アクティブなスケジュール設定を取得
-    const schedulesSnapshot = await adminDb
-      .collection('scheduledGenerations')
-      .where('isActive', '==', true)
-      .get();
+    // アクティブかつ現在時刻に一致するスケジュールを Firestore 側で絞り込む
+    // （5 分ごとに全件取得していたのを避けて転送量を削減）。
+    // 複合インデックス未作成時はフォールバックとして isActive のみで取得する。
+    let schedulesSnapshot;
+    try {
+      schedulesSnapshot = await adminDb
+        .collection('scheduledGenerations')
+        .where('isActive', '==', true)
+        .where('timeOfDay', '==', currentTime)
+        .get();
+    } catch (indexError) {
+      console.warn('[Cron] Composite index missing, falling back to isActive-only query. Please create a composite index on (isActive, timeOfDay) for scheduledGenerations.', indexError);
+      schedulesSnapshot = await adminDb
+        .collection('scheduledGenerations')
+        .where('isActive', '==', true)
+        .get();
+    }
 
     if (schedulesSnapshot.empty) {
-      console.log('[Cron] No active schedules found');
+      console.log('[Cron] No schedules match current time', { currentTime });
       return NextResponse.json({ 
-        message: 'No active schedules',
+        message: 'No matching schedules for current time',
+        currentDayOfWeek,
+        currentTime,
         executed: 0 
       });
     }
 
-    console.log(`[Cron] Found ${schedulesSnapshot.size} active schedules`);
+    console.log(`[Cron] Found ${schedulesSnapshot.size} schedules (pre-day-filter)`);
 
-    // 現在の曜日と時刻に一致するスケジュールをフィルタリング
+    // 曜日条件は array-contains との複合インデックスを避けるため JS 側で判定。
+    // フォールバックで timeOfDay フィルタが効かなかったケースもここで吸収する。
     const matchingSchedules = schedulesSnapshot.docs.filter(doc => {
       const schedule = doc.data();
-      const daysOfWeek = schedule.daysOfWeek || [];
-      const timeOfDay = schedule.timeOfDay || '';
-
-      console.log(`[Cron] Checking schedule ${doc.id}:`, {
-        scheduleDays: daysOfWeek,
-        scheduleTime: timeOfDay,
-        currentDay: currentDayOfWeek,
-        currentTime,
-        dayMatch: daysOfWeek.includes(currentDayOfWeek),
-        timeMatch: timeOfDay === currentTime,
-      });
-
+      const daysOfWeek: string[] = schedule.daysOfWeek || [];
+      const timeOfDay: string = schedule.timeOfDay || '';
       return daysOfWeek.includes(currentDayOfWeek) && timeOfDay === currentTime;
     });
 
