@@ -24,6 +24,7 @@ import {
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 import FAQManager from '@/components/admin/FAQManager';
 import { FAQItem } from '@/types/article';
+import { formatYmdInJapan, getJapanTodayYmd } from '@/lib/utils/date';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -50,20 +51,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [slugError, setSlugError] = useState('');
   const [checkingSlug, setCheckingSlug] = useState(false);
   
-  // 日付をYYYY-MM-DD形式に変換（nullの場合は空文字を返す）
-  const formatDateToInput = (date: Date | string | null | undefined): string => {
-    if (!date) return ''; // nullまたはundefinedの場合は空文字
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return ''; // Invalid Dateの場合も空文字
-    return d.toISOString().split('T')[0];
-  };
-
-  // 今日の日付をYYYY-MM-DD形式で取得
-  const getTodayString = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -83,7 +70,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     googleMapsUrl: '',
     reservationUrl: '',
     faqs: [] as FAQItem[],
-    publishedAt: getTodayString(),
+    publishedAt: getJapanTodayYmd(),
   });
 
   useEffect(() => {
@@ -140,7 +127,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           googleMapsUrl: articleData.googleMapsUrl || '',
           reservationUrl: articleData.reservationUrl || '',
           faqs: articleData.faqs || [],
-          publishedAt: formatDateToInput(articleData.publishedAt),
+          publishedAt: formatYmdInJapan(articleData.publishedAt),
         });
         
         setCategories(categoriesData);
@@ -569,7 +556,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   value={formData.publishedAt}
                   onChange={(e) => {
                     const selectedDate = e.target.value;
-                    const today = getTodayString();
+                    const today = getJapanTodayYmd();
                     const isFuture = selectedDate > today;
                     
                     setFormData({
@@ -928,7 +915,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                             ...formData,
                             isPublished: true,
                             isDraft: false,
-                            publishedAt: getTodayString(), // 公開日を今日に設定
+                            publishedAt: getJapanTodayYmd(), // 公開日を今日に設定
                           });
                         } else {
                           setFormData({ ...formData, isPublished: newIsPublished });
@@ -977,7 +964,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                           setFormData({
                             ...formData,
                             isDraft: false,
-                            publishedAt: formData.publishedAt || getTodayString(),
+                            publishedAt: formData.publishedAt || getJapanTodayYmd(),
                           });
                         }
                       }}

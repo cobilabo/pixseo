@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Block, ArticleBlockConfig } from '@/types/block';
 import { Article, Category } from '@/types/article';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
+import { formatDate } from '@/lib/utils/date';
 
 interface ArticleBlockSettingsProps {
   block: Block;
@@ -255,7 +256,7 @@ export default function ArticleBlockSettings({ block, onUpdate }: ArticleBlockSe
               </p>
               {selectedArticle.publishedAt && (
                 <p className="text-xs text-blue-500 mt-1">
-                  公開日: {new Date(selectedArticle.publishedAt).toLocaleDateString('ja-JP')}
+                  公開日: {formatDate(selectedArticle.publishedAt)}
                 </p>
               )}
             </div>

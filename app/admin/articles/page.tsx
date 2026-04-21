@@ -12,6 +12,7 @@ import { apiGet } from '@/lib/api-client';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { formatDateTime } from '@/lib/utils/date';
 
 // ソート可能なカラム
 type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'sliderOrder' | 'publishedAt' | 'createdAt' | 'updatedAt';
@@ -978,21 +979,18 @@ function ArticlesPageContent() {
                         </select>
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {article.publishedAt
-                          ? new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-                          : '-'
-                        }
+                        {article.publishedAt ? formatDateTime(article.publishedAt) : '-'}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
                         {article.createdAt
-                          ? new Date(article.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                          ? formatDateTime(article.createdAt)
                           : article.publishedAt
-                            ? new Date(article.publishedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                            ? formatDateTime(article.publishedAt)
                             : '-'
                         }
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
-                        {new Date(article.updatedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {formatDateTime(article.updatedAt)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">

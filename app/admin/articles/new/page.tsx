@@ -20,6 +20,7 @@ import { generateTableOfContents, calculateReadingTime } from '@/lib/article-uti
 import { cleanWordPressHtml } from '@/lib/cleanWordPressHtml';
 import FAQManager from '@/components/admin/FAQManager';
 import { FAQItem } from '@/types/article';
+import { getJapanTodayYmd } from '@/lib/utils/date';
 
 function NewArticlePageContent() {
   const router = useRouter();
@@ -45,12 +46,6 @@ function NewArticlePageContent() {
   const [slugError, setSlugError] = useState('');
   const [checkingSlug, setCheckingSlug] = useState(false);
   
-  // 今日の日付をYYYY-MM-DD形式で取得
-  const getTodayString = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -70,7 +65,7 @@ function NewArticlePageContent() {
     googleMapsUrl: '',
     reservationUrl: '',
     faqs: [] as FAQItem[],
-    publishedAt: getTodayString(), // デフォルトで今日の日付
+    publishedAt: getJapanTodayYmd(), // デフォルトで今日の日付（日本暦）
   });
 
   useEffect(() => {
@@ -542,7 +537,7 @@ function NewArticlePageContent() {
                   value={formData.publishedAt}
                   onChange={(e) => {
                     const selectedDate = e.target.value;
-                    const today = getTodayString();
+                    const today = getJapanTodayYmd();
                     const isFuture = selectedDate > today;
                     
                     setFormData({
@@ -891,7 +886,7 @@ function NewArticlePageContent() {
                             ...formData,
                             isPublished: true,
                             isDraft: false,
-                            publishedAt: getTodayString(), // 公開日を今日に設定
+                            publishedAt: getJapanTodayYmd(), // 公開日を今日に設定
                           });
                         } else {
                           setFormData({ ...formData, isPublished: newIsPublished });
@@ -940,7 +935,7 @@ function NewArticlePageContent() {
                           setFormData({
                             ...formData,
                             isDraft: false,
-                            publishedAt: formData.publishedAt || getTodayString(),
+                            publishedAt: formData.publishedAt || getJapanTodayYmd(),
                           });
                         }
                       }}

@@ -3,12 +3,7 @@ import Image from 'next/image';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
-
-function formatDate(date: Date | any) {
-  if (!date) return '';
-  const d = date instanceof Date ? date : new Date(date.toDate?.() || date);
-  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
-}
+import { formatDate } from '@/lib/utils/date';
 
 function SidebarArticleCard({
   article,
@@ -21,7 +16,7 @@ function SidebarArticleCard({
 }) {
   const title = (article as any)[`title_${lang}`] || article.title;
   const articleCategories = categories.filter((cat) => (article.categoryIds || []).includes(cat.id));
-  const publishedLabel = formatDate(article.publishedAt);
+  const publishedLabel = article.publishedAt ? formatDate(article.publishedAt) : '';
   const publishedIso = (() => {
     if (!article.publishedAt) return undefined;
     const d =

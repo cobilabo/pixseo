@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Lang } from '@/types/lang';
+import { formatDateLongJaInJapan } from '@/lib/utils/date';
 
 interface SliderArticle {
   id: string;
@@ -89,12 +90,6 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
 
   if (total === 0) return null;
 
-  const formatDate = (date: Date | string | undefined) => {
-    if (!date) return '';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-
   const dotCount = maxPage + 1;
   const gapPx = 16;
   const cardWidthPercent = 100 / effectiveCols;
@@ -158,7 +153,7 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                     </h3>
                     {article.publishedAt && (
                       <p className="text-xs text-gray-500 mt-1.5">
-                        {formatDate(article.publishedAt)}
+                        {formatDateLongJaInJapan(article.publishedAt)}
                       </p>
                     )}
                   </div>

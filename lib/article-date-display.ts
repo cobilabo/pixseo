@@ -1,4 +1,5 @@
 import { Lang, LANG_REGIONS } from '@/types/lang';
+import { ARTICLE_DISPLAY_TIMEZONE } from '@/lib/utils/date';
 
 /** Firestore Timestamp / ISO 文字列 / Date などを Date に正規化 */
 export function coerceToDate(value: unknown): Date | null {
@@ -29,6 +30,7 @@ export function formatArticleDate(value: unknown, lang: Lang): string {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
+    timeZone: ARTICLE_DISPLAY_TIMEZONE,
   });
 }
 

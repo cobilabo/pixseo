@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import { formatDate } from '@/lib/utils/date';
 
 interface ArticleNavigationProps {
   previousArticle?: Article | null;
@@ -24,12 +25,6 @@ export default function ArticleNavigation({
   if (!previousArticle && !nextArticle) {
     return null;
   }
-
-  const formatDate = (date: Date | any) => {
-    if (!date) return '';
-    const d = date instanceof Date ? date : new Date(date.toDate?.() || date);
-    return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
-  };
 
   return (
     <nav className="mb-8">

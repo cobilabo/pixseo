@@ -3,16 +3,11 @@ import Image from 'next/image';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import { formatDate } from '@/lib/utils/date';
 
 interface ArticleCardProps {
   article: Article & { categoryNames?: string[] };
   lang?: Lang;
-}
-
-function cardFormatDate(date: Date | any): string {
-  if (!date) return '';
-  const d = date instanceof Date ? date : new Date(date.toDate?.() || date);
-  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
 }
 
 export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) {
@@ -54,11 +49,11 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
         )}
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-1.5">
-            <span>{t('article.publishedAt', lang)}: {cardFormatDate(article.publishedAt)}</span>
+            <span>{t('article.publishedAt', lang)}: {formatDate(article.publishedAt)}</span>
             {article.updatedAt && (
               <>
                 <span>•</span>
-                <span>{t('article.updatedAt', lang)}: {cardFormatDate(article.updatedAt)}</span>
+                <span>{t('article.updatedAt', lang)}: {formatDate(article.updatedAt)}</span>
               </>
             )}
           </div>
