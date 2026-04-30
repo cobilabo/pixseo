@@ -183,10 +183,10 @@ const ARTICLE_SLUG_REDIRECTS: Record<string, string> = {
   // タイポ: "sightseeingrip" が混入していた記事群（"sightseeingrip" は意味不明な誤入力）
   'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
   'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
-  // NOTE: 'trip-sightseeingrip-sightseeing-osaka-expo' は意味の異なる別記事
-  // ('trip-sightseeing-osaka-expo' = 「大阪万博を障害者は楽しめるか」記事) が既に同じ
-  // 想定先 slug を使用しているため、暫定で別 slug を割り当てる必要あり。
-  // 別 slug が決定するまではリダイレクトしない（既存の typo URL のまま稼働）。
+  // 「【車椅子やバギーユーザーも楽しむ】大阪万博」記事。
+  // 'trip-sightseeing-osaka-expo' は別記事 (「大阪万博を障害者は楽しめるか」) に
+  // 既に使用されているため、衝突回避のため別 slug 'trip-osaka-expo-experience' を採用。
+  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-osaka-expo-experience',
 };
 
 /**
