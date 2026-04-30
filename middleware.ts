@@ -180,8 +180,10 @@ const WP_PAGE_REDIRECTS: Record<string, string> = {
  * value: 新 slug
  */
 const ARTICLE_SLUG_REDIRECTS: Record<string, string> = {
-  // タイポ: trip-sightseeing が重複していた記事
+  // タイポ: "sightseeingrip" が混入していた記事群（"sightseeingrip" は意味不明な誤入力）
   'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
+  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-sightseeing-osaka-expo',
+  'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
 };
 
 /**

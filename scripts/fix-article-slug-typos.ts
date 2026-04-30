@@ -34,6 +34,8 @@ const db = admin.firestore();
  */
 const SLUG_FIXES: Record<string, string> = {
   'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
+  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-sightseeing-osaka-expo',
+  'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
 };
 
 interface FixResult {
