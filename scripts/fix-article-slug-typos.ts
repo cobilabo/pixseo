@@ -34,8 +34,9 @@ const db = admin.firestore();
  */
 const SLUG_FIXES: Record<string, string> = {
   'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
-  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-sightseeing-osaka-expo',
   'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
+  // NOTE: 'trip-sightseeingrip-sightseeing-osaka-expo' は別 slug 候補が
+  // 既存記事と衝突するため、別 slug 決定後に再追加する
 };
 
 interface FixResult {
