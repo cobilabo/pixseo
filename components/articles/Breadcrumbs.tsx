@@ -1,26 +1,23 @@
-'use client';
-
 import Link from 'next/link';
 import { Article, Category } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
-import { useEffect, useState } from 'react';
 
 interface BreadcrumbsProps {
   article: Article;
   category?: Category | null;
   lang?: Lang;
+  /**
+   * 公開サイトのオリジン（例: https://the-ayumi.jp）。
+   * Server Component から `getSiteOrigin()` の結果を渡すこと。
+   * 未指定時は相対パスのみを表示する（JSON-LD はサイトマップ/canonical と同期させたいため）。
+   */
+  siteOrigin?: string;
 }
 
-export default function Breadcrumbs({ article, category, lang = 'ja' }: BreadcrumbsProps) {
-  const [origin, setOrigin] = useState('https://flat.pixseo.cloud');
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-  
+export default function Breadcrumbs({ article, category, lang = 'ja', siteOrigin = '' }: BreadcrumbsProps) {
+  const origin = siteOrigin;
+
   // JSON-LD構造化データ
   const breadcrumbSchema = {
     '@context': 'https://schema.org',

@@ -19,6 +19,7 @@
     "fill-flat-locale": "tsx scripts/fill-flat-locale.ts",
     "check:articles": "tsx scripts/check-articles.ts",
     "fix:title-meta-entities": "tsx scripts/decode-title-meta-entities.ts",
+    "fix:article-slug-typos": "tsx scripts/fix-article-slug-typos.ts",
     "set-super-admin": "tsx scripts/set-super-admin.ts",
     "deploy:production": "npm run build && firebase deploy --only hosting:production",
     "deploy:admin": "npm run build && firebase deploy --only hosting:admin",

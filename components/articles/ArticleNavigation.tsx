@@ -59,7 +59,7 @@ export default function ArticleNavigation({
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {nextArticle.viewCount !== undefined && (
+                  {nextArticle.viewCount !== undefined && nextArticle.viewCount > 0 && (
                     <span>{t('article.viewCount', lang, { count: nextArticle.viewCount.toLocaleString() })}</span>
                   )}
                   {nextCategories.length > 0 && (
@@ -138,7 +138,7 @@ export default function ArticleNavigation({
                 </div>
                 
                 <div className="flex items-center justify-end gap-2">
-                  {previousArticle.viewCount !== undefined && (
+                  {previousArticle.viewCount !== undefined && previousArticle.viewCount > 0 && (
                     <span>{t('article.viewCount', lang, { count: previousArticle.viewCount.toLocaleString() })}</span>
                   )}
                   {previousCategories.length > 0 && (

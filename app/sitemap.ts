@@ -3,12 +3,14 @@ import { getArticleSlugsForSitemap } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { getSiteOrigin } from '@/lib/site-url';
 
 // ISR: 1時間ごとに再生成（sitemap は頻繁に更新する必要がないため）
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'cobilabo.pixseo.cloud';
+  // host ヘッダ → NEXT_PUBLIC_SITE_URL → https://the-ayumi.jp の順で解決
+  const origin = getSiteOrigin();
 
   const [articles, categories, tags] = await Promise.all([
     getArticleSlugsForSitemap({ limit: 5000 }),
@@ -22,37 +24,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 静的ページ（各言語ごと）
   SUPPORTED_LANGS.forEach(lang => {
     sitemapEntries.push({
-      url: `https://${baseUrl}/${lang}`,
+      url: `${origin}/${lang}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 1.0,
       alternates: {
         languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}`])
+          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}`])
         ),
       },
     });
 
     sitemapEntries.push({
-      url: `https://${baseUrl}/${lang}/articles`,
+      url: `${origin}/${lang}/articles`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
       alternates: {
         languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}/articles`])
+          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/articles`])
         ),
       },
     });
 
     sitemapEntries.push({
-      url: `https://${baseUrl}/${lang}/search`,
+      url: `${origin}/${lang}/search`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.5,
       alternates: {
         languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}/search`])
+          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/search`])
         ),
       },
     });
@@ -63,13 +65,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!article.slug) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `https://${baseUrl}/${lang}/articles/${article.slug}`,
+        url: `${origin}/${lang}/articles/${article.slug}`,
         lastModified: article.updatedAt || article.publishedAt || now,
         changeFrequency: 'weekly',
         priority: 0.7,
         alternates: {
           languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}/articles/${article.slug}`])
+            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/articles/${article.slug}`])
           ),
         },
       });
@@ -81,13 +83,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!category.slug) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `https://${baseUrl}/${lang}/categories/${category.slug}`,
+        url: `${origin}/${lang}/categories/${category.slug}`,
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.6,
         alternates: {
           languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}/categories/${category.slug}`])
+            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/categories/${category.slug}`])
           ),
         },
       });
@@ -99,13 +101,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!tag.slug) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `https://${baseUrl}/${lang}/tags/${tag.slug}`,
+        url: `${origin}/${lang}/tags/${tag.slug}`,
         lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.5,
         alternates: {
           languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `https://${baseUrl}/${l}/tags/${tag.slug}`])
+            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/tags/${tag.slug}`])
           ),
         },
       });

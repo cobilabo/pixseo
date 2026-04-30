@@ -51,7 +51,7 @@ export default function FooterTextLinksRenderer({ sections, siteInfo, lang = 'ja
               unoptimized={siteInfo.logoUrl.endsWith('.svg')}
             />
           ) : (
-            <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+            <p className="text-2xl font-bold">{siteInfo.name}</p>
           )}
         </div>
         {siteInfo.description && (

@@ -57,7 +57,10 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
               </>
             )}
           </div>
-          <span>{t('article.viewCount', lang, { count: article.viewCount || 0 })}</span>
+          {/* SEO/CTR: 閲覧数が 0 または未取得の場合は表示しない（社会的証明としてマイナスになるため） */}
+          {article.viewCount && article.viewCount > 0 ? (
+            <span>{t('article.viewCount', lang, { count: article.viewCount })}</span>
+          ) : null}
         </div>
       </div>
     </Link>

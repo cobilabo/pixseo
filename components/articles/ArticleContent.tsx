@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import parse, { DOMNode, Element } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
@@ -134,7 +134,6 @@ export default function ArticleContent({
   siteHost = '',
   faviconUrl,
 }: ArticleContentProps) {
-  const [mounted, setMounted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // コンテンツ処理をメモ化して再計算を防ぐ
@@ -166,13 +165,8 @@ export default function ArticleContent({
     return { processedContent: withHeadingIds, contentSegments: segments };
   }, [content, internalLinkStyle, siteHost, tableOfContents]);
 
+  // Instagram埋め込みとスクリプトタグを処理するuseEffect（クライアントマウント後にのみ実行）
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Instagram埋め込みとスクリプトタグを処理するuseEffect（mountedがtrueになった後に実行）
-  useEffect(() => {
-    if (!mounted) return;
 
     // Instagram埋め込みスクリプトをロード
     const loadInstagramScript = () => {
@@ -227,7 +221,7 @@ export default function ArticleContent({
         });
       }
     }
-  }, [mounted, content]);
+  }, [content]);
 
   // 見出しの出現順をカウント
   let headingCount = 0;
@@ -385,18 +379,8 @@ export default function ArticleContent({
     },
   };
 
-  // SSR時はスケルトンを表示、クライアント側でのみコンテンツを表示
-  if (!mounted) {
-    return (
-      <div className="prose prose-lg max-w-none">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-        </div>
-      </div>
-    );
-  }
+  // SSR でも本文を出力する（Googlebot に本文を認識させるため）
+  // 以前はクライアントマウント後にのみ本文を表示していたが、SEO 観点で初期 HTML に本文を含める
 
   // スクリプトタグや埋め込みコンテンツが含まれているかをチェック
   const hasScriptTag = /<script[\s\S]*?>[\s\S]*?<\/script>/i.test(processedContent);

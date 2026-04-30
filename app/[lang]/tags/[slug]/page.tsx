@@ -18,6 +18,7 @@ import {
   getPopularSearchTagsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getSiteOrigin } from '@/lib/site-url';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeTag, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -57,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const tag = localizeTag(rawTag, lang);
   const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined, allowIndexing: false, isPreview: false };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
+  const origin = getSiteOrigin();
 
   return {
     title: `${tag.name}の記事一覧 | ${siteInfo.name}`,
@@ -64,13 +66,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     robots: { index: rawSiteInfo.allowIndexing, follow: rawSiteInfo.allowIndexing },
     icons: rawSiteInfo.faviconUrl ? { icon: rawSiteInfo.faviconUrl, apple: rawSiteInfo.faviconUrl } : undefined,
     alternates: {
-      canonical: `https://${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/tags/${params.slug}`,
+      canonical: `${origin}/${lang}/tags/${params.slug}`,
       languages: {
-        'ja-JP': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ja/tags/${params.slug}`,
-        'en-US': `https://${process.env.NEXT_PUBLIC_BASE_URL}/en/tags/${params.slug}`,
-        'zh-CN': `https://${process.env.NEXT_PUBLIC_BASE_URL}/zh/tags/${params.slug}`,
-        'ko-KR': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ko/tags/${params.slug}`,
-        'x-default': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ja/tags/${params.slug}`,
+        'ja-JP': `${origin}/ja/tags/${params.slug}`,
+        'en-US': `${origin}/en/tags/${params.slug}`,
+        'zh-CN': `${origin}/zh/tags/${params.slug}`,
+        'ko-KR': `${origin}/ko/tags/${params.slug}`,
+        'x-default': `${origin}/ja/tags/${params.slug}`,
       },
     },
     openGraph: {
@@ -254,7 +256,7 @@ export default async function TagPage({ params }: PageProps) {
         ) : (
           <div className="max-w-7xl mx-auto px-0 py-12">
             <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+              <p className="text-2xl font-bold">{siteInfo.name}</p>
               {siteInfo.description && <p className="text-gray-300 max-w-2xl mx-auto">{siteInfo.description}</p>}
               <p className="text-gray-400 text-sm pt-4">© {new Date().getFullYear()} {siteInfo.name}. All rights reserved.</p>
             </div>

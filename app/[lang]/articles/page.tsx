@@ -17,6 +17,7 @@ import {
   getPopularSearchTagsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getSiteOrigin } from '@/lib/site-url';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
@@ -58,7 +59,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const rawSiteInfo = await getSiteInfo(mediaId);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
-  
+  const origin = getSiteOrigin();
+
   return {
     title: `記事一覧 | ${siteInfo.name}`,
     description: siteInfo.description || '記事一覧',
@@ -71,13 +73,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       apple: rawSiteInfo.faviconUrl,
     } : undefined,
     alternates: {
-      canonical: `https://${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/articles`,
+      canonical: `${origin}/${lang}/articles`,
       languages: {
-        'ja-JP': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ja/articles`,
-        'en-US': `https://${process.env.NEXT_PUBLIC_BASE_URL}/en/articles`,
-        'zh-CN': `https://${process.env.NEXT_PUBLIC_BASE_URL}/zh/articles`,
-        'ko-KR': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ko/articles`,
-        'x-default': `https://${process.env.NEXT_PUBLIC_BASE_URL}/ja/articles`,
+        'ja-JP': `${origin}/ja/articles`,
+        'en-US': `${origin}/en/articles`,
+        'zh-CN': `${origin}/zh/articles`,
+        'ko-KR': `${origin}/ko/articles`,
+        'x-default': `${origin}/ja/articles`,
       },
     },
     openGraph: {
@@ -359,7 +361,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
         ) : (
           <div className="max-w-7xl mx-auto px-0 py-12">
             <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+              <p className="text-2xl font-bold">{siteInfo.name}</p>
               {siteInfo.description && (
                 <p className="text-gray-300 max-w-2xl mx-auto">
                   {siteInfo.description}

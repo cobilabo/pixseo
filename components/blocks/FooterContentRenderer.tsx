@@ -10,17 +10,34 @@ interface FooterContentRendererProps {
 }
 
 /**
+ * imageUrl のクエリを除いた path で重複コンテンツを排除する。
+ * Firebase Storage の署名付き URL は ?GoogleAccessId=... を含むため、
+ * URL 文字列の単純比較では重複検知できないケースがある。
+ */
+function dedupeContents(contents: FooterContent[]): FooterContent[] {
+  const seen = new Set<string>();
+  return contents.filter((content) => {
+    if (!content.imageUrl) return false;
+    const key = content.imageUrl.split('?')[0];
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * フッターコンテンツを表示するコンポーネント
  * 画像 + タイトル + 説明のリッチコンテンツ（画面横いっぱい、余白なし）
  */
 export default function FooterContentRenderer({ contents, lang = 'ja', className = '' }: FooterContentRendererProps) {
-  if (contents.length === 0) {
+  const uniqueContents = dedupeContents(contents);
+  if (uniqueContents.length === 0) {
     return null;
   }
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 ${className}`}>
-      {contents.slice(0, 2).map((content, index) => (
+      {uniqueContents.slice(0, 2).map((content, index) => (
         <ContentItem key={index} content={content} lang={lang} />
       ))}
     </div>

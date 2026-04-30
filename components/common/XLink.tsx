@@ -11,9 +11,9 @@ interface XLinkProps {
 export default function XLink({ username, lang = 'ja' }: XLinkProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
         X（Twitter）
-      </h2>
+      </h3>
       <a
         href={`https://x.com/${username}`}
         target="_blank"

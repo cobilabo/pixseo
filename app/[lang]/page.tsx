@@ -198,18 +198,31 @@ export default async function HomePage({ params }: PageProps) {
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
 
   // JSON-LD 構造化データ（WebSite）
+  const siteOrigin = `https://${host}`;
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteInfo.name,
     description: siteInfo.description,
-    url: `https://${host}/${lang}`,
+    url: `${siteOrigin}/${lang}`,
     inLanguage: LANG_REGIONS[lang],
+    publisher: { '@id': `${siteOrigin}/#organization` },
     potentialAction: {
       '@type': 'SearchAction',
-      target: `https://${host}/${lang}/search?q={search_term_string}`,
+      target: `${siteOrigin}/${lang}/search?q={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
+  };
+
+  // Organization スキーマ（記事ページの publisher と同じ @id を使い、再利用可能な参照に）
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteOrigin}/#organization`,
+    name: siteInfo.name,
+    url: siteOrigin,
+    ...(rawSiteInfo.logoUrl ? { logo: rawSiteInfo.logoUrl } : {}),
+    ...(rawSiteInfo.ogImageUrl ? { image: rawSiteInfo.ogImageUrl } : {}),
   };
 
   // homeページが存在する場合は固定ページを表示
@@ -241,10 +254,14 @@ export default async function HomePage({ params }: PageProps) {
             <link key={i} rel="stylesheet" href={href} />
           ))}
 
-          {/* JSON-LD構造化データ */}
+          {/* JSON-LD構造化データ: WebSite + Organization */}
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
           />
 
           {/* SEO用のh1タグ（視覚的には非表示） */}
@@ -302,10 +319,14 @@ export default async function HomePage({ params }: PageProps) {
           <style dangerouslySetInnerHTML={{ __html: customCss }} />
         )}
 
-        {/* JSON-LD構造化データ */}
+        {/* JSON-LD構造化データ: WebSite + Organization */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
 
         <MediaHeader
@@ -446,7 +467,7 @@ export default async function HomePage({ params }: PageProps) {
             ) : (
               <div className="max-w-7xl mx-auto px-0 py-12">
                 <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+                  <p className="text-2xl font-bold">{siteInfo.name}</p>
                   {siteInfo.description && (
                     <p className="text-gray-300 max-w-2xl mx-auto">{siteInfo.description}</p>
                   )}
@@ -471,10 +492,14 @@ export default async function HomePage({ params }: PageProps) {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* JSON-LD構造化データ */}
+      {/* JSON-LD構造化データ: WebSite + Organization */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
 
       {/* FV（ファーストビュー）- 最上部に配置 */}
@@ -525,50 +550,43 @@ export default async function HomePage({ params }: PageProps) {
             )}
 
             {/* 記事一覧（Cobiテーマのみ表示） */}
+            {/* SEO: 配列が空のときはセクションごと非表示にする（empty state を初期 HTML に焼き込まない） */}
             {rawTheme.layoutTheme !== 'furatto' && (
               <>
                 {/* 新着記事 */}
-                <section className="mb-12">
-                  <div className="text-center mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {localizedRecentArticles.length > 0 ? (
-                      localizedRecentArticles.map((article) => (
+                {localizedRecentArticles.length > 0 && (
+                  <section className="mb-12">
+                    <div className="text-center mb-8">
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {localizedRecentArticles.map((article) => (
                         <ArticleCard key={article.id} article={article} lang={lang} />
-                      ))
-                    ) : (
-                      <p className="text-gray-500 col-span-full text-center py-8">
-                        {t('message.noArticles', lang)}
-                      </p>
-                    )}
-                  </div>
-                </section>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {/* 人気記事ランキング */}
-                <section className="mb-12">
-                  <div className="text-center mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.popularArticles', lang)}</h2>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.popularArticlesEn', lang)}</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {localizedPopularArticles.length > 0 ? (
-                      localizedPopularArticles.map((article, index) => (
+                {localizedPopularArticles.length > 0 && (
+                  <section className="mb-12">
+                    <div className="text-center mb-8">
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.popularArticles', lang)}</h2>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.popularArticlesEn', lang)}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {localizedPopularArticles.map((article, index) => (
                         <div key={article.id} className="relative">
                           <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
                             {index + 1}
                           </span>
                           <ArticleCard article={article} lang={lang} />
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 col-span-full text-center py-8">
-                        {t('message.noArticles', lang)}
-                      </p>
-                    )}
-                  </div>
-                </section>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </>
             )}
           </div>
@@ -632,7 +650,7 @@ export default async function HomePage({ params }: PageProps) {
         ) : (
           <div className="max-w-7xl mx-auto px-0 py-12">
             <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+              <p className="text-2xl font-bold">{siteInfo.name}</p>
               {siteInfo.description && (
                 <p className="text-gray-300 max-w-2xl mx-auto">
                   {siteInfo.description}

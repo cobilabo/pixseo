@@ -14,9 +14,9 @@ export default function InstagramLink({ username, lang = 'ja' }: InstagramLinkPr
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
         Instagram
-      </h2>
+      </h3>
       <a
         href={`https://www.instagram.com/${encodeURIComponent(safe)}/`}
         target="_blank"

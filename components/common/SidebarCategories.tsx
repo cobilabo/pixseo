@@ -22,9 +22,9 @@ export default function SidebarCategories({ categories, lang = 'ja' }: SidebarCa
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
         {t('section.categories', lang)}
-      </h2>
+      </h3>
       <ul className="space-y-2">
         {categoriesWithArticles.map((category) => {
           const categoryName = (category as any)[`name_${lang}`] || category.name;

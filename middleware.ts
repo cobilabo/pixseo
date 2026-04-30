@@ -171,15 +171,40 @@ const WP_PAGE_REDIRECTS: Record<string, string> = {
 };
 
 /**
+ * 記事スラグの旧→新リダイレクトマッピング
+ * Firestore に既に格納されている誤った slug を一括で正規化するための互換層。
+ * 該当記事は管理画面/Firestore 側で slug を新値に更新したうえで、本マップを残しておくことで
+ * 既にインデックスされている旧 URL からの 301 リダイレクトを保証する。
+ *
+ * key: 旧 slug（誤った値）
+ * value: 新 slug
+ */
+const ARTICLE_SLUG_REDIRECTS: Record<string, string> = {
+  // タイポ: trip-sightseeing が重複していた記事
+  'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
+};
+
+/**
  * WordPress旧URL形式を新URL形式にリダイレクト
  * @returns 新しいパス（リダイレクトが必要な場合）またはnull
  */
 function handleWordPressRedirect(pathname: string): string | null {
-  // 記事: /YYYY/MM/DD/slug/ → /ja/articles/slug
+  // 記事スラグの旧→新リダイレクト: /[lang]/articles/<old-slug>/ → /[lang]/articles/<new-slug>/
+  const localizedArticleMatch = pathname.match(/^\/([a-z]{2})\/articles\/([^/]+)\/?$/);
+  if (localizedArticleMatch) {
+    const lang = localizedArticleMatch[1];
+    const slug = localizedArticleMatch[2];
+    if (slug in ARTICLE_SLUG_REDIRECTS) {
+      return `/${lang}/articles/${ARTICLE_SLUG_REDIRECTS[slug]}`;
+    }
+  }
+
+  // 記事: /YYYY/MM/DD/slug/ → /ja/articles/slug（slug 自体が旧→新マップに該当する場合は新 slug へ）
   const articleMatch = pathname.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/([^/]+)\/?$/);
   if (articleMatch) {
     const slug = articleMatch[4];
-    return `/${DEFAULT_LANG}/articles/${slug}`;
+    const targetSlug = ARTICLE_SLUG_REDIRECTS[slug] || slug;
+    return `/${DEFAULT_LANG}/articles/${targetSlug}`;
   }
   
   // カテゴリー: /category/slug/ or /category/parent/child/ → /ja/categories/slug

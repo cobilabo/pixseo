@@ -68,8 +68,9 @@ function SidebarArticleCard({
         ) : null}
         <div className="flex justify-between items-center gap-2 text-[10px] text-gray-500">
           <span className="min-w-0 flex-1 truncate text-left">
-            {article.viewCount !== undefined
-              ? t('article.viewCount', lang, { count: (article.viewCount ?? 0).toLocaleString() })
+            {/* SEO/CTR: 閲覧数が 0 または未取得の場合は空文字 */}
+            {article.viewCount && article.viewCount > 0
+              ? t('article.viewCount', lang, { count: article.viewCount.toLocaleString() })
               : ''}
           </span>
           {publishedLabel ? (
@@ -105,7 +106,7 @@ export default function SidebarArticleSection({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
+      <h3 className="text-lg font-bold text-gray-900 mb-4">{title}</h3>
       <div className="grid grid-cols-2 gap-3">
         {articles.map((article) => (
           <SidebarArticleCard key={article.id} article={article} categories={categories} lang={lang} />

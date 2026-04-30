@@ -479,7 +479,7 @@ export default async function FixedPage({ params }: PageProps) {
           ) : (
             <div className="max-w-7xl mx-auto px-4 py-12">
               <div className="text-center space-y-4">
-                <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+                <p className="text-2xl font-bold">{siteInfo.name}</p>
                 {siteInfo.description && (
                   <p className="text-gray-300 max-w-2xl mx-auto">{siteInfo.description}</p>
                 )}

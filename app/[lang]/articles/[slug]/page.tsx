@@ -22,6 +22,7 @@ import {
   getPopularSearchTagsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
+import { getSiteOrigin } from '@/lib/site-url';
 import { FooterContent, FooterTextLinkSection } from '@/types/theme';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
@@ -110,10 +111,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const tags = rawTags.map(tag => localizeTag(tag, lang));
   const writer = rawWriter ? localizeWriter(rawWriter, lang) : null;
   
-  // Canonical URL
-  const headersList = headers();
-  const host = headersList.get('host') || '';
-  const canonicalUrl = `https://${host}/${lang}/articles/${rawArticle.slug}`;
+  // Canonical URL（host ヘッダ → NEXT_PUBLIC_SITE_URL → フォールバックの順）
+  const origin = getSiteOrigin();
+  const canonicalUrl = `${origin}/${lang}/articles/${rawArticle.slug}`;
 
   // AIサマリーをメタデータに追加（AIO対策）
   const description = article.aiSummary || article.metaDescription || article.excerpt || article.title;
@@ -128,11 +128,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        'ja-JP': `https://${host}/ja/articles/${rawArticle.slug}`,
-        'en-US': `https://${host}/en/articles/${rawArticle.slug}`,
-        'zh-CN': `https://${host}/zh/articles/${rawArticle.slug}`,
-        'ko-KR': `https://${host}/ko/articles/${rawArticle.slug}`,
-        'x-default': `https://${host}/ja/articles/${rawArticle.slug}`,
+        'ja-JP': `${origin}/ja/articles/${rawArticle.slug}`,
+        'en-US': `${origin}/en/articles/${rawArticle.slug}`,
+        'zh-CN': `${origin}/zh/articles/${rawArticle.slug}`,
+        'ko-KR': `${origin}/ko/articles/${rawArticle.slug}`,
+        'x-default': `${origin}/ja/articles/${rawArticle.slug}`,
       },
     },
     openGraph: {
@@ -189,14 +189,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ArticlePage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   
-  // ホスト情報を取得
+  // ホスト情報を取得（client から内部リンクの絶対 URL 比較に使う）
   const headersList = headers();
   const siteHost = headersList.get('host') || '';
+  // 公開サイトのオリジン（JSON-LD・canonical で利用）
+  const siteOrigin = getSiteOrigin();
   
   const defaultSiteInfo = { 
     name: 'メディアサイト', name_ja: 'メディアサイト', name_en: 'Media Site',
     name_zh: '媒体网站', name_ko: '미디어 사이트',
-    description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false,
+    description: '', logoUrl: '', faviconUrl: '', ogImageUrl: '',
+    allowIndexing: false, isPreview: false,
   };
 
   // Step 1: mediaId 取得
@@ -284,10 +287,32 @@ export default async function ArticlePage({ params }: PageProps) {
   // パンくずリスト用のカテゴリー（最初の1つ）
   const category = categories.length > 0 ? categories[0] : null;
 
+  // アクセシビリティ系の記事かどうかを slug / カテゴリ / タグから推定し、
+  // schema.org の accessibilityFeature を付与する。
+  // 参考: https://schema.org/accessibilityFeature
+  const accessibilityKeywords = ['barrier-free', 'barrierfree', 'accessible', 'accessibility', 'wheelchair', 'バリアフリー', 'アクセシブル', '車椅子', '車いす'];
+  const articleHay = [
+    rawArticle.slug || '',
+    article.title || '',
+    ...categories.map((c) => c.name || ''),
+    ...categories.map((c) => c.slug || ''),
+    ...tags.map((t) => t.name || ''),
+    ...tags.map((t) => t.slug || ''),
+  ].join(' ').toLowerCase();
+  const isAccessibilityArticle = accessibilityKeywords.some((k) => articleHay.includes(k.toLowerCase()));
+
+  // Organization スキーマ（記事の publisher を独立して再利用可能に）
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteOrigin}/#organization`,
+    name: siteInfo.name,
+    url: siteOrigin,
+    ...(rawSiteInfo.logoUrl ? { logo: rawSiteInfo.logoUrl } : {}),
+    ...(rawSiteInfo.ogImageUrl ? { image: rawSiteInfo.ogImageUrl } : {}),
+  };
+
   // JSON-LD 構造化データ（SEO強化 + AIO対策）
-  // headersList と siteHost は関数の先頭で定義済み
-  const host = siteHost;
-  
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -301,7 +326,7 @@ export default async function ArticlePage({ params }: PageProps) {
     author: writer ? {
       '@type': 'Person',
       name: writer.handleName,
-      url: `https://${host}/${lang}/writers/${rawWriter?.id}`,
+      url: `${siteOrigin}/${lang}/writers/${rawWriter?.id}`,
       image: rawWriter?.icon || '',
       description: writer.bio || '',
     } : {
@@ -310,6 +335,7 @@ export default async function ArticlePage({ params }: PageProps) {
     },
     publisher: {
       '@type': 'Organization',
+      '@id': `${siteOrigin}/#organization`,
       name: siteInfo.name,
       logo: rawSiteInfo.logoUrl ? {
         '@type': 'ImageObject',
@@ -318,8 +344,13 @@ export default async function ArticlePage({ params }: PageProps) {
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://${host}/${lang}/articles/${rawArticle.slug || ''}`,
+      '@id': `${siteOrigin}/${lang}/articles/${rawArticle.slug || ''}`,
     },
+    // アクセシビリティ系記事に対しては schema.org の accessibility 系プロパティを付与
+    ...(isAccessibilityArticle && {
+      about: 'Accessibility',
+      accessibilityFeature: ['alternativeText', 'longDescription', 'readingOrder'],
+    }),
   };
 
   // FAQスキーマ（よくある質問がある場合）- 多言語対応
@@ -344,12 +375,18 @@ export default async function ArticlePage({ params }: PageProps) {
       {/* Themeスタイル注入 */}
       <style dangerouslySetInnerHTML={{ __html: combinedStyles }} />
 
-      {/* JSON-LD構造化データ */}
+      {/* JSON-LD構造化データ: Article */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
+
+      {/* JSON-LD構造化データ: Organization（再利用可能な publisher） */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+
       {/* FAQスキーマ（SEO強化 + AIO対策） */}
       {faqSchema && (
         <script
@@ -391,8 +428,9 @@ export default async function ArticlePage({ params }: PageProps) {
               <span>{t('article.published', lang)}: {formatArticleDate(rawArticle.publishedAt, lang)}</span>
               {rawArticle.updatedAt && <span className="hidden md:inline">•</span>}
               {rawArticle.updatedAt && <span>{t('article.updated', lang)}: {formatArticleDate(rawArticle.updatedAt, lang)}</span>}
-              {rawArticle.viewCount !== undefined && <span className="hidden md:inline">•</span>}
-              {rawArticle.viewCount !== undefined && <span>{t('article.viewCount', lang, { count: rawArticle.viewCount })}</span>}
+              {/* SEO/CTR: 閲覧数 0 のときは非表示 */}
+              {rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 && <span className="hidden md:inline">•</span>}
+              {rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 && <span>{t('article.viewCount', lang, { count: rawArticle.viewCount })}</span>}
               {rawArticle.readingTime && <span className="hidden md:inline">•</span>}
               {rawArticle.readingTime && <span>{t('article.readingTime', lang, { minutes: rawArticle.readingTime })}</span>}
             </div>
@@ -412,7 +450,7 @@ export default async function ArticlePage({ params }: PageProps) {
             updated: rawArticle.updatedAt
               ? `${t('article.updated', lang)}: ${formatArticleDate(rawArticle.updatedAt, lang)}`
               : undefined,
-            views: rawArticle.viewCount !== undefined ? t('article.viewCount', lang, { count: rawArticle.viewCount }) : undefined,
+            views: rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 ? t('article.viewCount', lang, { count: rawArticle.viewCount }) : undefined,
             readingTime: rawArticle.readingTime ? t('article.readingTime', lang, { minutes: rawArticle.readingTime }) : undefined,
           }}
           showCustomContent={true}
@@ -438,12 +476,17 @@ export default async function ArticlePage({ params }: PageProps) {
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
             {/* ふらっとテーマ: サムネイル画像を角丸で表示 */}
+            {/* next/image 経由で配信し、Firebase Storage の署名付き URL のクエリを最適化URLに隠蔽する */}
             {rawTheme.layoutTheme === 'furatto' && rawArticle.featuredImage && (
               <div className="mb-6 overflow-hidden rounded-2xl shadow-md">
-                <img
+                <Image
                   src={rawArticle.featuredImage}
                   alt={article.featuredImageAlt || article.title}
+                  width={1200}
+                  height={630}
                   className="w-full h-auto"
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 800px"
                 />
               </div>
             )}
@@ -462,7 +505,7 @@ export default async function ArticlePage({ params }: PageProps) {
             )}
 
             {/* パンくずリスト */}
-            <Breadcrumbs article={article} category={category} lang={lang} />
+            <Breadcrumbs article={article} category={category} lang={lang} siteOrigin={siteOrigin} />
 
             {/* カテゴリー・タグバッジ */}
             <CategoryTagBadges categories={categories} tags={tags} lang={lang} />
@@ -596,7 +639,7 @@ export default async function ArticlePage({ params }: PageProps) {
         ) : (
           <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold">{siteInfo.name}</h3>
+              <p className="text-2xl font-bold">{siteInfo.name}</p>
               {siteInfo.description && (
                 <p className="text-gray-300 max-w-2xl mx-auto whitespace-pre-line">{siteInfo.description}</p>
               )}
