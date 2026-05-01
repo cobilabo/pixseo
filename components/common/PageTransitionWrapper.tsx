@@ -8,7 +8,7 @@ const MIN_LOADER_MS = 220;
 /** routeKey 変化が来ない場合の強制クリア時間（ms）。
  *  popstate で armLoader が routeKey 更新「後」に走るタイミングや、
  *  実遷移が発生しなかったケースのフェイルセーフ。 */
-const SAFETY_CLEAR_MS = 5000;
+const SAFETY_CLEAR_MS = 3000;
 
 /**
  * 内部リンククリックからパス／クエリが変わるまでの間、中央にローダーを表示する。
