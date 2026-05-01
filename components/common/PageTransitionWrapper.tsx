@@ -5,6 +5,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 /** ローダーが一瞬で消えないよう最低表示時間（ms） */
 const MIN_LOADER_MS = 220;
+/** routeKey 変化が来ない場合の強制クリア時間（ms）。
+ *  popstate で armLoader が routeKey 更新「後」に走るタイミングや、
+ *  実遷移が発生しなかったケースのフェイルセーフ。 */
+const SAFETY_CLEAR_MS = 5000;
 
 /**
  * 内部リンククリックからパス／クエリが変わるまでの間、中央にローダーを表示する。
@@ -20,10 +24,23 @@ function NavigationRouteLoader() {
 
   const loaderArmedAtRef = useRef<number | null>(null);
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const armLoader = () => {
     loaderArmedAtRef.current = Date.now();
     setNavigating(true);
+
+    // routeKey が更新「後」に armLoader が走った場合（popstate 等で
+    // Next.js の履歴更新が同期的に先行したケース）、useLayoutEffect が
+    // 二度と発火せずローダーが残るのを防ぐためのフェイルセーフ。
+    if (safetyTimerRef.current != null) {
+      clearTimeout(safetyTimerRef.current);
+    }
+    safetyTimerRef.current = setTimeout(() => {
+      safetyTimerRef.current = null;
+      loaderArmedAtRef.current = null;
+      setNavigating(false);
+    }, SAFETY_CLEAR_MS);
   };
 
   /** 遷移完了（URL 確定）後、最低表示時間を満たしてからローダーを消す */
@@ -44,6 +61,10 @@ function NavigationRouteLoader() {
     clearTimerRef.current = setTimeout(() => {
       clearTimerRef.current = null;
       loaderArmedAtRef.current = null;
+      if (safetyTimerRef.current != null) {
+        clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+      }
       setNavigating(false);
     }, wait);
 
@@ -112,20 +133,24 @@ function NavigationRouteLoader() {
       return origReplace(...args);
     };
 
-    /** 戻る／進む */
+    /**
+     * 戻る／進む
+     *
+     * popstate は履歴更新後に発火するので window.location.href は新しい値。
+     * Next.js の routeKey 更新と競合しないよう同期的に armLoader を呼び、
+     * useLayoutEffect が routeKey 変化を確実に拾えるようにする。
+     */
     const onPopState = () => {
       const before = routeKeyRef.current;
-      queueMicrotask(() => {
-        try {
-          const u = new URL(window.location.href);
-          const nextKey = `${u.pathname}?${u.searchParams.toString()}`;
-          if (nextKey !== before) {
-            armLoader();
-          }
-        } catch {
-          /* ignore */
+      try {
+        const u = new URL(window.location.href);
+        const nextKey = `${u.pathname}?${u.searchParams.toString()}`;
+        if (nextKey !== before) {
+          armLoader();
         }
-      });
+      } catch {
+        /* ignore */
+      }
     };
 
     document.addEventListener('click', onClick, true);
@@ -135,6 +160,10 @@ function NavigationRouteLoader() {
       window.removeEventListener('popstate', onPopState);
       history.pushState = origPush;
       history.replaceState = origReplace;
+      if (safetyTimerRef.current != null) {
+        clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+      }
     };
   }, []);
 
