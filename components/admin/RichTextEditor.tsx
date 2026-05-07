@@ -1324,12 +1324,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       lastSpan = wrapRangeWithSpan(range);
     }
 
-    selection.removeAllRanges();
+    const selAfter = window.getSelection();
+    selAfter?.removeAllRanges();
     const newRange = document.createRange();
     if (lastSpan) {
       newRange.setStartAfter(lastSpan);
       newRange.collapse(true);
-      selection.addRange(newRange);
+      selAfter?.addRange(newRange);
     }
 
     handleInput();
