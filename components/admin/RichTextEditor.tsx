@@ -17,6 +17,14 @@ const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><d
 /** cleanWordPressHtml 適用済みの本文では div.image-figure + p.image-caption になることがある */
 const IMAGE_FIGURE_SELECTOR = 'figure.image-figure, div.image-figure';
 
+function closestImageFigure(el: Element | null): HTMLElement | null {
+  if (!el) return null;
+  return (
+    (el.closest('figure.image-figure') as HTMLElement | null) ||
+    (el.closest('div.image-figure') as HTMLElement | null)
+  );
+}
+
 /** 保存時と同様に注入ボタンを除いた innerHTML（親 value との同期判定用） */
 function canonicalEditorInnerHtml(root: HTMLElement): string {
   const clone = root.cloneNode(true) as HTMLElement;
@@ -52,11 +60,32 @@ function intersectRangeWithElement(range: Range, el: HTMLElement): Range | null 
   return sub;
 }
 
-function getIntersectingBlockElements(range: Range, editor: HTMLElement): HTMLElement[] {
-  const selector = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th';
-  return (Array.from(editor.querySelectorAll(selector)) as HTMLElement[]).filter(
-    (el) => editor.contains(el) && range.intersectsNode(el)
+function isSkippableBlockElement(el: HTMLElement, editor: HTMLElement): boolean {
+  if (el === editor) return true;
+  if (el.classList.contains('image-figure')) return true;
+  if (el.closest('.html-block, .toc-placeholder')) return true;
+  return false;
+}
+
+/** 内側のブロックだけ残す（div ラッパーと p 子の重複を解消） */
+function filterInnermostBlockElements(blocks: HTMLElement[]): HTMLElement[] {
+  return blocks.filter(
+    (b) => !blocks.some((other) => other !== b && b.contains(other))
   );
+}
+
+/**
+ * contenteditable では Enter で <p> ではなく <div> 行ができることが多いため div を含める。
+ */
+function getIntersectingBlockElements(range: Range, editor: HTMLElement): HTMLElement[] {
+  const selector = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th, div';
+  const candidates = Array.from(editor.querySelectorAll(selector)) as HTMLElement[];
+  const intersecting = candidates.filter((el) => {
+    if (!editor.contains(el)) return false;
+    if (isSkippableBlockElement(el, editor)) return false;
+    return range.intersectsNode(el);
+  });
+  return filterInnermostBlockElements(intersecting);
 }
 
 function ensureTocPlaceholderChrome(root: HTMLElement | null) {
@@ -116,6 +145,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const draggingBlockIdRef = useRef<string | null>(null);
   /** 直近でエディタと一致させた本文（親の value との差分同期に使う） */
   const lastCanonicalHtmlRef = useRef<string | undefined>(undefined);
+  /** フォントサイズモーダル表示時に選択が失われるため、開く直前の Range を保持 */
+  const fontSizeSavedRangeRef = useRef<Range | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -174,9 +205,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
     if (!editorRef.current) return;
-    const figures = editorRef.current.querySelectorAll<HTMLElement>(IMAGE_FIGURE_SELECTOR);
+    const figures = editorRef.current.querySelectorAll<HTMLElement>(
+      'figure.image-figure, div.image-figure'
+    );
     figures.forEach((figure) => {
       figure.style.position = 'relative';
+      figure.querySelectorAll('img').forEach((img) => {
+        img.setAttribute('draggable', 'false');
+      });
       if (!figure.querySelector('.image-figure-edit-btn')) {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
@@ -254,24 +290,26 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setShowImageEditModal(true);
     };
 
+    /** capture で処理しないと、contenteditable やブラウザ既定の画像挙動のあとにクリックが潰れることがある */
+    const handleFigureImageClickCapture = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.image-figure-edit-btn, .image-figure-delete-btn')) return;
+      const imgEl =
+        target instanceof HTMLImageElement
+          ? target
+          : (target.closest('img') as HTMLImageElement | null);
+      if (!imgEl || !editor.contains(imgEl)) return;
+      const figure = closestImageFigure(imgEl);
+      if (!figure || !editor.contains(figure)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openFigureEdit(figure);
+    };
+
     // ボタンクリックのハンドラ
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const button = target.closest('[data-action]') as HTMLElement;
-
-      // 画像本体クリックで編集モーダル（ツールバーの編集ボタンと同じ）
-      if (!button && target.tagName === 'IMG') {
-        const img = target as HTMLImageElement;
-        if (editor.contains(img)) {
-          const figure = img.closest(IMAGE_FIGURE_SELECTOR) as HTMLElement | null;
-          if (figure && editor.contains(figure)) {
-            e.preventDefault();
-            e.stopPropagation();
-            openFigureEdit(figure);
-            return;
-          }
-        }
-      }
       
       if (button) {
         e.preventDefault();
@@ -293,7 +331,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'edit-figure') {
-          const figure = button.closest(IMAGE_FIGURE_SELECTOR) as HTMLElement | null;
+          const figure = closestImageFigure(button);
           if (figure && editorRef.current) {
             openFigureEdit(figure);
           }
@@ -301,7 +339,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'delete-figure') {
-          const figure = button.closest(IMAGE_FIGURE_SELECTOR);
+          const figure = closestImageFigure(button);
           if (figure) {
             figure.remove();
             if (editorRef.current) {
@@ -504,6 +542,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setDraggingBlockId(null);
     };
 
+    editor.addEventListener('click', handleFigureImageClickCapture, true);
     editor.addEventListener('click', handleClick);
     editor.addEventListener('input', handleTextareaInput);
     editor.addEventListener('mousedown', handleMouseDown);
@@ -511,6 +550,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      editor.removeEventListener('click', handleFigureImageClickCapture, true);
       editor.removeEventListener('click', handleClick);
       editor.removeEventListener('input', handleTextareaInput);
       editor.removeEventListener('mousedown', handleMouseDown);
@@ -882,6 +922,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     img.src = url;
     img.alt =
       imageAlt.trim() !== '' ? imageAlt.trim() : imageCaption || '';
+    img.setAttribute('draggable', 'false');
     img.style.width = '100%';
     img.style.height = 'auto';
     img.style.borderRadius = '0.5rem';
@@ -1212,12 +1253,33 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const editor = editorRef.current;
 
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
+    let range: Range | null = null;
+    const saved = fontSizeSavedRangeRef.current;
+    if (saved) {
+      try {
+        if (
+          editor.contains(saved.startContainer) &&
+          editor.contains(saved.endContainer)
+        ) {
+          range = saved.cloneRange();
+        }
+      } catch {
+        range = null;
+      }
+    }
+    if (!range && selection && selection.rangeCount > 0) {
+      const r = selection.getRangeAt(0);
+      if (editor.contains(r.commonAncestorContainer)) {
+        range = r.cloneRange();
+      }
+    }
+    if (!range) {
       alert('テキストを選択してください');
       return;
     }
 
-    const range = selection.getRangeAt(0).cloneRange();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
 
     // 選択範囲がエディタ内にあるかチェック
     if (!editor.contains(range.commonAncestorContainer)) {
@@ -1271,17 +1333,24 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     handleInput();
+    fontSizeSavedRangeRef.current = null;
     setShowFontSizeModal(false);
     editor.focus();
   };
 
   // フォントサイズモーダルを開く際に、選択範囲のフォントサイズを取得
   const openFontSizeModal = () => {
+    fontSizeSavedRangeRef.current = null;
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && editorRef.current) {
       const range = selection.getRangeAt(0);
       
       if (editorRef.current.contains(range.commonAncestorContainer)) {
+        try {
+          fontSizeSavedRangeRef.current = range.cloneRange();
+        } catch {
+          fontSizeSavedRangeRef.current = null;
+        }
         // 選択範囲または親要素からフォントサイズを取得
         let element: Node | null = range.commonAncestorContainer;
         if (element.nodeType === Node.TEXT_NODE) {
@@ -1980,32 +2049,53 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  // フォントサイズをリセット（デフォルトに戻す）
-                  const selection = window.getSelection();
-                  if (selection && selection.rangeCount > 0 && editorRef.current) {
-                    const range = selection.getRangeAt(0);
-                    if (editorRef.current.contains(range.commonAncestorContainer)) {
-                      // 選択範囲内のspan要素からfontSizeスタイルを削除
-                      const spanElements = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
-                        ? (range.commonAncestorContainer as Element).querySelectorAll('span[style*="font-size"]')
-                        : [];
-                      
-                      spanElements.forEach((span) => {
-                        const element = span as HTMLElement;
-                        if (element.style.fontSize) {
-                          element.style.fontSize = '';
-                          // スタイルが空になったらspanタグを削除
-                          if (!element.style.cssText.trim()) {
-                            element.outerHTML = element.innerHTML;
-                          }
-                        }
-                      });
-                      
-                      handleInput();
-                      setShowFontSizeModal(false);
-                      editorRef.current.focus();
+                  if (!editorRef.current) return;
+                  const ed = editorRef.current;
+                  let range: Range | null = null;
+                  const saved = fontSizeSavedRangeRef.current;
+                  if (saved) {
+                    try {
+                      if (ed.contains(saved.startContainer) && ed.contains(saved.endContainer)) {
+                        range = saved.cloneRange();
+                      }
+                    } catch {
+                      range = null;
                     }
                   }
+                  const sel = window.getSelection();
+                  if (!range && sel && sel.rangeCount > 0) {
+                    const r = sel.getRangeAt(0);
+                    if (ed.contains(r.commonAncestorContainer)) range = r.cloneRange();
+                  }
+                  if (!range) {
+                    fontSizeSavedRangeRef.current = null;
+                    setShowFontSizeModal(false);
+                    return;
+                  }
+                  sel?.removeAllRanges();
+                  sel?.addRange(range);
+                  // 選択範囲内のspan要素からfontSizeスタイルを削除
+                  const spanElements =
+                    range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+                      ? (range.commonAncestorContainer as Element).querySelectorAll(
+                          'span[style*="font-size"]'
+                        )
+                      : [];
+
+                  spanElements.forEach((span) => {
+                    const element = span as HTMLElement;
+                    if (element.style.fontSize) {
+                      element.style.fontSize = '';
+                      if (!element.style.cssText.trim()) {
+                        element.outerHTML = element.innerHTML;
+                      }
+                    }
+                  });
+
+                  handleInput();
+                  fontSizeSavedRangeRef.current = null;
+                  setShowFontSizeModal(false);
+                  ed.focus();
                 }}
                 className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-sm text-gray-900"
               >
@@ -2016,6 +2106,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  fontSizeSavedRangeRef.current = null;
                   setShowFontSizeModal(false);
                   setFontSize('16');
                 }}
