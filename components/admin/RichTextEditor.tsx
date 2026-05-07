@@ -17,6 +17,48 @@ const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><d
 /** cleanWordPressHtml 適用済みの本文では div.image-figure + p.image-caption になることがある */
 const IMAGE_FIGURE_SELECTOR = 'figure.image-figure, div.image-figure';
 
+/** 保存時と同様に注入ボタンを除いた innerHTML（親 value との同期判定用） */
+function canonicalEditorInnerHtml(root: HTMLElement): string {
+  const clone = root.cloneNode(true) as HTMLElement;
+  clone
+    .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
+    .forEach((b) => b.remove());
+  return clone.innerHTML;
+}
+
+/** 選択範囲とブロック要素の共通部分（複数段落へのフォントサイズ適用用） */
+function intersectRangeWithElement(range: Range, el: HTMLElement): Range | null {
+  const inner = document.createRange();
+  inner.selectNodeContents(el);
+
+  if (range.compareBoundaryPoints(Range.END_TO_START, inner) <= 0) return null;
+  if (range.compareBoundaryPoints(Range.START_TO_END, inner) >= 0) return null;
+
+  const sub = document.createRange();
+
+  if (range.compareBoundaryPoints(Range.START_TO_START, inner) < 0) {
+    sub.setStart(inner.startContainer, inner.startOffset);
+  } else {
+    sub.setStart(range.startContainer, range.startOffset);
+  }
+
+  if (range.compareBoundaryPoints(Range.END_TO_END, inner) > 0) {
+    sub.setEnd(inner.endContainer, inner.endOffset);
+  } else {
+    sub.setEnd(range.endContainer, range.endOffset);
+  }
+
+  if (sub.collapsed) return null;
+  return sub;
+}
+
+function getIntersectingBlockElements(range: Range, editor: HTMLElement): HTMLElement[] {
+  const selector = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th';
+  return (Array.from(editor.querySelectorAll(selector)) as HTMLElement[]).filter(
+    (el) => editor.contains(el) && range.intersectsNode(el)
+  );
+}
+
 function ensureTocPlaceholderChrome(root: HTMLElement | null) {
   if (!root) return;
   const nodes = root.querySelectorAll<HTMLElement>(
@@ -110,18 +152,17 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const ed = editorRef.current;
     const prevCanonical = lastCanonicalHtmlRef.current;
     const valueChangedFromParent = prevCanonical !== value;
+    const canonicalNow = canonicalEditorInnerHtml(ed);
 
-    if (valueChangedFromParent && value != null && value !== ed.innerHTML) {
+    // 注入した編集・削除ボタンは innerHTML に含まれるが保存 value には無いため、
+    // value !== ed.innerHTML だと常に不一致になり、入力のたびに DOM を貼り直してカーソルが先頭へ飛ぶ。
+    if (valueChangedFromParent && value != null && value !== canonicalNow) {
       ed.innerHTML = value;
     }
 
     ensureTocPlaceholderChrome(ed);
 
-    const clone = ed.cloneNode(true) as HTMLElement;
-    clone
-      .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
-      .forEach((b) => b.remove());
-    const canonical = clone.innerHTML;
+    const canonical = canonicalEditorInnerHtml(ed);
 
     if (canonical !== value) {
       onChangeRef.current(canonical);
@@ -200,10 +241,37 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const editor = editorRef.current;
     if (!editor) return;
 
+    const openFigureEdit = (figure: HTMLElement) => {
+      const img = figure.querySelector('img');
+      if (!img) return;
+      const copyEl = figure.querySelector('.image-copyright');
+      const capEl = figure.querySelector('figcaption, p.image-caption');
+      editingFigureRef.current = figure;
+      setEditImageSrc(img.getAttribute('src') || '');
+      setEditImageAlt(img.getAttribute('alt') || '');
+      setEditImageCaption(capEl?.textContent?.trim() || '');
+      setEditImageCopyright(copyEl?.textContent?.trim() || '');
+      setShowImageEditModal(true);
+    };
+
     // ボタンクリックのハンドラ
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const button = target.closest('[data-action]') as HTMLElement;
+
+      // 画像本体クリックで編集モーダル（ツールバーの編集ボタンと同じ）
+      if (!button && target.tagName === 'IMG') {
+        const img = target as HTMLImageElement;
+        if (editor.contains(img)) {
+          const figure = img.closest(IMAGE_FIGURE_SELECTOR) as HTMLElement | null;
+          if (figure && editor.contains(figure)) {
+            e.preventDefault();
+            e.stopPropagation();
+            openFigureEdit(figure);
+            return;
+          }
+        }
+      }
       
       if (button) {
         e.preventDefault();
@@ -227,17 +295,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         if (action === 'edit-figure') {
           const figure = button.closest(IMAGE_FIGURE_SELECTOR) as HTMLElement | null;
           if (figure && editorRef.current) {
-            const img = figure.querySelector('img');
-            if (img) {
-              const copyEl = figure.querySelector('.image-copyright');
-              const capEl = figure.querySelector('figcaption, p.image-caption');
-              editingFigureRef.current = figure;
-              setEditImageSrc(img.getAttribute('src') || '');
-              setEditImageAlt(img.getAttribute('alt') || '');
-              setEditImageCaption(capEl?.textContent?.trim() || '');
-              setEditImageCopyright(copyEl?.textContent?.trim() || '');
-              setShowImageEditModal(true);
-            }
+            openFigureEdit(figure);
           }
           return;
         }
@@ -1151,51 +1209,70 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // フォントサイズ変更
   const applyFontSize = () => {
     if (!editorRef.current) return;
-    
+    const editor = editorRef.current;
+
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       alert('テキストを選択してください');
       return;
     }
-    
+
     const range = selection.getRangeAt(0).cloneRange();
-    
+
     // 選択範囲がエディタ内にあるかチェック
-    if (!editorRef.current.contains(range.commonAncestorContainer)) {
+    if (!editor.contains(range.commonAncestorContainer)) {
       alert('エディタ内のテキストを選択してください');
       return;
     }
-    
+
     // 選択範囲が空の場合は、カーソル位置にテキストノードを作成
     if (range.collapsed) {
       const textNode = document.createTextNode('\u200B'); // ゼロ幅スペース
       range.insertNode(textNode);
       range.selectNodeContents(textNode);
     }
-    
-    // 選択範囲をspanで囲んでフォントサイズを適用
-    const span = document.createElement('span');
-    span.style.fontSize = `${fontSize}px`;
-    
-    try {
-      range.surroundContents(span);
-    } catch (e) {
-      // 選択範囲が適切でない場合は、選択範囲全体をspanで囲む
-      const contents = range.extractContents();
-      span.appendChild(contents);
-      range.insertNode(span);
+
+    const px = `${fontSize}px`;
+    const wrapRangeWithSpan = (r: Range): HTMLElement => {
+      const span = document.createElement('span');
+      span.style.fontSize = px;
+      try {
+        r.surroundContents(span);
+      } catch {
+        const contents = r.extractContents();
+        span.appendChild(contents);
+        r.insertNode(span);
+      }
+      return span;
+    };
+
+    const blocks = getIntersectingBlockElements(range, editor);
+    const subs: Range[] = [];
+    for (const block of blocks) {
+      const sub = intersectRangeWithElement(range, block);
+      if (sub && !sub.collapsed) subs.push(sub);
     }
-    
-    // カーソルを選択範囲の後に移動
+
+    let lastSpan: HTMLElement | null = null;
+    if (subs.length > 0) {
+      for (const sub of subs) {
+        lastSpan = wrapRangeWithSpan(sub);
+      }
+    } else {
+      lastSpan = wrapRangeWithSpan(range);
+    }
+
     selection.removeAllRanges();
     const newRange = document.createRange();
-    newRange.setStartAfter(span);
-    newRange.collapse(true);
-    selection.addRange(newRange);
-    
+    if (lastSpan) {
+      newRange.setStartAfter(lastSpan);
+      newRange.collapse(true);
+      selection.addRange(newRange);
+    }
+
     handleInput();
     setShowFontSizeModal(false);
-    editorRef.current.focus();
+    editor.focus();
   };
 
   // フォントサイズモーダルを開く際に、選択範囲のフォントサイズを取得
