@@ -60,7 +60,8 @@ export async function searchArticlesWithAlgolia(
         page,
         hitsPerPage,
         filters,
-        ...(keyword ? { restrictSearchableAttributes: ['title'] } : {}),
+        // contentText: sync で本文から HTML を除いた先頭 3000 文字（AlgoliaArticleRecord）
+        ...(keyword ? { restrictSearchableAttributes: ['title', 'contentText'] } : {}),
       },
     });
 
