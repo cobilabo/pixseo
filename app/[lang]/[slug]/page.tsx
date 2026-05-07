@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const mediaId = await getMediaIdFromHost();
   
   if (!mediaId) {
-    return { title: 'ページが見つかりません' };
+    notFound();
   }
 
   const [rawPage, rawSiteInfo] = await Promise.all([
@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getSiteInfo(mediaId),
   ]);
   if (!rawPage) {
-    return { title: 'ページが見つかりません' };
+    notFound();
   }
 
   const page = localizePage(rawPage, lang);

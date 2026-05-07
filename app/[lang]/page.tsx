@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag, localizePage } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
 import { Page } from '@/types/page';
+import { shouldReturn404ForMissingTenant } from '@/lib/firebase/media-tenant-helper';
 
 // homeスラッグの固定ページを取得
 async function getHomePage(mediaId: string): Promise<Page | null> {
@@ -90,7 +92,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const mediaId = await getMediaIdFromHost();
   const headersList = headers();
   const host = headersList.get('host') || '';
-  
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   if (!mediaId) {
     return {
       title: 'PixSEO Media',
@@ -151,6 +157,11 @@ export default async function HomePage({ params }: PageProps) {
   const mediaId = await getMediaIdFromHost();
   const headersList = headers();
   const host = headersList.get('host') || '';
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   const userAgent = headersList.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
   

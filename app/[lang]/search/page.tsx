@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -34,6 +35,7 @@ import SidebarRenderer from '@/components/common/SidebarRenderer';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, localizeTag } from '@/lib/i18n/localize';
+import { shouldReturn404ForMissingTenant } from '@/lib/firebase/media-tenant-helper';
 
 interface PageProps {
   params: {
@@ -48,7 +50,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const headersList = headers();
   const host = headersList.get('host') || '';
   const mediaId = await getMediaIdFromHost();
-  
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   const rawSiteInfo = mediaId 
     ? await getSiteInfo(mediaId)
     : {
@@ -97,10 +103,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SearchPage({ params }: PageProps) {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  
+
+  const headersList = headers();
+  const host = headersList.get('host') || '';
+
   // サーバーサイドでデータを取得
   const mediaId = await getMediaIdFromHost();
-  
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   // サイト設定、Theme、カテゴリー、タグ、よく検索されているタグを並列取得
   const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, fallbackArticles, recentArticles, popularSearchTags] = await Promise.all([
     getSiteInfo(mediaId || ''),

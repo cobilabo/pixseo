@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const [mediaId, rawWriter] = await Promise.all([getMediaIdFromHost(), getWriterServer(params.id)]);
   
   if (!rawWriter) {
-    return { title: 'ライターが見つかりません', robots: { index: false, follow: false } };
+    notFound();
   }
 
   const writer = localizeWriter(rawWriter, lang);

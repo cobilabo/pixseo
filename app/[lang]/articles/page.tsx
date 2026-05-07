@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -21,6 +22,7 @@ import { getSiteOrigin } from '@/lib/site-url';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
 import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle } from '@/lib/i18n/localize';
 import { t } from '@/lib/i18n/translations';
+import { shouldReturn404ForMissingTenant } from '@/lib/firebase/media-tenant-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
 import CategoryBar from '@/components/layout/CategoryBar';
 import FirstView from '@/components/layout/FirstView';
@@ -49,7 +51,12 @@ export const revalidate = 600;
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   const mediaId = await getMediaIdFromHost();
-  
+  const host = headers().get('host') || '';
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   if (!mediaId) {
     return {
       title: '記事一覧',
@@ -98,7 +105,11 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
   const mediaId = await getMediaIdFromHost();
   const headersList = headers();
   const host = headersList.get('host') || '';
-  
+
+  if (shouldReturn404ForMissingTenant(host, mediaId)) {
+    notFound();
+  }
+
   // ページネーション設定
   const currentPage = parseInt(searchParams.page || '1', 10);
   const articlesPerPage = 30;

@@ -34,6 +34,20 @@ export function getCurrentHost(): string {
 }
 
 /**
+ * 本番相当のホストで mediaId が解決できないときは HTTP 404 にすべきか。
+ * （ビルド時は host が取れないことが多い／localhost は開発用に 404 にしない）
+ */
+export function shouldReturn404ForMissingTenant(host: string, mediaId: string | null): boolean {
+  if (mediaId) return false;
+  if (!host) return false;
+  const lower = host.toLowerCase();
+  if (lower.startsWith('localhost') || lower.startsWith('127.0.0.1') || lower.startsWith('[::1]')) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * ホスト名からmediaIdを取得（キャッシュ付き）
  * 
  * サポートする環境:

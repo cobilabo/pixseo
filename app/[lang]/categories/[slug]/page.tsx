@@ -53,9 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
   
   if (!rawCategory) {
-    return {
-      title: 'カテゴリーが見つかりません',
-    };
+    notFound();
   }
 
   const category = localizeCategory(rawCategory, lang);

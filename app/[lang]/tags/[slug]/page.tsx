@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
   
   if (!rawTag) {
-    return { title: 'タグが見つかりません' };
+    notFound();
   }
 
   const tag = localizeTag(rawTag, lang);

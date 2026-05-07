@@ -91,10 +91,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
   
   if (!rawArticle) {
-    return {
-      title: '記事が見つかりません',
-      robots: { index: false, follow: false },
-    };
+    notFound();
   }
 
   const article = localizeArticle(rawArticle, lang);
