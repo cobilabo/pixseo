@@ -282,6 +282,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [imageAlt, setImageAlt] = useState('');
   const [imageCopyright, setImageCopyright] = useState('');
   const [showImageEditModal, setShowImageEditModal] = useState(false);
+  const [editImageInputMethod, setEditImageInputMethod] = useState<'upload' | 'url' | 'ai'>(
+    'upload'
+  );
   const [editImageSrc, setEditImageSrc] = useState('');
   const [editImageAlt, setEditImageAlt] = useState('');
   const [editImageCaption, setEditImageCaption] = useState('');
@@ -318,6 +321,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     setEditImageAlt(img.getAttribute('alt') || '');
     setEditImageCaption(capEl?.textContent?.trim() || '');
     setEditImageCopyright(copyEl?.textContent?.trim() || '');
+    setEditImageInputMethod('upload');
     setShowImageEditModal(true);
   };
 
@@ -975,6 +979,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     editingFigureRef.current = null;
     setShowImageEditModal(false);
+    setEditImageInputMethod('upload');
     setEditImageSrc('');
     setEditImageAlt('');
     setEditImageCaption('');
@@ -986,6 +991,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const closeImageEditModal = () => {
     editingFigureRef.current = null;
     setShowImageEditModal(false);
+    setEditImageInputMethod('upload');
     setEditImageSrc('');
     setEditImageAlt('');
     setEditImageCaption('');
@@ -1081,6 +1087,40 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (response.ok) {
         const data = await response.json();
         insertImageWithCaption(data.url);
+      } else {
+        alert('画像のアップロードに失敗しました');
+      }
+    } catch (error) {
+      console.error('画像アップロードエラー:', error);
+      alert('画像のアップロードに失敗しました');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  /** 編集モーダル用: アップロード後は URL のみ差し替え（挿入はしない） */
+  const handleEditImageUpload = async (file: File) => {
+    if (!currentTenant) {
+      alert('サービスが選択されていません');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'x-media-id': currentTenant.id,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEditImageSrc(data.url);
       } else {
         alert('画像のアップロードに失敗しました');
       }
@@ -2000,57 +2040,177 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         </div>
       )}
 
-      {/* 挿入済み画像の編集 */}
+      {/* 挿入済み画像の編集（画像挿入モーダルと同一のタブ UI） */}
       {showImageEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[150]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-custom text-gray-900">
             <h3 className="text-xl font-bold mb-4 text-gray-900">画像の設定を編集</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              画像URL・代替テキスト・キャプション・著作権表記を変更できます。
-            </p>
 
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">画像URL</label>
-            <input
-              type="url"
-              value={editImageSrc}
-              onChange={(e) => setEditImageSrc(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-gray-900"
-            />
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setEditImageInputMethod('upload')}
+                className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
+                  editImageInputMethod === 'upload'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                アップロード
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditImageInputMethod('ai')}
+                className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
+                  editImageInputMethod === 'ai'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🎨 AI生成
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditImageInputMethod('url')}
+                className={`flex-1 px-3 py-2 rounded-xl font-medium transition-colors text-sm ${
+                  editImageInputMethod === 'url'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                URL指定
+              </button>
+            </div>
 
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
-            </label>
-            <input
-              type="text"
-              value={editImageAlt}
-              onChange={(e) => setEditImageAlt(e.target.value)}
-              placeholder="スクリーンリーダー・SEO用"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-            />
+            {editImageInputMethod === 'upload' ? (
+              <div>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition-colors mb-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleEditImageUpload(file);
+                    }}
+                    className="hidden"
+                    id="image-upload-editor-edit"
+                    disabled={uploadingImage}
+                  />
+                  <label htmlFor="image-upload-editor-edit" className="cursor-pointer">
+                    <div className="mb-3">
+                      <svg
+                        className="w-16 h-16 text-gray-400 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {uploadingImage ? 'アップロード中...' : 'クリックして画像を選択'}
+                    </p>
+                  </label>
+                </div>
 
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              著作権表記<span className="text-gray-400 font-normal">任意</span>
-            </label>
-            <input
-              type="text"
-              value={editImageCopyright}
-              onChange={(e) => setEditImageCopyright(e.target.value)}
-              placeholder="例：©企業名"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-            />
+                <input
+                  type="text"
+                  value={editImageCopyright}
+                  onChange={(e) => setEditImageCopyright(e.target.value)}
+                  placeholder="著作権表記（例：©企業名）"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                />
 
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              キャプション<span className="text-gray-400 font-normal">任意</span>
-            </label>
-            <input
-              type="text"
-              value={editImageCaption}
-              onChange={(e) => setEditImageCaption(e.target.value)}
-              placeholder="画像下に表示する説明"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={editImageAlt}
+                  onChange={(e) => setEditImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+                />
+                <p className="text-xs text-gray-500 mb-3">
+                  SEO・アクセシビリティ用。キャプションと別の説明にしたい場合に入力してください。
+                </p>
 
-            <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={editImageCaption}
+                  onChange={(e) => setEditImageCaption(e.target.value)}
+                  placeholder="画像キャプション（例：画像元：～）"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            ) : editImageInputMethod === 'ai' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={editImageAlt}
+                  onChange={(e) => setEditImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3"
+                />
+                <ImageGenerator
+                  onImageGenerated={(url) => {
+                    setEditImageSrc(url);
+                  }}
+                  articleTitle=""
+                  articleContent={value}
+                />
+              </div>
+            ) : (
+              <div>
+                <input
+                  type="url"
+                  value={editImageSrc}
+                  onChange={(e) => setEditImageSrc(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                />
+
+                <input
+                  type="text"
+                  value={editImageCopyright}
+                  onChange={(e) => setEditImageCopyright(e.target.value)}
+                  placeholder="著作権表記（例：©企業名）"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                />
+
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  代替テキスト（alt）<span className="text-gray-400 font-normal">任意</span>
+                </label>
+                <input
+                  type="text"
+                  value={editImageAlt}
+                  onChange={(e) => setEditImageAlt(e.target.value)}
+                  placeholder="スクリーンリーダー用。未入力時はキャプションを使います"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+                />
+                <p className="text-xs text-gray-500 mb-3">
+                  SEO・アクセシビリティ用。キャプションと別の説明にしたい場合に入力してください。
+                </p>
+
+                <input
+                  type="text"
+                  value={editImageCaption}
+                  onChange={(e) => setEditImageCaption(e.target.value)}
+                  placeholder="画像キャプション（例：画像元：～）"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                />
+              </div>
+            )}
+
+            <div className="mt-4 flex gap-3">
               <button
                 type="button"
                 onClick={applyImageFigureEdit}
@@ -2062,6 +2222,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
                 type="button"
                 onClick={closeImageEditModal}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-900"
+                disabled={uploadingImage}
               >
                 キャンセル
               </button>
