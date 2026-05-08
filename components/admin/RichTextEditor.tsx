@@ -38,6 +38,18 @@ function closestImageFigure(el: Element | null): HTMLElement | null {
   return null;
 }
 
+/** pointer / click の target が Element でない場合の安全な起点 */
+function eventTargetElement(ev: Event): Element | null {
+  const t = ev.target;
+  if (!t || !(t instanceof Node)) return null;
+  return t instanceof Element ? t : t.parentElement;
+}
+
+function hitImageFigureToolbar(ev: Event): boolean {
+  const el = eventTargetElement(ev);
+  return !!el?.closest('.image-figure-edit-btn, .image-figure-delete-btn');
+}
+
 /** 保存時と同様に注入ボタンを除いた innerHTML（親 value との同期判定用） */
 function canonicalEditorInnerHtml(root: HTMLElement): string {
   const clone = root.cloneNode(true) as HTMLElement;
@@ -213,18 +225,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       'figure.image-figure, div.image-figure, figure.wp-block-image'
     );
 
-    const onFigurePointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      const figure = e.currentTarget as HTMLElement;
-      const t = e.target as HTMLElement;
-      if (t.closest('.image-figure-edit-btn, .image-figure-delete-btn')) return;
-      if (!figure.querySelector('img')) return;
-      e.preventDefault();
-      e.stopPropagation();
-      openImageFigureEditRef.current(figure);
-    };
-
-    const disposers: AbortController[] = [];
     figures.forEach((figure) => {
       figure.style.position = 'relative';
       figure.querySelectorAll('img').forEach((img) => {
@@ -250,20 +250,46 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
         figure.appendChild(btn);
       }
-
-      const ac = new AbortController();
-      figure.addEventListener('pointerdown', onFigurePointerDown, {
-        capture: true,
-        passive: false,
-        signal: ac.signal,
-      });
-      disposers.push(ac);
     });
-
-    return () => {
-      disposers.forEach((ac) => ac.abort());
-    };
   }, [value]);
+
+  /** 画像ブロック: capture で window から composedPath を辿り、figure 直付けより確実に拾う */
+  useEffect(() => {
+    const onPointerDownCapture = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const ed = editorRef.current;
+      if (!ed) return;
+
+      const path = e.composedPath();
+      const leaf = path[0];
+      if (!(leaf instanceof Node) || !ed.contains(leaf)) return;
+      if (hitImageFigureToolbar(e)) return;
+
+      for (const node of path) {
+        if (!(node instanceof Element)) continue;
+        if (!ed.contains(node)) continue;
+        if (node.closest('.html-block-preview-content, .toc-placeholder')) continue;
+
+        const figure = closestImageFigure(node);
+        if (
+          figure &&
+          ed.contains(figure) &&
+          !figure.closest('.html-block-preview-content, .toc-placeholder') &&
+          figure.querySelector('img')
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          openImageFigureEditRef.current(figure);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('pointerdown', onPointerDownCapture, true);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDownCapture, true);
+    };
+  }, []);
 
   // 既存のHTMLブロックを検出して初期化
   useEffect(() => {
@@ -308,7 +334,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     // ボタンクリックのハンドラ
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = eventTargetElement(e);
+      if (!target) return;
       const button = target.closest('[data-action]') as HTMLElement;
       
       if (button) {
@@ -443,7 +470,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     // mousedownでドラッグ開始
     const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = eventTargetElement(e);
+      if (!target) return;
       const dragHandle = target.closest('.html-block-drag-handle') as HTMLElement;
       
       if (dragHandle) {
