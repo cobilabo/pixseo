@@ -15,9 +15,24 @@ import ImageGenerator from './ImageGenerator';
 const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
 
 /** cleanWordPressHtml 適用済みの本文では div.image-figure + p.image-caption になることがある */
-const IMAGE_FIGURE_SELECTOR = 'figure.image-figure, div.image-figure';
 
-function closestImageFigure(el: Element | null): HTMLElement | null {
+/**
+ * 移行 HTML などで `<div><img></div>` のようにラッパーだけ付いている画像ブロック。
+ * 子要素が img 1つのみの div / figure（エディタ直下そのものは除外）
+ */
+function isBareSingleImageWrapper(el: HTMLElement, editorRoot: HTMLElement | null): boolean {
+  const tag = el.tagName;
+  if (tag !== 'DIV' && tag !== 'FIGURE') return false;
+  if (editorRoot && el === editorRoot) return false;
+  if (el.closest('.html-block, .toc-placeholder')) return false;
+  const kids = Array.from(el.children);
+  return kids.length === 1 && kids[0].tagName === 'IMG';
+}
+
+function closestImageFigure(
+  el: Element | null,
+  editorRoot: HTMLElement | null = null
+): HTMLElement | null {
   if (!el) return null;
   const byClass =
     (el.closest('figure.image-figure') as HTMLElement | null) ||
@@ -31,11 +46,33 @@ function closestImageFigure(el: Element | null): HTMLElement | null {
 
   let p: HTMLElement | null = img.parentElement;
   while (p) {
+    if (isBareSingleImageWrapper(p, editorRoot)) return p;
     if (p.tagName === 'FIGURE' && p.querySelector('img')) return p;
     if (p.classList.contains('image-figure')) return p;
     p = p.parentElement;
   }
   return null;
+}
+
+/** ツールバー注入対象の画像ラッパーを列挙（クラス付き + 素の div/figure+img） */
+function collectImageFigureRoots(editor: HTMLElement): HTMLElement[] {
+  const seen = new Set<HTMLElement>();
+  const add = (h: HTMLElement) => {
+    if (!editor.contains(h)) return;
+    if (h.closest('.html-block, .toc-placeholder')) return;
+    seen.add(h);
+  };
+
+  editor.querySelectorAll<HTMLElement>(
+    'figure.image-figure, div.image-figure, figure.wp-block-image'
+  ).forEach(add);
+
+  editor.querySelectorAll<HTMLElement>('div, figure').forEach((el) => {
+    if (seen.has(el)) return;
+    if (isBareSingleImageWrapper(el, editor)) add(el);
+  });
+
+  return Array.from(seen);
 }
 
 /** pointer / click の target が Element でない場合の安全な起点 */
@@ -221,9 +258,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
     if (!editorRef.current) return;
-    const figures = editorRef.current.querySelectorAll<HTMLElement>(
-      'figure.image-figure, div.image-figure, figure.wp-block-image'
-    );
+    const figures = collectImageFigureRoots(editorRef.current);
 
     figures.forEach((figure) => {
       figure.style.position = 'relative';
@@ -270,7 +305,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         if (!ed.contains(node)) continue;
         if (node.closest('.html-block-preview-content, .toc-placeholder')) continue;
 
-        const figure = closestImageFigure(node);
+        const figure = closestImageFigure(node, ed);
         if (
           figure &&
           ed.contains(figure) &&
@@ -358,7 +393,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'edit-figure') {
-          const figure = closestImageFigure(button);
+          const figure = closestImageFigure(button, editorRef.current);
           if (figure && editorRef.current) {
             openImageFigureEditRef.current(figure);
           }
@@ -366,7 +401,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         }
 
         if (action === 'delete-figure') {
-          const figure = closestImageFigure(button);
+          const figure = closestImageFigure(button, editorRef.current);
           if (figure) {
             figure.remove();
             if (editorRef.current) {
