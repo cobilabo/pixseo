@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   useCallback,
+  type KeyboardEvent,
 } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
@@ -55,12 +56,120 @@ function closestImageFigure(
 
   let p: HTMLElement | null = img.parentElement;
   while (p) {
+    if (editorRoot && p === editorRoot) break;
     if (isEditorImageBlockWrapper(p, editorRoot)) return p;
     if (p.tagName === 'FIGURE' && p.querySelector('img')) return p;
     if (p.classList.contains('image-figure')) return p;
+    // エディタ直下のブロック 1 枚の画像（キャプション付きの裸 div 等）
+    if (
+      editorRoot &&
+      p.parentElement === editorRoot &&
+      p.getElementsByTagName('img').length === 1 &&
+      p.getElementsByTagName('img')[0] === img &&
+      !p.closest('.html-block, .toc-placeholder')
+    ) {
+      return p;
+    }
     p = p.parentElement;
   }
   return null;
+}
+
+/** キー削除用: 前後の兄弟が「画像ブロックのルート」か */
+function isDeletableImageBlockRoot(el: HTMLElement, editor: HTMLElement): boolean {
+  if (!editor.contains(el) || el.closest('.html-block, .toc-placeholder')) return false;
+  if (el.matches('figure.image-figure, div.image-figure, figure.wp-block-image')) return true;
+  if (isEditorImageBlockWrapper(el, editor)) return true;
+  if (el.parentElement === editor && el.getElementsByTagName('img').length === 1) return true;
+  return false;
+}
+
+/** キャレットがエディタ直下ブロックの先頭にあるとき、そのブロック要素を返す */
+function getContainingEditorChildIfCaretAtStart(
+  range: Range,
+  editor: HTMLElement
+): HTMLElement | null {
+  if (!range.collapsed) return null;
+  let node: Node = range.startContainer;
+  let offset = range.startOffset;
+
+  while (node !== editor) {
+    const parent = node.parentNode;
+    if (!parent) return null;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (offset > 0) return null;
+      offset = Array.prototype.indexOf.call(parent.childNodes, node);
+      node = parent;
+      continue;
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (offset > 0) return null;
+      if (parent === editor) {
+        return node as HTMLElement;
+      }
+      offset = Array.prototype.indexOf.call(parent.childNodes, node);
+      node = parent;
+    } else {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** キャレットがエディタ直下ブロックの末尾にあるとき、そのブロック要素を返す（Delete 用） */
+function getContainingEditorChildIfCaretAtEnd(
+  range: Range,
+  editor: HTMLElement
+): HTMLElement | null {
+  if (!range.collapsed) return null;
+  let node: Node = range.startContainer;
+  let offset = range.startOffset;
+
+  while (node !== editor) {
+    const parent = node.parentNode;
+    if (!parent) return null;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const len = (node as Text).length;
+      if (offset < len) return null;
+      offset = Array.prototype.indexOf.call(parent.childNodes, node) + 1;
+      node = parent;
+      continue;
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (offset < node.childNodes.length) return null;
+      if (parent === editor) {
+        return node as HTMLElement;
+      }
+      offset = Array.prototype.indexOf.call(parent.childNodes, node) + 1;
+      node = parent;
+    } else {
+      return null;
+    }
+  }
+  return null;
+}
+
+function placeCaretAtStart(el: HTMLElement) {
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  const first = el.firstChild;
+  if (first) {
+    if (first.nodeType === Node.TEXT_NODE) {
+      range.setStart(first, 0);
+    } else {
+      range.setStartBefore(first);
+    }
+  } else {
+    range.setStart(el, 0);
+  }
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 
 /** ツールバー注入対象の画像ラッパーを列挙（クラス付き + 素の div/figure+img） */
@@ -740,6 +849,74 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         .forEach((btn) => btn.remove());
       const html = clone.innerHTML;
       onChange(html);
+    }
+  };
+
+  /** 画像ブロック直前/直後で Backspace / Delete が効かないブラザ対策 */
+  const handleEditorKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+    if (e.defaultPrevented) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return;
+
+    if (e.key === 'Backspace') {
+      if (range.startContainer === editor && range.startOffset > 0) {
+        const prevChild = editor.childNodes[range.startOffset - 1];
+        const stay = editor.childNodes[range.startOffset];
+        if (
+          prevChild instanceof HTMLElement &&
+          isDeletableImageBlockRoot(prevChild, editor)
+        ) {
+          e.preventDefault();
+          prevChild.remove();
+          handleInput();
+          if (stay instanceof HTMLElement) placeCaretAtStart(stay);
+          return;
+        }
+      }
+
+      const blockStart = getContainingEditorChildIfCaretAtStart(range, editor);
+      if (blockStart) {
+        const prev = blockStart.previousElementSibling;
+        if (prev instanceof HTMLElement && isDeletableImageBlockRoot(prev, editor)) {
+          e.preventDefault();
+          prev.remove();
+          handleInput();
+          placeCaretAtStart(blockStart);
+        }
+      }
+      return;
+    }
+
+    if (e.key === 'Delete') {
+      if (range.startContainer === editor && range.startOffset < editor.childNodes.length) {
+        const nextChild = editor.childNodes[range.startOffset];
+        if (
+          nextChild instanceof HTMLElement &&
+          isDeletableImageBlockRoot(nextChild, editor)
+        ) {
+          e.preventDefault();
+          nextChild.remove();
+          handleInput();
+          return;
+        }
+      }
+
+      const blockEnd = getContainingEditorChildIfCaretAtEnd(range, editor);
+      if (blockEnd) {
+        const next = blockEnd.nextElementSibling;
+        if (next instanceof HTMLElement && isDeletableImageBlockRoot(next, editor)) {
+          e.preventDefault();
+          next.remove();
+          handleInput();
+          placeCaretAtStart(blockEnd);
+        }
+      }
     }
   };
 
@@ -1577,6 +1754,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onKeyDown={handleEditorKeyDown}
           onDragOver={(e) => {
             if (draggingBlockId) {
               e.preventDefault();
