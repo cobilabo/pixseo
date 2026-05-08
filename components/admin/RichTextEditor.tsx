@@ -212,6 +212,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const figures = editorRef.current.querySelectorAll<HTMLElement>(
       'figure.image-figure, div.image-figure, figure.wp-block-image'
     );
+
+    const onFigurePointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const figure = e.currentTarget as HTMLElement;
+      const t = e.target as HTMLElement;
+      if (t.closest('.image-figure-edit-btn, .image-figure-delete-btn')) return;
+      if (!figure.querySelector('img')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openImageFigureEditRef.current(figure);
+    };
+
+    const disposers: AbortController[] = [];
     figures.forEach((figure) => {
       figure.style.position = 'relative';
       figure.querySelectorAll('img').forEach((img) => {
@@ -237,32 +250,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
         figure.appendChild(btn);
       }
-    });
 
-    const onFigureImgPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      const img = e.currentTarget as HTMLImageElement;
-      const figure = closestImageFigure(img);
-      if (!figure || !editorRef.current?.contains(figure)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      queueMicrotask(() => {
-        openImageFigureEditRef.current(figure);
-      });
-    };
-
-    const disposers: AbortController[] = [];
-    editorRef.current.querySelectorAll('img').forEach((node) => {
-      const img = node as HTMLImageElement;
-      const ed = editorRef.current;
-      if (!ed || !ed.contains(img)) return;
-      if (img.closest('.html-block-preview-content, .toc-placeholder')) return;
-      const figure = closestImageFigure(img);
-      if (!figure || !ed.contains(figure)) return;
-
-      img.setAttribute('draggable', 'false');
       const ac = new AbortController();
-      img.addEventListener('pointerdown', onFigureImgPointerDown, {
+      figure.addEventListener('pointerdown', onFigurePointerDown, {
         capture: true,
         passive: false,
         signal: ac.signal,
@@ -2337,7 +2327,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           text-align: center;
         }
 
-        /* 画像編集ボタン */
+        /* 画像編集ボタン（非表示時はクリックを透過させ、画像の pointerdown が届くようにする） */
+        @media (hover: hover) and (pointer: fine) {
+          [contenteditable="true"] .image-figure-edit-btn,
+          [contenteditable="true"] .image-figure-delete-btn {
+            pointer-events: none;
+          }
+          [contenteditable="true"] .image-figure:hover .image-figure-edit-btn,
+          [contenteditable="true"] .image-figure:hover .image-figure-delete-btn,
+          [contenteditable="true"] .image-figure-edit-btn:focus,
+          [contenteditable="true"] .image-figure-delete-btn:focus {
+            pointer-events: auto;
+          }
+        }
+
         [contenteditable="true"] .image-figure-edit-btn {
           position: absolute;
           top: 8px;
