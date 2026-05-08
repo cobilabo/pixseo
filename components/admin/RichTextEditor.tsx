@@ -21,7 +21,8 @@ function closestImageFigure(el: Element | null): HTMLElement | null {
   if (!el) return null;
   return (
     (el.closest('figure.image-figure') as HTMLElement | null) ||
-    (el.closest('div.image-figure') as HTMLElement | null)
+    (el.closest('div.image-figure') as HTMLElement | null) ||
+    (el.closest('figure.wp-block-image') as HTMLElement | null)
   );
 }
 
@@ -34,58 +35,34 @@ function canonicalEditorInnerHtml(root: HTMLElement): string {
   return clone.innerHTML;
 }
 
-/** 選択範囲とブロック要素の共通部分（複数段落へのフォントサイズ適用用） */
-function intersectRangeWithElement(range: Range, el: HTMLElement): Range | null {
-  const inner = document.createRange();
-  inner.selectNodeContents(el);
+/** 選択範囲に重なるテキスト区間（各區間は単一 Text ノード内 → surroundContents が常に成功） */
+function collectTextSegmentsInRange(range: Range): { t: Text; start: number; end: number }[] {
+  const segments: { t: Text; start: number; end: number }[] = [];
+  const root =
+    range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+      ? (range.commonAncestorContainer as Node)
+      : range.commonAncestorContainer.parentNode;
+  if (!root) return segments;
 
-  if (range.compareBoundaryPoints(Range.END_TO_START, inner) <= 0) return null;
-  if (range.compareBoundaryPoints(Range.START_TO_END, inner) >= 0) return null;
+  const visit = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node as Text;
+      if (t.parentElement?.closest('.html-block, .toc-placeholder')) return;
+      if (!range.intersectsNode(t)) return;
+      let start = 0;
+      let end = t.length;
+      if (range.startContainer === t) start = range.startOffset;
+      if (range.endContainer === t) end = range.endOffset;
+      start = Math.max(0, Math.min(start, t.length));
+      end = Math.max(start, Math.min(end, t.length));
+      if (start < end) segments.push({ t, start, end });
+      return;
+    }
+    for (let c = node.firstChild; c; c = c.nextSibling) visit(c);
+  };
 
-  const sub = document.createRange();
-
-  if (range.compareBoundaryPoints(Range.START_TO_START, inner) < 0) {
-    sub.setStart(inner.startContainer, inner.startOffset);
-  } else {
-    sub.setStart(range.startContainer, range.startOffset);
-  }
-
-  if (range.compareBoundaryPoints(Range.END_TO_END, inner) > 0) {
-    sub.setEnd(inner.endContainer, inner.endOffset);
-  } else {
-    sub.setEnd(range.endContainer, range.endOffset);
-  }
-
-  if (sub.collapsed) return null;
-  return sub;
-}
-
-function isSkippableBlockElement(el: HTMLElement, editor: HTMLElement): boolean {
-  if (el === editor) return true;
-  if (el.classList.contains('image-figure')) return true;
-  if (el.closest('.html-block, .toc-placeholder')) return true;
-  return false;
-}
-
-/** 内側のブロックだけ残す（div ラッパーと p 子の重複を解消） */
-function filterInnermostBlockElements(blocks: HTMLElement[]): HTMLElement[] {
-  return blocks.filter(
-    (b) => !blocks.some((other) => other !== b && b.contains(other))
-  );
-}
-
-/**
- * contenteditable では Enter で <p> ではなく <div> 行ができることが多いため div を含める。
- */
-function getIntersectingBlockElements(range: Range, editor: HTMLElement): HTMLElement[] {
-  const selector = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th, div';
-  const candidates = Array.from(editor.querySelectorAll(selector)) as HTMLElement[];
-  const intersecting = candidates.filter((el) => {
-    if (!editor.contains(el)) return false;
-    if (isSkippableBlockElement(el, editor)) return false;
-    return range.intersectsNode(el);
-  });
-  return filterInnermostBlockElements(intersecting);
+  visit(root);
+  return segments;
 }
 
 function ensureTocPlaceholderChrome(root: HTMLElement | null) {
@@ -206,7 +183,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   useEffect(() => {
     if (!editorRef.current) return;
     const figures = editorRef.current.querySelectorAll<HTMLElement>(
-      'figure.image-figure, div.image-figure'
+      'figure.image-figure, div.image-figure, figure.wp-block-image'
     );
     figures.forEach((figure) => {
       figure.style.position = 'relative';
@@ -290,8 +267,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setShowImageEditModal(true);
     };
 
-    /** capture で処理しないと、contenteditable やブラウザ既定の画像挙動のあとにクリックが潰れることがある */
-    const handleFigureImageClickCapture = (e: MouseEvent) => {
+    /** contenteditable 内の画像はネイティブドラッグで click が届かないことがあるため mousedown(capture) で抑止して開く */
+    const handleFigureImageMouseDownCapture = (e: MouseEvent) => {
+      if (e.button !== 0) return;
       const target = e.target as HTMLElement;
       if (target.closest('.image-figure-edit-btn, .image-figure-delete-btn')) return;
       const imgEl =
@@ -303,7 +281,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (!figure || !editor.contains(figure)) return;
       e.preventDefault();
       e.stopPropagation();
-      openFigureEdit(figure);
+      queueMicrotask(() => {
+        openFigureEdit(figure);
+      });
     };
 
     // ボタンクリックのハンドラ
@@ -542,7 +522,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setDraggingBlockId(null);
     };
 
-    editor.addEventListener('click', handleFigureImageClickCapture, true);
+    editor.addEventListener('mousedown', handleFigureImageMouseDownCapture, true);
     editor.addEventListener('click', handleClick);
     editor.addEventListener('input', handleTextareaInput);
     editor.addEventListener('mousedown', handleMouseDown);
@@ -550,7 +530,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      editor.removeEventListener('click', handleFigureImageClickCapture, true);
+      editor.removeEventListener('mousedown', handleFigureImageMouseDownCapture, true);
       editor.removeEventListener('click', handleClick);
       editor.removeEventListener('input', handleTextareaInput);
       editor.removeEventListener('mousedown', handleMouseDown);
@@ -1295,33 +1275,30 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     const px = `${fontSize}px`;
-    const wrapRangeWithSpan = (r: Range): HTMLElement => {
+    const segments = collectTextSegmentsInRange(range);
+    let lastSpan: HTMLElement | null = null;
+
+    if (segments.length > 0) {
+      for (const { t, start, end } of segments) {
+        const r = document.createRange();
+        r.setStart(t, start);
+        r.setEnd(t, end);
+        const span = document.createElement('span');
+        span.style.fontSize = px;
+        r.surroundContents(span);
+        lastSpan = span;
+      }
+    } else {
       const span = document.createElement('span');
       span.style.fontSize = px;
       try {
-        r.surroundContents(span);
+        range.surroundContents(span);
       } catch {
-        const contents = r.extractContents();
+        const contents = range.extractContents();
         span.appendChild(contents);
-        r.insertNode(span);
+        range.insertNode(span);
       }
-      return span;
-    };
-
-    const blocks = getIntersectingBlockElements(range, editor);
-    const subs: Range[] = [];
-    for (const block of blocks) {
-      const sub = intersectRangeWithElement(range, block);
-      if (sub && !sub.collapsed) subs.push(sub);
-    }
-
-    let lastSpan: HTMLElement | null = null;
-    if (subs.length > 0) {
-      for (const sub of subs) {
-        lastSpan = wrapRangeWithSpan(sub);
-      }
-    } else {
-      lastSpan = wrapRangeWithSpan(range);
+      lastSpan = span;
     }
 
     const selAfter = window.getSelection();
