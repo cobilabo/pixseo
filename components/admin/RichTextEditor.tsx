@@ -17,16 +17,25 @@ const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><d
 /** cleanWordPressHtml 適用済みの本文では div.image-figure + p.image-caption になることがある */
 
 /**
- * 移行 HTML などで `<div><img></div>` のようにラッパーだけ付いている画像ブロック。
- * 子要素が img 1つのみの div / figure（エディタ直下そのものは除外）
+ * 移行 HTML の `<div><img></div>` や、エディタ注入後の
+ * `<div><img/><button class="image-figure-edit-btn"/>…</div>` を同一視する。
+ * 注入ボタン以外の直下子が img ちょうど 1 つの div / figure。
  */
-function isBareSingleImageWrapper(el: HTMLElement, editorRoot: HTMLElement | null): boolean {
+function isEditorImageBlockWrapper(el: HTMLElement, editorRoot: HTMLElement | null): boolean {
   const tag = el.tagName;
   if (tag !== 'DIV' && tag !== 'FIGURE') return false;
   if (editorRoot && el === editorRoot) return false;
   if (el.closest('.html-block, .toc-placeholder')) return false;
-  const kids = Array.from(el.children);
-  return kids.length === 1 && kids[0].tagName === 'IMG';
+
+  const significant = Array.from(el.children).filter((c) => {
+    if (!(c instanceof HTMLElement)) return true;
+    return (
+      !c.classList.contains('image-figure-edit-btn') &&
+      !c.classList.contains('image-figure-delete-btn')
+    );
+  });
+
+  return significant.length === 1 && significant[0].tagName === 'IMG';
 }
 
 function closestImageFigure(
@@ -46,7 +55,7 @@ function closestImageFigure(
 
   let p: HTMLElement | null = img.parentElement;
   while (p) {
-    if (isBareSingleImageWrapper(p, editorRoot)) return p;
+    if (isEditorImageBlockWrapper(p, editorRoot)) return p;
     if (p.tagName === 'FIGURE' && p.querySelector('img')) return p;
     if (p.classList.contains('image-figure')) return p;
     p = p.parentElement;
@@ -69,7 +78,7 @@ function collectImageFigureRoots(editor: HTMLElement): HTMLElement[] {
 
   editor.querySelectorAll<HTMLElement>('div, figure').forEach((el) => {
     if (seen.has(el)) return;
-    if (isBareSingleImageWrapper(el, editor)) add(el);
+    if (isEditorImageBlockWrapper(el, editor)) add(el);
   });
 
   return Array.from(seen);
