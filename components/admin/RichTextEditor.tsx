@@ -19,11 +19,23 @@ const IMAGE_FIGURE_SELECTOR = 'figure.image-figure, div.image-figure';
 
 function closestImageFigure(el: Element | null): HTMLElement | null {
   if (!el) return null;
-  return (
+  const byClass =
     (el.closest('figure.image-figure') as HTMLElement | null) ||
     (el.closest('div.image-figure') as HTMLElement | null) ||
-    (el.closest('figure.wp-block-image') as HTMLElement | null)
-  );
+    (el.closest('figure.wp-block-image') as HTMLElement | null);
+  if (byClass) return byClass;
+
+  const img =
+    el instanceof HTMLImageElement ? el : (el.closest('img') as HTMLImageElement | null);
+  if (!img) return null;
+
+  let p: HTMLElement | null = img.parentElement;
+  while (p) {
+    if (p.tagName === 'FIGURE' && p.querySelector('img')) return p;
+    if (p.classList.contains('image-figure')) return p;
+    p = p.parentElement;
+  }
+  return null;
 }
 
 /** 保存時と同様に注入ボタンを除いた innerHTML（親 value との同期判定用） */
@@ -108,6 +120,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const [editImageCaption, setEditImageCaption] = useState('');
   const [editImageCopyright, setEditImageCopyright] = useState('');
   const editingFigureRef = useRef<HTMLElement | null>(null);
+  /** 画像ブロックの img に直接 listener を付けるため、常に最新のモーダルオープン処理を参照 */
+  const openImageFigureEditRef = useRef<(figure: HTMLElement) => void>(() => {});
   const [showTableModal, setShowTableModal] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
@@ -126,6 +140,19 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const fontSizeSavedRangeRef = useRef<Range | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+
+  openImageFigureEditRef.current = (figure: HTMLElement) => {
+    const img = figure.querySelector('img');
+    if (!img) return;
+    const copyEl = figure.querySelector('.image-copyright');
+    const capEl = figure.querySelector('figcaption, p.image-caption');
+    editingFigureRef.current = figure;
+    setEditImageSrc(img.getAttribute('src') || '');
+    setEditImageAlt(img.getAttribute('alt') || '');
+    setEditImageCaption(capEl?.textContent?.trim() || '');
+    setEditImageCopyright(copyEl?.textContent?.trim() || '');
+    setShowImageEditModal(true);
+  };
 
   // デザイン設定を取得
   useEffect(() => {
@@ -211,6 +238,41 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         figure.appendChild(btn);
       }
     });
+
+    const onFigureImgPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const img = e.currentTarget as HTMLImageElement;
+      const figure = closestImageFigure(img);
+      if (!figure || !editorRef.current?.contains(figure)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      queueMicrotask(() => {
+        openImageFigureEditRef.current(figure);
+      });
+    };
+
+    const disposers: AbortController[] = [];
+    editorRef.current.querySelectorAll('img').forEach((node) => {
+      const img = node as HTMLImageElement;
+      const ed = editorRef.current;
+      if (!ed || !ed.contains(img)) return;
+      if (img.closest('.html-block-preview-content, .toc-placeholder')) return;
+      const figure = closestImageFigure(img);
+      if (!figure || !ed.contains(figure)) return;
+
+      img.setAttribute('draggable', 'false');
+      const ac = new AbortController();
+      img.addEventListener('pointerdown', onFigureImgPointerDown, {
+        capture: true,
+        passive: false,
+        signal: ac.signal,
+      });
+      disposers.push(ac);
+    });
+
+    return () => {
+      disposers.forEach((ac) => ac.abort());
+    };
   }, [value]);
 
   // 既存のHTMLブロックを検出して初期化
@@ -254,38 +316,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const editor = editorRef.current;
     if (!editor) return;
 
-    const openFigureEdit = (figure: HTMLElement) => {
-      const img = figure.querySelector('img');
-      if (!img) return;
-      const copyEl = figure.querySelector('.image-copyright');
-      const capEl = figure.querySelector('figcaption, p.image-caption');
-      editingFigureRef.current = figure;
-      setEditImageSrc(img.getAttribute('src') || '');
-      setEditImageAlt(img.getAttribute('alt') || '');
-      setEditImageCaption(capEl?.textContent?.trim() || '');
-      setEditImageCopyright(copyEl?.textContent?.trim() || '');
-      setShowImageEditModal(true);
-    };
-
-    /** contenteditable 内の画像はネイティブドラッグで click が届かないことがあるため mousedown(capture) で抑止して開く */
-    const handleFigureImageMouseDownCapture = (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      const target = e.target as HTMLElement;
-      if (target.closest('.image-figure-edit-btn, .image-figure-delete-btn')) return;
-      const imgEl =
-        target instanceof HTMLImageElement
-          ? target
-          : (target.closest('img') as HTMLImageElement | null);
-      if (!imgEl || !editor.contains(imgEl)) return;
-      const figure = closestImageFigure(imgEl);
-      if (!figure || !editor.contains(figure)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      queueMicrotask(() => {
-        openFigureEdit(figure);
-      });
-    };
-
     // ボタンクリックのハンドラ
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -313,7 +343,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         if (action === 'edit-figure') {
           const figure = closestImageFigure(button);
           if (figure && editorRef.current) {
-            openFigureEdit(figure);
+            openImageFigureEditRef.current(figure);
           }
           return;
         }
@@ -522,7 +552,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       setDraggingBlockId(null);
     };
 
-    editor.addEventListener('mousedown', handleFigureImageMouseDownCapture, true);
     editor.addEventListener('click', handleClick);
     editor.addEventListener('input', handleTextareaInput);
     editor.addEventListener('mousedown', handleMouseDown);
@@ -530,7 +559,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      editor.removeEventListener('mousedown', handleFigureImageMouseDownCapture, true);
       editor.removeEventListener('click', handleClick);
       editor.removeEventListener('input', handleTextareaInput);
       editor.removeEventListener('mousedown', handleMouseDown);
