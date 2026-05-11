@@ -13,6 +13,7 @@ import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { formatDateTime } from '@/lib/utils/date';
+import { searchArticlesWithAlgolia } from '@/lib/algolia/search';
 
 // ソート可能なカラム
 type SortColumn = 'title' | 'writer' | 'viewCount' | 'isPublished' | 'sliderOrder' | 'publishedAt' | 'createdAt' | 'updatedAt';
@@ -35,6 +36,13 @@ function ArticlesPageContent() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  /**
+   * キーワード検索結果のID集合。null = キーワード未指定（全件対象）。
+   * Algolia 側で公開・非公開を問わず検索した結果の objectID を保持する。
+   * これにより公開サイト側 (Algolia) と完全に同じヒット判定になる。
+   */
+  const [algoliaMatchIds, setAlgoliaMatchIds] = useState<Set<string> | null>(null);
+  const [searchingKeyword, setSearchingKeyword] = useState(false);
   
   // フィルター（URLクエリパラメータから初期化）
   const [filterWriter, setFilterWriter] = useState<string>(searchParams.get('writer') || '');
@@ -56,6 +64,42 @@ function ArticlesPageContent() {
     fetchCategories();
     fetchTags();
   }, []);
+
+  // キーワード検索: 公開サイト側と完全一致させるため Algolia 経由で検索する。
+  // 未公開記事も対象、現在のテナント (mediaId) でスコープ。
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      setAlgoliaMatchIds(null);
+      setSearchingKeyword(false);
+      return;
+    }
+    let cancelled = false;
+    setSearchingKeyword(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { articles: hits } = await searchArticlesWithAlgolia({
+          keyword: trimmed,
+          lang: 'ja',
+          mediaId: currentTenant?.id,
+          isPublishedOnly: false,
+          hitsPerPage: 1000,
+        });
+        if (cancelled) return;
+        setAlgoliaMatchIds(new Set(hits.map((h) => h.id).filter((id): id is string => Boolean(id))));
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[ArticlesPage] Algolia keyword search error:', err);
+        setAlgoliaMatchIds(new Set());
+      } finally {
+        if (!cancelled) setSearchingKeyword(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm, currentTenant?.id]);
 
   const fetchArticles = async () => {
     try {
@@ -356,12 +400,17 @@ function ArticlesPageContent() {
 
   // フィルタリング + ソート + ページネーション
   const { paginatedArticles, totalPages, totalCount } = useMemo(() => {
-    // 1. テキスト検索フィルタリング
-    const lowercaseSearch = searchTerm.toLowerCase();
-    let filtered = articles.filter((article) => 
-      article.title.toLowerCase().includes(lowercaseSearch) ||
-      article.content.toLowerCase().includes(lowercaseSearch)
-    );
+    // 1. テキスト検索フィルタリング (Algolia 経由 / 公開サイト側と同一ロジック)
+    let filtered: Article[];
+    if (!searchTerm.trim()) {
+      filtered = articles;
+    } else if (algoliaMatchIds === null) {
+      // Algolia 検索結果が未到着 (debounce 中) の場合は一旦全件のまま表示し、
+      // ヒット集合が確定したタイミングで再フィルタされる。
+      filtered = articles;
+    } else {
+      filtered = articles.filter((article) => algoliaMatchIds.has(article.id));
+    }
     
     // 2. ライターフィルター
     if (filterWriter) {
@@ -438,7 +487,7 @@ function ArticlesPageContent() {
     const paginatedArticles = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return { paginatedArticles, totalPages, totalCount };
-  }, [articles, searchTerm, filterWriter, filterCategory, filterTag, filterStatus, sortColumn, sortDirection, currentPage, writers]);
+  }, [articles, searchTerm, algoliaMatchIds, filterWriter, filterCategory, filterTag, filterStatus, sortColumn, sortDirection, currentPage, writers]);
 
   // フィルター変更時は1ページ目に戻る
   useEffect(() => {
@@ -475,7 +524,7 @@ function ArticlesPageContent() {
           <div className="rounded-xl p-4" style={{ backgroundColor: '#ddecf8' }}>
             <div className="flex flex-wrap gap-3 items-center">
               {/* 検索入力 */}
-              <div className="flex-shrink-0 w-48">
+              <div className="flex-shrink-0 w-48 relative">
                 <input
                   type="text"
                   placeholder="記事を検索..."
@@ -483,6 +532,9 @@ function ArticlesPageContent() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                 />
+                {searchingKeyword && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">…</div>
+                )}
               </div>
               
               {/* ライターフィルター */}

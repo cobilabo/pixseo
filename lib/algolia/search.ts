@@ -18,6 +18,11 @@ export interface AlgoliaSearchOptions {
   mediaId?: string;
   page?: number;
   hitsPerPage?: number;
+  /**
+   * 公開記事のみ取得するか（デフォルト true）。
+   * 管理画面で未公開記事も検索したいケース等では false を渡す。
+   */
+  isPublishedOnly?: boolean;
 }
 
 /**
@@ -27,28 +32,26 @@ export interface AlgoliaSearchOptions {
 export async function searchArticlesWithAlgolia(
   options: AlgoliaSearchOptions
 ): Promise<{ articles: Partial<Article>[]; totalHits: number; searchType: 'keyword' | 'tag' | 'category' }> {
-  const { keyword, tagName, categoryName, lang, mediaId, page = 0, hitsPerPage = 20 } = options;
+  const { keyword, tagName, categoryName, lang, mediaId, page = 0, hitsPerPage = 20, isPublishedOnly = true } = options;
   const trimmedKeyword = (keyword ?? '').trim();
   /** キーワードのみの検索（タグ/カテゴリフィルター時は従来どおり） */
   const isKeywordOnlySearch = Boolean(trimmedKeyword) && !tagName && !categoryName;
 
   try {
-    let filters = 'isPublished:true';
-
-    // mediaIdでフィルタリング
+    const filterParts: string[] = [];
+    if (isPublishedOnly) {
+      filterParts.push('isPublished:true');
+    }
     if (mediaId) {
-      filters += ` AND mediaId:${mediaId}`;
+      filterParts.push(`mediaId:${mediaId}`);
     }
-
-    // タグでフィルタリング（tagsフィールドに対してフィルター）
     if (tagName) {
-      filters += ` AND tags:"${tagName}"`;
+      filterParts.push(`tags:"${tagName}"`);
     }
-
-    // カテゴリーでフィルタリング（categoriesフィールドに対してフィルター）
     if (categoryName) {
-      filters += ` AND categories:"${categoryName}"`;
+      filterParts.push(`categories:"${categoryName}"`);
     }
+    const filters = filterParts.join(' AND ');
 
     // 言語別インデックスを使用
     const indexName = getArticlesIndexName(lang);
@@ -58,7 +61,7 @@ export async function searchArticlesWithAlgolia(
 
     console.log('[Algolia Search] Query:', keyword || '(empty)');
     console.log('[Algolia Search] Index:', indexName);
-    console.log('[Algolia Search] Filters:', filters);
+    console.log('[Algolia Search] Filters:', filters || '(none)');
     console.log('[Algolia Search] MediaId:', mediaId);
     console.log('[Algolia Search] SearchType:', searchType);
     if (tagName) console.log('[Algolia Search] TagName:', tagName);
@@ -71,7 +74,7 @@ export async function searchArticlesWithAlgolia(
         query: isKeywordOnlySearch ? trimmedKeyword : (keyword || ''),
         page,
         hitsPerPage,
-        filters,
+        ...(filters ? { filters } : {}),
         ...(isKeywordOnlySearch
           ? {
               restrictSearchableAttributes: ['title', 'contentText', 'contentTextChunks'],
