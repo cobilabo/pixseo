@@ -3,11 +3,14 @@
  *
  * - 4言語の index を clear してから syncArticleToAlgolia (本流関数) で再投入。
  * - objectID 命名揺れ (`{id}` vs `{id}_{lang}`) の zombie レコードも一掃される。
+ * - デフォルトで未公開記事も含めて全件同期する（管理画面検索を Algolia 経由でヒットさせるため）。
+ *   公開サイトは検索時に `isPublished:true` フィルタを掛けているので未公開記事は表示されない。
  * - lib/algolia/sync.ts の ALGOLIA_MAX_RECORD_UTF8_BYTES を使うので、Grow プラン (100KB/rec) 化と同時に
  *   `npm run` した場合に切り捨てが解消される。
  *
  * Run:
- *   npx tsx scripts/resync-articles-canonical.ts
+ *   npx tsx scripts/resync-articles-canonical.ts                  # 全件 (公開+未公開)
+ *   npx tsx scripts/resync-articles-canonical.ts --published-only # 公開記事のみ (旧挙動)
  *   npx tsx scripts/resync-articles-canonical.ts --dry-run        # clear/書き込みせず件数だけ
  *   npx tsx scripts/resync-articles-canonical.ts --skip-clear     # clear だけスキップ
  */
@@ -20,6 +23,7 @@ loadEnv();
 const args = new Set(process.argv.slice(2));
 const DRY_RUN = args.has("--dry-run");
 const SKIP_CLEAR = args.has("--skip-clear");
+const PUBLISHED_ONLY = args.has("--published-only");
 
 const SUPPORTED_LANGS = ["ja", "en", "zh", "ko"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
@@ -30,7 +34,7 @@ async function main() {
   const { syncArticleToAlgolia } = await import("../lib/algolia/sync");
 
   console.log("=== Algolia canonical resync ===");
-  console.log(`mode: dryRun=${DRY_RUN}, skipClear=${SKIP_CLEAR}\n`);
+  console.log(`mode: dryRun=${DRY_RUN}, skipClear=${SKIP_CLEAR}, publishedOnly=${PUBLISHED_ONLY}\n`);
 
   if (!adminClient) {
     console.error("[FATAL] adminClient is not initialized. Set ALGOLIA_ADMIN_KEY.");
@@ -53,9 +57,17 @@ async function main() {
     console.log("");
   }
 
-  // 2) fetch all published articles
-  const snap = await adminDb.collection("articles").where("isPublished", "==", true).get();
-  console.log(`Published articles: ${snap.size}\n`);
+  // 2) fetch articles (default: all; --published-only で公開のみ)
+  const snap = PUBLISHED_ONLY
+    ? await adminDb.collection("articles").where("isPublished", "==", true).get()
+    : await adminDb.collection("articles").get();
+  let pub = 0;
+  let unpub = 0;
+  snap.docs.forEach((d) => {
+    if ((d.data() as any).isPublished) pub++;
+    else unpub++;
+  });
+  console.log(`Articles to sync: ${snap.size} (published=${pub}, unpublished=${unpub})\n`);
 
   if (DRY_RUN) {
     console.log("(dry-run: skipping sync)");

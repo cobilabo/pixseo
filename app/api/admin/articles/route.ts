@@ -204,6 +204,20 @@ export async function POST(request: NextRequest) {
         console.error(`[API ${docRef.id}] 翻訳処理エラー:`, error);
         // エラーが発生しても記事の作成は完了しているので処理は続行
       }
+    } else {
+      // 未公開時も Algolia に同期する（管理画面検索ヒット用、isPublished:false で登録）。
+      // 翻訳は走らないため日本語フィールドのみのレコードになる。公開時に再 sync で上書きされる。
+      try {
+        const article: Article = {
+          id: docRef.id,
+          ...articleData,
+          publishedAt: publishedAt ?? undefined,
+          updatedAt: now,
+        } as Article;
+        await syncArticleToAlgolia(article);
+      } catch (error) {
+        console.error(`[API ${docRef.id}] Algolia sync (unpublished) error:`, error);
+      }
     }
 
     // サーバーサイドメモリキャッシュと Vercel ISR キャッシュを即時無効化

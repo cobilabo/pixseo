@@ -263,23 +263,22 @@ export async function PUT(
           console.error(`[BG ${id}] バックグラウンド翻訳処理エラー:`, error);
         }
       })();
-    } else if (body.isPublished === false) {
-      try {
-        await deleteArticleFromAlgolia(id);
-      } catch (algoliaError) {
-        console.error('[API] Algolia delete error:', algoliaError);
-      }
-    } else if (wasPublished) {
-      // 公開中の記事でコンテンツ変更（タイトル・カテゴリー・タグ等）があった場合もAlgolia同期
+    } else {
+      // 公開→非公開、または公開中のメタ更新（タイトル・カテゴリー・タグ等）。
+      // 未公開記事も Algolia に残す方針 (管理画面検索ヒット用) のため、
+      // どちらのケースでも delete ではなく sync で再投入する。
+      // isPublished フィールドが Algolia 側でも更新されるので、公開サイトは
+      // `isPublished:true` フィルタで自動的に非表示となる。
       (async () => {
         try {
           const bgRef = adminDb.collection('articles').doc(id);
           const updatedDoc = await bgRef.get();
+          if (!updatedDoc.exists) return;
           const updatedData = updatedDoc.data()!;
           const article: Article = {
             id: updatedDoc.id,
             ...updatedData,
-            publishedAt: convertToDate(updatedData.publishedAt) || new Date(),
+            publishedAt: convertToDate(updatedData.publishedAt) || undefined,
             updatedAt: convertToDate(updatedData.updatedAt) || new Date(),
           } as Article;
           await syncArticleToAlgolia(article);

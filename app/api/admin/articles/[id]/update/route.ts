@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Article } from '@/types/article';
-import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sync';
+import { syncArticleToAlgolia } from '@/lib/algolia/sync';
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
@@ -200,12 +200,34 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         }
       })();
     } else if (!body.isPublished) {
-      // 非公開にした場合はAlgoliaから削除（軽量なので同期実行）
-      try {
-        await deleteArticleFromAlgolia(id);
-      } catch (error) {
-        console.error('[API] Algolia delete error:', error);
-      }
+      // 未公開状態で保存された場合も Algolia に同期する（管理画面検索ヒット用）。
+      // 翻訳は走らないため日本語フィールドのみのレコードになる（公開時に再 sync で上書き）。
+      // 公開サイトは `isPublished:true` フィルタで自動的に非表示。
+      const bgArticleRef = adminDb.collection('articles').doc(id);
+      (async () => {
+        try {
+          const convertToDate = (value: any): Date | undefined => {
+            if (!value) return undefined;
+            if (value.toDate) return value.toDate();
+            if (value.seconds) return new Date(value.seconds * 1000);
+            if (typeof value === 'string') return new Date(value);
+            if (value instanceof Date) return value;
+            return undefined;
+          };
+          const updatedDoc = await bgArticleRef.get();
+          if (!updatedDoc.exists) return;
+          const updatedData = updatedDoc.data()!;
+          const article: Article = {
+            id: updatedDoc.id,
+            ...updatedData,
+            publishedAt: convertToDate(updatedData.publishedAt),
+            updatedAt: convertToDate(updatedData.updatedAt) || new Date(),
+          } as Article;
+          await syncArticleToAlgolia(article);
+        } catch (error) {
+          console.error(`[BG ${id}] Algolia sync (unpublished) error:`, error);
+        }
+      })();
     }
 
     // ⚡ Firestore保存完了後に即座にレスポンスを返す（翻訳はバックグラウンドで継続）
