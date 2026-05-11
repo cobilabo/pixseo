@@ -116,6 +116,36 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       const bgUpdateData = { ...updateData };
       const bgExistingData = existingData ? { ...existingData } : null;
 
+      // ⚡ 先行 Algolia 同期: featuredImage / title / slug などの即時反映用。
+      // 翻訳完了を待たずに日本語 + 既存多言語フィールドで一旦同期する。
+      // これがないと、サムネイル変更などが検索結果ページに反映されるのが
+      // 翻訳バックグラウンド完了 (数十秒〜数分) まで遅延する。
+      // 翻訳完了後に再度 sync するため、最終的に多言語フィールドも上書きされる。
+      (async () => {
+        try {
+          const convertToDate = (value: any): Date | undefined => {
+            if (!value) return undefined;
+            if (value.toDate) return value.toDate();
+            if (value.seconds) return new Date(value.seconds * 1000);
+            if (typeof value === 'string') return new Date(value);
+            if (value instanceof Date) return value;
+            return undefined;
+          };
+          const preDoc = await bgArticleRef.get();
+          if (!preDoc.exists) return;
+          const preData = preDoc.data()!;
+          const preArticle: Article = {
+            id: preDoc.id,
+            ...preData,
+            publishedAt: convertToDate(preData.publishedAt),
+            updatedAt: convertToDate(preData.updatedAt) || new Date(),
+          } as Article;
+          await syncArticleToAlgolia(preArticle);
+        } catch (error) {
+          console.error(`[BG ${id}] 先行 Algolia 同期エラー:`, error);
+        }
+      })();
+
       // バックグラウンド処理（awaitしない）
       (async () => {
         try {
