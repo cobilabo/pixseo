@@ -5,6 +5,13 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分
 
 /**
+ * Cron API は検索結果に絶対に表示してはならない (Bearer なしでは 401 を返すだけのため
+ * Search Console で「未承認のリクエスト(401)が原因でブロックされました」エラーになる)。
+ * robots.txt の Disallow と二重で防御するため、すべてのレスポンスに X-Robots-Tag を付与する。
+ */
+const NOINDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' } as const;
+
+/**
  * Cron実行用エンドポイント
  * 定期実行設定に基づいて記事を自動生成
  */
@@ -17,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (authHeader !== expectedAuth) {
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: NOINDEX_HEADERS }
       );
     }
 
@@ -115,20 +122,23 @@ export async function GET(request: NextRequest) {
 
     console.log('[Cron] Scheduled article generation completed');
 
-    return NextResponse.json({
-      success: true,
-      executedAt: japanTime.toISOString(),
-      schedulesExecuted: targetSchedules.length,
-      results,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        executedAt: japanTime.toISOString(),
+        schedulesExecuted: targetSchedules.length,
+        results,
+      },
+      { headers: NOINDEX_HEADERS }
+    );
   } catch (error) {
     console.error('[API /cron/generate-articles] Error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to execute scheduled generation', 
-        details: error instanceof Error ? error.message : String(error) 
+      {
+        error: 'Failed to execute scheduled generation',
+        details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500, headers: NOINDEX_HEADERS }
     );
   }
 }

@@ -5,6 +5,13 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分
 
 /**
+ * Cron API は検索結果に絶対に表示してはならない (Bearer なしでは 401 を返すだけのため
+ * Search Console で「未承認のリクエスト(401)が原因でブロックされました」エラーになる)。
+ * robots.txt の Disallow と二重で防御するため、すべてのレスポンスに X-Robots-Tag を付与する。
+ */
+const NOINDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' } as const;
+
+/**
  * スケジュール設定に基づいて記事を自動生成するCron Job
  * 毎時0分に実行される
  */
@@ -13,7 +20,10 @@ export async function GET(request: NextRequest) {
     // Vercel Cronからのリクエストか確認
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401, headers: NOINDEX_HEADERS }
+      );
     }
 
     console.log('[Cron] Scheduled article generation started');
@@ -53,12 +63,15 @@ export async function GET(request: NextRequest) {
 
     if (schedulesSnapshot.empty) {
       console.log('[Cron] No schedules match current time', { currentTime });
-      return NextResponse.json({ 
-        message: 'No matching schedules for current time',
-        currentDayOfWeek,
-        currentTime,
-        executed: 0 
-      });
+      return NextResponse.json(
+        {
+          message: 'No matching schedules for current time',
+          currentDayOfWeek,
+          currentTime,
+          executed: 0,
+        },
+        { headers: NOINDEX_HEADERS }
+      );
     }
 
     console.log(`[Cron] Found ${schedulesSnapshot.size} schedules (pre-day-filter)`);
@@ -75,12 +88,15 @@ export async function GET(request: NextRequest) {
     console.log(`[Cron] Found ${matchingSchedules.length} matching schedules`);
 
     if (matchingSchedules.length === 0) {
-      return NextResponse.json({ 
-        message: 'No matching schedules for current time',
-        currentDayOfWeek,
-        currentTime,
-        executed: 0
-      });
+      return NextResponse.json(
+        {
+          message: 'No matching schedules for current time',
+          currentDayOfWeek,
+          currentTime,
+          executed: 0,
+        },
+        { headers: NOINDEX_HEADERS }
+      );
     }
 
     // 各スケジュールについて記事生成を実行
@@ -122,20 +138,23 @@ export async function GET(request: NextRequest) {
 
     console.log(`[Cron] Completed: ${succeeded} succeeded, ${failed} failed`);
 
-    return NextResponse.json({
-      message: 'Scheduled article generation completed',
-      currentDayOfWeek,
-      currentTime,
-      executed: matchingSchedules.length,
-      succeeded,
-      failed,
-      results: results.map(r => r.status === 'fulfilled' ? r.value : { error: 'rejected' }),
-    });
+    return NextResponse.json(
+      {
+        message: 'Scheduled article generation completed',
+        currentDayOfWeek,
+        currentTime,
+        executed: matchingSchedules.length,
+        succeeded,
+        failed,
+        results: results.map(r => r.status === 'fulfilled' ? r.value : { error: 'rejected' }),
+      },
+      { headers: NOINDEX_HEADERS }
+    );
   } catch (error: any) {
     console.error('[Cron] Error in scheduled article generation:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
-      { status: 500 }
+      { status: 500, headers: NOINDEX_HEADERS }
     );
   }
 }
