@@ -10,6 +10,10 @@
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
+import {
+  htmlToAlgoliaPlainText,
+  packPlainTextForAlgoliaRecord,
+} from '../lib/algolia/sync';
 import * as admin from 'firebase-admin';
 import { algoliasearch } from 'algoliasearch';
 
@@ -79,22 +83,6 @@ async function getTagName(tagId: string, lang: Lang): Promise<string> {
   return data?.[`name_${lang}`] || data?.name || '';
 }
 
-// HTMLからテキストを抽出
-function extractTextFromHtml(html: string): string {
-  if (!html) return '';
-  return html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim()
-    .substring(0, 1500);
-}
-
 // 記事をローカライズ
 function localizeArticle(article: any, lang: Lang) {
   const title = article[`title_${lang}`] || article.title || '';
@@ -153,24 +141,27 @@ async function main() {
         }
       }
 
-      // contentTextを抽出
-      const contentText = extractTextFromHtml(localized.content);
-
-      const record: AlgoliaArticleRecord = {
+      const plain = htmlToAlgoliaPlainText(localized.content || '');
+      const baseWithoutContent: Omit<AlgoliaArticleRecord, 'contentText' | 'contentTextChunks'> = {
         objectID: `${article.id}_${lang}`,
         title: localized.title || article.title || '',
         slug: article.slug || '',
         excerpt: localized.excerpt || '',
-        contentText,
         mediaId: article.mediaId || '',
         categories: categoryNames,
         tags: tagNames,
-        publishedAt: article.publishedAt?.toDate?.()?.getTime() || 
+        publishedAt: article.publishedAt?.toDate?.()?.getTime() ||
                      (article.publishedAt ? new Date(article.publishedAt).getTime() : 0),
         isPublished: true,
         featuredImage: article.featuredImage || '',
         featuredImageAlt: article.featuredImageAlt || '',
         viewCount: article.viewCount || 0,
+      };
+      const packed = packPlainTextForAlgoliaRecord(plain, baseWithoutContent);
+
+      const record: AlgoliaArticleRecord = {
+        ...baseWithoutContent,
+        ...packed,
       };
 
       recordsByLang[lang].push(record);
@@ -203,6 +194,7 @@ async function main() {
     console.log('  objectID:', sample.objectID);
     console.log('  title:', sample.title?.substring(0, 50));
     console.log('  contentText:', sample.contentText?.substring(0, 100) + '...');
+    console.log('  contentTextChunks:', sample.contentTextChunks?.length ?? 0);
     console.log('  categories:', sample.categories);
     console.log('  tags:', sample.tags);
   }

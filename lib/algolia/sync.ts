@@ -4,13 +4,155 @@ import { adminClient, getArticlesIndexName } from './client';
 import { localizeArticle } from '@/lib/i18n/localize';
 import { adminDb } from '@/lib/firebase/admin';
 
+/**
+ * Algolia の 1 レコードあたりのサイズ上限（UTF-8 バイト）。
+ * Grow / Premium プラン以上では 1 レコード最大 100KB まで利用できるため、
+ * 計測差・base メタデータ分の余裕を見込んで 99000 bytes を上限とする。
+ * （Build プランで運用する場合は 9600 等まで下げる必要がある）
+ */
+export const ALGOLIA_MAX_RECORD_UTF8_BYTES = 99000;
+
+/** UTF-8 で maxBytes を超えないように末尾で切り詰め（サロゲート分割なし） */
+export function truncateUtf8ToMaxBytes(s: string, maxBytes: number): string {
+  const enc = new TextEncoder();
+  const buf = enc.encode(s);
+  if (buf.length <= maxBytes) return s;
+  const dec = new TextDecoder('utf-8', { fatal: false });
+  return dec.decode(buf.subarray(0, maxBytes));
+}
+
+function jsonUtf8ByteLength(obj: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(obj)).length;
+}
+
+/** HTML から Algolia 検索用プレーンテキストへ（管理画面の全文検索は HTML 付きだが、検索の近似としてプレーン化する） */
+export function htmlToAlgoliaPlainText(html: string): string {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** buf[start:end] が UTF-8 境界になるよう end を start 側へ調整 */
+function shrinkEndToUtf8Boundary(buf: Uint8Array, start: number, end: number): number {
+  let e = Math.min(end, buf.length);
+  while (e > start && (buf[e - 1] & 0xc0) === 0x80) {
+    e--;
+  }
+  return e;
+}
+
+/** start から最低 1 文字分進める（無限ループ防止） */
+function advanceOneUtf8Char(buf: Uint8Array, start: number): number {
+  if (start >= buf.length) return start;
+  const b = buf[start];
+  if ((b & 0x80) === 0) return start + 1;
+  if ((b & 0xe0) === 0xc0) return Math.min(start + 2, buf.length);
+  if ((b & 0xf0) === 0xe0) return Math.min(start + 3, buf.length);
+  if ((b & 0xf8) === 0xf0) return Math.min(start + 4, buf.length);
+  return start + 1;
+}
+
+export type AlgoliaContentFields = {
+  contentText: string;
+  contentTextChunks?: string[];
+};
+
+/**
+ * プレーンテキストをレコード JSON 全体が ALGOLIA_MAX_RECORD_UTF8_BYTES 以下になるまで複数チャンクに分割する。
+ */
+export function packPlainTextForAlgoliaRecord(
+  plain: string,
+  baseWithoutContent: Omit<AlgoliaArticleRecord, 'contentText' | 'contentTextChunks'>
+): AlgoliaContentFields {
+  if (!plain) {
+    const empty: AlgoliaArticleRecord = {
+      ...baseWithoutContent,
+      contentText: '',
+    };
+    if (jsonUtf8ByteLength(empty) > ALGOLIA_MAX_RECORD_UTF8_BYTES) {
+      console.warn(
+        `[Algolia] Record ${baseWithoutContent.objectID} exceeds size budget without body (metadata too large)`
+      );
+    }
+    return { contentText: '' };
+  }
+
+  const buf = new TextEncoder().encode(plain);
+  const chunks: string[] = [];
+  let start = 0;
+  const dec = new TextDecoder('utf-8', { fatal: false });
+  const maxChunks = 48;
+
+  while (start < buf.length && chunks.length < maxChunks) {
+    let lo = start + 1;
+    let hi = buf.length;
+    let bestEnd = start;
+
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      let end = shrinkEndToUtf8Boundary(buf, start, mid);
+      if (end <= start) {
+        end = advanceOneUtf8Char(buf, start);
+      }
+      const slice = dec.decode(buf.subarray(start, end));
+      const candidateChunks = [...chunks, slice];
+      const candidate: AlgoliaArticleRecord = {
+        ...baseWithoutContent,
+        contentText: candidateChunks[0] ?? '',
+        // 先頭チャンクは contentText にのみ保持し、続きだけを配列に載せて JSON を二重にしない
+        ...(candidateChunks.length > 1 ? { contentTextChunks: candidateChunks.slice(1) } : {}),
+      };
+      if (jsonUtf8ByteLength(candidate) <= ALGOLIA_MAX_RECORD_UTF8_BYTES) {
+        bestEnd = end;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+
+    if (bestEnd <= start) {
+      const forcedEnd = advanceOneUtf8Char(buf, start);
+      const slice = dec.decode(buf.subarray(start, forcedEnd));
+      chunks.push(slice);
+      start = forcedEnd;
+      continue;
+    }
+
+    chunks.push(dec.decode(buf.subarray(start, bestEnd)));
+    start = bestEnd;
+  }
+
+  if (start < buf.length) {
+    console.warn(
+      `[Algolia] Plain text truncated for record ${baseWithoutContent.objectID}: ${buf.length - start} byte(s) not indexed`
+    );
+  }
+
+  if (chunks.length === 0) {
+    return { contentText: '' };
+  }
+  if (chunks.length === 1) {
+    return { contentText: chunks[0] };
+  }
+  return { contentText: chunks[0], contentTextChunks: chunks.slice(1) };
+}
+
 // AlgoliaRecord型（Algoliaに保存する形式）
 export interface AlgoliaArticleRecord {
   objectID: string; // Algolia用のID（articleのIDと同じ）
   title: string;
   slug: string;
   excerpt?: string;
-  contentText?: string; // HTMLタグを除去したテキスト（検索用、最大3000文字）
+  contentText?: string;
+  /** 本文 2 チャンク目以降（先頭は contentText のみ） */
+  contentTextChunks?: string[];
   mediaId: string;
   categories: string[]; // カテゴリー名の配列
   tags: string[]; // タグ名の配列
@@ -41,7 +183,7 @@ export async function syncArticleToAlgolia(
       try {
         // 記事を言語別にローカライズ
         const localizedArticle = localizeArticle(article, lang);
-        
+
         // その言語のカテゴリー名を取得
         const categoryNames: string[] = [];
         if (article.categoryIds && Array.isArray(article.categoryIds)) {
@@ -81,31 +223,16 @@ export async function syncArticleToAlgolia(
             }
           }
         }
-        
-        // HTMLタグを除去してテキストのみ抽出（検索用）
-        let contentText = '';
-        if (localizedArticle.content) {
-          contentText = localizedArticle.content
-            .replace(/<[^>]*>/g, '') // HTMLタグを削除
-            .replace(/&nbsp;/g, ' ') // &nbsp;をスペースに変換
-            .replace(/&amp;/g, '&') // &amp;を&に変換
-            .replace(/&lt;/g, '<') // &lt;を<に変換
-            .replace(/&gt;/g, '>') // &gt;を>に変換
-            .replace(/&quot;/g, '"') // &quot;を"に変換
-            .replace(/\s+/g, ' ') // 連続した空白を1つに
-            .trim()
-            .substring(0, 3000); // 最初の3000文字のみ（約3KB、安全マージン）
-        }
 
-        const record: AlgoliaArticleRecord = {
+        const plain = htmlToAlgoliaPlainText(localizedArticle.content || '');
+        const baseWithoutContent: Omit<AlgoliaArticleRecord, 'contentText' | 'contentTextChunks'> = {
           objectID: article.id,
           title: localizedArticle.title,
           slug: article.slug, // slugは言語共通
           excerpt: localizedArticle.excerpt,
-          contentText, // HTMLタグを除去したテキスト
           mediaId: article.mediaId,
-          categories: categoryNames, // その言語のカテゴリー名
-          tags: tagNames, // その言語のタグ名
+          categories: categoryNames,
+          tags: tagNames,
           publishedAt: article.publishedAt
             ? (article.publishedAt instanceof Date
                 ? article.publishedAt.getTime()
@@ -116,13 +243,18 @@ export async function syncArticleToAlgolia(
           featuredImageAlt: article.featuredImageAlt,
           viewCount: article.viewCount || 0,
         };
+        const packed = packPlainTextForAlgoliaRecord(plain, baseWithoutContent);
+        const record: AlgoliaArticleRecord = {
+          ...baseWithoutContent,
+          ...packed,
+        };
 
         const indexName = getArticlesIndexName(lang);
         await client.saveObject({
           indexName,
           body: record,
         });
-        
+
         console.log(`[Algolia] Synced article to ${lang} index: ${article.id} (${categoryNames.length} categories, ${tagNames.length} tags)`);
       } catch (error) {
         console.error(`[Algolia] Error syncing article to ${lang} index:`, error);
@@ -196,7 +328,7 @@ export async function bulkSyncArticlesToAlgolia(
       indexName,
       objects: records as unknown as Array<Record<string, unknown>>,
     });
-    
+
     console.log(`[Algolia] Bulk synced ${records.length} articles to ${lang} index`);
   } catch (error) {
     console.error(`[Algolia] Error bulk syncing articles to ${lang} index:`, error);

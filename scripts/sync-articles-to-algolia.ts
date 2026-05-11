@@ -2,21 +2,27 @@
  * 既存の全記事をAlgoliaに同期するスクリプト
  * 
  * 実行方法:
- * npx ts-node --compiler-options '{"module":"commonjs"}' scripts/sync-articles-to-algolia.ts
+ * npx tsx scripts/sync-articles-to-algolia.ts
+ *
+ * 注意: Algolia / Firebase を import する前に .env を読む（静的 import の評価順のため）
  */
+import { config as loadEnv } from 'dotenv';
+import path from 'path';
+import type { AlgoliaArticleRecord } from '../lib/algolia/sync';
+import { SUPPORTED_LANGS, type Lang } from '../types/lang';
 
-// 環境変数を読み込む
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-dotenv.config({ path: path.join(__dirname, '../.env.local') });
-
-import { adminDb } from '../lib/firebase/admin';
-import { bulkSyncArticlesToAlgolia } from '../lib/algolia/sync';
-import { AlgoliaArticleRecord } from '../lib/algolia/sync';
-import { SUPPORTED_LANGS, Lang } from '../types/lang';
-import { localizeArticle } from '../lib/i18n/localize';
+loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
+loadEnv();
 
 async function syncAllArticles() {
+  const { adminDb } = await import('../lib/firebase/admin');
+  const {
+    htmlToAlgoliaPlainText,
+    packPlainTextForAlgoliaRecord,
+    bulkSyncArticlesToAlgolia,
+  } = await import('../lib/algolia/sync');
+  const { localizeArticle } = await import('../lib/i18n/localize');
+
   console.log('🚀 記事のAlgolia同期を開始します...\n');
 
   try {
@@ -83,28 +89,12 @@ async function syncAllArticles() {
         const article = { id: doc.id, ...data };
         const localizedArticle = localizeArticle(article as any, lang);
 
-        // HTMLタグを除去してテキストのみ抽出（検索用）
-        let contentText = '';
-        if (localizedArticle.content) {
-          contentText = localizedArticle.content
-            .replace(/<[^>]*>/g, '') // HTMLタグを削除
-            .replace(/&nbsp;/g, ' ') // &nbsp;をスペースに変換
-            .replace(/&amp;/g, '&') // &amp;を&に変換
-            .replace(/&lt;/g, '<') // &lt;を<に変換
-            .replace(/&gt;/g, '>') // &gt;を>に変換
-            .replace(/&quot;/g, '"') // &quot;を"に変換
-            .replace(/\s+/g, ' ') // 連続した空白を1つに
-            .trim()
-            .substring(0, 3000); // 最初の3000文字のみ（約3KB、安全マージン）
-        }
-
-        // Algoliaレコードを作成
-        const record: AlgoliaArticleRecord = {
+        const plain = htmlToAlgoliaPlainText(localizedArticle.content || '');
+        const baseWithoutContent: Omit<AlgoliaArticleRecord, 'contentText' | 'contentTextChunks'> = {
           objectID: doc.id,
           title: localizedArticle.title || '',
           slug: data.slug || '',
           excerpt: localizedArticle.excerpt,
-          contentText, // HTMLタグを除去したテキスト
           mediaId: data.mediaId || '',
           categories: categoryNames,
           tags: tagNames,
@@ -113,6 +103,12 @@ async function syncAllArticles() {
           featuredImage: data.featuredImage,
           featuredImageAlt: data.featuredImageAlt,
           viewCount: data.viewCount || 0,
+        };
+        const packed = packPlainTextForAlgoliaRecord(plain, baseWithoutContent);
+
+        const record: AlgoliaArticleRecord = {
+          ...baseWithoutContent,
+          ...packed,
         };
 
         recordsByLang[lang].push(record);

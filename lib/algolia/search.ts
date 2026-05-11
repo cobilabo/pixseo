@@ -1,6 +1,14 @@
+import type { SupportedLanguage } from '@algolia/client-search';
 import { searchClient, getArticlesIndexName } from './client';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
+
+const QUERY_LANGUAGE_BY_SITE_LANG: Record<Lang, SupportedLanguage> = {
+  ja: 'ja',
+  en: 'en',
+  zh: 'zh',
+  ko: 'ko',
+};
 
 export interface AlgoliaSearchOptions {
   keyword?: string;
@@ -20,6 +28,9 @@ export async function searchArticlesWithAlgolia(
   options: AlgoliaSearchOptions
 ): Promise<{ articles: Partial<Article>[]; totalHits: number; searchType: 'keyword' | 'tag' | 'category' }> {
   const { keyword, tagName, categoryName, lang, mediaId, page = 0, hitsPerPage = 20 } = options;
+  const trimmedKeyword = (keyword ?? '').trim();
+  /** キーワードのみの検索（タグ/カテゴリフィルター時は従来どおり） */
+  const isKeywordOnlySearch = Boolean(trimmedKeyword) && !tagName && !categoryName;
 
   try {
     let filters = 'isPublished:true';
@@ -56,12 +67,17 @@ export async function searchArticlesWithAlgolia(
     const result = await searchClient.searchSingleIndex({
       indexName,
       searchParams: {
-        query: keyword || '',
+        // 管理画面は title/content の部分一致に近いため、フレーズ検索は使わず通常クエリ（完全一致にはならない）
+        query: isKeywordOnlySearch ? trimmedKeyword : (keyword || ''),
         page,
         hitsPerPage,
         filters,
-        // contentText: sync で本文から HTML を除いた先頭 3000 文字（AlgoliaArticleRecord）
-        ...(keyword ? { restrictSearchableAttributes: ['title', 'contentText'] } : {}),
+        ...(isKeywordOnlySearch
+          ? {
+              restrictSearchableAttributes: ['title', 'contentText', 'contentTextChunks'],
+              queryLanguages: [QUERY_LANGUAGE_BY_SITE_LANG[lang]],
+            }
+          : {}),
       },
     });
 

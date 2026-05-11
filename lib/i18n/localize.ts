@@ -1,5 +1,13 @@
 import { Lang } from '@/types/lang';
 
+/** theme.menuSettings に言語別フィールドが無いときのフォールバック（従来は日本語固定だった） */
+const DEFAULT_MENU_LABELS: Record<Lang, { topLabel: string; articlesLabel: string; searchLabel: string }> = {
+  ja: { topLabel: 'トップ', articlesLabel: '記事一覧', searchLabel: '検索' },
+  en: { topLabel: 'Home', articlesLabel: 'Articles', searchLabel: 'Search' },
+  zh: { topLabel: '首页', articlesLabel: '文章列表', searchLabel: '搜索' },
+  ko: { topLabel: '홈', articlesLabel: '기사', searchLabel: '검색' },
+};
+
 /**
  * 多言語フィールドを持つオブジェクトから、指定言語のフィールドを抽出
  * 
@@ -238,11 +246,12 @@ export function localizeTheme(theme: any, lang: Lang) {
   // メニュー設定
   if (theme.menuSettings) {
     const menuFields = localizeFields(theme.menuSettings, lang, ['topLabel', 'articlesLabel', 'searchLabel']);
+    const menuFb = DEFAULT_MENU_LABELS[lang];
     localized.menuSettings = {
       ...theme.menuSettings,
-      topLabel: menuFields.topLabel || theme.menuSettings.topLabel || 'トップ',
-      articlesLabel: menuFields.articlesLabel || theme.menuSettings.articlesLabel || '記事一覧',
-      searchLabel: menuFields.searchLabel || theme.menuSettings.searchLabel || '検索',
+      topLabel: menuFields.topLabel || theme.menuSettings.topLabel || menuFb.topLabel,
+      articlesLabel: menuFields.articlesLabel || theme.menuSettings.articlesLabel || menuFb.articlesLabel,
+      searchLabel: menuFields.searchLabel || theme.menuSettings.searchLabel || menuFb.searchLabel,
       customMenus: theme.menuSettings.customMenus?.map((menu: any) => {
         const customMenuFields = localizeFields(menu, lang, ['label']);
         return {
