@@ -92,7 +92,12 @@ export async function searchArticlesWithAlgolia(
       slug: hit.slug,
       excerpt: hit.excerpt,
       mediaId: hit.mediaId,
-      publishedAt: new Date(hit.publishedAt),
+      // hit.publishedAt は Algolia 上で number (ms) 想定だが、過去データで null の可能性があるため
+      // ガード (`new Date(null) = 1970-01-01` で表示崩れを起こさないように)。
+      publishedAt:
+        typeof hit.publishedAt === 'number' && hit.publishedAt > 0
+          ? new Date(hit.publishedAt)
+          : undefined,
       isPublished: hit.isPublished,
       featuredImage: hit.featuredImage,
       featuredImageAlt: hit.featuredImageAlt,

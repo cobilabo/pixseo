@@ -25,6 +25,48 @@ function jsonUtf8ByteLength(obj: unknown): number {
   return new TextEncoder().encode(JSON.stringify(obj)).length;
 }
 
+/**
+ * `publishedAt` のような日時値を Algolia 用の Unix ミリ秒に正規化する。
+ *
+ * 受け取り得る型:
+ *   - `Date`
+ *   - `number` (既に ms)
+ *   - `string` (ISO など)
+ *   - Firebase Admin / Client SDK の `Timestamp` ({ seconds, nanoseconds } もしくは toDate())
+ *   - null / undefined / その他
+ *
+ * 過去に `new Date(timestampObj).getTime()` だけで処理していたため Firestore Timestamp は
+ * Invalid Date → NaN → JSON.stringify で null になり、Algolia 上で publishedAt が null として
+ * 保存されていた (検索 UI 上で 1970-01-01 表示の原因)。
+ */
+function toUnixMs(value: unknown): number {
+  if (value == null) return 0;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (value instanceof Date) {
+    const t = value.getTime();
+    return Number.isFinite(t) ? t : 0;
+  }
+  if (typeof value === 'string') {
+    const t = new Date(value).getTime();
+    return Number.isFinite(t) ? t : 0;
+  }
+  if (typeof value === 'object') {
+    const v = value as { toDate?: () => Date; toMillis?: () => number; seconds?: number; nanoseconds?: number };
+    if (typeof v.toMillis === 'function') {
+      const t = v.toMillis();
+      return Number.isFinite(t) ? t : 0;
+    }
+    if (typeof v.toDate === 'function') {
+      const t = v.toDate().getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+    if (typeof v.seconds === 'number') {
+      return v.seconds * 1000 + Math.floor((v.nanoseconds ?? 0) / 1_000_000);
+    }
+  }
+  return 0;
+}
+
 /** HTML から Algolia 検索用プレーンテキストへ（管理画面の全文検索は HTML 付きだが、検索の近似としてプレーン化する） */
 export function htmlToAlgoliaPlainText(html: string): string {
   if (!html) return '';
@@ -233,11 +275,7 @@ export async function syncArticleToAlgolia(
           mediaId: article.mediaId,
           categories: categoryNames,
           tags: tagNames,
-          publishedAt: article.publishedAt
-            ? (article.publishedAt instanceof Date
-                ? article.publishedAt.getTime()
-                : new Date(article.publishedAt).getTime())
-            : 0,
+          publishedAt: toUnixMs(article.publishedAt),
           isPublished: article.isPublished,
           featuredImage: article.featuredImage,
           featuredImageAlt: article.featuredImageAlt,
