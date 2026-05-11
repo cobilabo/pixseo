@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import SimpleSearch from '@/components/search/SimpleSearch';
@@ -24,141 +24,161 @@ interface SearchContentProps {
   layoutTheme?: string;
 }
 
-// 検索タイプの定義
 type SearchType = 'keyword' | 'tag' | 'category';
+
+interface CurrentSearch {
+  type: SearchType;
+  value: string;
+}
+
+const HITS_PER_PAGE = 20;
 
 export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags = [], layoutTheme }: SearchContentProps) {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
-  const tagParam = searchParams.get('tag') || '';       // タグ名パラメータ
-  const categoryParam = searchParams.get('category') || ''; // カテゴリー名パラメータ
-  
+  const tagParam = searchParams.get('tag') || '';
+  const categoryParam = searchParams.get('category') || '';
+
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [keyword, setKeyword] = useState(query);
   const [searchType, setSearchType] = useState<SearchType>('keyword');
   const [searchLabel, setSearchLabel] = useState('');
+  const [currentSearch, setCurrentSearch] = useState<CurrentSearch | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalHits, setTotalHits] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
-  // URLパラメータの変更を監視
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // 検索ログ送信（初回ロード時のみ）
+  const logSearch = useCallback(
+    (type: SearchType, value: string, displayName?: string) => {
+      if (!mediaId) return;
+      fetch('/api/search-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          value: value.trim(),
+          ...(displayName ? { displayName } : {}),
+          mediaId,
+        }),
+      }).catch((err) => console.error('Search log error:', err));
+    },
+    [mediaId]
+  );
+
+  /**
+   * 任意ページの検索結果を取得して articles に append または置換する。
+   * append=false の場合は articles をリセットしてセットし直す（新規検索の初回ロード）。
+   */
+  const fetchPage = useCallback(
+    async (search: CurrentSearch, pageToLoad: number, append: boolean) => {
+      const baseParams = {
+        lang,
+        mediaId,
+        page: pageToLoad,
+        hitsPerPage: HITS_PER_PAGE,
+      };
+      const callParams =
+        search.type === 'tag'
+          ? { ...baseParams, tagName: search.value }
+          : search.type === 'category'
+            ? { ...baseParams, categoryName: search.value }
+            : { ...baseParams, keyword: search.value };
+
+      const { articles: results, totalHits: nb } = await searchArticlesWithAlgolia(callParams);
+      const cast = results as Article[];
+
+      setTotalHits(nb);
+      setArticles((prev) => (append ? [...prev, ...cast] : cast));
+      const loadedCount = (append ? articles.length : 0) + cast.length;
+      setHasMore(loadedCount < nb && cast.length > 0);
+      setPage(pageToLoad);
+    },
+    [lang, mediaId, articles.length]
+  );
+
+  const startSearch = useCallback(
+    async (type: SearchType, rawValue: string, displayName?: string) => {
+      setLoading(true);
+      setSearchType(type);
+      setSearchLabel(displayName ?? rawValue);
+      if (type === 'keyword') {
+        setKeyword(rawValue);
+      } else {
+        setKeyword('');
+      }
+      const search: CurrentSearch = { type, value: rawValue };
+      setCurrentSearch(search);
+      logSearch(type, rawValue, displayName);
+
+      try {
+        await fetchPage(search, 0, false);
+      } catch (error) {
+        console.error('Search error:', error);
+        setArticles([]);
+        setTotalHits(0);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPage, logSearch]
+  );
+
+  const loadMore = useCallback(async () => {
+    if (!currentSearch || loading || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      await fetchPage(currentSearch, page + 1, true);
+    } catch (error) {
+      console.error('Search loadMore error:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [currentSearch, loading, loadingMore, hasMore, page, fetchPage]);
+
+  // URL パラメータの変化で初回検索をトリガー
   useEffect(() => {
     if (tagParam) {
-      // タグ検索
-      handleTagSearch(tagParam);
+      void startSearch('tag', tagParam, tags.find((t) => t.name === tagParam || t.slug === tagParam)?.name ?? tagParam);
     } else if (categoryParam) {
-      // カテゴリー検索
-      handleCategorySearch(categoryParam);
+      void startSearch('category', categoryParam, categoryParam);
     } else if (query) {
-      // キーワード検索
-      handleKeywordSearch(query);
+      void startSearch('keyword', query, query);
     } else {
-      // パラメータが空の場合はクリア
       setArticles([]);
       setKeyword('');
       setSearchLabel('');
       setSearchType('keyword');
+      setCurrentSearch(null);
+      setPage(0);
+      setTotalHits(0);
+      setHasMore(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, tagParam, categoryParam]);
 
-  // キーワード検索
-  const handleKeywordSearch = async (searchKeyword: string) => {
-    setLoading(true);
-    setKeyword(searchKeyword);
-    setSearchType('keyword');
-    setSearchLabel(searchKeyword);
-    
-    try {
-      // 検索ログを記録
-      if (mediaId) {
-        fetch('/api/search-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'keyword',
-            value: searchKeyword.trim(),
-            mediaId,
-          }),
-        }).catch(err => console.error('Search log error:', err));
-      }
+  // IntersectionObserver による無限スクロール
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    if (!hasMore) return;
 
-      const { articles: results } = await searchArticlesWithAlgolia({
-        keyword: searchKeyword,
-        lang,
-        mediaId,
-        hitsPerPage: 50,
-      });
-      setArticles(results as Article[]);
-    } catch (error) {
-      console.error('Search error:', error);
-      setArticles([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getLocalizedTagName = (name: string): string => {
-    const found = tags.find(t => t.name === name || t.slug === name);
-    return found?.name || name;
-  };
-
-  const handleTagSearch = async (tagName: string) => {
-    setLoading(true);
-    setKeyword('');
-    setSearchType('tag');
-    setSearchLabel(getLocalizedTagName(tagName));
-    
-    try {
-      // 検索ログを記録
-      if (mediaId) {
-        fetch('/api/search-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'tag',
-            value: tagName,
-            displayName: tagName,
-            mediaId,
-          }),
-        }).catch(err => console.error('Search log error:', err));
-      }
-
-      const { articles: results } = await searchArticlesWithAlgolia({
-        tagName: tagName,
-        lang,
-        mediaId,
-        hitsPerPage: 50,
-      });
-      setArticles(results as Article[]);
-    } catch (error) {
-      console.error('Tag search error:', error);
-      setArticles([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // カテゴリー検索（Algolia経由）
-  const handleCategorySearch = async (categoryName: string) => {
-    setLoading(true);
-    setKeyword('');
-    setSearchType('category');
-    setSearchLabel(categoryName);
-    
-    try {
-      const { articles: results } = await searchArticlesWithAlgolia({
-        categoryName: categoryName,
-        lang,
-        mediaId,
-        hitsPerPage: 50,
-      });
-      setArticles(results as Article[]);
-    } catch (error) {
-      console.error('Category search error:', error);
-      setArticles([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          void loadMore();
+        }
+      },
+      { rootMargin: '400px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   const handleSearch = (searchKeyword: string) => {
     const trimmed = searchKeyword.trim();
@@ -167,13 +187,16 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
       setKeyword('');
       setSearchLabel('');
       setSearchType('keyword');
+      setCurrentSearch(null);
+      setPage(0);
+      setTotalHits(0);
+      setHasMore(false);
       setLoading(false);
       return;
     }
-    handleKeywordSearch(trimmed);
+    void startSearch('keyword', trimmed, trimmed);
   };
 
-  // 検索結果のタイトル
   const getSearchResultTitle = () => {
     switch (searchType) {
       case 'tag':
@@ -181,11 +204,10 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
       case 'category':
         return `${t('search.categorySearchResults', lang)}: ${searchLabel}`;
       default:
-        return `${articles.length}${t('section.searchResults', lang)}`;
+        return `${totalHits}${t('section.searchResults', lang)}`;
     }
   };
 
-  // 検索結果がない場合のメッセージ
   const getNoResultsMessage = () => {
     if (searchType === 'tag') {
       return t('message.noTagArticles', lang);
@@ -205,7 +227,6 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
         <SimpleSearch onSearch={handleSearch} initialKeyword={keyword} lang={lang} />
       )}
 
-      {/* タグ/カテゴリー検索時のバッジ表示 */}
       {(searchType === 'tag' || searchType === 'category') && searchLabel && (
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
@@ -224,7 +245,6 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
         </div>
       )}
 
-      {/* 検索結果 */}
       <section>
         {loading ? (
           <div className="text-center py-12">
@@ -232,21 +252,32 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
           </div>
         ) : articles.length > 0 ? (
           <>
-            {/* タイトル部分 - ホームページと同じスタイル */}
             <div className="text-center mb-8">
               <h2 className="text-xl font-bold text-gray-900 mb-1">
                 {getSearchResultTitle()}
               </h2>
               <p className="text-xs text-gray-500 uppercase tracking-wider">
-                {searchType === 'keyword' ? t('section.searchResultsEn', lang) : `${articles.length} articles`}
+                {searchType === 'keyword' ? t('section.searchResultsEn', lang) : `${totalHits} articles`}
               </p>
             </div>
-            {/* 記事グリッド - ホームページと同じスタイル（2カラム） */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {articles.map((article) => (
                 <ArticleCard key={article.id} article={article} lang={lang} />
               ))}
             </div>
+
+            {/* 無限スクロール用 sentinel と状態表示 */}
+            <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+            {loadingMore && (
+              <div className="text-center py-6">
+                <p className="text-sm text-gray-500">{t('common.loading', lang)}</p>
+              </div>
+            )}
+            {!hasMore && articles.length >= HITS_PER_PAGE && (
+              <div className="text-center py-6">
+                <p className="text-xs text-gray-400">— {totalHits} / {totalHits} —</p>
+              </div>
+            )}
           </>
         ) : hasSearchParams ? (
           <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center text-gray-900">
