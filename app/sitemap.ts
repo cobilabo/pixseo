@@ -3,14 +3,23 @@ import { getArticleSlugsForSitemap } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
 import { SUPPORTED_LANGS } from '@/types/lang';
-import { getSiteOrigin } from '@/lib/site-url';
 
-// ISR: 1時間ごとに再生成（sitemap は頻繁に更新する必要がないため）
+/**
+ * ISR: 1時間ごとに再生成（sitemap は頻繁に更新する必要がないため）。
+ *
+ * NOTE: 以前は `getSiteOrigin()` で `headers()` を経由していたため Next.js が Dynamic Rendering
+ * 扱いとし、Vercel CDN に全くキャッシュされずに毎リクエストで Firestore (1700 件超) に
+ * クエリが走っていた (`X-VERCEL-CACHE: MISS` が常時)。
+ * sitemap.xml は単一ドメイン専用 (vercel.json で `NEXT_PUBLIC_SITE_URL` 固定) なので
+ * `headers()` を使わず env から直接解決することで Static Rendering 扱いに戻し、
+ * ISR (revalidate=3600) と Vercel CDN キャッシュを有効化する。
+ */
 export const revalidate = 3600;
 
+const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL || 'https://the-ayumi.jp').replace(/\/+$/, '');
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // host ヘッダ → NEXT_PUBLIC_SITE_URL → https://the-ayumi.jp の順で解決
-  const origin = getSiteOrigin();
+  const origin = SITE_ORIGIN;
 
   const [articles, categories, tags] = await Promise.all([
     getArticleSlugsForSitemap({ limit: 5000 }),
