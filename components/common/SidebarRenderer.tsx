@@ -7,6 +7,7 @@ import PopularArticles from './PopularArticles';
 import RecommendedArticles from './RecommendedArticles';
 import SidebarCategories from './SidebarCategories';
 import SidebarHtmlContent from './SidebarHtmlContent';
+import SidebarLinkButton from './SidebarLinkButton';
 
 interface CategoryWithCount extends Category {
   articleCount?: number;
@@ -129,6 +130,18 @@ export default function SidebarRenderer({
               <SidebarCategories
                 key={item.id}
                 categories={categories}
+                lang={lang}
+              />
+            );
+          case 'linkButton':
+            if (!item.title?.trim() || !item.linkUrl?.trim()) return null;
+            return (
+              <SidebarLinkButton
+                key={item.id}
+                title={item.title}
+                linkLabel={item.linkLabel || item.title}
+                linkUrl={item.linkUrl}
+                buttonIcon={item.buttonIcon}
                 lang={lang}
               />
             );

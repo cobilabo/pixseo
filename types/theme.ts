@@ -223,12 +223,16 @@ export interface SearchSettings {
   searchBoxType?: 'keyword' | 'tag' | 'both';
 }
 
+// サイドバーリンクボタンのアイコン（法人の方へ＝book、ご要望＝mail）
+export type SideContentLinkButtonIcon = 'mail' | 'book';
+
 // サイドコンテンツ項目タイプの定義
 export type SideContentItemType = 
   | 'recentArticles'      // 新着記事
   | 'popularArticles'     // 人気記事
   | 'recommendedArticles' // おすすめ記事
   | 'categories'          // カテゴリー一覧
+  | 'linkButton'          // リンクボタン（法人の方へ等）
   | 'html';               // HTMLコード
 
 // サイドコンテンツ項目の定義（統合型）
@@ -240,8 +244,12 @@ export interface SideContentItem {
   // 人気記事・おすすめ記事用
   displayCount?: number;            // 表示件数
   // HTML用
-  title?: string;                   // 管理用タイトル
+  title?: string;                   // 管理用タイトル / リンクボタンの見出し
   htmlCode?: string;                // HTMLコード
+  // リンクボタン用
+  linkLabel?: string;               // ボタンラベル
+  linkUrl?: string;                 // リンク先（例: /ja/user-request/）
+  buttonIcon?: SideContentLinkButtonIcon;
 }
 
 // サイドコンテンツHTMLアイテムの定義（ふらっとテーマ専用）※後方互換性のため保持
