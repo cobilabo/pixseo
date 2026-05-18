@@ -16,6 +16,7 @@ import {
   getTheme,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getSiteOrigin } from '@/lib/site-url';
@@ -98,7 +99,7 @@ export default async function TagPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags, popularSearchKeywords] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ tagId: rawTag.id, limit: 30 }),
@@ -109,6 +110,7 @@ export default async function TagPage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50) : Promise.resolve([]),
   ]);
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -221,6 +223,7 @@ export default async function TagPage({ params }: PageProps) {
                 tags={sidebarTags}
                 categories={categories}
                 popularTags={popularSearchTags}
+                popularKeywords={popularSearchKeywords}
                 variant="compact"
               />
             )}

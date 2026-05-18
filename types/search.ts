@@ -26,3 +26,28 @@ export interface DailySearchLog {
   updatedAt: Date;
 }
 
+// よく検索されているキーワードの承認状態
+export type PopularKeywordStatus = 'pending' | 'approved' | 'rejected';
+
+// 承認状態が決定済みの永続化形式（Firestore保存値）
+export type PopularKeywordDecidedStatus = Exclude<PopularKeywordStatus, 'pending'>;
+
+// よく検索されているキーワードの承認レコード
+export interface PopularKeywordApproval {
+  mediaId: string;
+  value: string;              // 正規化済みキーワード（小文字化）
+  displayName: string;        // 表示用の生キーワード
+  status: PopularKeywordDecidedStatus;
+  decidedBy: string;          // 承認/拒否した管理者のuid
+  decidedAt: Date;
+  updatedAt: Date;
+}
+
+// 集計済みキーワード（管理画面表示用）
+export interface AggregatedPopularKeyword {
+  value: string;
+  displayName: string;
+  count: number;
+  status: PopularKeywordStatus;
+}
+

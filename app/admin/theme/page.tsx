@@ -18,6 +18,7 @@ import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthGuard from '@/components/admin/AuthGuard';
+import PopularKeywordsApprovalPanel from '@/components/admin/PopularKeywordsApprovalPanel';
 import { apiClient, apiGet } from '@/lib/api-client';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -346,6 +347,10 @@ export default function ThemePage() {
           popularTagsSettings: {
             ...defaultSearchSettings.popularTagsSettings,
             ...fetchedTheme.searchSettings?.popularTagsSettings,
+          },
+          popularKeywordsSettings: {
+            ...(defaultSearchSettings.popularKeywordsSettings || { displayCount: 10, aggregationDays: 30 }),
+            ...fetchedTheme.searchSettings?.popularKeywordsSettings,
           },
         },
         articleSettings: {
@@ -879,7 +884,7 @@ export default function ThemePage() {
   };
 
   // 検索設定のデフォルト値
-  const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
+  const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
 
   const defaultSearchSettings: SearchSettings = {
     displayPages: {
@@ -893,11 +898,16 @@ export default function ThemePage() {
       tagSearch: false,
       categorySearch: false,
       popularTags: false,
+      popularKeywords: false,
     },
     searchOrder: DEFAULT_SEARCH_ORDER,
     categorySearchDisplayType: 'dropdown',
     popularTagsSettings: {
       displayCount: 10,
+    },
+    popularKeywordsSettings: {
+      displayCount: 10,
+      aggregationDays: 30,
     },
   };
 
@@ -983,6 +993,40 @@ export default function ThemePage() {
           popularTagsSettings: {
             ...(currentSettings.popularTagsSettings || defaultSearchSettings.popularTagsSettings),
             displayCount: count,
+          },
+        },
+      };
+    });
+  };
+
+  // よく検索されているキーワードの表示件数を更新
+  const updatePopularKeywordsDisplayCount = (count: number) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          popularKeywordsSettings: {
+            ...(currentSettings.popularKeywordsSettings || defaultSearchSettings.popularKeywordsSettings || { displayCount: 10, aggregationDays: 30 }),
+            displayCount: count,
+          },
+        },
+      };
+    });
+  };
+
+  // よく検索されているキーワードの集計期間を更新
+  const updatePopularKeywordsAggregationDays = (days: number) => {
+    setTheme(prev => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          popularKeywordsSettings: {
+            ...(currentSettings.popularKeywordsSettings || defaultSearchSettings.popularKeywordsSettings || { displayCount: 10, aggregationDays: 30 }),
+            aggregationDays: days,
           },
         },
       };
@@ -1938,6 +1982,7 @@ export default function ThemePage() {
                               tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
                               categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
                               popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
+                              popularKeywords: { label: 'よく検索されているキーワード', icon: '🔥', description: 'サイトで検索されたキーワードのうち、管理者が承認したものを表示' },
                             };
                             const { label, icon, description } = config[key];
                             return (
@@ -2012,6 +2057,53 @@ export default function ThemePage() {
                       <p className="text-xs text-orange-600 mt-2">
                         直近1ヶ月の検索履歴から、検索回数が多いタグを上位から表示します
                       </p>
+                    </div>
+                  )}
+
+                  {/* よく検索されているキーワード設定 + 承認管理 */}
+                  {theme.searchSettings?.searchTypes?.popularKeywords && (
+                    <div className="space-y-4">
+                      <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-rose-700 mb-2">
+                            集計期間
+                          </label>
+                          <select
+                            value={theme.searchSettings?.popularKeywordsSettings?.aggregationDays ?? 30}
+                            onChange={(e) => updatePopularKeywordsAggregationDays(parseInt(e.target.value))}
+                            className="w-full px-4 py-2 border border-rose-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                          >
+                            <option value={7}>直近7日</option>
+                            <option value={30}>直近30日</option>
+                            <option value={90}>直近90日</option>
+                            <option value={0}>全期間</option>
+                          </select>
+                          <p className="text-xs text-rose-600 mt-2">
+                            管理画面の承認リストで対象となる集計期間です
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-rose-700 mb-2">
+                            サイト表示件数
+                          </label>
+                          <select
+                            value={theme.searchSettings?.popularKeywordsSettings?.displayCount || 10}
+                            onChange={(e) => updatePopularKeywordsDisplayCount(parseInt(e.target.value))}
+                            className="w-full px-4 py-2 border border-rose-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                          >
+                            {[5, 10, 15, 20, 30].map(num => (
+                              <option key={num} value={num}>{num}件</option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-rose-600 mt-2">
+                            検索回数の多い「承認済み」キーワードを上位から表示します
+                          </p>
+                        </div>
+                      </div>
+
+                      <PopularKeywordsApprovalPanel
+                        aggregationDays={theme.searchSettings?.popularKeywordsSettings?.aggregationDays ?? 30}
+                      />
                     </div>
                   )}
 

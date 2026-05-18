@@ -13,6 +13,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { SIDEBAR_ARTICLE_FETCH_LIMIT } from '@/lib/constants/sidebar-content';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
@@ -143,13 +144,14 @@ export default async function FixedPage({ params }: PageProps) {
   }
 
   // mediaId依存の取得を並列化
-  const [rawPage, rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags] = await Promise.all([
+  const [rawPage, rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags, popularSearchKeywords] = await Promise.all([
     getPageBySlug(params.slug, mediaId),
     getSiteInfo(mediaId),
     getTheme(mediaId),
     getTagsServer(),
     getCategoriesServer(),
     getPopularSearchTagsServer(mediaId, 30, 20),
+    getApprovedPopularKeywordsServer(mediaId, 0, 50),
   ]);
   if (!rawPage) {
     notFound();
@@ -234,7 +236,7 @@ export default async function FixedPage({ params }: PageProps) {
         
         {/* BlockBuilderのみでレンダリング */}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -267,7 +269,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
+        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
       ) : (
         <div 
           className="prose prose-lg max-w-none"
@@ -376,6 +378,7 @@ export default async function FixedPage({ params }: PageProps) {
                       tags={sidebarTags}
                       categories={categories}
                       popularTags={popularSearchTags}
+                      popularKeywords={popularSearchKeywords}
                     />
                   </div>
                 )}
@@ -394,6 +397,7 @@ export default async function FixedPage({ params }: PageProps) {
                       tags={sidebarTags}
                       categories={categories}
                       popularTags={popularSearchTags}
+                      popularKeywords={popularSearchKeywords}
                       variant="compact"
                     />
                   </div>

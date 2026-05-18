@@ -45,6 +45,7 @@ import {
   getTagsServer as _getAllTagsServer,
 } from './tags-server';
 import { getPopularSearchTagsServer as _getPopularSearchTagsServer } from './search-log-server';
+import { getApprovedPopularKeywordsServer as _getApprovedPopularKeywordsServer } from './popular-keywords-server';
 import type { Article } from '@/types/article';
 import type { Writer } from '@/types/writer';
 
@@ -62,6 +63,7 @@ export const CACHE_TAGS = {
   WRITERS: 'writers',
   SITE: 'site',
   SEARCH_LOGS: 'search-logs',
+  POPULAR_KEYWORDS: 'popular-keywords',
   THEME: 'theme',
 } as const;
 
@@ -128,6 +130,13 @@ const cachedPopularSearchTags = unstable_cache(
     _getPopularSearchTagsServer(mediaId, days, limitCount),
   ['popular-search-tags-v1'],
   { tags: [CACHE_TAGS.SEARCH_LOGS], revalidate: TTL.MEDIUM }
+);
+
+const cachedApprovedPopularKeywords = unstable_cache(
+  async (mediaId: string, days: number, limitCount: number) =>
+    _getApprovedPopularKeywordsServer(mediaId, days, limitCount),
+  ['approved-popular-keywords-v1'],
+  { tags: [CACHE_TAGS.SEARCH_LOGS, CACHE_TAGS.POPULAR_KEYWORDS], revalidate: TTL.MEDIUM }
 );
 
 const cachedSliderArticles = unstable_cache(
@@ -205,6 +214,10 @@ export const getAllTagsServer = cache((mediaId?: string) => cachedAllTags(mediaI
 export const getPopularSearchTagsServer = cache(
   (mediaId: string, days: number = 30, limitCount: number = 10) =>
     cachedPopularSearchTags(mediaId, days, limitCount)
+);
+export const getApprovedPopularKeywordsServer = cache(
+  (mediaId: string, days: number = 30, limitCount: number = 10) =>
+    cachedApprovedPopularKeywords(mediaId, days, limitCount)
 );
 export const getSliderArticlesServer = cache((mediaId?: string) => cachedSliderArticles(mediaId));
 export const getArticlesByWriterServer = cache(

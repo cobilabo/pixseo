@@ -123,6 +123,13 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
   },
+  patch: async (url: string, data: any) => {
+    return fetchWithMediaId(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
   delete: async (url: string) => {
     return fetchWithMediaId(url, { method: 'DELETE' });
   },

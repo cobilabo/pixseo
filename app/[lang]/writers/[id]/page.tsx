@@ -15,6 +15,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -94,7 +95,7 @@ export default async function WriterPage({ params }: PageProps) {
   const headersList = headers();
   const host = headersList.get('host') || '';
 
-  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles, recentArticles, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, allCategories, allCategoriesWithCount, popularArticles, recommendedArticles, recentArticles, allTags, popularSearchTags, popularSearchKeywords] = await Promise.all([
     mediaId ? getSiteInfo(mediaId) : Promise.resolve({ name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: '', allowIndexing: false, isPreview: false }),
     mediaId ? getTheme(mediaId) : Promise.resolve({} as any),
     getArticlesByWriterServer(params.id, mediaId || undefined),
@@ -105,6 +106,7 @@ export default async function WriterPage({ params }: PageProps) {
     getRecentArticlesServer(10, mediaId || undefined),
     getTagsServer(),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50) : Promise.resolve([]),
   ]);
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -201,6 +203,7 @@ export default async function WriterPage({ params }: PageProps) {
                 tags={sidebarTags}
                 categories={headerCategories}
                 popularTags={popularSearchTags}
+                popularKeywords={popularSearchKeywords}
                 variant="compact"
               />
             )}

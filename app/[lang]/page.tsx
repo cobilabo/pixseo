@@ -15,6 +15,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import MediaHeader from '@/components/layout/MediaHeader';
@@ -166,7 +167,9 @@ export default async function HomePage({ params }: PageProps) {
   const isMobile = /mobile|android|iphone|ipad|tablet/i.test(userAgent);
   
   // すべてのデータを並列取得（homeページチェックも含む）
-  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  // 注: popularKeywords の集計期間/件数はテーマ設定から取得するが、Promise.all 内では未取得のため
+  //     ここでは広めの集計期間/件数で取得し、SearchWidget 側で displayCount に切り詰める。
+  const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags, popularSearchKeywords] = await Promise.all([
     mediaId ? getHomePage(mediaId) : Promise.resolve(null),
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
@@ -177,6 +180,7 @@ export default async function HomePage({ params }: PageProps) {
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50) : Promise.resolve([]),
   ]);
   
   // 多言語化
@@ -280,7 +284,7 @@ export default async function HomePage({ params }: PageProps) {
 
           {/* BlockBuilderのみでレンダリング */}
           {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
           ) : (
             <div
               className="prose prose-lg max-w-none"
@@ -311,7 +315,7 @@ export default async function HomePage({ params }: PageProps) {
         
         {/* ブロックビルダー使用時はBlockRendererで表示 */}
         {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders searchData={{ tags, categories, popularTags: popularSearchTags, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders searchData={{ tags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -393,6 +397,7 @@ export default async function HomePage({ params }: PageProps) {
                         tags={tags}
                         categories={categories}
                         popularTags={popularSearchTags}
+                        popularKeywords={popularSearchKeywords}
                       />
                     </div>
                   )}
@@ -410,6 +415,7 @@ export default async function HomePage({ params }: PageProps) {
                       tags={tags}
                       categories={categories}
                       popularTags={popularSearchTags}
+                      popularKeywords={popularSearchKeywords}
                       variant="compact"
                     />
                   )}

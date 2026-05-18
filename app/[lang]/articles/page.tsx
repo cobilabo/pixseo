@@ -16,6 +16,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getSiteOrigin } from '@/lib/site-url';
@@ -116,7 +117,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
   const offset = (currentPage - 1) * articlesPerPage;
   
   // サイト設定、Theme、記事、総記事数、カテゴリー、タグ、人気タグを並列取得
-  const [rawSiteInfo, rawTheme, articles, totalArticles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, articles, totalArticles, popularArticles, recommendedArticles, recentArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags, popularSearchKeywords] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getArticlesServer({ limit: articlesPerPage, offset, mediaId: mediaId || undefined }),
@@ -128,6 +129,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
     getCategoriesWithCountServer({ mediaId: mediaId || undefined }),
     getTagsServer(),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50) : Promise.resolve([]),
   ]);
   
   // 多言語化
@@ -323,6 +325,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
                 tags={sidebarTags}
                 categories={categories}
                 popularTags={popularSearchTags}
+                popularKeywords={popularSearchKeywords}
                 variant="compact"
               />
             )}

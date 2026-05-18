@@ -171,10 +171,13 @@ export interface SearchBlockConfig {
     tagSearch: boolean;
     categorySearch: boolean;
     popularTags: boolean;
+    popularKeywords: boolean;
   };
-  searchOrder?: ('keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags')[];
+  searchOrder?: ('keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags' | 'popularKeywords')[];
   categorySearchDisplayType?: 'dropdown' | 'list';
   popularTagsDisplayCount?: number;
+  popularKeywordsDisplayCount?: number;
+  popularKeywordsAggregationDays?: number;
 }
 
 // カスタムブロックの設定

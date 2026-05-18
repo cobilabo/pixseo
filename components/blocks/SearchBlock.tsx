@@ -11,6 +11,7 @@ interface SearchBlockProps {
   tags?: Array<{ id: string; name: string; slug: string }>;
   categories?: Array<{ id: string; name: string; slug: string; isHiddenFromLists?: boolean }>;
   popularTags?: Array<{ value: string; displayName?: string; count: number }>;
+  popularKeywords?: Array<{ value: string; displayName?: string; count: number }>;
   mediaId?: string;
 }
 
@@ -20,6 +21,7 @@ export default function SearchBlock({
   tags = [],
   categories = [],
   popularTags = [],
+  popularKeywords = [],
   mediaId,
 }: SearchBlockProps) {
   const config = block.config as SearchBlockConfig;
@@ -36,11 +38,16 @@ export default function SearchBlock({
       tagSearch: false,
       categorySearch: false,
       popularTags: false,
+      popularKeywords: false,
     },
     searchOrder: config.searchOrder as SearchTypeKey[] | undefined,
     categorySearchDisplayType: config.categorySearchDisplayType,
     popularTagsSettings: {
       displayCount: config.popularTagsDisplayCount || 10,
+    },
+    popularKeywordsSettings: {
+      displayCount: config.popularKeywordsDisplayCount || 10,
+      aggregationDays: config.popularKeywordsAggregationDays ?? 30,
     },
   };
 
@@ -52,6 +59,7 @@ export default function SearchBlock({
       tags={tags}
       categories={categories}
       popularTags={popularTags}
+      popularKeywords={popularKeywords}
     />
   );
 }

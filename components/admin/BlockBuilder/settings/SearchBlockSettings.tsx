@@ -27,9 +27,10 @@ const SEARCH_TYPE_CONFIG: Record<SearchTypeKey, { label: string; icon: string; d
   tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
   categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
   popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
+  popularKeywords: { label: 'よく検索されているキーワード', icon: '🔥', description: '管理者が承認したキーワードのみを表示' },
 };
 
-const DEFAULT_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
+const DEFAULT_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
 
 function SortableSearchItem({
   id,
@@ -208,6 +209,43 @@ export default function SearchBlockSettings({ block, onUpdate }: SearchBlockSett
               <option key={num} value={num}>{num}件</option>
             ))}
           </select>
+        </div>
+      )}
+
+      {config.searchTypes?.popularKeywords && (
+        <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-rose-700 mb-2">
+              よく検索されているキーワードの集計期間
+            </label>
+            <select
+              value={config.popularKeywordsAggregationDays ?? 30}
+              onChange={(e) => updateConfig({ popularKeywordsAggregationDays: parseInt(e.target.value) })}
+              className="w-full px-3 py-2 border border-rose-300 rounded-lg text-gray-900 bg-white text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+            >
+              <option value={7}>直近7日</option>
+              <option value={30}>直近30日</option>
+              <option value={90}>直近90日</option>
+              <option value={0}>全期間</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-rose-700 mb-2">
+              表示件数
+            </label>
+            <select
+              value={config.popularKeywordsDisplayCount || 10}
+              onChange={(e) => updateConfig({ popularKeywordsDisplayCount: parseInt(e.target.value) })}
+              className="w-full px-3 py-2 border border-rose-300 rounded-lg text-gray-900 bg-white text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+            >
+              {[5, 10, 15, 20, 30].map(num => (
+                <option key={num} value={num}>{num}件</option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs text-rose-600">
+            管理画面のテーマ → 検索タブ で承認したキーワードのみが表示されます。
+          </p>
         </div>
       )}
 

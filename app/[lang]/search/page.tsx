@@ -22,6 +22,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer as getTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
   getArticlesServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
@@ -115,7 +116,7 @@ export default async function SearchPage({ params }: PageProps) {
   }
 
   // サイト設定、Theme、カテゴリー、タグ、よく検索されているタグを並列取得
-  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, fallbackArticles, recentArticles, popularSearchTags] = await Promise.all([
+  const [rawSiteInfo, rawTheme, allCategories, allCategoriesWithCount, allTags, popularArticles, recommendedArticles, fallbackArticles, recentArticles, popularSearchTags, popularSearchKeywords] = await Promise.all([
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getCategoriesServer(),
@@ -126,6 +127,7 @@ export default async function SearchPage({ params }: PageProps) {
     getArticlesServer({ limit: 5, mediaId: mediaId || undefined }),
     getRecentArticlesServer(10, mediaId || undefined),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50) : Promise.resolve([]),
   ]);
 
   // 多言語化
@@ -230,6 +232,7 @@ export default async function SearchPage({ params }: PageProps) {
                   tags={tags}
                   categories={categories}
                   popularTags={popularSearchTags}
+                  popularKeywords={popularSearchKeywords}
                   variant="compact"
                 />
               )}

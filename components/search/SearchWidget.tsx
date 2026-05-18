@@ -14,6 +14,12 @@ interface PopularTag {
   count: number;
 }
 
+interface PopularKeyword {
+  value: string;
+  displayName?: string;
+  count: number;
+}
+
 interface CategoryItem {
   id: string;
   name: string;
@@ -28,10 +34,11 @@ interface SearchWidgetProps {
   tags?: Array<{ id: string; name: string; slug: string }>;
   categories?: CategoryItem[];
   popularTags?: PopularTag[];
+  popularKeywords?: PopularKeyword[];
   variant?: 'default' | 'compact';
 }
 
-const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'];
+const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
 
 export default function SearchWidget({ 
   searchSettings, 
@@ -40,6 +47,7 @@ export default function SearchWidget({
   tags = [],
   categories = [],
   popularTags = [],
+  popularKeywords = [],
   variant = 'default'
 }: SearchWidgetProps) {
   const router = useRouter();
@@ -50,7 +58,13 @@ export default function SearchWidget({
 
   const getSearchTypes = () => {
     if (searchSettings?.searchTypes) {
-      return searchSettings.searchTypes;
+      return {
+        keywordSearch: searchSettings.searchTypes.keywordSearch ?? false,
+        tagSearch: searchSettings.searchTypes.tagSearch ?? false,
+        categorySearch: searchSettings.searchTypes.categorySearch ?? false,
+        popularTags: searchSettings.searchTypes.popularTags ?? false,
+        popularKeywords: searchSettings.searchTypes.popularKeywords ?? false,
+      };
     }
     const oldType = searchSettings?.searchBoxType || 'keyword';
     return {
@@ -58,11 +72,13 @@ export default function SearchWidget({
       tagSearch: oldType === 'tag' || oldType === 'both',
       categorySearch: false,
       popularTags: false,
+      popularKeywords: false,
     };
   };
 
   const searchTypes = getSearchTypes();
   const popularTagsCount = searchSettings?.popularTagsSettings?.displayCount || 10;
+  const popularKeywordsCount = searchSettings?.popularKeywordsSettings?.displayCount || 10;
   const categoryDisplayType = searchSettings?.categorySearchDisplayType || 'dropdown';
 
   const searchOrder = (() => {
@@ -98,8 +114,15 @@ export default function SearchWidget({
     setIsSubmitting(false);
   };
 
+  const handlePopularKeywordClick = (keyword: string) => {
+    setIsSubmitting(true);
+    router.push(`/${lang}/search?q=${encodeURIComponent(keyword)}`);
+    setIsSubmitting(false);
+  };
+
   const isCompact = variant === 'compact';
   const displayPopularTags = popularTags.slice(0, popularTagsCount);
+  const displayPopularKeywords = popularKeywords.slice(0, popularKeywordsCount);
 
   const renderSearchItem = (key: SearchTypeKey) => {
     switch (key) {
@@ -201,6 +224,31 @@ export default function SearchWidget({
                 >
                   <span className="text-orange-500">🔥</span>
                   <span>{tag.displayName || tag.value}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'popularKeywords':
+        if (!searchTypes.popularKeywords || displayPopularKeywords.length === 0) return null;
+        return (
+          <div key={key}>
+            <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`}>
+              {t('search.popularKeywords', lang)}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {displayPopularKeywords.map((kw, index) => (
+                <button
+                  key={`${kw.value}-${index}`}
+                  onClick={() => handlePopularKeywordClick(kw.displayName || kw.value)}
+                  disabled={isSubmitting}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full hover:bg-rose-100 transition-colors disabled:opacity-50 ${
+                    isCompact ? 'text-xs' : 'text-sm'
+                  }`}
+                >
+                  <span className="text-rose-500">🔍</span>
+                  <span>{kw.displayName || kw.value}</span>
                 </button>
               ))}
             </div>

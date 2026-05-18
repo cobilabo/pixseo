@@ -239,3 +239,15 @@ export function revalidateSearchLogs(): void {
   runRevalidateTag(CACHE_TAGS.SEARCH_LOGS);
 }
 
+/**
+ * よく検索されているキーワードの承認状態が変わったときに呼ぶ。
+ * サイト側 SSR の `getApprovedPopularKeywordsServer` キャッシュを即時無効化する。
+ */
+export function revalidatePopularKeywords(): void {
+  runRevalidateTag(CACHE_TAGS.POPULAR_KEYWORDS);
+
+  SUPPORTED_LANGS.forEach((lang) => {
+    runRevalidate('/' + lang, 'layout');
+  });
+}
+

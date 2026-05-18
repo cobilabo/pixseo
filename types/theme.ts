@@ -168,17 +168,24 @@ export interface SearchTypes {
   tagSearch: boolean;          // タグ検索（プルダウン）
   categorySearch: boolean;     // カテゴリー検索
   popularTags: boolean;        // よく検索されているタグ
+  popularKeywords: boolean;    // よく検索されているキーワード（承認制）
 }
 
 // カテゴリー検索の表示形式
 export type CategorySearchDisplayType = 'dropdown' | 'list';
 
 // 検索項目のキー
-export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags';
+export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags' | 'popularKeywords';
 
 // よく検索されているタグの設定
 export interface PopularTagsSettings {
   displayCount: number;        // 表示件数（デフォルト: 10）
+}
+
+// よく検索されているキーワードの設定
+export interface PopularKeywordsSettings {
+  displayCount: number;        // 表示件数（デフォルト: 10）
+  aggregationDays: number;     // 集計期間（日数）。0 で全期間。デフォルト: 30
 }
 
 // 検索設定の定義（ふらっとテーマ専用）
@@ -188,6 +195,7 @@ export interface SearchSettings {
   searchOrder?: SearchTypeKey[];       // 検索項目の表示順
   categorySearchDisplayType?: CategorySearchDisplayType; // カテゴリー検索の表示形式
   popularTagsSettings: PopularTagsSettings;  // よく検索されているタグの設定
+  popularKeywordsSettings?: PopularKeywordsSettings;  // よく検索されているキーワードの設定
   // 後方互換性のため残す（廃止予定）
   searchBoxType?: 'keyword' | 'tag' | 'both';
 }
@@ -478,9 +486,14 @@ export const defaultTheme: Theme = {
       tagSearch: false,
       categorySearch: false,
       popularTags: false,
+      popularKeywords: false,
     },
     popularTagsSettings: {
       displayCount: 10,
+    },
+    popularKeywordsSettings: {
+      displayCount: 10,
+      aggregationDays: 30,
     },
   },
   

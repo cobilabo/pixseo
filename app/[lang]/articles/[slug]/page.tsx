@@ -20,6 +20,7 @@ import {
   getCategoriesWithCountServer,
   getAllTagsServer,
   getPopularSearchTagsServer,
+  getApprovedPopularKeywordsServer,
 } from '@/lib/firebase/cached';
 import { getCombinedStyles } from '@/lib/firebase/theme-helper';
 import { getSiteOrigin } from '@/lib/site-url';
@@ -218,7 +219,7 @@ export default async function ArticlePage({ params }: PageProps) {
   const theme = localizeTheme(rawTheme, lang);
 
   // Step 3: 記事に依存するデータ + サイドバーデータを全て並列取得
-  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, rawRecentArticles, popularSearchTags] = await Promise.all([
+  const [rawCategories, rawTags, rawWriter, adjacentArticles, rawRelatedArticles, allCategories, allCategoriesWithCount, allTags, rawPopularArticles, rawRecentArticles, popularSearchTags, popularSearchKeywords] = await Promise.all([
     getCategoriesServer(rawArticle.categoryIds || []).catch(() => []),
     getTagsServer(rawArticle.tagIds || []).catch(() => []),
     rawArticle.writerId ? getWriterServer(rawArticle.writerId).catch(() => null) : Promise.resolve(null),
@@ -230,6 +231,7 @@ export default async function ArticlePage({ params }: PageProps) {
     getPopularArticlesServer(10, mediaId || undefined).catch(() => []),
     getRecentArticlesServer(10, mediaId || undefined).catch(() => []),
     mediaId ? getPopularSearchTagsServer(mediaId, 30, 20).catch(() => []) : Promise.resolve([]),
+    mediaId ? getApprovedPopularKeywordsServer(mediaId, 0, 50).catch(() => []) : Promise.resolve([]),
   ]);
   
   const categories = rawCategories.map(cat => localizeCategory(cat, lang));
@@ -497,6 +499,7 @@ export default async function ArticlePage({ params }: PageProps) {
                   tags={sidebarTags}
                   categories={headerCategories}
                   popularTags={popularSearchTags}
+                  popularKeywords={popularSearchKeywords}
                 />
               </div>
             )}
@@ -577,6 +580,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 tags={sidebarTags}
                 categories={headerCategories}
                 popularTags={popularSearchTags}
+                popularKeywords={popularSearchKeywords}
                 variant="compact"
               />
             )}

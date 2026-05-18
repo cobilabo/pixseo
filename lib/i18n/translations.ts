@@ -71,6 +71,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': 'タグ検索結果',
     'search.categorySearchResults': 'カテゴリー検索結果',
     'search.popularTags': 'よく検索されているタグ',
+    'search.popularKeywords': 'よく検索されているキーワード',
     'search.categorySearch': 'カテゴリーから探す',
     
     // メッセージ
@@ -165,6 +166,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': 'Tag search results',
     'search.categorySearchResults': 'Category search results',
     'search.popularTags': 'Popular Tags',
+    'search.popularKeywords': 'Popular Keywords',
     'search.categorySearch': 'Search by category',
     
     // Messages
@@ -259,6 +261,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': '标签搜索结果',
     'search.categorySearchResults': '分类搜索结果',
     'search.popularTags': '热门标签',
+    'search.popularKeywords': '热门关键词',
     'search.categorySearch': '按分类搜索',
     
     // 消息
@@ -353,6 +356,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'search.tagSearchResults': '태그 검색 결과',
     'search.categorySearchResults': '카테고리 검색 결과',
     'search.popularTags': '인기 태그',
+    'search.popularKeywords': '인기 키워드',
     'search.categorySearch': '카테고리로 검색',
     
     // 메시지

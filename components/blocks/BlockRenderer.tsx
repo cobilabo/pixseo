@@ -27,6 +27,7 @@ interface BlockRendererProps {
     tags?: Array<{ id: string; name: string; slug: string }>;
     categories?: Array<{ id: string; name: string; slug: string; isHiddenFromLists?: boolean }>;
     popularTags?: Array<{ value: string; displayName?: string; count: number }>;
+    popularKeywords?: Array<{ value: string; displayName?: string; count: number }>;
     mediaId?: string;
   };
 }
@@ -113,6 +114,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
                 tags={searchData?.tags}
                 categories={searchData?.categories}
                 popularTags={searchData?.popularTags}
+                popularKeywords={searchData?.popularKeywords}
                 mediaId={searchData?.mediaId}
               />
             );
