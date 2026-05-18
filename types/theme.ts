@@ -178,6 +178,21 @@ export type CategorySearchDisplayType = 'dropdown' | 'list';
 // 検索項目のキー
 export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'featuredTags' | 'popularTags' | 'popularKeywords';
 
+/** メディアページ・ファーストビュー検索で設定可能な項目（キーワード・カテゴリーはヒーローUIで別表示） */
+export type FirstViewSearchTypeKey = 'tagSearch' | 'featuredTags' | 'popularTags' | 'popularKeywords';
+
+export interface FirstViewSearchTypes {
+  tagSearch: boolean;
+  featuredTags: boolean;
+  popularTags: boolean;
+  popularKeywords: boolean;
+}
+
+export interface FirstViewSearchSettings {
+  searchTypes: FirstViewSearchTypes;
+  searchOrder?: FirstViewSearchTypeKey[];
+}
+
 // おすすめタグの設定
 export interface FeaturedTagsSettings {
   tagIds: string[];            // 表示するタグID（選択順で表示）
@@ -203,6 +218,7 @@ export interface SearchSettings {
   featuredTagsSettings?: FeaturedTagsSettings;  // おすすめタグの設定
   popularTagsSettings: PopularTagsSettings;  // よく検索されているタグの設定
   popularKeywordsSettings?: PopularKeywordsSettings;  // よく検索されているキーワードの設定
+  firstViewSearchSettings?: FirstViewSearchSettings;  // メディアページFV検索（種類・順序のみ別設定）
   // 後方互換性のため残す（廃止予定）
   searchBoxType?: 'keyword' | 'tag' | 'both';
 }
@@ -505,6 +521,15 @@ export const defaultTheme: Theme = {
     popularKeywordsSettings: {
       displayCount: 10,
       aggregationDays: 30,
+    },
+    firstViewSearchSettings: {
+      searchTypes: {
+        tagSearch: true,
+        featuredTags: true,
+        popularTags: true,
+        popularKeywords: false,
+      },
+      searchOrder: ['featuredTags', 'popularTags', 'tagSearch', 'popularKeywords'],
     },
   },
   

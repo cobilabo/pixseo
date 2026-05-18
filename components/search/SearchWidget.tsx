@@ -38,8 +38,10 @@ interface SearchWidgetProps {
   popularKeywords?: PopularKeyword[];
   variant?: 'default' | 'compact' | 'hero';
   showTitle?: boolean;
+  /** おすすめタグ・人気タグ等のセクション見出しを表示するか（FVでは false） */
+  showSectionLabels?: boolean;
   omitTypes?: SearchTypeKey[];
-  /** 縺翫☆縺吶ａ繧ｿ繧ｰ繧剃ｺｺ豌励ち繧ｰ縺ｮ逶ｴ蜑阪↓蝗ｺ螳夲ｼ医Γ繝・ぅ繧｢FV逕ｨ・・*/
+  /** @deprecated FV は firstViewSearchSettings の searchOrder を使用 */
   featuredBeforePopular?: boolean;
 }
 
@@ -73,6 +75,7 @@ export default function SearchWidget({
   popularKeywords = [],
   variant = 'default',
   showTitle = true,
+  showSectionLabels = true,
   omitTypes = [],
   featuredBeforePopular = false,
 }: SearchWidgetProps) {
@@ -263,7 +266,9 @@ export default function SearchWidget({
         if (!searchTypes.featuredTags || featuredTags.length === 0) return null;
         return (
           <div key={key}>
-            <label className={labelClass}>{t('search.featuredTags', lang)}</label>
+            {showSectionLabels && (
+              <label className={labelClass}>{t('search.featuredTags', lang)}</label>
+            )}
             <div className="flex flex-wrap gap-2">
               {featuredTags.map((tag) => (
                 <button
@@ -285,7 +290,9 @@ export default function SearchWidget({
         if (!searchTypes.popularTags || displayPopularTags.length === 0) return null;
         return (
           <div key={key}>
-            <label className={labelClass}>{t('search.popularTags', lang)}</label>
+            {showSectionLabels && (
+              <label className={labelClass}>{t('search.popularTags', lang)}</label>
+            )}
             <div className="flex flex-wrap gap-2">
               {displayPopularTags.map((tag, index) => (
                 <button
@@ -307,7 +314,9 @@ export default function SearchWidget({
         if (!searchTypes.popularKeywords || displayPopularKeywords.length === 0) return null;
         return (
           <div key={key}>
-            <label className={labelClass}>{t('search.popularKeywords', lang)}</label>
+            {showSectionLabels && (
+              <label className={labelClass}>{t('search.popularKeywords', lang)}</label>
+            )}
             <div className="flex flex-wrap gap-2">
               {displayPopularKeywords.map((kw, index) => (
                 <button

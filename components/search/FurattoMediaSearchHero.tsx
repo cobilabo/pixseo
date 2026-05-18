@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,6 +7,10 @@ import { SearchSettings } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import SearchWidget from './SearchWidget';
+import {
+  buildFirstViewWidgetSearchSettings,
+  hasFirstViewSearchExtras,
+} from '@/lib/search/first-view-search-settings';
 
 interface CategoryItem {
   id: string;
@@ -60,19 +64,14 @@ export default function FurattoMediaSearchHero({
   const [keyword, setKeyword] = useState('');
 
   const visibleCategories = categories.filter((cat) => !cat.isHiddenFromLists);
+  const fvSearchSettings = buildFirstViewWidgetSearchSettings(searchSettings);
+  const showSearchExtras = hasFirstViewSearchExtras(searchSettings);
 
   const handleKeywordSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!keyword.trim()) return;
     router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
   };
-
-  const showSearchExtras =
-    searchSettings &&
-    (searchSettings.searchTypes?.tagSearch ||
-      searchSettings.searchTypes?.featuredTags ||
-      searchSettings.searchTypes?.popularTags ||
-      searchSettings.searchTypes?.popularKeywords);
 
   return (
     <div className={noBackground ? 'relative' : 'furatto-media-search-hero relative overflow-hidden'}>
@@ -113,10 +112,10 @@ export default function FurattoMediaSearchHero({
           </div>
         </form>
 
-        {showSearchExtras && (
+        {showSearchExtras && fvSearchSettings && (
           <div className="max-w-2xl mx-auto mb-6">
             <SearchWidget
-              searchSettings={searchSettings}
+              searchSettings={fvSearchSettings}
               mediaId={mediaId}
               lang={lang}
               tags={tags}
@@ -125,8 +124,8 @@ export default function FurattoMediaSearchHero({
               popularKeywords={popularKeywords}
               variant="hero"
               showTitle={false}
+              showSectionLabels={false}
               omitTypes={['keywordSearch', 'categorySearch']}
-              featuredBeforePopular
             />
           </div>
         )}

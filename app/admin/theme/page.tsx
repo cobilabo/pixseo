@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, TransitionAnimation } from '@/types/theme';
+import { Theme, defaultTheme, THEME_LAYOUTS, ThemeLayoutId, ThemeLayoutSettings, FooterBlock, FooterContent, FooterTextLink, FooterTextLinkSection, ScriptItem, ScriptTrigger, ScriptTriggerType, SearchSettings, SearchTypeKey, FirstViewSearchTypeKey, CategorySearchDisplayType, SideContentHtmlItem, SideContentItem, SideContentItemType, HtmlShortcodeItem, ArticleSettings, InternalLinkStyle, NavigationItem, NavigationItemType, TransitionAnimation } from '@/types/theme';
+import {
+  DEFAULT_FIRST_VIEW_SEARCH_SETTINGS,
+  normalizeFirstViewSearchOrder,
+} from '@/lib/search/first-view-search-settings';
 import {
   SIDE_CONTENT_DISPLAY_COUNT_OPTIONS,
   DEFAULT_SIDE_CONTENT_DISPLAY_COUNT,
@@ -364,6 +368,14 @@ export default function ThemePage() {
           popularKeywordsSettings: {
             ...(defaultSearchSettings.popularKeywordsSettings || { displayCount: 10, aggregationDays: 30 }),
             ...fetchedTheme.searchSettings?.popularKeywordsSettings,
+          },
+          firstViewSearchSettings: {
+            ...defaultSearchSettings.firstViewSearchSettings,
+            ...fetchedTheme.searchSettings?.firstViewSearchSettings,
+            searchTypes: {
+              ...defaultSearchSettings.firstViewSearchSettings?.searchTypes,
+              ...fetchedTheme.searchSettings?.firstViewSearchSettings?.searchTypes,
+            },
           },
         },
         articleSettings: {
@@ -926,6 +938,14 @@ export default function ThemePage() {
       displayCount: 10,
       aggregationDays: 30,
     },
+    firstViewSearchSettings: DEFAULT_FIRST_VIEW_SEARCH_SETTINGS,
+  };
+
+  const FV_SEARCH_TYPE_CONFIG: Record<FirstViewSearchTypeKey, { label: string; icon: string; description: string }> = {
+    tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
+    featuredTags: { label: 'おすすめタグ', icon: '⭐', description: 'テーマ設定で選択したタグを表示（見出しなし）' },
+    popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示（見出しなし）' },
+    popularKeywords: { label: 'よく検索されているキーワード', icon: '🔥', description: '承認済みキーワードを表示（見出しなし）' },
   };
 
   const getSearchOrder = (): SearchTypeKey[] => {
@@ -935,6 +955,10 @@ export default function ThemePage() {
       return [...saved, ...missing];
     }
     return DEFAULT_SEARCH_ORDER;
+  };
+
+  const getFirstViewSearchOrder = (): FirstViewSearchTypeKey[] => {
+    return normalizeFirstViewSearchOrder(theme.searchSettings?.firstViewSearchSettings?.searchOrder);
   };
 
   // 検索設定の更新（表示ページ）
@@ -980,6 +1004,43 @@ export default function ThemePage() {
         searchSettings: {
           ...currentSettings,
           searchOrder: newOrder,
+        },
+      };
+    });
+  };
+
+  const updateFirstViewSearchTypes = (field: FirstViewSearchTypeKey, value: boolean) => {
+    setTheme((prev) => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      const fv = currentSettings.firstViewSearchSettings || DEFAULT_FIRST_VIEW_SEARCH_SETTINGS;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          firstViewSearchSettings: {
+            ...fv,
+            searchTypes: {
+              ...fv.searchTypes,
+              [field]: value,
+            },
+          },
+        },
+      };
+    });
+  };
+
+  const updateFirstViewSearchOrder = (newOrder: FirstViewSearchTypeKey[]) => {
+    setTheme((prev) => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      const fv = currentSettings.firstViewSearchSettings || DEFAULT_FIRST_VIEW_SEARCH_SETTINGS;
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          firstViewSearchSettings: {
+            ...fv,
+            searchOrder: newOrder,
+          },
         },
       };
     });
@@ -2031,6 +2092,50 @@ export default function ThemePage() {
                                 description={description}
                                 checked={theme.searchSettings?.searchTypes?.[key] ?? (key === 'keywordSearch')}
                                 onChange={(checked) => updateSearchTypes(key, checked)}
+                              />
+                            );
+                          })}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+
+                  {/* ファーストビュー検索（メディアページ上部） */}
+                  <div className="border-t border-gray-200 pt-8 mt-8">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      ファーストビュー検索の種類と表示順
+                    </label>
+                    <p className="text-sm text-gray-500 mb-4">
+                      メディアページ（/media/）上部の検索エリア用です。キーワード検索・カテゴリーはヒーロー内で別表示のため、ここではタグ検索などのみ設定できます。おすすめタグ・人気タグなどの見出しは表示されません。
+                    </p>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event: DragEndEvent) => {
+                        const { active, over } = event;
+                        if (over && active.id !== over.id) {
+                          const currentOrder = getFirstViewSearchOrder();
+                          const oldIndex = currentOrder.indexOf(active.id as FirstViewSearchTypeKey);
+                          const newIndex = currentOrder.indexOf(over.id as FirstViewSearchTypeKey);
+                          updateFirstViewSearchOrder(arrayMove(currentOrder, oldIndex, newIndex));
+                        }
+                      }}
+                    >
+                      <SortableContext items={getFirstViewSearchOrder()} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-3">
+                          {getFirstViewSearchOrder().map((key) => {
+                            const { label, icon, description } = FV_SEARCH_TYPE_CONFIG[key];
+                            const fvTypes = theme.searchSettings?.firstViewSearchSettings?.searchTypes
+                              ?? DEFAULT_FIRST_VIEW_SEARCH_SETTINGS.searchTypes;
+                            return (
+                              <SortableSearchTypeItem
+                                key={key}
+                                id={key}
+                                label={label}
+                                icon={icon}
+                                description={description}
+                                checked={fvTypes[key] ?? false}
+                                onChange={(checked) => updateFirstViewSearchTypes(key, checked)}
                               />
                             );
                           })}
