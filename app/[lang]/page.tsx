@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { adminDb, adminStorage } from '@/lib/firebase/admin';
+import { adminStorage } from '@/lib/firebase/admin';
+import { getPageServer } from '@/lib/firebase/pages-server';
 import {
   getMediaIdFromHost,
   getSiteInfo,
@@ -41,37 +42,6 @@ import { t } from '@/lib/i18n/translations';
 import { Page } from '@/types/page';
 import { shouldReturn404ForMissingTenant } from '@/lib/firebase/media-tenant-helper';
 
-// homeスラッグの固定ページを取得
-async function getHomePage(mediaId: string): Promise<Page | null> {
-  try {
-    const pagesSnapshot = await adminDb
-      .collection('pages')
-      .where('slug', '==', 'home')
-      .where('mediaId', '==', mediaId)
-      .where('isPublished', '==', true)
-      .limit(1)
-      .get();
-
-    if (pagesSnapshot.empty) {
-      return null;
-    }
-
-    const doc = pagesSnapshot.docs[0];
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      publishedAt: data.publishedAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-      useBlockBuilder: data.useBlockBuilder || false,
-      blocks: data.blocks || [],
-    } as Page;
-  } catch (error) {
-    console.error('[getHomePage] Error:', error);
-    return null;
-  }
-}
-
 interface PageProps {
   params: {
     lang: string;
@@ -108,7 +78,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const [rawSiteInfo, rawHomePage] = await Promise.all([
     getSiteInfo(mediaId),
-    getHomePage(mediaId),
+    getPageServer('home', mediaId),
   ]);
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const homePage = rawHomePage ? localizePage(rawHomePage, lang) : null;
@@ -171,7 +141,7 @@ export default async function HomePage({ params }: PageProps) {
   // 注: popularKeywords の集計期間/件数はテーマ設定から取得するが、Promise.all 内では未取得のため
   //     ここでは広めの集計期間/件数で取得し、SearchWidget 側で displayCount に切り詰める。
   const [rawHomePage, rawSiteInfo, rawTheme, recentArticles, popularArticles, recommendedArticles, allCategories, allCategoriesWithCount, allTags, popularSearchTags, popularSearchKeywords] = await Promise.all([
-    mediaId ? getHomePage(mediaId) : Promise.resolve(null),
+    mediaId ? getPageServer('home', mediaId) : Promise.resolve(null),
     getSiteInfo(mediaId || ''),
     getTheme(mediaId || ''),
     getRecentArticlesServer(10, mediaId || undefined),

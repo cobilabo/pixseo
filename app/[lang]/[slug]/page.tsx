@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { adminDb, adminStorage } from '@/lib/firebase/admin';
+import { adminStorage } from '@/lib/firebase/admin';
+import { getPageServer } from '@/lib/firebase/pages-server';
 import {
   getMediaIdFromHost,
   getSiteInfo,
@@ -49,37 +50,6 @@ interface PageProps {
 // ISR: 30分ごとに再生成（カスタムページ更新時は revalidatePath で即時反映）
 export const revalidate = 1800;
 
-// 固定ページ取得
-async function getPageBySlug(slug: string, mediaId: string) {
-  try {
-    const pagesSnapshot = await adminDb
-      .collection('pages')
-      .where('slug', '==', slug)
-      .where('mediaId', '==', mediaId)
-      .where('isPublished', '==', true)
-      .limit(1)
-      .get();
-
-    if (pagesSnapshot.empty) {
-      return null;
-    }
-
-    const doc = pagesSnapshot.docs[0];
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      publishedAt: data.publishedAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-      useBlockBuilder: data.useBlockBuilder || false,
-      blocks: data.blocks || [],
-    } as any;
-  } catch (error) {
-    console.error('[getPageBySlug] Error:', error);
-    return null;
-  }
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
   const headersList = headers();
@@ -91,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const [rawPage, rawSiteInfo] = await Promise.all([
-    getPageBySlug(params.slug, mediaId),
+    getPageServer(params.slug, mediaId),
     getSiteInfo(mediaId),
   ]);
   if (!rawPage) {
@@ -146,7 +116,7 @@ export default async function FixedPage({ params }: PageProps) {
 
   // mediaId依存の取得を並列化
   const [rawPage, rawSiteInfo, rawTheme, allTags, allCategories, popularSearchTags, popularSearchKeywords] = await Promise.all([
-    getPageBySlug(params.slug, mediaId),
+    getPageServer(params.slug, mediaId),
     getSiteInfo(mediaId),
     getTheme(mediaId),
     getTagsServer(),

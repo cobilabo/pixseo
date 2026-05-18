@@ -1,33 +1,52 @@
 import { adminDb, getWpMediaUrlMap } from './admin';
 import { Page } from '@/types/page';
 import { pageMayContainWpUploads, rewritePageWpMediaUrls } from '@/lib/article-utils';
+import { isPreviewMode } from './media-tenant-helper';
 
 /**
  * 固定ページの取得（スラッグ指定・サーバーサイド）
+ * プレビュー環境では非公開ページも返す（記事プレビューと同様）
  */
 export async function getPageServer(slug: string, mediaId?: string): Promise<Page | null> {
   try {
-    let query = adminDb.collection('pages').where('slug', '==', slug);
-    
+    const isPreview = isPreviewMode();
+
+    let query: FirebaseFirestore.Query = adminDb
+      .collection('pages')
+      .where('slug', '==', slug);
+
     if (mediaId) {
       query = query.where('mediaId', '==', mediaId);
     }
-    
+
+    if (!isPreview) {
+      query = query.where('isPublished', '==', true);
+    }
+
     const snapshot = await query.limit(1).get();
-    
+
     if (snapshot.empty) {
       return null;
     }
-    
+
     const doc = snapshot.docs[0];
     const data = doc.data();
-    
+
     const page = {
       id: doc.id,
       ...data,
       publishedAt: data.publishedAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
+      useBlockBuilder: data.useBlockBuilder || false,
+      blocks: data.blocks || [],
     } as Page;
+
+    if (!isPreview) {
+      const now = new Date();
+      if (page.publishedAt && page.publishedAt > now) {
+        return null;
+      }
+    }
 
     if (pageMayContainWpUploads(page)) {
       const map = await getWpMediaUrlMap();
