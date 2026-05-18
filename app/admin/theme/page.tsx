@@ -15,6 +15,7 @@ import {
   normalizeSideContentItemsDisplayCounts,
 } from '@/lib/constants/sidebar-content';
 import { ensureUserRequestSideContentItem } from '@/lib/constants/side-content-html-presets';
+import { applyHtmlShortcodePresets } from '@/lib/constants/html-shortcode-presets';
 import { filterValidFooterBlocks } from '@/lib/theme/footer-blocks';
 import { Page } from '@/types/page';
 import { Category, Tag } from '@/types/article';
@@ -338,6 +339,11 @@ export default function ThemePage() {
       const mergedFooterBlocks =
         fetchedTheme.footerBlocks ?? fetchedTheme.themeSettings?.[layoutKey]?.footerBlocks;
 
+      const htmlShortcodePresets = applyHtmlShortcodePresets({
+        htmlShortcodes: fetchedTheme.htmlShortcodes,
+        customCss: fetchedTheme.customCss ?? defaultTheme.customCss,
+      });
+
       // デフォルト値とマージ
       setTheme({
         ...defaultTheme,
@@ -385,6 +391,8 @@ export default function ThemePage() {
           internalLinkStyle: fetchedTheme.articleSettings?.internalLinkStyle || 'text',
         },
         sideContentItems: migratedSideContentItems,
+        htmlShortcodes: htmlShortcodePresets.htmlShortcodes,
+        customCss: htmlShortcodePresets.customCss,
       });
     } catch (error) {
       console.error('テーマ設定の取得に失敗しました:', error);
@@ -405,11 +413,17 @@ export default function ThemePage() {
       
       // 保存前に現在のテーマ設定をthemeSettingsに保存
       const currentSettings = extractCurrentLayoutSettings(theme);
+      const htmlShortcodePresets = applyHtmlShortcodePresets({
+        htmlShortcodes: theme.htmlShortcodes,
+        customCss: theme.customCss,
+      });
       const themeToSave: Theme = {
         ...theme,
         sideContentItems: ensureUserRequestSideContentItem(
           normalizeSideContentItemsDisplayCounts(theme.sideContentItems) ?? []
         ),
+        htmlShortcodes: htmlShortcodePresets.htmlShortcodes,
+        customCss: htmlShortcodePresets.customCss,
         themeSettings: {
           ...theme.themeSettings,
           [theme.layoutTheme]: currentSettings,
@@ -2632,6 +2646,7 @@ export default function ThemePage() {
                           <li>すべてのページの <code className="bg-blue-100 px-1 rounded">&lt;head&gt;</code> 内に <code className="bg-blue-100 px-1 rounded">&lt;style&gt;</code> タグとして挿入されます</li>
                           <li>テーマカラーの後に読み込まれるため、カラー設定を上書きすることもできます</li>
                           <li>記事コンテンツ内の要素は <code className="bg-blue-100 px-1 rounded">.article-content</code> セレクタで指定できます</li>
+                          <li>HTMLショートコード「認証店記事の予約」ボタンは <code className="bg-blue-100 px-1 rounded">.pixseo-shortcode-reservation-btn</code> でスタイルを編集できます</li>
                         </ul>
                       </div>
                     </div>
@@ -3007,6 +3022,7 @@ export default function ThemePage() {
                           <li>記事編集画面のHTML挿入モーダルで呼び出せるHTMLテンプレートを登録できます</li>
                           <li>よく使うHTMLコードをラベル付きで登録しておくことで、素早く挿入できます</li>
                           <li>広告コード、埋め込みウィジェットなどの登録に便利です</li>
+                          <li>「認証店記事の予約」は挿入後にリンク先（href）を記事ごとの予約URLに差し替えてください</li>
                         </ul>
                       </div>
                     </div>
