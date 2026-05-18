@@ -14,7 +14,7 @@ import {
   normalizeSideContentDisplayCount,
   normalizeSideContentItemsDisplayCounts,
 } from '@/lib/constants/sidebar-content';
-import { ensureUserRequestSideContentItem } from '@/lib/constants/side-content-link-button';
+import { ensureUserRequestSideContentItem } from '@/lib/constants/side-content-html-presets';
 import { filterValidFooterBlocks } from '@/lib/theme/footer-blocks';
 import { Page } from '@/types/page';
 import { Category, Tag } from '@/types/article';
@@ -1202,9 +1202,6 @@ export default function ThemePage() {
       order: currentItems.length,
       ...(type === 'recentArticles' || type === 'popularArticles' || type === 'recommendedArticles' ? { displayCount: DEFAULT_SIDE_CONTENT_DISPLAY_COUNT } : {}),
       ...(type === 'html' ? { title: '', htmlCode: '' } : {}),
-      ...(type === 'linkButton'
-        ? { title: '', linkLabel: '', linkUrl: '', buttonIcon: 'mail' as const }
-        : {}),
     };
     setTheme(prev => ({
       ...prev,
@@ -1245,7 +1242,6 @@ export default function ThemePage() {
       case 'recommendedArticles': return 'おすすめ記事';
       case 'categories': return 'カテゴリー一覧';
       case 'html': return 'HTMLコード';
-      case 'linkButton': return 'リンクボタン';
       default: return '不明';
     }
   };
@@ -1262,8 +1258,6 @@ export default function ThemePage() {
         return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>;
       case 'html':
         return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>;
-      case 'linkButton':
-        return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
       default:
         return null;
     }
@@ -2331,7 +2325,7 @@ export default function ThemePage() {
                         <p className="font-medium mb-1">サイドコンテンツ設定</p>
                         <ul className="list-disc list-inside space-y-1 text-blue-600">
                           <li>サイドバーに表示するコンテンツを設定できます</li>
-                          <li>新着記事、人気記事、おすすめ記事、カテゴリー一覧、リンクボタン、HTMLコードを追加できます</li>
+                          <li>新着記事、人気記事、おすすめ記事、カテゴリー一覧、HTMLコードを追加できます</li>
                           <li>項目の順番を変更して表示順を制御できます</li>
                         </ul>
                       </div>
@@ -2350,15 +2344,12 @@ export default function ThemePage() {
                               item.type === 'popularArticles' ? 'bg-orange-100 text-orange-600' :
                               item.type === 'recommendedArticles' ? 'bg-yellow-100 text-yellow-600' :
                               item.type === 'categories' ? 'bg-green-100 text-green-600' :
-                              item.type === 'linkButton' ? 'bg-purple-100 text-purple-600' :
                               'bg-blue-100 text-blue-600'
                             }`}>
                               {getSideContentItemIcon(item.type)}
                             </span>
                             <span className="text-gray-900 font-medium">
-                              {item.type === 'html' || item.type === 'linkButton'
-                                ? (item.title || getSideContentItemLabel(item.type))
-                                : getSideContentItemLabel(item.type)}
+                              {item.type === 'html' ? (item.title || 'HTMLコード') : getSideContentItemLabel(item.type)}
                             </span>
                             {!item.isEnabled && (
                               <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">無効</span>
@@ -2437,42 +2428,6 @@ export default function ThemePage() {
                                 multiline
                                 rows={8}
                               />
-                            </>
-                          )}
-
-                          {/* リンクボタンの場合 */}
-                          {item.type === 'linkButton' && (
-                            <>
-                              <FloatingInput
-                                label="見出し"
-                                value={item.title || ''}
-                                onChange={(value) => updateSideContentItem(item.id, { title: value })}
-                              />
-                              <FloatingInput
-                                label="ボタンラベル"
-                                value={item.linkLabel || ''}
-                                onChange={(value) => updateSideContentItem(item.id, { linkLabel: value })}
-                              />
-                              <FloatingInput
-                                label="リンク先URL"
-                                value={item.linkUrl || ''}
-                                onChange={(value) => updateSideContentItem(item.id, { linkUrl: value })}
-                              />
-                              <p className="flex items-center gap-4">
-                                <label className="text-sm font-medium text-gray-700">アイコン</label>
-                                <select
-                                  value={item.buttonIcon || 'mail'}
-                                  onChange={(e) =>
-                                    updateSideContentItem(item.id, {
-                                      buttonIcon: e.target.value as 'mail' | 'book',
-                                    })
-                                  }
-                                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                                >
-                                  <option value="mail">メール</option>
-                                  <option value="book">資料（本）</option>
-                                </select>
-                              </p>
                             </>
                           )}
 
