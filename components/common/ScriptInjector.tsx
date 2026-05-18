@@ -104,11 +104,59 @@ function stripLeadingHtmlNoise(code: string): string {
   return s;
 }
 
-/** 先頭が <script になるよう、手前のマークアップを捨てる */
-function trimToFirstScriptOpen(code: string): string {
-  const idx = code.search(/<script\b/i);
-  if (idx <= 0) return code;
-  return code.slice(idx);
+interface ParsedScriptBlock {
+  src: string | null;
+  inline: string;
+  attributes: Record<string, string>;
+}
+
+/**
+ * テーマで設定された 1 件のスクリプトコード内から `<script>...</script>` ブロックを
+ * 全て抽出する。
+ *
+ * 過去実装は「最初に見つけた <script> タグ 1 個」だけを対象にしていたため、
+ * 例えば GA4 公式スニペットのような
+ *   <script async src="...gtag/js?id=G-XXXX"></script>
+ *   <script>gtag('config', 'G-XXXX');</script>
+ * という二段スニペットを貼ると、2 個目の <script> 内のインライン JS
+ * (`gtag('config', ...)` 等) が丸ごと捨てられ、計測タグが動かなかった。
+ *
+ * このヘルパーは複数ブロックを返すので、レンダリング側で各ブロックを
+ * 個別の <Script> として注入する。
+ *
+ * 注意:
+ *   - async / defer / id 属性は next/script 側の strategy / id で扱うため除外
+ *   - type="module" は通す。それ以外の type (text/javascript 等) は除外
+ *   - <noscript> や非 <script> マークアップは無視 (Next/Script で扱えないため)
+ */
+function parseScriptBlocks(code: string): ParsedScriptBlock[] {
+  const blocks: ParsedScriptBlock[] = [];
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(code)) !== null) {
+    const attrString = m[1] ?? '';
+    const inline = (m[2] ?? '').trim();
+    const attrs: Record<string, string> = {};
+    let src: string | null = null;
+    const attrRegex =
+      /([a-zA-Z_:][a-zA-Z0-9_:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+    let am: RegExpExecArray | null;
+    while ((am = attrRegex.exec(attrString)) !== null) {
+      const rawName = am[1];
+      const name = rawName.toLowerCase();
+      const value = am[2] ?? am[3] ?? am[4] ?? '';
+      if (name === 'src') {
+        src = value;
+        continue;
+      }
+      if (name === 'async' || name === 'defer' || name === 'id') continue;
+      if (name === 'type' && value && value.toLowerCase() !== 'module') continue;
+      attrs[rawName] = value;
+    }
+    if (!src && !inline) continue;
+    blocks.push({ src, inline, attributes: attrs });
+  }
+  return blocks;
 }
 
 /**
@@ -175,45 +223,6 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
     return true;
   });
 
-  // スクリプトコードが <script で始まるか（属性・閉じタグ有無を考慮）
-  const isScriptTag = (code: string): boolean => {
-    return /^\s*<script\b/i.test(code);
-  };
-
-  // <script>タグからsrcを抽出
-  const extractSrc = (code: string): string | null => {
-    const srcMatch = code.match(/src=["']([^"']+)["']/);
-    return srcMatch ? srcMatch[1] : null;
-  };
-
-  // <script>タグから全ての属性を抽出（src以外）
-  const extractAttributes = (code: string): Record<string, string> => {
-    const attrs: Record<string, string> = {};
-    // <script ... > の部分を取得
-    const tagMatch = code.match(/<script([^>]*)>/i);
-    if (!tagMatch) return attrs;
-    
-    const attrString = tagMatch[1];
-    // 属性を抽出（name="value" または name='value' 形式）
-    const attrRegex = /([a-zA-Z0-9_-]+)=["']([^"']*)["']/g;
-    let match;
-    while ((match = attrRegex.exec(attrString)) !== null) {
-      const attrName = match[1];
-      const attrValue = match[2];
-      // srcは別途処理するので除外
-      if (attrName.toLowerCase() !== 'src') {
-        attrs[attrName] = attrValue;
-      }
-    }
-    return attrs;
-  };
-
-  // <script>…</script> の内側のみ（閉じタグが無い場合は null。全文を JS として渡さない）
-  const extractInlineScript = (code: string): string | null => {
-    const match = code.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
-    return match ? match[1].trim() : null;
-  };
-
   // スクリプトコードを取得（position=bothの場合は別々のコードを使用）
   const getScriptCode = (script: ScriptItem): string => {
     if (script.position === 'both') {
@@ -226,80 +235,74 @@ export default function ScriptInjector({ scripts, position }: ScriptInjectorProp
   // Next.js App RouterではbeforeInteractiveはクライアントコンポーネントで動作しないため
   // afterInteractiveを使用（ページのhydration後に実行）
   const getStrategy = (): 'afterInteractive' | 'lazyOnload' => {
-    // headスクリプトは早めに実行、bodyスクリプトは遅延可能
     return 'afterInteractive';
   };
 
   return (
     <>
-      {filteredScripts.map((script) => {
+      {filteredScripts.flatMap((script): JSX.Element[] => {
         const raw = getScriptCode(script).trim();
-        if (!raw) return null;
+        if (!raw) return [];
 
-        let code = stripLeadingHtmlNoise(raw);
-        code = trimToFirstScriptOpen(code);
-        if (!code) return null;
+        const cleaned = stripLeadingHtmlNoise(raw);
+        if (!cleaned) return [];
 
         const strategy = getStrategy();
 
-        // <script src="...">形式の外部スクリプト
-        if (isScriptTag(code)) {
-          const src = extractSrc(code);
-          if (src) {
-            const additionalAttrs = extractAttributes(code);
-            return (
-              <Script
-                key={`${script.id}-${position}`}
-                id={`${script.id}-${position}`}
-                src={src}
-                strategy={strategy}
-                {...additionalAttrs}
-              />
-            );
-          }
-
-          const inlineCode = extractInlineScript(code);
-          if (inlineCode) {
-            return (
-              <Script
-                key={`${script.id}-${position}`}
-                id={`${script.id}-${position}`}
-                strategy={strategy}
-                dangerouslySetInnerHTML={{ __html: inlineCode }}
-              />
-            );
-          }
-
-          if (/^\s*</.test(code)) {
-            if (process.env.NODE_ENV === 'development') {
-              console.warn(
-                '[ScriptInjector] スキップ: script タグの解釈に失敗しました（src または閉じタグ付きインラインを確認）',
-                script.id
+        // 1) <script>...</script> ブロックを全て抽出する。
+        //    GA4 / GTM のような「外部ロード + インライン設定」の二段スニペットでも
+        //    両方が別々の <Script> として注入される。
+        const blocks = parseScriptBlocks(cleaned);
+        if (blocks.length > 0) {
+          const nodes: JSX.Element[] = [];
+          blocks.forEach((block, idx) => {
+            const key = `${script.id}-${position}-${idx}`;
+            if (block.src) {
+              nodes.push(
+                <Script
+                  key={key}
+                  id={key}
+                  src={block.src}
+                  strategy={strategy}
+                  {...block.attributes}
+                />
+              );
+            } else if (block.inline) {
+              nodes.push(
+                <Script
+                  key={key}
+                  id={key}
+                  strategy={strategy}
+                  dangerouslySetInnerHTML={{ __html: block.inline }}
+                />
               );
             }
-            return null;
-          }
+          });
+          return nodes;
         }
 
-        // 先頭が「タグ」なのに script として解釈できない → HTML を JS として実行しない（Unexpected token '<' 防止）
-        if (/^\s*</.test(code)) {
+        // 2) <script> タグが無く、かつ先頭が別の HTML タグ → JS として実行できないのでスキップ。
+        //    (例: <noscript>...</noscript> など。誤って eval すると Unexpected token '<' で死ぬ)
+        if (/^\s*</.test(cleaned)) {
           if (process.env.NODE_ENV === 'development') {
             console.warn(
-              '[ScriptInjector] スキップ: script タグとして解釈できないマークアップです（テーマのスクリプト設定を確認してください）',
+              '[ScriptInjector] スキップ: <script> タグとして解釈できないマークアップです（テーマのスクリプト設定を確認してください）',
               script.id
             );
           }
-          return null;
+          return [];
         }
 
-        return (
+        // 3) 純粋な JS コード (タグなし) として実行する。
+        const key = `${script.id}-${position}`;
+        return [
           <Script
-            key={`${script.id}-${position}`}
-            id={`${script.id}-${position}`}
+            key={key}
+            id={key}
             strategy={strategy}
-            dangerouslySetInnerHTML={{ __html: code }}
-          />
-        );
+            dangerouslySetInnerHTML={{ __html: cleaned }}
+          />,
+        ];
       })}
     </>
   );
