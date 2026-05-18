@@ -137,19 +137,26 @@ export async function GET(request: NextRequest) {
       .where('mediaId', '==', mediaId)
       .get();
 
-    const logs = logsSnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
+    type DailySearchLogDoc = {
+      id: string;
+      date?: string;
+      keywords?: DailySearchLogItem[];
+      tags?: DailySearchLogItem[];
+    };
+
+    const logs: DailySearchLogDoc[] = logsSnapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() } as DailySearchLogDoc))
       .filter((log) => {
         const docDate = typeof log.date === 'string' ? log.date : '';
         return docDate && docDate >= startDateStr && docDate <= endDate;
       })
-      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')));
 
     // 集計データを作成
     const keywordMap = new Map<string, DailySearchLogItem>();
     const tagMap = new Map<string, DailySearchLogItem>();
 
-    for (const log of logs as any[]) {
+    for (const log of logs) {
       // キーワード集計
       if (!type || type === 'keyword') {
         for (const item of (log.keywords || [])) {
