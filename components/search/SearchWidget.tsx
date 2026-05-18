@@ -273,7 +273,7 @@ export default function SearchWidget({
                   disabled={isSubmitting}
                   className={featuredBtnClass}
                 >
-                  <span className="text-amber-500">⭐</span>
+                  <span className="text-amber-500" aria-hidden="true">{'\u2B50'}</span>
                   <span>{tag.name}</span>
                 </button>
               ))}
@@ -295,7 +295,7 @@ export default function SearchWidget({
                   disabled={isSubmitting}
                   className={popularTagBtnClass}
                 >
-                  <span className="text-orange-500">櫨</span>
+                  <span className="text-orange-500" aria-hidden="true">{'\u{1F525}'}</span>
                   <span>{tag.displayName || tag.value}</span>
                 </button>
               ))}
@@ -317,7 +317,7 @@ export default function SearchWidget({
                   disabled={isSubmitting}
                   className={popularKwBtnClass}
                 >
-                  <span className="text-rose-500">剥</span>
+                  <span className="text-rose-500" aria-hidden="true">{'\u{1F50D}'}</span>
                   <span>{kw.displayName || kw.value}</span>
                 </button>
               ))}
