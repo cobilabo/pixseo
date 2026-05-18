@@ -132,19 +132,18 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
     const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
 
-    // ログを取得
     const logsSnapshot = await adminDb
       .collection('dailySearchLogs')
       .where('mediaId', '==', mediaId)
-      .where('date', '>=', startDateStr)
-      .where('date', '<=', endDate)
-      .orderBy('date', 'desc')
       .get();
 
-    const logs = logsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const logs = logsSnapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((log) => {
+        const docDate = typeof log.date === 'string' ? log.date : '';
+        return docDate && docDate >= startDateStr && docDate <= endDate;
+      })
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
     // 集計データを作成
     const keywordMap = new Map<string, DailySearchLogItem>();

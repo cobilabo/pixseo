@@ -68,24 +68,29 @@ export async function aggregateKeywordsFromDailyLogs(
   }
 
   try {
-    let query: FirebaseFirestore.Query = adminDb
+    const endDate = days > 0 ? getTodayDateString() : null;
+    const startDate = days > 0 ? getDateStringDaysAgo(days) : null;
+
+    const snapshot = await adminDb
       .collection('dailySearchLogs')
-      .where('mediaId', '==', mediaId);
-
-    if (days > 0) {
-      const endDate = getTodayDateString();
-      const startDate = getDateStringDaysAgo(days);
-      query = query
-        .where('date', '>=', startDate)
-        .where('date', '<=', endDate);
-    }
-
-    const snapshot = await query.get();
+      .where('mediaId', '==', mediaId)
+      .get();
 
     const keywordMap = new Map<string, DailySearchLogItem>();
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
+      const docDate =
+        typeof data.date === 'string'
+          ? data.date
+          : doc.id.startsWith(`${mediaId}_`)
+            ? doc.id.slice(mediaId.length + 1)
+            : '';
+      if (startDate && endDate) {
+        if (!docDate || docDate < startDate || docDate > endDate) {
+          continue;
+        }
+      }
       const keywords: DailySearchLogItem[] = data.keywords || [];
 
       for (const item of keywords) {

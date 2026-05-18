@@ -56,6 +56,7 @@ export default function SearchContent({ faviconUrl, mediaId, lang = 'ja', tags =
   const logSearch = useCallback(
     (type: SearchType, value: string, displayName?: string) => {
       if (!mediaId) return;
+      if (type !== 'keyword' && type !== 'tag') return;
       fetch('/api/search-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

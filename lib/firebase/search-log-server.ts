@@ -44,13 +44,9 @@ export const getPopularSearchTagsServer = async (
   const startDate = getDateStringDaysAgo(days);
 
   try {
-    // dailySearchLogsコレクションから指定期間のログを取得
-    const logsRef = adminDb.collection('dailySearchLogs');
-    const snapshot = await logsRef
+    const snapshot = await adminDb
+      .collection('dailySearchLogs')
       .where('mediaId', '==', mediaId)
-      .where('date', '>=', startDate)
-      .where('date', '<=', endDate)
-      .orderBy('date', 'desc')
       .get();
 
     // 全タグを集計
@@ -58,6 +54,10 @@ export const getPopularSearchTagsServer = async (
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
+      const docDate = typeof data.date === 'string' ? data.date : '';
+      if (!docDate || docDate < startDate || docDate > endDate) {
+        continue;
+      }
       const tags = data.tags || [];
       
       for (const item of tags) {
