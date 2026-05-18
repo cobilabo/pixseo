@@ -31,6 +31,7 @@ import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import { Lang, LANG_REGIONS, SUPPORTED_LANGS, isValidLang } from '@/types/lang';
@@ -142,6 +143,11 @@ export default async function SearchPage({ params }: PageProps) {
   const tags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
+
+  const featuredTags = resolveFeaturedTags(
+    tags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
   const localizedPopularArticles = popularArticles.map(art => localizeArticle(art, lang));
   const localizedFallbackArticles = fallbackArticles.map(art => localizeArticle(art, lang));
   const localizedRecentArticles = recentArticles.map(art => localizeArticle(art, lang));
@@ -231,6 +237,7 @@ export default async function SearchPage({ params }: PageProps) {
                   lang={lang}
                   tags={tags}
                   categories={categories}
+                  featuredTags={featuredTags}
                   popularTags={popularSearchTags}
                   popularKeywords={popularSearchKeywords}
                   variant="compact"

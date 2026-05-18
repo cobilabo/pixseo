@@ -30,6 +30,7 @@ import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import BlockRenderer, { hasFullWidthSlider, getFullWidthSliderBlocks } from '@/components/blocks/BlockRenderer';
@@ -195,6 +196,11 @@ export default async function HomePage({ params }: PageProps) {
   const tags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
+
+  const featuredTags = resolveFeaturedTags(
+    tags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
   
   // 記事も多言語化
   const localizedRecentArticles = recentArticles.map(article => localizeArticle(article, lang));
@@ -284,7 +290,7 @@ export default async function HomePage({ params }: PageProps) {
 
           {/* BlockBuilderのみでレンダリング */}
           {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
           ) : (
             <div
               className="prose prose-lg max-w-none"
@@ -315,7 +321,7 @@ export default async function HomePage({ params }: PageProps) {
         
         {/* ブロックビルダー使用時はBlockRendererで表示 */}
         {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders searchData={{ tags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -396,6 +402,7 @@ export default async function HomePage({ params }: PageProps) {
                         lang={lang}
                         tags={tags}
                         categories={categories}
+                        featuredTags={featuredTags}
                         popularTags={popularSearchTags}
                         popularKeywords={popularSearchKeywords}
                       />
@@ -414,6 +421,7 @@ export default async function HomePage({ params }: PageProps) {
                       lang={lang}
                       tags={tags}
                       categories={categories}
+                      featuredTags={featuredTags}
                       popularTags={popularSearchTags}
                       popularKeywords={popularSearchKeywords}
                       variant="compact"
@@ -453,6 +461,9 @@ export default async function HomePage({ params }: PageProps) {
                     lang={lang}
                     tags={tags}
                     categories={categories}
+                    featuredTags={featuredTags}
+                    popularTags={popularSearchTags}
+                    popularKeywords={popularSearchKeywords}
                   />
                 </div>
               )}
@@ -562,6 +573,9 @@ export default async function HomePage({ params }: PageProps) {
                   lang={lang}
                   tags={tags}
                   categories={categories}
+                  featuredTags={featuredTags}
+                  popularTags={popularSearchTags}
+                  popularKeywords={popularSearchKeywords}
                 />
               </div>
             )}
@@ -618,6 +632,9 @@ export default async function HomePage({ params }: PageProps) {
                 lang={lang}
                 tags={tags}
                 categories={categories}
+                featuredTags={featuredTags}
+                popularTags={popularSearchTags}
+                popularKeywords={popularSearchKeywords}
                 variant="compact"
               />
             )}

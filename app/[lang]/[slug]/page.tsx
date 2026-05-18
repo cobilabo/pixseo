@@ -31,6 +31,7 @@ import SliderBlock from '@/components/blocks/SliderBlock';
 import HTMLBlock from '@/components/blocks/HTMLBlock';
 import SearchWidget from '@/components/search/SearchWidget';
 import FurattoMediaSearchHero from '@/components/search/FurattoMediaSearchHero';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 import PopularArticles from '@/components/common/PopularArticles';
 import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
@@ -195,6 +196,11 @@ export default async function FixedPage({ params }: PageProps) {
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
 
+  const featuredTags = resolveFeaturedTags(
+    sidebarTags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
+
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -236,7 +242,7 @@ export default async function FixedPage({ params }: PageProps) {
         
         {/* BlockBuilderのみでレンダリング */}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"
@@ -269,7 +275,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
       ) : (
         <div 
           className="prose prose-lg max-w-none"
@@ -330,6 +336,11 @@ export default async function FixedPage({ params }: PageProps) {
             lang={lang}
             tags={sidebarTags}
             categories={categories}
+            featuredTags={featuredTags}
+            popularTags={popularSearchTags}
+            popularKeywords={popularSearchKeywords}
+            searchSettings={rawTheme.searchSettings}
+            mediaId={mediaId || undefined}
             noBackground
           />
 
@@ -377,6 +388,7 @@ export default async function FixedPage({ params }: PageProps) {
                       lang={lang}
                       tags={sidebarTags}
                       categories={categories}
+                      featuredTags={featuredTags}
                       popularTags={popularSearchTags}
                       popularKeywords={popularSearchKeywords}
                     />
@@ -396,6 +408,7 @@ export default async function FixedPage({ params }: PageProps) {
                       lang={lang}
                       tags={sidebarTags}
                       categories={categories}
+                      featuredTags={featuredTags}
                       popularTags={popularSearchTags}
                       popularKeywords={popularSearchKeywords}
                       variant="compact"
@@ -436,6 +449,9 @@ export default async function FixedPage({ params }: PageProps) {
                   lang={lang}
                   tags={sidebarTags}
                   categories={categories}
+                  featuredTags={featuredTags}
+                  popularTags={popularSearchTags}
+                  popularKeywords={popularSearchKeywords}
                 />
               </div>
             )}

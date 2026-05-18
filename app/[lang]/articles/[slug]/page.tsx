@@ -60,6 +60,7 @@ import RecommendedArticles from '@/components/common/RecommendedArticles';
 import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SearchWidget from '@/components/search/SearchWidget';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import ViewCounter from '@/components/articles/ViewCounter';
@@ -246,6 +247,11 @@ export default async function ArticlePage({ params }: PageProps) {
   const sidebarTags = allTags
     .filter(tag => !mediaId || tag.mediaId === mediaId)
     .map(tag => localizeTag(tag, lang));
+
+  const featuredTags = resolveFeaturedTags(
+    sidebarTags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
   
   // 前後記事のカテゴリーを並列取得（adjacentArticles の結果に依存するが、Step 3 完了後即座に実行）
   const [previousCategories, nextCategories] = await Promise.all([

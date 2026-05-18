@@ -167,6 +167,7 @@ export interface SearchTypes {
   keywordSearch: boolean;      // キーワード検索
   tagSearch: boolean;          // タグ検索（プルダウン）
   categorySearch: boolean;     // カテゴリー検索
+  featuredTags: boolean;       // おすすめタグ（管理者が選択）
   popularTags: boolean;        // よく検索されているタグ
   popularKeywords: boolean;    // よく検索されているキーワード（承認制）
 }
@@ -175,7 +176,12 @@ export interface SearchTypes {
 export type CategorySearchDisplayType = 'dropdown' | 'list';
 
 // 検索項目のキー
-export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags' | 'popularKeywords';
+export type SearchTypeKey = 'keywordSearch' | 'tagSearch' | 'categorySearch' | 'featuredTags' | 'popularTags' | 'popularKeywords';
+
+// おすすめタグの設定
+export interface FeaturedTagsSettings {
+  tagIds: string[];            // 表示するタグID（選択順で表示）
+}
 
 // よく検索されているタグの設定
 export interface PopularTagsSettings {
@@ -194,6 +200,7 @@ export interface SearchSettings {
   searchTypes: SearchTypes;            // 検索の種類
   searchOrder?: SearchTypeKey[];       // 検索項目の表示順
   categorySearchDisplayType?: CategorySearchDisplayType; // カテゴリー検索の表示形式
+  featuredTagsSettings?: FeaturedTagsSettings;  // おすすめタグの設定
   popularTagsSettings: PopularTagsSettings;  // よく検索されているタグの設定
   popularKeywordsSettings?: PopularKeywordsSettings;  // よく検索されているキーワードの設定
   // 後方互換性のため残す（廃止予定）
@@ -485,8 +492,12 @@ export const defaultTheme: Theme = {
       keywordSearch: true,
       tagSearch: false,
       categorySearch: false,
+      featuredTags: false,
       popularTags: false,
       popularKeywords: false,
+    },
+    featuredTagsSettings: {
+      tagIds: [],
     },
     popularTagsSettings: {
       displayCount: 10,

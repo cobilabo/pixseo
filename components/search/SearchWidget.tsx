@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,28 +33,56 @@ interface SearchWidgetProps {
   lang?: Lang;
   tags?: Array<{ id: string; name: string; slug: string }>;
   categories?: CategoryItem[];
+  featuredTags?: Array<{ id: string; name: string; slug: string }>;
   popularTags?: PopularTag[];
   popularKeywords?: PopularKeyword[];
-  variant?: 'default' | 'compact';
+  variant?: 'default' | 'compact' | 'hero';
+  showTitle?: boolean;
+  omitTypes?: SearchTypeKey[];
+  /** 縺翫☆縺吶ａ繧ｿ繧ｰ繧剃ｺｺ豌励ち繧ｰ縺ｮ逶ｴ蜑阪↓蝗ｺ螳夲ｼ医Γ繝・ぅ繧｢FV逕ｨ・・*/
+  featuredBeforePopular?: boolean;
 }
 
-const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
+const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = [
+  'keywordSearch',
+  'tagSearch',
+  'categorySearch',
+  'featuredTags',
+  'popularTags',
+  'popularKeywords',
+];
 
-export default function SearchWidget({ 
-  searchSettings, 
-  mediaId, 
+function applyFeaturedBeforePopular(order: SearchTypeKey[]): SearchTypeKey[] {
+  const ftIdx = order.indexOf('featuredTags');
+  const ptIdx = order.indexOf('popularTags');
+  if (ftIdx === -1 || ptIdx === -1 || ftIdx < ptIdx) return order;
+  const next: SearchTypeKey[] = order.filter((k) => k !== 'featuredTags');
+  const insertAt = next.indexOf('popularTags');
+  next.splice(insertAt, 0, 'featuredTags');
+  return next;
+}
+
+export default function SearchWidget({
+  searchSettings,
+  mediaId,
   lang = 'ja',
   tags = [],
   categories = [],
+  featuredTags = [],
   popularTags = [],
   popularKeywords = [],
-  variant = 'default'
+  variant = 'default',
+  showTitle = true,
+  omitTypes = [],
+  featuredBeforePopular = false,
 }: SearchWidgetProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists);
+
+  const visibleCategories = categories.filter((cat) => !cat.isHiddenFromLists);
+  const isHero = variant === 'hero';
+  const isCompact = variant === 'compact';
 
   const getSearchTypes = () => {
     if (searchSettings?.searchTypes) {
@@ -62,6 +90,7 @@ export default function SearchWidget({
         keywordSearch: searchSettings.searchTypes.keywordSearch ?? false,
         tagSearch: searchSettings.searchTypes.tagSearch ?? false,
         categorySearch: searchSettings.searchTypes.categorySearch ?? false,
+        featuredTags: searchSettings.searchTypes.featuredTags ?? false,
         popularTags: searchSettings.searchTypes.popularTags ?? false,
         popularKeywords: searchSettings.searchTypes.popularKeywords ?? false,
       };
@@ -71,6 +100,7 @@ export default function SearchWidget({
       keywordSearch: oldType === 'keyword' || oldType === 'both',
       tagSearch: oldType === 'tag' || oldType === 'both',
       categorySearch: false,
+      featuredTags: false,
       popularTags: false,
       popularKeywords: false,
     };
@@ -83,11 +113,20 @@ export default function SearchWidget({
 
   const searchOrder = (() => {
     const saved = searchSettings?.searchOrder;
+    let order: SearchTypeKey[];
     if (saved && saved.length > 0) {
-      const missing = DEFAULT_SEARCH_ORDER.filter(k => !saved.includes(k));
-      return [...saved, ...missing];
+      const missing = DEFAULT_SEARCH_ORDER.filter((k) => !saved.includes(k));
+      order = [...saved, ...missing];
+    } else {
+      order = DEFAULT_SEARCH_ORDER;
     }
-    return DEFAULT_SEARCH_ORDER;
+    if (featuredBeforePopular) {
+      order = applyFeaturedBeforePopular(order);
+    }
+    if (omitTypes.length > 0) {
+      order = order.filter((k) => !omitTypes.includes(k));
+    }
+    return order;
   })();
 
   const handleKeywordSearch = async (e: React.FormEvent) => {
@@ -98,7 +137,7 @@ export default function SearchWidget({
     setIsSubmitting(false);
   };
 
-  const handleTagSearch = async (tagId: string, tagName: string) => {
+  const handleTagSearch = async (_tagId: string, tagName: string) => {
     setIsSubmitting(true);
     router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
     setIsSubmitting(false);
@@ -108,21 +147,36 @@ export default function SearchWidget({
     router.push(`/${lang}/categories/${categorySlug}`);
   };
 
-  const handlePopularTagClick = (tagName: string) => {
+  const handleTagClick = (tagName: string) => {
     setIsSubmitting(true);
     router.push(`/${lang}/search?tag=${encodeURIComponent(tagName)}`);
     setIsSubmitting(false);
   };
 
-  const handlePopularKeywordClick = (keyword: string) => {
+  const handlePopularKeywordClick = (kw: string) => {
     setIsSubmitting(true);
-    router.push(`/${lang}/search?q=${encodeURIComponent(keyword)}`);
+    router.push(`/${lang}/search?q=${encodeURIComponent(kw)}`);
     setIsSubmitting(false);
   };
 
-  const isCompact = variant === 'compact';
   const displayPopularTags = popularTags.slice(0, popularTagsCount);
   const displayPopularKeywords = popularKeywords.slice(0, popularKeywordsCount);
+
+  const labelClass = isHero
+    ? `block font-medium text-white/90 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`
+    : `block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`;
+
+  const featuredBtnClass = isHero
+    ? `inline-flex items-center gap-1 px-3 py-1.5 bg-white/90 text-amber-800 rounded-full hover:bg-white shadow-sm transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`
+    : `inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-800 rounded-full hover:bg-amber-100 transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`;
+
+  const popularTagBtnClass = isHero
+    ? `inline-flex items-center gap-1 px-3 py-1.5 bg-white/85 text-orange-800 rounded-full hover:bg-white shadow-sm transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`
+    : `inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-full hover:bg-orange-100 transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`;
+
+  const popularKwBtnClass = isHero
+    ? `inline-flex items-center gap-1 px-3 py-1.5 bg-white/85 text-rose-800 rounded-full hover:bg-white shadow-sm transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`
+    : `inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full hover:bg-rose-100 transition-colors disabled:opacity-50 ${isCompact ? 'text-xs' : 'text-sm'}`;
 
   const renderSearchItem = (key: SearchTypeKey) => {
     switch (key) {
@@ -168,7 +222,7 @@ export default function SearchWidget({
             onSelect={handleTagSearch}
             disabled={isSubmitting}
             lang={lang}
-            isCompact={isCompact}
+            isCompact={isCompact || isHero}
           />
         );
 
@@ -201,28 +255,47 @@ export default function SearchWidget({
             key={key}
             categories={visibleCategories}
             onSelect={handleCategorySelect}
-            isCompact={isCompact}
+            isCompact={isCompact || isHero}
           />
+        );
+
+      case 'featuredTags':
+        if (!searchTypes.featuredTags || featuredTags.length === 0) return null;
+        return (
+          <div key={key}>
+            <label className={labelClass}>{t('search.featuredTags', lang)}</label>
+            <div className="flex flex-wrap gap-2">
+              {featuredTags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => handleTagClick(tag.name)}
+                  disabled={isSubmitting}
+                  className={featuredBtnClass}
+                >
+                  <span className="text-amber-500">⭐</span>
+                  <span>{tag.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         );
 
       case 'popularTags':
         if (!searchTypes.popularTags || displayPopularTags.length === 0) return null;
         return (
           <div key={key}>
-            <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`}>
-              {t('search.popularTags', lang)}
-            </label>
+            <label className={labelClass}>{t('search.popularTags', lang)}</label>
             <div className="flex flex-wrap gap-2">
               {displayPopularTags.map((tag, index) => (
                 <button
                   key={`${tag.value}-${index}`}
-                  onClick={() => handlePopularTagClick(tag.displayName || tag.value)}
+                  type="button"
+                  onClick={() => handleTagClick(tag.displayName || tag.value)}
                   disabled={isSubmitting}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-full hover:bg-orange-100 transition-colors disabled:opacity-50 ${
-                    isCompact ? 'text-xs' : 'text-sm'
-                  }`}
+                  className={popularTagBtnClass}
                 >
-                  <span className="text-orange-500">🔥</span>
+                  <span className="text-orange-500">櫨</span>
                   <span>{tag.displayName || tag.value}</span>
                 </button>
               ))}
@@ -234,20 +307,17 @@ export default function SearchWidget({
         if (!searchTypes.popularKeywords || displayPopularKeywords.length === 0) return null;
         return (
           <div key={key}>
-            <label className={`block font-medium text-gray-700 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-2'}`}>
-              {t('search.popularKeywords', lang)}
-            </label>
+            <label className={labelClass}>{t('search.popularKeywords', lang)}</label>
             <div className="flex flex-wrap gap-2">
               {displayPopularKeywords.map((kw, index) => (
                 <button
                   key={`${kw.value}-${index}`}
+                  type="button"
                   onClick={() => handlePopularKeywordClick(kw.displayName || kw.value)}
                   disabled={isSubmitting}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full hover:bg-rose-100 transition-colors disabled:opacity-50 ${
-                    isCompact ? 'text-xs' : 'text-sm'
-                  }`}
+                  className={popularKwBtnClass}
                 >
-                  <span className="text-rose-500">🔍</span>
+                  <span className="text-rose-500">剥</span>
                   <span>{kw.displayName || kw.value}</span>
                 </button>
               ))}
@@ -260,15 +330,23 @@ export default function SearchWidget({
     }
   };
 
-  return (
-    <div className={`bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`}>
-      <h3 className={`font-bold text-gray-900 text-lg ${isCompact ? 'mb-3' : 'mb-4'}`}>
-        {t('common.search', lang)}
-      </h3>
+  const items = searchOrder.map(renderSearchItem).filter(Boolean);
+  if (items.length === 0) return null;
 
-      <div className="space-y-4">
-        {searchOrder.map(renderSearchItem)}
-      </div>
+  const wrapperClass = isHero
+    ? ''
+    : `bg-white rounded-lg shadow-md ${isCompact ? 'p-4' : 'p-6'}`;
+
+  return (
+    <div className={wrapperClass}>
+      {showTitle && !isHero && (
+        <h3 className={`font-bold text-gray-900 text-lg ${isCompact ? 'mb-3' : 'mb-4'}`}>
+          {t('common.search', lang)}
+        </h3>
+      )}
+
+      <div className="space-y-4">{items}</div>
     </div>
   );
 }
+

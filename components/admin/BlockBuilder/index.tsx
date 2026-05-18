@@ -278,9 +278,10 @@ function getDefaultConfig(type: BlockType): any {
           keywordSearch: true,
           tagSearch: false,
           categorySearch: false,
+          featuredTags: false,
           popularTags: false,
         },
-        searchOrder: ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags'],
+        searchOrder: ['keywordSearch', 'tagSearch', 'categorySearch', 'featuredTags', 'popularTags'],
         categorySearchDisplayType: 'dropdown',
         popularTagsDisplayCount: 10,
       };

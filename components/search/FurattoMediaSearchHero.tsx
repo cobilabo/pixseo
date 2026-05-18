@@ -1,10 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { SearchSettings } from '@/types/theme';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import SearchWidget from './SearchWidget';
 
 interface CategoryItem {
   id: string;
@@ -13,22 +15,51 @@ interface CategoryItem {
   isHiddenFromLists?: boolean;
 }
 
+interface TagItem {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface PopularTag {
+  value: string;
+  displayName?: string;
+  count: number;
+}
+
+interface PopularKeyword {
+  value: string;
+  displayName?: string;
+  count: number;
+}
+
 interface FurattoMediaSearchHeroProps {
   lang: Lang;
-  tags?: unknown[];
+  tags?: TagItem[];
   categories?: CategoryItem[];
+  featuredTags?: TagItem[];
+  popularTags?: PopularTag[];
+  popularKeywords?: PopularKeyword[];
+  searchSettings?: SearchSettings;
+  mediaId?: string;
   noBackground?: boolean;
 }
 
 export default function FurattoMediaSearchHero({
   lang,
+  tags = [],
   categories = [],
+  featuredTags = [],
+  popularTags = [],
+  popularKeywords = [],
+  searchSettings,
+  mediaId,
   noBackground = false,
 }: FurattoMediaSearchHeroProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
-  const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists);
+  const visibleCategories = categories.filter((cat) => !cat.isHiddenFromLists);
 
   const handleKeywordSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +67,23 @@ export default function FurattoMediaSearchHero({
     router.push(`/${lang}/search?q=${encodeURIComponent(keyword.trim())}`);
   };
 
+  const showSearchExtras =
+    searchSettings &&
+    (searchSettings.searchTypes?.tagSearch ||
+      searchSettings.searchTypes?.featuredTags ||
+      searchSettings.searchTypes?.popularTags ||
+      searchSettings.searchTypes?.popularKeywords);
+
   return (
     <div className={noBackground ? 'relative' : 'furatto-media-search-hero relative overflow-hidden'}>
       {!noBackground && (
         <>
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          <div className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '-40%' }}>
+          <div
+            className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none select-none overflow-hidden"
+            aria-hidden="true"
+            style={{ top: '-40%' }}
+          >
             <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
               KEYWORD
             </span>
@@ -49,9 +91,7 @@ export default function FurattoMediaSearchHero({
         </>
       )}
 
-      {/* コンテンツ */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-        {/* キーワード検索 */}
         <form onSubmit={handleKeywordSearch} className="mb-6">
           <div className="relative max-w-2xl mx-auto">
             <input
@@ -73,7 +113,24 @@ export default function FurattoMediaSearchHero({
           </div>
         </form>
 
-        {/* カテゴリー検索（角丸ボタン一覧） */}
+        {showSearchExtras && (
+          <div className="max-w-2xl mx-auto mb-6">
+            <SearchWidget
+              searchSettings={searchSettings}
+              mediaId={mediaId}
+              lang={lang}
+              tags={tags}
+              featuredTags={featuredTags}
+              popularTags={popularTags}
+              popularKeywords={popularKeywords}
+              variant="hero"
+              showTitle={false}
+              omitTypes={['keywordSearch', 'categorySearch']}
+              featuredBeforePopular
+            />
+          </div>
+        )}
+
         {visibleCategories.length > 0 && (
           <div className="max-w-3xl mx-auto">
             <div className="flex flex-wrap justify-center gap-2">
@@ -96,3 +153,4 @@ export default function FurattoMediaSearchHero({
     </div>
   );
 }
+

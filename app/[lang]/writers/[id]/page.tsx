@@ -32,6 +32,7 @@ import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import SearchWidget from '@/components/search/SearchWidget';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -130,6 +131,11 @@ export default async function WriterPage({ params }: PageProps) {
       name: (tag as any)[`name_${lang}`] || tag.name,
       slug: tag.slug,
     }));
+
+  const featuredTags = resolveFeaturedTags(
+    sidebarTags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
 
   const combinedStyles = getCombinedStyles(rawTheme);
   const footerBlocks = rawTheme.footerBlocks?.filter((block: any) => block.imageUrl) || [];

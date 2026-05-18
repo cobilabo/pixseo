@@ -26,11 +26,12 @@ const SEARCH_TYPE_CONFIG: Record<SearchTypeKey, { label: string; icon: string; d
   keywordSearch: { label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
   tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
   categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
+  featuredTags: { label: 'おすすめタグ', icon: '⭐', description: 'テーマ設定で選択したタグを表示' },
   popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
   popularKeywords: { label: 'よく検索されているキーワード', icon: '🔥', description: '管理者が承認したキーワードのみを表示' },
 };
 
-const DEFAULT_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
+const DEFAULT_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'featuredTags', 'popularTags', 'popularKeywords'];
 
 function SortableSearchItem({
   id,
@@ -192,6 +193,14 @@ export default function SearchBlockSettings({ block, onUpdate }: SearchBlockSett
               </label>
             ))}
           </div>
+        </div>
+      )}
+
+      {config.searchTypes?.featuredTags && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="text-xs text-amber-700">
+            表示するタグは管理画面のテーマ → 検索タブで選択してください。
+          </p>
         </div>
       )}
 

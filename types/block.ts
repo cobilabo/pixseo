@@ -170,10 +170,11 @@ export interface SearchBlockConfig {
     keywordSearch: boolean;
     tagSearch: boolean;
     categorySearch: boolean;
+    featuredTags: boolean;
     popularTags: boolean;
     popularKeywords: boolean;
   };
-  searchOrder?: ('keywordSearch' | 'tagSearch' | 'categorySearch' | 'popularTags' | 'popularKeywords')[];
+  searchOrder?: ('keywordSearch' | 'tagSearch' | 'categorySearch' | 'featuredTags' | 'popularTags' | 'popularKeywords')[];
   categorySearchDisplayType?: 'dropdown' | 'list';
   popularTagsDisplayCount?: number;
   popularKeywordsDisplayCount?: number;

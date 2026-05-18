@@ -35,6 +35,7 @@ import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import SearchWidget from '@/components/search/SearchWidget';
+import { resolveFeaturedTags } from '@/lib/search/featured-tags';
 
 // ISR: 30分ごとに再生成（記事更新時は revalidatePath で即時反映）
 export const revalidate = 1800;
@@ -155,6 +156,11 @@ export default async function CategoryPage({ params }: PageProps) {
       name: (tag as any)[`name_${lang}`] || tag.name,
       slug: tag.slug,
     }));
+
+  const featuredTags = resolveFeaturedTags(
+    sidebarTags,
+    rawTheme.searchSettings?.featuredTagsSettings?.tagIds
+  );
   
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
@@ -285,6 +291,7 @@ export default async function CategoryPage({ params }: PageProps) {
                 lang={lang}
                 tags={sidebarTags}
                 categories={categories}
+                featuredTags={featuredTags}
                 popularTags={popularSearchTags}
                 popularKeywords={popularSearchKeywords}
                 variant="compact"

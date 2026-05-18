@@ -12,7 +12,7 @@ import {
 } from '@/lib/constants/sidebar-content';
 import { filterValidFooterBlocks } from '@/lib/theme/footer-blocks';
 import { Page } from '@/types/page';
-import { Category } from '@/types/article';
+import { Category, Tag } from '@/types/article';
 import ColorPicker from '@/components/admin/ColorPicker';
 import FloatingInput from '@/components/admin/FloatingInput';
 import FeaturedImageUpload from '@/components/admin/FeaturedImageUpload';
@@ -248,6 +248,9 @@ export default function ThemePage() {
   
   // カテゴリー一覧
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // タグ一覧（おすすめタグ選択用）
+  const [tags, setTags] = useState<Tag[]>([]);
   
   // DnD sensors
   const sensors = useSensors(
@@ -262,6 +265,7 @@ export default function ThemePage() {
       fetchThemeSettings();
       fetchPages();
       fetchCategories();
+      fetchTags();
     }
   }, [currentTenant]);
   
@@ -282,6 +286,15 @@ export default function ThemePage() {
       setCategories(data.sort((a, b) => (a.order || 0) - (b.order || 0)));
     } catch (error) {
       console.error('カテゴリーの取得に失敗しました:', error);
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const data: Tag[] = await apiGet('/api/admin/tags');
+      setTags(data.sort((a, b) => a.name.localeCompare(b.name, 'ja')));
+    } catch (error) {
+      console.error('タグの取得に失敗しました:', error);
     }
   };
 
@@ -884,7 +897,7 @@ export default function ThemePage() {
   };
 
   // 検索設定のデフォルト値
-  const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'popularTags', 'popularKeywords'];
+  const DEFAULT_SEARCH_ORDER: SearchTypeKey[] = ['keywordSearch', 'tagSearch', 'categorySearch', 'featuredTags', 'popularTags', 'popularKeywords'];
 
   const defaultSearchSettings: SearchSettings = {
     displayPages: {
@@ -897,11 +910,15 @@ export default function ThemePage() {
       keywordSearch: true,
       tagSearch: false,
       categorySearch: false,
+      featuredTags: false,
       popularTags: false,
       popularKeywords: false,
     },
     searchOrder: DEFAULT_SEARCH_ORDER,
     categorySearchDisplayType: 'dropdown',
+    featuredTagsSettings: {
+      tagIds: [],
+    },
     popularTagsSettings: {
       displayCount: 10,
     },
@@ -977,6 +994,25 @@ export default function ThemePage() {
         searchSettings: {
           ...currentSettings,
           categorySearchDisplayType: displayType,
+        },
+      };
+    });
+  };
+
+  const toggleFeaturedTagId = (tagId: string, checked: boolean) => {
+    setTheme((prev) => {
+      const currentSettings = prev.searchSettings || defaultSearchSettings;
+      const currentIds = currentSettings.featuredTagsSettings?.tagIds || [];
+      const tagIds = checked
+        ? currentIds.includes(tagId)
+          ? currentIds
+          : [...currentIds, tagId]
+        : currentIds.filter((id) => id !== tagId);
+      return {
+        ...prev,
+        searchSettings: {
+          ...currentSettings,
+          featuredTagsSettings: { tagIds },
         },
       };
     });
@@ -1981,6 +2017,7 @@ export default function ThemePage() {
                               keywordSearch: { label: 'キーワード検索', icon: '🔍', description: '記事タイトル・内容を検索' },
                               tagSearch: { label: 'タグ検索（プルダウン）', icon: '🏷️', description: 'タグから関連記事を表示' },
                               categorySearch: { label: 'カテゴリー検索', icon: '📂', description: 'カテゴリーから記事を絞り込み' },
+                              featuredTags: { label: 'おすすめタグ', icon: '⭐', description: '登録済みタグから任意のタグを選んでサイトに表示' },
                               popularTags: { label: 'よく検索されているタグ', icon: '🔥', description: '直近1ヶ月でよく検索されたタグを表示' },
                               popularKeywords: { label: 'よく検索されているキーワード', icon: '🔥', description: 'サイトで検索されたキーワードのうち、管理者が承認したものを表示' },
                             };
@@ -2036,6 +2073,45 @@ export default function ThemePage() {
                           </label>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* おすすめタグの選択 */}
+                  {theme.searchSettings?.searchTypes?.featuredTags && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <label className="block text-sm font-medium text-amber-800 mb-2">
+                        おすすめタグの選択
+                      </label>
+                      <p className="text-xs text-amber-700 mb-3">
+                        登録済みのタグから表示するタグを複数選択できます。選択した順序でサイトに表示されます。
+                      </p>
+                      {tags.length === 0 ? (
+                        <p className="text-sm text-gray-500">タグが登録されていません</p>
+                      ) : (
+                        <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                          {tags.map((tag) => {
+                            const selected = (theme.searchSettings?.featuredTagsSettings?.tagIds || []).includes(tag.id);
+                            return (
+                              <label
+                                key={tag.id}
+                                className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer border transition-colors ${
+                                  selected
+                                    ? 'border-amber-400 bg-amber-100'
+                                    : 'border-transparent bg-white hover:bg-amber-50'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  onChange={(e) => toggleFeaturedTagId(tag.id, e.target.checked)}
+                                  className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500"
+                                />
+                                <span className="text-sm font-medium text-gray-900">{tag.name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
 
