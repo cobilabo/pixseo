@@ -1,48 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
-// メディア一覧取得（高速版：使用状況は別APIで取得）
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 200;
+
+// メディア一覧取得（ページネーション対応）
+// クエリパラメータ:
+//   - limit: 1ページあたりの件数（デフォルト50、最大200）
+//   - cursor: 前ページ最後の createdAt の ISO 文字列（カーソル）
+// レスポンス:
+//   { items: MediaFile[], nextCursor: string | null }
 export async function GET(request: NextRequest) {
   try {
-    // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');
-    // 両方のコレクションから取得（media と mediaLibrary）
-    let query1: FirebaseFirestore.Query = adminDb.collection('media');
-    let query2: FirebaseFirestore.Query = adminDb.collection('mediaLibrary');
-    
-    // mediaIdが指定されている場合はフィルタリング
-    if (mediaId) {
-      query1 = query1.where('mediaId', '==', mediaId);
-      query2 = query2.where('mediaId', '==', mediaId);
-    }
-    
-    // orderByはクライアント側で行う（複合インデックスを避けるため）
-    const [snapshot1, snapshot2] = await Promise.all([
-      query1.get(),
-      query2.get(),
-    ]);
-    
-    // 両方のスナップショットをマージ
-    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
-    // メディアデータをマッピング（使用状況は別APIで取得するため省略）
+    const { searchParams } = new URL(request.url);
+    const limitParam = Number(searchParams.get('limit'));
+    const cursor = searchParams.get('cursor');
+    const limit = Math.min(
+      Math.max(Number.isFinite(limitParam) && limitParam > 0 ? limitParam : DEFAULT_LIMIT, 1),
+      MAX_LIMIT
+    );
+
+    const collections: FirebaseFirestore.Query[] = [
+      adminDb.collection('media'),
+      adminDb.collection('mediaLibrary'),
+    ].map((col) => {
+      let q: FirebaseFirestore.Query = col;
+      if (mediaId) q = q.where('mediaId', '==', mediaId);
+      // Firestore側で並べ替えて、各コレクション上位 limit+1 件のみ取得
+      q = q.orderBy('createdAt', 'desc').limit(limit + 1);
+      if (cursor) {
+        const cursorDate = new Date(cursor);
+        if (!Number.isNaN(cursorDate.getTime())) {
+          q = q.startAfter(Timestamp.fromDate(cursorDate));
+        }
+      }
+      return q;
+    });
+
+    const snapshots = await Promise.all(collections.map((q) => q.get()));
+    const allDocs = snapshots.flatMap((s) => s.docs);
+
+    // マージ後、createdAtで降順ソートしてから上位 limit 件を返す
     const mediaList = allDocs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
         ...data,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        createdAt:
+          data.createdAt?.toDate?.()?.toISOString() || new Date(0).toISOString(),
+        updatedAt:
+          data.updatedAt?.toDate?.()?.toISOString() ||
+          data.createdAt?.toDate?.()?.toISOString() ||
+          new Date(0).toISOString(),
       };
     });
 
-    // 作成日時で降順ソート
-    mediaList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return NextResponse.json(mediaList);
+    mediaList.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const items = mediaList.slice(0, limit);
+    const hasMore = mediaList.length > limit;
+    const nextCursor = hasMore ? items[items.length - 1]?.createdAt ?? null : null;
+
+    return NextResponse.json({ items, nextCursor });
   } catch (error: any) {
     console.error('[API Media] エラー:', error);
     return NextResponse.json({ error: 'Failed to fetch media' }, { status: 500 });
   }
 }
-

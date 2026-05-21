@@ -10,6 +10,11 @@ import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal'
 import { useToast } from '@/contexts/ToastContext';
 const ITEMS_PER_LOAD = 50;
 
+interface MediaListResponse {
+  items: MediaFile[];
+  nextCursor: string | null;
+}
+
 interface MediaFile {
   id: string;
   name: string;
@@ -33,83 +38,130 @@ interface UsageData {
   usageDetails: string[];
 }
 
-export default function MediaPage() {  const { showSuccess, showError } = useToast();
+export default function MediaPage() {
+  const { showSuccess, showError } = useToast();
 
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'image' | 'video'>('all');
   const [isImagePromptModalOpen, setIsImagePromptModalOpen] = useState(false);
-  const [displayCount, setDisplayCount] = useState(ITEMS_PER_LOAD);
-  const [loadingUsage, setLoadingUsage] = useState(false);
-  const [usageLoadedIds, setUsageLoadedIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetchMedia();
-  }, []);
+  // useEffect の依存関係を安定化するため、取得済みID集合はrefで保持
+  const usageLoadedIdsRef = useRef<Set<string>>(new Set());
+  // 同時に複数フェッチが走らないようにする
+  const usageInFlightRef = useRef<Promise<void> | null>(null);
 
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async (cursor?: string | null) => {
+    const isInitial = !cursor;
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
+
     try {
-      const data = await apiGet<MediaFile[]>('/api/admin/media');
-      setMediaFiles(data);
-      // 使用状況のキャッシュをリセット
-      setUsageLoadedIds(new Set());
+      const params = new URLSearchParams();
+      params.set('limit', String(ITEMS_PER_LOAD));
+      if (cursor) params.set('cursor', cursor);
+      const data = await apiGet<MediaListResponse>(`/api/admin/media?${params.toString()}`);
+
+      setMediaFiles((prev) => {
+        if (isInitial) return data.items;
+        const existingIds = new Set(prev.map((m) => m.id));
+        const merged = [...prev];
+        for (const item of data.items) {
+          if (!existingIds.has(item.id)) merged.push(item);
+        }
+        return merged;
+      });
+      setNextCursor(data.nextCursor);
+
+      if (isInitial) {
+        usageLoadedIdsRef.current = new Set();
+      }
     } catch (error) {
       console.error('Error fetching media:', error);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
+      else setLoadingMore(false);
     }
-  };
+  }, []);
 
-  // 表示中のメディアの使用状況を取得
+  useEffect(() => {
+    fetchMedia();
+  }, [fetchMedia]);
+
+  // 表示中のメディアの使用状況を取得（差分のみ）
   const fetchUsage = useCallback(async (mediaToFetch: MediaFile[]) => {
     if (mediaToFetch.length === 0) return;
 
-    // まだ使用状況を取得していないメディアのみを対象にする
-    const unfetchedMedia = mediaToFetch.filter(m => !usageLoadedIds.has(m.id));
+    const unfetchedMedia = mediaToFetch.filter(
+      (m) => !usageLoadedIdsRef.current.has(m.id)
+    );
     if (unfetchedMedia.length === 0) return;
 
-    setLoadingUsage(true);
-    try {
-      const response = await fetch('/api/admin/media/usage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mediaItems: unfetchedMedia.map(m => ({
-            id: m.id,
-            url: m.url,
-            mediaId: m.mediaId || '',
-          })),
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch usage');
-
-      const usageData: UsageData[] = await response.json();
-
-      // 使用状況をマージ
-      setMediaFiles(prev => prev.map(media => {
-        const usage = usageData.find(u => u.id === media.id);
-        if (usage) {
-          return { ...media, usageCount: usage.usageCount, usageDetails: usage.usageDetails };
-        }
-        return media;
-      }));
-
-      // 取得済みIDを記録
-      setUsageLoadedIds(prev => {
-        const newSet = new Set(prev);
-        unfetchedMedia.forEach(m => newSet.add(m.id));
-        return newSet;
-      });
-    } catch (error) {
-      console.error('Error fetching usage:', error);
-    } finally {
-      setLoadingUsage(false);
+    // 同時実行があれば終わるまで待ってから合流（同じIDを2重に投げないため）
+    if (usageInFlightRef.current) {
+      await usageInFlightRef.current;
     }
-  }, [usageLoadedIds]);
+    const stillUnfetched = unfetchedMedia.filter(
+      (m) => !usageLoadedIdsRef.current.has(m.id)
+    );
+    if (stillUnfetched.length === 0) return;
+
+    // 先にIDを「取得予約」してしまい、後続呼び出しの重複を防ぐ
+    for (const m of stillUnfetched) usageLoadedIdsRef.current.add(m.id);
+
+    const promise = (async () => {
+      try {
+        const response = await fetch('/api/admin/media/usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mediaItems: stillUnfetched.map((m) => ({
+              id: m.id,
+              url: m.url,
+              mediaId: m.mediaId || '',
+            })),
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch usage');
+
+        const usageData: UsageData[] = await response.json();
+        const usageMap = new Map(usageData.map((u) => [u.id, u]));
+
+        setMediaFiles((prev) =>
+          prev.map((media) => {
+            const usage = usageMap.get(media.id);
+            if (usage) {
+              return {
+                ...media,
+                usageCount: usage.usageCount,
+                usageDetails: usage.usageDetails,
+              };
+            }
+            return media;
+          })
+        );
+      } catch (error) {
+        console.error('Error fetching usage:', error);
+        // 失敗した分は再試行できるように予約を解除する
+        for (const m of stillUnfetched) usageLoadedIdsRef.current.delete(m.id);
+      }
+    })();
+
+    usageInFlightRef.current = promise;
+    try {
+      await promise;
+    } finally {
+      if (usageInFlightRef.current === promise) {
+        usageInFlightRef.current = null;
+      }
+    }
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -127,6 +179,7 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
       }
 
       showSuccess(`${files.length}個のファイルをアップロードしました`);
+      // アップロード後は最初のページから取り直し
       fetchMedia();
     } catch (error) {
       console.error('Error uploading files:', error);
@@ -167,34 +220,30 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
     showSuccess('URLをコピーしました');
   };
 
-  // フィルタリング
+  // フィルタリング（読み込み済みデータに対して）
   const filteredMedia = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return mediaFiles.filter((media) => {
-      const matchesSearch = media.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        q === '' || media.originalName.toLowerCase().includes(q);
       const matchesType = filterType === 'all' || media.type === filterType;
       return matchesSearch && matchesType;
     });
   }, [mediaFiles, searchQuery, filterType]);
 
-  // 表示するメディア（displayCount件まで）
-  const displayedMedia = useMemo(() => {
-    return filteredMedia.slice(0, displayCount);
-  }, [filteredMedia, displayCount]);
+  // 表示するメディアはフィルター後の全件（サーバー側でページング済み）
+  const displayedMedia = filteredMedia;
 
-  // さらに読み込めるかどうか
-  const hasMore = displayCount < filteredMedia.length;
+  const hasMore = nextCursor !== null;
 
-  // 次を読み込み
-  const handleLoadMore = () => {
-    setDisplayCount(prev => prev + ITEMS_PER_LOAD);
-  };
+  // サーバーから次のページを取得
+  const handleLoadMore = useCallback(() => {
+    if (nextCursor && !loadingMore) {
+      fetchMedia(nextCursor);
+    }
+  }, [nextCursor, loadingMore, fetchMedia]);
 
-  // 検索・フィルター変更時は表示件数をリセット
-  useEffect(() => {
-    setDisplayCount(ITEMS_PER_LOAD);
-  }, [searchQuery, filterType]);
-
-  // 表示中のメディアが変わったら使用状況を取得
+  // 表示中のメディアが変わったら使用状況を取得（差分のみ）
   useEffect(() => {
     if (displayedMedia.length > 0 && !loading) {
       fetchUsage(displayedMedia);
@@ -210,7 +259,14 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
   return (
     <AuthGuard>
       <AdminLayout>
-        {loading ? null : (
+        {loading ? (
+          <div className="max-w-7xl animate-fadeIn">
+            <div className="bg-white rounded-xl p-12 text-center text-gray-500">
+              <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3" />
+              <div>読み込み中...</div>
+            </div>
+          </div>
+        ) : (
           <div className="max-w-7xl animate-fadeIn">
           {/* 検索・フィルター */}
           <div className="bg-white rounded-xl p-4 mb-6" style={{ backgroundColor: '#ddecf8' }}>
@@ -245,9 +301,11 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
             <div className="bg-white rounded-xl p-6">
               {/* 件数表示 */}
               <div className="mb-4 text-sm text-gray-600">
-                全{filteredMedia.length}件中 {displayedMedia.length}件を表示
+                {searchQuery || filterType !== 'all'
+                  ? `読み込み済みのうち ${filteredMedia.length} 件が条件に一致${hasMore ? '（さらに未読み込みあり）' : ''}`
+                  : `${mediaFiles.length} 件を表示${hasMore ? '中（次ページあり）' : ''}`}
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {displayedMedia.map((media) => (
                   <div
@@ -261,11 +319,14 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
                           src={media.thumbnailUrl || media.url}
                           alt={media.originalName}
                           fill
+                          loading="lazy"
+                          sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                           style={{ objectFit: 'cover' }}
                         />
                       ) : (
                         <video
                           src={media.url}
+                          preload="none"
                           className="w-full h-full object-cover"
                         />
                       )}
@@ -358,9 +419,17 @@ export default function MediaPage() {  const { showSuccess, showError } = useToa
                 <div className="mt-6 text-center">
                   <button
                     onClick={handleLoadMore}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                    disabled={loadingMore}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    次を読み込み（残り{filteredMedia.length - displayCount}件）
+                    {loadingMore ? (
+                      <>
+                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        読み込み中...
+                      </>
+                    ) : (
+                      <>次を読み込み（あと{ITEMS_PER_LOAD}件）</>
+                    )}
                   </button>
                 </div>
               )}
