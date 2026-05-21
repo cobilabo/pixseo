@@ -44,11 +44,8 @@ export default function MediaLibraryModal({
 
   const fetchMedia = async () => {
     try {
-      // モーダル選択UIでは「次を読み込み」を実装する代わりに、まとめて多めに取得
-      const data = await apiGet<{ items: MediaFile[]; nextCursor: string | null }>(
-        '/api/admin/media?limit=200'
-      );
-      setMediaFiles(data.items || []);
+      const data = await apiGet<MediaFile[]>('/api/admin/media');
+      setMediaFiles(data);
     } catch (error) {
       console.error('Error fetching media:', error);
     } finally {
