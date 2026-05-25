@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia } from '@/lib/algolia/sync';
 import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
+import { buildArticleUpdatePayload } from '@/lib/article-update-payload';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -26,17 +26,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const isDraft = body.publishedAt === null || body.isDraft === true;
     const publishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
     
-    // updatedAtを現在時刻に設定
+    // クライアント由来の updatedAt 等を除外し、常にサーバー時刻で更新
     let updateData: any = {
-      ...body,
-      updatedAt: FieldValue.serverTimestamp(),
+      ...buildArticleUpdatePayload(body as Record<string, unknown>),
       // publishedAtを更新（nullの場合もnullとして保存）
       publishedAt: publishedAt,
       // 下書きの場合は非公開・非予約
       isPublished: isDraft ? false : (body.isPublished || false),
       isScheduled: isDraft ? false : (body.isScheduled || false),
     };
-    
+
     // isDraftフィールドを削除（一時的なフラグ）
     delete updateData.isDraft;
 

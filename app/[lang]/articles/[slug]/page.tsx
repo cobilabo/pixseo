@@ -436,8 +436,6 @@ export default async function ArticlePage({ params }: PageProps) {
               {/* SEO/CTR: 閲覧数 0 のときは非表示 */}
               {rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 && <span className="hidden md:inline">•</span>}
               {rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 && <span>{t('article.viewCount', lang, { count: rawArticle.viewCount })}</span>}
-              {rawArticle.readingTime && <span className="hidden md:inline">•</span>}
-              {rawArticle.readingTime && <span>{t('article.readingTime', lang, { minutes: rawArticle.readingTime })}</span>}
             </div>
           </div>
         </section>
@@ -456,7 +454,6 @@ export default async function ArticlePage({ params }: PageProps) {
               ? `${t('article.updated', lang)}: ${formatArticleDate(rawArticle.updatedAt, lang)}`
               : undefined,
             views: rawArticle.viewCount !== undefined && rawArticle.viewCount > 0 ? t('article.viewCount', lang, { count: rawArticle.viewCount }) : undefined,
-            readingTime: rawArticle.readingTime ? t('article.readingTime', lang, { minutes: rawArticle.readingTime }) : undefined,
           }}
           showCustomContent={true}
         />

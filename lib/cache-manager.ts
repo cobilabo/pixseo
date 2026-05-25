@@ -133,15 +133,20 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { CACHE_TAGS } from './firebase/cached';
 
+/** next.config.js の trailingSlash: true に合わせる */
+const withTrailingSlash = (path: string): string =>
+  path.endsWith('/') ? path : `${path}/`;
+
 const runRevalidate = (path: string, type?: 'page' | 'layout') => {
+  const normalized = withTrailingSlash(path);
   try {
     if (type) {
-      revalidatePath(path, type);
+      revalidatePath(normalized, type);
     } else {
-      revalidatePath(path);
+      revalidatePath(normalized);
     }
   } catch (error) {
-    console.warn('[revalidate] failed to revalidate ' + path, error);
+    console.warn('[revalidate] failed to revalidate ' + normalized, error);
   }
 };
 
@@ -164,6 +169,7 @@ export function revalidateArticle(slug?: string | null): void {
       runRevalidate('/' + lang + '/articles/' + slug);
     }
   });
+  // sitemap は trailingSlash 対象外
   runRevalidate('/sitemap.xml');
 }
 

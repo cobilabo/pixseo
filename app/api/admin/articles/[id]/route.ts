@@ -6,6 +6,7 @@ import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -163,6 +164,13 @@ export async function PUT(
     if (Array.isArray(body.tagIds)) {
       updateData.tagIds = body.tagIds;
     }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ success: true });
+    }
+
+    // 一覧からの部分更新でも更新日を進める
+    updateData.updatedAt = FieldValue.serverTimestamp();
 
     // Firestoreを即座に更新
     await articleRef.update(updateData);

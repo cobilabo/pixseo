@@ -4,6 +4,9 @@ import { CACHE_TAGS } from "@/lib/firebase/cached";
 
 const LANGS = ["ja", "en", "zh", "ko"] as const;
 
+const withTrailingSlash = (path: string): string =>
+  path.endsWith("/") ? path : `${path}/`;
+
 export async function revalidateWriterPublicPages(writerId: string): Promise<void> {
   try {
     revalidateTag(CACHE_TAGS.WRITERS);
@@ -13,7 +16,7 @@ export async function revalidateWriterPublicPages(writerId: string): Promise<voi
   }
 
   for (const lang of LANGS) {
-    revalidatePath(`/${lang}/writers/${writerId}`);
+    revalidatePath(withTrailingSlash(`/${lang}/writers/${writerId}`));
   }
 
   const snap = await adminDb.collection("articles").where("writerId", "==", writerId).get();
@@ -21,7 +24,7 @@ export async function revalidateWriterPublicPages(writerId: string): Promise<voi
     const slug = doc.data()?.slug as string | undefined;
     if (!slug) continue;
     for (const lang of LANGS) {
-      revalidatePath(`/${lang}/articles/${slug}`);
+      revalidatePath(withTrailingSlash(`/${lang}/articles/${slug}`));
     }
   }
 }
