@@ -102,6 +102,15 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.nextUrl.hostname;
   
+  // WordPress 旧メディアパス (拡張子付き .png 等を含む):
+  // 下の「pathname.includes('.')」判定より前に処理しないと middleware を素通りし、
+  // WAF bypass 通過後も 404 になる。GSC がクロールする旧画像 URL は 301 で /ja/ へ。
+  if (/^\/(wp-content|wp-includes)\//i.test(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = withTrailingSlash(`/${DEFAULT_LANG}`);
+    return NextResponse.redirect(url, { status: 301 });
+  }
+  
   // 静的ファイルやAPIルートは除外
   if (
     pathname.startsWith('/_next') ||
