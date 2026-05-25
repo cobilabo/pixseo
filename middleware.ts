@@ -7,6 +7,21 @@ const authCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 60 * 1000; // 1分
 
 /**
+ * next.config.js の `trailingSlash: true` に合わせて、リダイレクト先パスに
+ * 必ず末尾スラッシュを付与するヘルパー。
+ *
+ * これを使わないと
+ *   /articles/foo → 301 → /ja/articles/foo → 308 → /ja/articles/foo/
+ * のように 2 hop の chain になり、Google Search Console の
+ * 「ページにリダイレクトがあります」を不必要に増やすため、必ず 1 hop で
+ * 終わるよう全リダイレクトを末尾スラッシュ付きに揃える。
+ */
+function withTrailingSlash(path: string): string {
+  if (!path) return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
+/**
  * ベーシック認証のチェック
  */
 async function checkBasicAuth(request: NextRequest, slug: string): Promise<NextResponse | null> {
@@ -122,7 +137,7 @@ export async function middleware(request: NextRequest) {
   const wpRedirect = handleWordPressRedirect(pathname);
   if (wpRedirect) {
     const url = request.nextUrl.clone();
-    url.pathname = wpRedirect;
+    url.pathname = withTrailingSlash(wpRedirect);
     return NextResponse.redirect(url, { status: 301 });
   }
   
@@ -132,17 +147,20 @@ export async function middleware(request: NextRequest) {
   
   // すでに言語パスが含まれている場合
   if (firstSegment && isValidLang(firstSegment)) {
-    // /[lang]/home → /[lang] にリダイレクト（home固定ページは / で表示）
+    // /[lang]/home → /[lang]/ にリダイレクト（home固定ページは / で表示）
     if (pathSegments[1] === 'home') {
       const url = request.nextUrl.clone();
-      url.pathname = `/${firstSegment}`;
+      url.pathname = withTrailingSlash(`/${firstSegment}`);
       return NextResponse.redirect(url, { status: 301 });
     }
     return NextResponse.next();
   }
   
   // 言語パスがない場合、デフォルト言語を追加してリダイレクト（301: SEO評価引き継ぎ）
-  const newPath = `/${DEFAULT_LANG}${pathname === '/' ? '' : pathname}`;
+  // 末尾スラッシュを必ず付与して、Next.js trailingSlash による追加 308 を防ぐ。
+  const newPath = withTrailingSlash(
+    pathname === '/' ? `/${DEFAULT_LANG}` : `/${DEFAULT_LANG}${pathname}`
+  );
   const url = request.nextUrl.clone();
   url.pathname = newPath;
   

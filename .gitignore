@@ -45,3 +45,9 @@ firestore-debug.log
 functions/lib/
 functions/node_modules/
 *-firebase-adminsdk-*.json
+
+# Local backups produced by migration repair scripts
+scripts/backups/
+scripts/wp-date-investigation.csv
+scripts/audit-wp-uploads-summary.csv
+scripts/audit-wp-uploads-urls.csv
