@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { DEFAULT_LANG, isValidLang } from '@/types/lang';
 import { ARTICLE_SLUG_REDIRECTS } from '@/lib/wp-slug-redirects';
-import { resolveAyumiSitePath } from '@/lib/fix-internal-links';
+import { resolveAyumiSitePath, type InternalLinkContext } from '@/lib/fix-internal-links';
 
 // 認証情報のキャッシュ（メモリ内、サーバーリスタートでクリア）
 const authCache = new Map<string, { data: any; timestamp: number }>();
@@ -209,7 +209,10 @@ const WP_PAGE_REDIRECTS: Record<string, string> = {
   'barrierfree-fand-explanation': '',
 };
 
-const LINK_CTX = { defaultLang: DEFAULT_LANG as const, articleSlugs: new Set<string>() };
+const LINK_CTX: InternalLinkContext = {
+  defaultLang: DEFAULT_LANG,
+  articleSlugs: new Set<string>(),
+};
 
 function resolveArticleSlugRedirect(slug: string): string {
   const candidates = [slug];
