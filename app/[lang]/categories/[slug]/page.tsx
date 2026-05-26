@@ -58,6 +58,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     notFound();
   }
 
+  const categoryArticles = await getArticlesServer({
+    categoryId: rawCategory.id,
+    limit: 1,
+    mediaId: mediaId || undefined,
+  });
+  if (categoryArticles.length === 0) {
+    notFound();
+  }
+
   const category = localizeCategory(rawCategory, lang);
   const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined, allowIndexing: false, isPreview: false };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -101,6 +110,15 @@ export default async function CategoryPage({ params }: PageProps) {
   ]);
 
   if (!rawCategory) {
+    notFound();
+  }
+
+  const categoryArticlesCheck = await getArticlesServer({
+    categoryId: rawCategory.id,
+    limit: 1,
+    mediaId: mediaId || undefined,
+  });
+  if (categoryArticlesCheck.length === 0) {
     notFound();
   }
 

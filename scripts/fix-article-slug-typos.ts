@@ -29,15 +29,10 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-/**
- * 旧 slug → 新 slug マッピング。middleware.ts の ARTICLE_SLUG_REDIRECTS と一致させること。
- */
-const SLUG_FIXES: Record<string, string> = {
-  'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
-  'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
-  // 'trip-sightseeing-osaka-expo' は別記事に使用済みのため、衝突回避で別 slug を採用
-  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-osaka-expo-experience',
-};
+import { ARTICLE_SLUG_REDIRECTS } from '../lib/wp-slug-redirects';
+
+/** middleware / lib/wp-slug-redirects.ts と一致させること */
+const SLUG_FIXES: Record<string, string> = { ...ARTICLE_SLUG_REDIRECTS };
 
 interface FixResult {
   id: string;

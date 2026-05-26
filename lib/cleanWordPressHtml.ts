@@ -1,3 +1,5 @@
+import { rewriteInternalLinksInHtml } from '@/lib/fix-internal-links';
+
 /**
  * WordPressから移行したHTMLをクリーニングする
  * - WordPressコメントタグを削除
@@ -111,6 +113,8 @@ export function cleanWordPressHtml(html: string): string {
   imageFigurePlaceholders.forEach((block, index) => {
     cleaned = cleaned.replace(`__IMAGE_FIGURE_PLACEHOLDER_${index}__`, block);
   });
+
+  cleaned = rewriteInternalLinksInHtml(cleaned);
 
   return cleaned;
 }

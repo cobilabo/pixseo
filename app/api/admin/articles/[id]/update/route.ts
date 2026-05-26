@@ -7,6 +7,7 @@ import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 import { buildArticleUpdatePayload } from '@/lib/article-update-payload';
+import { rewriteArticleHtmlFields } from '@/lib/fix-internal-links-server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -38,6 +39,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     // isDraftフィールドを削除（一時的なフラグ）
     delete updateData.isDraft;
+
+    const mediaIdForLinks =
+      (existingData?.mediaId as string | undefined) ||
+      (updateData.mediaId as string | undefined);
+    if (mediaIdForLinks) {
+      const rewritten = await rewriteArticleHtmlFields(updateData, mediaIdForLinks);
+      Object.assign(updateData, rewritten);
+    }
 
     // 🌐 日本語フィールドを保存（常に実行）
     if (updateData.title) {

@@ -2,6 +2,10 @@ import { MetadataRoute } from 'next';
 import { getArticleSlugsForSitemap } from '@/lib/firebase/articles-server';
 import { getCategoriesServer } from '@/lib/firebase/categories-server';
 import { getTagsServer } from '@/lib/firebase/tags-server';
+import {
+  getPublishedCategoryIdsSet,
+  getPublishedTagIdsSet,
+} from '@/lib/firebase/published-taxonomy';
 import { SUPPORTED_LANGS } from '@/types/lang';
 
 /**
@@ -21,11 +25,14 @@ const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL || 'https://the-ayumi.jp')
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = SITE_ORIGIN;
 
-  const [articles, categories, tags] = await Promise.all([
-    getArticleSlugsForSitemap({ limit: 5000 }),
-    getCategoriesServer(),
-    getTagsServer(),
-  ]);
+  const [articles, categories, tags, publishedTagIds, publishedCategoryIds] =
+    await Promise.all([
+      getArticleSlugsForSitemap({ limit: 5000 }),
+      getCategoriesServer(),
+      getTagsServer(),
+      getPublishedTagIdsSet(),
+      getPublishedCategoryIdsSet(),
+    ]);
 
   const sitemapEntries: MetadataRoute.Sitemap = [];
   const now = new Date();
@@ -87,9 +94,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   });
 
-  // カテゴリーページ（各言語ごと）
+  // カテゴリーページ（公開記事が1件以上あるもののみ）
   categories.forEach(category => {
-    if (!category.slug) return;
+    if (!category.slug || !publishedCategoryIds.has(category.id)) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
         url: `${origin}/${lang}/categories/${category.slug}`,
@@ -105,9 +112,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   });
 
-  // タグページ（各言語ごと）
+  // タグページ（公開記事が1件以上あるもののみ）
   tags.forEach(tag => {
-    if (!tag.slug) return;
+    if (!tag.slug || !publishedTagIds.has(tag.id)) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
         url: `${origin}/${lang}/tags/${tag.slug}`,

@@ -57,6 +57,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     notFound();
   }
 
+  const taggedArticles = await getArticlesServer({
+    tagId: rawTag.id,
+    limit: 1,
+    mediaId: mediaId || undefined,
+  });
+  if (taggedArticles.length === 0) {
+    notFound();
+  }
+
   const tag = localizeTag(rawTag, lang);
   const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined, allowIndexing: false, isPreview: false };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
@@ -94,6 +103,16 @@ export default async function TagPage({ params }: PageProps) {
   ]);
 
   if (!rawTag) notFound();
+
+  const taggedArticlesCheck = await getArticlesServer({
+    tagId: rawTag.id,
+    limit: 1,
+    mediaId: mediaId || undefined,
+  });
+  if (taggedArticlesCheck.length === 0) {
+    notFound();
+  }
+
   const tag = localizeTag(rawTag, lang);
 
   // hostを取得

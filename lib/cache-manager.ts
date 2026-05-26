@@ -161,6 +161,7 @@ const runRevalidateTag = (tag: string) => {
 export function revalidateArticle(slug?: string | null): void {
   // Vercel Data Cache (unstable_cache) の粒度無効化
   runRevalidateTag(CACHE_TAGS.ARTICLES);
+  cacheManager.deletePattern('^published-taxonomy-ids');
 
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);
@@ -176,6 +177,7 @@ export function revalidateArticle(slug?: string | null): void {
 export function revalidateCategorySlug(slug?: string | null): void {
   runRevalidateTag(CACHE_TAGS.CATEGORIES);
   runRevalidateTag(CACHE_TAGS.ARTICLES);
+  cacheManager.deletePattern('^published-taxonomy-ids');
 
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);
@@ -190,6 +192,7 @@ export function revalidateCategorySlug(slug?: string | null): void {
 export function revalidateTagSlug(slug?: string | null): void {
   runRevalidateTag(CACHE_TAGS.TAGS);
   runRevalidateTag(CACHE_TAGS.ARTICLES);
+  cacheManager.deletePattern('^published-taxonomy-ids');
 
   SUPPORTED_LANGS.forEach((lang) => {
     runRevalidate('/' + lang);

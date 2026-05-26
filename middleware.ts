@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { DEFAULT_LANG, isValidLang } from '@/types/lang';
+import { ARTICLE_SLUG_REDIRECTS } from '@/lib/wp-slug-redirects';
+import { resolveAyumiSitePath } from '@/lib/fix-internal-links';
 
 // 認証情報のキャッシュ（メモリ内、サーバーリスタートでクリア）
 const authCache = new Map<string, { data: any; timestamp: number }>();
@@ -142,6 +144,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // 本文内の誤リンク: /ja/articles/{slug}/instagram.com/... → 外部 URL へ
+  const embeddedExternal = pathname.match(
+    /^\/(ja|en|zh|ko)\/articles\/[^/]+\/((?:instagram\.com|www\.[^/]+).+)$/i
+  );
+  if (embeddedExternal) {
+    const tail = embeddedExternal[2].replace(/\/$/, '');
+    const target = tail.startsWith('http') ? tail : `https://${tail}`;
+    return NextResponse.redirect(target, { status: 301 });
+  }
+
   // WordPress旧URL形式のリダイレクト（301 Permanent Redirect）
   const wpRedirect = handleWordPressRedirect(pathname);
   if (wpRedirect) {
@@ -197,67 +209,148 @@ const WP_PAGE_REDIRECTS: Record<string, string> = {
   'barrierfree-fand-explanation': '',
 };
 
-/**
- * 記事スラグの旧→新リダイレクトマッピング
- * Firestore に既に格納されている誤った slug を一括で正規化するための互換層。
- * 該当記事は管理画面/Firestore 側で slug を新値に更新したうえで、本マップを残しておくことで
- * 既にインデックスされている旧 URL からの 301 リダイレクトを保証する。
- *
- * key: 旧 slug（誤った値）
- * value: 新 slug
- */
-const ARTICLE_SLUG_REDIRECTS: Record<string, string> = {
-  // タイポ: "sightseeingrip" が混入していた記事群（"sightseeingrip" は意味不明な誤入力）
-  'trip-sightseeingrip-sightseeing-accessible-tourism': 'trip-sightseeing-accessible-tourism',
-  'trip-sightseeingrip-rental-welfare-vehicles': 'trip-rental-welfare-vehicles',
-  // 「【車椅子やバギーユーザーも楽しむ】大阪万博」記事。
-  // 'trip-sightseeing-osaka-expo' は別記事 (「大阪万博を障害者は楽しめるか」) に
-  // 既に使用されているため、衝突回避のため別 slug 'trip-osaka-expo-experience' を採用。
-  'trip-sightseeingrip-sightseeing-osaka-expo': 'trip-osaka-expo-experience',
-};
+const LINK_CTX = { defaultLang: DEFAULT_LANG as const, articleSlugs: new Set<string>() };
+
+function resolveArticleSlugRedirect(slug: string): string {
+  const candidates = [slug];
+  try {
+    const decoded = decodeURIComponent(slug);
+    if (decoded !== slug) candidates.push(decoded);
+  } catch {
+    /* malformed % sequence */
+  }
+  for (const s of candidates) {
+    if (s in ARTICLE_SLUG_REDIRECTS) return ARTICLE_SLUG_REDIRECTS[s];
+  }
+  return slug;
+}
 
 /**
  * WordPress旧URL形式を新URL形式にリダイレクト
  * @returns 新しいパス（リダイレクトが必要な場合）またはnull
  */
 function handleWordPressRedirect(pathname: string): string | null {
+  // 本文リンク壊れ: /ja/articles/{slug}/the-ayumi.jp/2024/01/04/foo/
+  const embeddedAyumi = pathname.match(
+    /^\/(ja|en|zh|ko)\/articles\/[^/]+\/the-ayumi\.jp\/(.+)$/i
+  );
+  if (embeddedAyumi) {
+    return resolveAyumiSitePath(embeddedAyumi[2], LINK_CTX).replace(/\/$/, '') || `/${DEFAULT_LANG}`;
+  }
+
+  // 言語付き記事パスにゴミセグメント（the-ayumi.jp 以外の誤結合）
+  const garbageArticle = pathname.match(
+    /^\/(ja|en|zh|ko)\/articles\/[^/]+\/(URL|the-ayumi\.jp)\/?$/i
+  );
+  if (garbageArticle) {
+    return `/${garbageArticle[1]}`;
+  }
   // 記事スラグの旧→新リダイレクト: /[lang]/articles/<old-slug>/ → /[lang]/articles/<new-slug>/
   const localizedArticleMatch = pathname.match(/^\/([a-z]{2})\/articles\/([^/]+)\/?$/);
   if (localizedArticleMatch) {
     const lang = localizedArticleMatch[1];
     const slug = localizedArticleMatch[2];
-    if (slug in ARTICLE_SLUG_REDIRECTS) {
-      return `/${lang}/articles/${ARTICLE_SLUG_REDIRECTS[slug]}`;
+    const targetSlug = resolveArticleSlugRedirect(slug);
+    if (targetSlug !== slug) {
+      return `/${lang}/articles/${targetSlug}`;
     }
+  }
+
+  // 記事フィード: /YYYY/MM/DD/slug/feed/ → 記事ページへ
+  const articleFeedMatch = pathname.match(
+    /^\/(\d{4})\/(\d{2})\/(\d{2})\/([^/]+)\/feed\/?$/
+  );
+  if (articleFeedMatch) {
+    const slug = articleFeedMatch[4];
+    const targetSlug = resolveArticleSlugRedirect(slug);
+    return `/${DEFAULT_LANG}/articles/${targetSlug}`;
   }
 
   // 記事: /YYYY/MM/DD/slug/ → /ja/articles/slug（slug 自体が旧→新マップに該当する場合は新 slug へ）
   const articleMatch = pathname.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/([^/]+)\/?$/);
   if (articleMatch) {
     const slug = articleMatch[4];
-    const targetSlug = ARTICLE_SLUG_REDIRECTS[slug] || slug;
+    const targetSlug = resolveArticleSlugRedirect(slug);
     return `/${DEFAULT_LANG}/articles/${targetSlug}`;
   }
-  
-  // カテゴリー: /category/slug/ or /category/parent/child/ → /ja/categories/slug
-  const categoryMatch = pathname.match(/^\/category\/(?:[^/]+\/)*([^/]+)\/?$/);
-  if (categoryMatch) {
-    const slug = categoryMatch[1];
-    return `/${DEFAULT_LANG}/categories/${slug}`;
+
+  // 言語なし旧記事: /articles/slug/ → /ja/articles/slug
+  const legacyArticleMatch = pathname.match(/^\/articles\/([^/]+)\/?$/);
+  if (legacyArticleMatch) {
+    const slug = legacyArticleMatch[1];
+    const targetSlug = resolveArticleSlugRedirect(slug);
+    return `/${DEFAULT_LANG}/articles/${targetSlug}`;
   }
-  
+
+  // 著者: ページネーション・フィード → 著者ページ（存在しなければ先で 404）
+  const authorPageMatch = pathname.match(/^\/author\/([^/]+)\/page\/\d+\/?$/);
+  if (authorPageMatch) {
+    return `/${DEFAULT_LANG}/writers/${authorPageMatch[1]}`;
+  }
+  const authorFeedMatch = pathname.match(/^\/author\/([^/]+)\/feed\/?$/);
+  if (authorFeedMatch) {
+    return `/${DEFAULT_LANG}/writers/${authorFeedMatch[1]}`;
+  }
+
+  // 著者: /author/slug/ → /ja/writers/slug
+  const authorMatch = pathname.match(/^\/author\/([^/]+)\/?$/);
+  if (authorMatch) {
+    const slug = authorMatch[1];
+    return `/${DEFAULT_LANG}/writers/${slug}`;
+  }
+
+  // タグ: ページネーション・フィード → タグページ
+  const tagPageMatch = pathname.match(/^\/tag\/([^/]+)\/page\/\d+\/?$/);
+  if (tagPageMatch) {
+    return `/${DEFAULT_LANG}/tags/${tagPageMatch[1]}`;
+  }
+  const tagFeedMatch = pathname.match(/^\/tag\/([^/]+)\/feed\/?$/);
+  if (tagFeedMatch) {
+    return `/${DEFAULT_LANG}/tags/${tagFeedMatch[1]}`;
+  }
+  if (/^\/tag\/?$/.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
+  }
+
   // タグ: /tag/slug/ → /ja/tags/slug
   const tagMatch = pathname.match(/^\/tag\/([^/]+)\/?$/);
   if (tagMatch) {
     const slug = tagMatch[1];
     return `/${DEFAULT_LANG}/tags/${slug}`;
   }
-  
-  // 著者: /author/slug/ → /ja/writers/slug
-  const authorMatch = pathname.match(/^\/author\/([^/]+)\/?$/);
-  if (authorMatch) {
-    const slug = authorMatch[1];
-    return `/${DEFAULT_LANG}/writers/${slug}`;
+
+  // カテゴリー: ページネーション・フィード → カテゴリーページ（末尾セグメントを slug に）
+  const categoryPageMatch = pathname.match(/^\/category\/(?:.+\/)?([^/]+)\/page\/\d+\/?$/);
+  if (categoryPageMatch) {
+    return `/${DEFAULT_LANG}/categories/${categoryPageMatch[1]}`;
+  }
+  const categoryFeedMatch = pathname.match(/^\/category\/(?:.+\/)?([^/]+)\/feed\/?$/);
+  if (categoryFeedMatch) {
+    return `/${DEFAULT_LANG}/categories/${categoryFeedMatch[1]}`;
+  }
+
+  // カテゴリー: /category/slug/ or /category/parent/child/ → /ja/categories/slug
+  const categoryMatch = pathname.match(/^\/category\/(?:[^/]+\/)*([^/]+)\/?$/);
+  if (categoryMatch) {
+    const slug = categoryMatch[1];
+    return `/${DEFAULT_LANG}/categories/${slug}`;
+  }
+
+  // 旧 /categories/slug（言語なし）→ /ja/categories/slug
+  const legacyCategoryMatch = pathname.match(/^\/categories\/([^/]+)\/?$/);
+  if (legacyCategoryMatch) {
+    return `/${DEFAULT_LANG}/categories/${legacyCategoryMatch[1]}`;
+  }
+
+  // 旧 /tags/slug（言語なし）→ /ja/tags/slug
+  const legacyTagsMatch = pathname.match(/^\/tags\/([^/]+)\/?$/);
+  if (legacyTagsMatch) {
+    return `/${DEFAULT_LANG}/tags/${legacyTagsMatch[1]}`;
+  }
+
+  // /media/ 単体（旧 WP パス）→ トップ
+  if (/^\/media\/?$/.test(pathname)) {
+    return `/${DEFAULT_LANG}`;
   }
   
   // ページネーション: /page/N/ → トップへ
