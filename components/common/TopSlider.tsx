@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Lang } from '@/types/lang';
-import { formatDateLongJaInJapan } from '@/lib/utils/date';
+import { t } from '@/lib/i18n/translations';
+import { formatDate } from '@/lib/utils/date';
 
 interface SliderArticle {
   id: string;
@@ -15,6 +16,8 @@ interface SliderArticle {
   excerpt?: string;
   categoryNames?: string[];
   publishedAt?: Date | string;
+  updatedAt?: Date | string;
+  viewCount?: number;
 }
 
 interface TopSliderProps {
@@ -151,11 +154,20 @@ export default function TopSlider({ articles, lang, columnCount = 3, autoplay = 
                     <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
                       {article.title}
                     </h3>
-                    {article.publishedAt && (
-                      <p className="text-xs text-gray-500 mt-1.5">
-                        {formatDateLongJaInJapan(article.publishedAt)}
-                      </p>
-                    )}
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span>{t('article.publishedAt', lang)}: {formatDate(article.publishedAt)}</span>
+                        {article.updatedAt && (
+                          <>
+                            <span>•</span>
+                            <span>{t('article.updatedAt', lang)}: {formatDate(article.updatedAt)}</span>
+                          </>
+                        )}
+                      </div>
+                      {article.viewCount && article.viewCount > 0 ? (
+                        <span>{t('article.viewCount', lang, { count: article.viewCount })}</span>
+                      ) : null}
+                    </div>
                   </div>
                 </Link>
               </div>
