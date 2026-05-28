@@ -255,17 +255,15 @@ export default async function HomePage({ params }: PageProps) {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
           />
 
-          {/* SEO用のh1タグ（視覚的には非表示） */}
-          <h1 className="sr-only">{homePage.title}</h1>
-
-          {/* BlockBuilderのみでレンダリング */}
           {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} semanticLandmarks searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
           ) : (
-            <div
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: homePage.content }}
-            />
+            <main id="main-content">
+              <div
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ __html: homePage.content }}
+              />
+            </main>
           )}
 
           <ScrollToTopButton />

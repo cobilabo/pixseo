@@ -3,7 +3,7 @@
  * メインアプリ（フロントエンド）で使用
  */
 
-import { Block, SliderBlockConfig, HTMLBlockConfig } from '@/types/block';
+import { Block, SliderBlockConfig, HTMLBlockConfig, CustomBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import FormBlock from './FormBlock';
 import HTMLBlock from './HTMLBlock';
@@ -23,6 +23,8 @@ interface BlockRendererProps {
   layoutTheme?: string;
   excludeFullWidthSliders?: boolean;
   excludeFullWidthBottomBlocks?: boolean;
+  /** blank レイアウト: header/footer カスタムブロック以外を <main> でラップ */
+  semanticLandmarks?: boolean;
   searchData?: {
     tags?: Array<{ id: string; name: string; slug: string }>;
     categories?: Array<{ id: string; name: string; slug: string; isHiddenFromLists?: boolean }>;
@@ -57,7 +59,19 @@ export function getFullWidthBottomBlocks(blocks: Block[]): Block[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, layoutTheme, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, searchData }: BlockRendererProps) {
+const HEADER_BLOCK_IDS = new Set(['95hbSjU9PkvJZIYgbWjr']);
+const FOOTER_BLOCK_IDS = new Set(['ku2QvTERFVD2eQNKuirz']);
+
+function isHeaderFooterBlock(block: Block): 'header' | 'footer' | null {
+  if (block.type !== 'custom') return null;
+  const config = block.config as CustomBlockConfig;
+  const name = (config.customBlockName || '').toLowerCase();
+  if (name === 'header' || HEADER_BLOCK_IDS.has(config.customBlockId)) return 'header';
+  if (name === 'footer' || FOOTER_BLOCK_IDS.has(config.customBlockId)) return 'footer';
+  return null;
+}
+
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, layoutTheme, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, semanticLandmarks = false, searchData }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
@@ -73,69 +87,90 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
       return a.order - b.order;
     });
 
+  const renderBlock = (block: Block) => {
+    const paddingStyle: React.CSSProperties = {};
+    if (block.spacing?.paddingTop !== undefined) {
+      paddingStyle.paddingTop = `${block.spacing.paddingTop}px`;
+    }
+    if (block.spacing?.paddingBottom !== undefined) {
+      paddingStyle.paddingBottom = `${block.spacing.paddingBottom}px`;
+    }
+
+    let blockContent;
+    switch (block.type) {
+      case 'form':
+        blockContent = <FormBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
+        break;
+      case 'html':
+        blockContent = <HTMLBlock block={block} lang={lang} />;
+        break;
+      case 'spacer':
+        blockContent = <SpacerBlock block={block} />;
+        break;
+      case 'content':
+        blockContent = <ContentBlock block={block} showPanel={showPanel} isMobile={isMobile} lang={lang} />;
+        break;
+      case 'article':
+        blockContent = <ArticleBlock block={block} lang={lang} />;
+        break;
+      case 'slider':
+        blockContent = <SliderBlock block={block} lang={lang} />;
+        break;
+      case 'row':
+        blockContent = <RowBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
+        break;
+      case 'search':
+        blockContent = (
+          <SearchBlock
+            block={block}
+            lang={lang}
+            tags={searchData?.tags}
+            categories={searchData?.categories}
+            featuredTags={searchData?.featuredTags}
+            popularTags={searchData?.popularTags}
+            popularKeywords={searchData?.popularKeywords}
+            mediaId={searchData?.mediaId}
+          />
+        );
+        break;
+      case 'custom':
+        blockContent = <CustomBlock config={block.config as CustomBlockConfig} showPanel={showPanel} lang={lang} />;
+        break;
+      default:
+        blockContent = null;
+    }
+
+    if (!blockContent) return null;
+
+    return (
+      <div key={block.id} style={paddingStyle}>
+        {blockContent}
+      </div>
+    );
+  };
+
+  if (!semanticLandmarks) {
+    return <div>{visibleBlocks.map(renderBlock)}</div>;
+  }
+
+  const headerBlocks: Block[] = [];
+  const footerBlocks: Block[] = [];
+  const mainBlocks: Block[] = [];
+
+  for (const block of visibleBlocks) {
+    const role = isHeaderFooterBlock(block);
+    if (role === 'header') headerBlocks.push(block);
+    else if (role === 'footer') footerBlocks.push(block);
+    else mainBlocks.push(block);
+  }
+
   return (
     <div>
-      {visibleBlocks.map((block) => {
-        const paddingStyle: React.CSSProperties = {};
-        if (block.spacing?.paddingTop !== undefined) {
-          paddingStyle.paddingTop = `${block.spacing.paddingTop}px`;
-        }
-        if (block.spacing?.paddingBottom !== undefined) {
-          paddingStyle.paddingBottom = `${block.spacing.paddingBottom}px`;
-        }
-
-        let blockContent;
-        switch (block.type) {
-          case 'form':
-            blockContent = <FormBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
-            break;
-          case 'html':
-            blockContent = <HTMLBlock block={block} lang={lang} />;
-            break;
-          case 'spacer':
-            blockContent = <SpacerBlock block={block} />;
-            break;
-          case 'content':
-            blockContent = <ContentBlock block={block} showPanel={showPanel} isMobile={isMobile} lang={lang} />;
-            break;
-          case 'article':
-            blockContent = <ArticleBlock block={block} lang={lang} />;
-            break;
-          case 'slider':
-            blockContent = <SliderBlock block={block} lang={lang} />;
-            break;
-          case 'row':
-            blockContent = <RowBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
-            break;
-          case 'search':
-            blockContent = (
-              <SearchBlock
-                block={block}
-                lang={lang}
-                tags={searchData?.tags}
-                categories={searchData?.categories}
-                featuredTags={searchData?.featuredTags}
-                popularTags={searchData?.popularTags}
-                popularKeywords={searchData?.popularKeywords}
-                mediaId={searchData?.mediaId}
-              />
-            );
-            break;
-          case 'custom':
-            blockContent = <CustomBlock config={block.config as any} showPanel={showPanel} lang={lang} />;
-            break;
-          default:
-            blockContent = null;
-        }
-
-        if (!blockContent) return null;
-
-        return (
-          <div key={block.id} style={paddingStyle}>
-            {blockContent}
-          </div>
-        );
-      })}
+      {headerBlocks.map(renderBlock)}
+      {mainBlocks.length > 0 ? (
+        <main id="main-content">{mainBlocks.map(renderBlock)}</main>
+      ) : null}
+      {footerBlocks.map(renderBlock)}
     </div>
   );
 }

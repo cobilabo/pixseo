@@ -207,17 +207,15 @@ export default async function FixedPage({ params }: PageProps) {
         {cssLinks.map((href: string, i: number) => (
           <link key={i} rel="stylesheet" href={href} />
         ))}
-        {/* SEO用のh1タグ（視覚的には非表示） */}
-        <h1 className="sr-only">{page.title}</h1>
-        
-        {/* BlockBuilderのみでレンダリング */}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} semanticLandmarks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
-          <div 
-            className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: page.content }}
-          />
+          <main id="main-content">
+            <div 
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+          </main>
         )}
         
         <ScrollToTopButton />
