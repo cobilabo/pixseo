@@ -229,10 +229,60 @@ function resolveArticleSlugRedirect(slug: string): string {
 }
 
 /**
+ * 旧メディアサイトの `/media/` URL プレフィックスを除去し、現行の `/[lang]/...` へ。
+ * 例: /media/search/ → /ja/search/、/ja/media/articles/foo/ → /ja/articles/foo/
+ * `/media/` 単体は CMS 固定ページのためここでは扱わない。
+ */
+function handleLegacyMediaPrefixRedirect(pathname: string): string | null {
+  const withLang = pathname.match(/^\/(ja|en|zh|ko)\/media\/(.+?)\/?$/);
+  const withoutLang = pathname.match(/^\/media\/(.+?)\/?$/);
+  const lang = withLang ? withLang[1] : DEFAULT_LANG;
+  const tail = (withLang ? withLang[2] : withoutLang?.[1])?.replace(/\/$/, '');
+  if (!tail) {
+    return null;
+  }
+
+  if (tail === 'search') {
+    return `/${lang}/search`;
+  }
+  if (tail === 'articles') {
+    return `/${lang}/articles`;
+  }
+
+  const articleSlug = tail.match(/^articles\/([^/]+)$/);
+  if (articleSlug) {
+    const slug = resolveArticleSlugRedirect(articleSlug[1]);
+    return `/${lang}/articles/${slug}`;
+  }
+
+  const categorySlug = tail.match(/^categories\/([^/]+)$/);
+  if (categorySlug) {
+    return `/${lang}/categories/${categorySlug[1]}`;
+  }
+
+  const tagSlug = tail.match(/^tags\/([^/]+)$/);
+  if (tagSlug) {
+    return `/${lang}/tags/${tagSlug[1]}`;
+  }
+
+  const writerSlug = tail.match(/^writers\/([^/]+)$/);
+  if (writerSlug) {
+    return `/${lang}/writers/${writerSlug[1]}`;
+  }
+
+  return null;
+}
+
+/**
  * WordPress旧URL形式を新URL形式にリダイレクト
  * @returns 新しいパス（リダイレクトが必要な場合）またはnull
  */
 function handleWordPressRedirect(pathname: string): string | null {
+  const legacyMedia = handleLegacyMediaPrefixRedirect(pathname);
+  if (legacyMedia) {
+    return legacyMedia;
+  }
+
   // 本文リンク壊れ: /ja/articles/{slug}/the-ayumi.jp/2024/01/04/foo/
   const embeddedAyumi = pathname.match(
     /^\/(ja|en|zh|ko)\/articles\/[^/]+\/the-ayumi\.jp\/(.+)$/i
@@ -351,11 +401,6 @@ function handleWordPressRedirect(pathname: string): string | null {
     return `/${DEFAULT_LANG}/tags/${legacyTagsMatch[1]}`;
   }
 
-  // /media/ 単体（旧 WP パス）→ トップ
-  if (/^\/media\/?$/.test(pathname)) {
-    return `/${DEFAULT_LANG}`;
-  }
-  
   // ページネーション: /page/N/ → トップへ
   if (/^\/page\/\d+\/?$/.test(pathname)) {
     return `/${DEFAULT_LANG}`;
