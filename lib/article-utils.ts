@@ -88,6 +88,23 @@ function contentForTableOfContents(content: string): string {
 }
 
 /**
+ * 見出しタグ内の HTML から目次用テキストを抽出する。
+ * 見出し内に参照リンク段落（HTMLブロック由来）が含まれる場合、番号付き見出し本文だけを採用する。
+ */
+function extractHeadingTextForToc(innerHtml: string): string {
+  let html = innerHtml || '';
+  html = html.replace(/<p[^>]*>[\s\S]*?参照：[\s\S]*?<\/p>/gi, '');
+  let text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+  const dashSection = text.match(/\d+(?:-\d+)+\.[^]+/);
+  if (dashSection) {
+    return dashSection[0].trim();
+  }
+
+  return text;
+}
+
+/**
  * HTML本文から目次を自動生成
  */
 export function generateTableOfContents(content: string): TableOfContentsItem[] {
@@ -102,14 +119,15 @@ export function generateTableOfContents(content: string): TableOfContentsItem[] 
 
     while ((match = headingRegex.exec(source)) !== null) {
       const level = parseInt(match[1].substring(1)); // h2 -> 2
-      const text = match[2].replace(/<[^>]*>/g, '').trim(); // HTMLタグを除去
-      
+      const text = extractHeadingTextForToc(match[2]);
+      if (!text) continue;
+
       toc.push({
         id: `heading-${index}`,
         level,
         text,
       });
-      
+
       index++;
     }
 
@@ -121,11 +139,17 @@ export function generateTableOfContents(content: string): TableOfContentsItem[] 
   const doc = parser.parseFromString(source, 'text/html');
   const headings = doc.querySelectorAll('h2, h3, h4');
 
-  return Array.from(headings).map((h, i) => ({
-    id: `heading-${i}`,
-    level: parseInt(h.tagName.substring(1)),
-    text: h.textContent?.trim() || '',
-  }));
+  const toc: TableOfContentsItem[] = [];
+  headings.forEach((h) => {
+    const text = extractHeadingTextForToc(h.innerHTML);
+    if (!text) return;
+    toc.push({
+      id: `heading-${toc.length}`,
+      level: parseInt(h.tagName.substring(1)),
+      text,
+    });
+  });
+  return toc;
 }
 
 /**
