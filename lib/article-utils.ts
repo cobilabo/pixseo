@@ -1,3 +1,4 @@
+import { normalizeInlineTocPlaceholder } from '@/lib/cleanWordPressHtml';
 import type { Article, TableOfContentsItem } from '@/types/article';
 import type { Page } from '@/types/page';
 import type { Writer } from '@/types/writer';
@@ -22,9 +23,76 @@ export function ensureInlineTocPlaceholderForAdminEditor(
 }
 
 /**
+ * エディタの HTML ブロック（ツールバー付き）を data-html-content の実コンテンツに置換する。
+ * 公開時の ArticleContent と目次生成の両方で同じ処理を使う。
+ */
+export function processHtmlBlocks(html: string): string {
+  if (!html) return '';
+
+  let result = html;
+  let searchStart = 0;
+
+  while (true) {
+    const blockStartMatch = result.slice(searchStart).match(/<div[^>]*class="html-block"[^>]*>/i);
+    if (!blockStartMatch || blockStartMatch.index === undefined) break;
+
+    const absoluteBlockStart = searchStart + blockStartMatch.index;
+    const openingTag = blockStartMatch[0];
+    const contentMatch = openingTag.match(/data-html-content="([^"]*)"/);
+    if (!contentMatch) {
+      searchStart = absoluteBlockStart + openingTag.length;
+      continue;
+    }
+
+    const encodedContent = contentMatch[1];
+    let depth = 1;
+    let pos = absoluteBlockStart + openingTag.length;
+
+    while (depth > 0 && pos < result.length) {
+      const nextOpen = result.indexOf('<div', pos);
+      const nextClose = result.indexOf('</div>', pos);
+      if (nextClose === -1) break;
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++;
+        pos = nextOpen + 4;
+      } else {
+        depth--;
+        if (depth === 0) {
+          const blockEnd = nextClose + 6;
+          try {
+            const decodedContent = decodeURIComponent(encodedContent);
+            result = result.slice(0, absoluteBlockStart) + decodedContent + result.slice(blockEnd);
+            searchStart = absoluteBlockStart + decodedContent.length;
+          } catch {
+            result = result.slice(0, absoluteBlockStart) + result.slice(blockEnd);
+            searchStart = absoluteBlockStart;
+          }
+        } else {
+          pos = nextClose + 6;
+        }
+      }
+    }
+
+    if (depth > 0) {
+      searchStart = absoluteBlockStart + openingTag.length;
+    }
+  }
+
+  return result;
+}
+
+/** 目次生成用にエディタ専用マークアップを除去した HTML を返す */
+function contentForTableOfContents(content: string): string {
+  return normalizeInlineTocPlaceholder(processHtmlBlocks(content || ''));
+}
+
+/**
  * HTML本文から目次を自動生成
  */
 export function generateTableOfContents(content: string): TableOfContentsItem[] {
+  const source = contentForTableOfContents(content);
+
   if (typeof window === 'undefined') {
     // サーバーサイドの場合は正規表現で解析
     const headingRegex = /<(h[234])[^>]*>(.*?)<\/\1>/gi;
@@ -32,7 +100,7 @@ export function generateTableOfContents(content: string): TableOfContentsItem[] 
     let match;
     let index = 0;
 
-    while ((match = headingRegex.exec(content)) !== null) {
+    while ((match = headingRegex.exec(source)) !== null) {
       const level = parseInt(match[1].substring(1)); // h2 -> 2
       const text = match[2].replace(/<[^>]*>/g, '').trim(); // HTMLタグを除去
       
@@ -50,7 +118,7 @@ export function generateTableOfContents(content: string): TableOfContentsItem[] 
 
   // クライアントサイドの場合はDOMParserを使用
   const parser = new DOMParser();
-  const doc = parser.parseFromString(content, 'text/html');
+  const doc = parser.parseFromString(source, 'text/html');
   const headings = doc.querySelectorAll('h2, h3, h4');
 
   return Array.from(headings).map((h, i) => ({
