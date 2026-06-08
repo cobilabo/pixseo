@@ -1,3 +1,8 @@
+import {
+  stripFontSizesFromElementTree,
+  stripInlineFontSizesFromHtml,
+} from '@/lib/strip-inline-font-sizes';
+
 const GOOGLE_DOCS_MARKERS =
   /docs-internal-guid|xmlns:google|google-sheets|data-sheets-|mso-|bumper-block|#docs-internal-guid/i;
 
@@ -81,11 +86,14 @@ function mergeOrphanReferenceLabels(root: ParentNode): void {
 
 export function normalizePastedHtml(html: string): string {
   if (!html?.trim()) return html;
-  if (typeof DOMParser === 'undefined') return html;
+
+  if (typeof DOMParser === 'undefined') {
+    return stripInlineFontSizesFromHtml(html);
+  }
 
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const root = doc.body;
-  if (!root) return html;
+  if (!root) return stripInlineFontSizesFromHtml(html);
 
   root.querySelectorAll('a[href]').forEach((anchor) => {
     if (anchor instanceof HTMLAnchorElement) {
@@ -96,6 +104,8 @@ export function normalizePastedHtml(html: string): string {
   if (isGoogleDocsPasteHtml(html)) {
     mergeOrphanReferenceLabels(root);
   }
+
+  stripFontSizesFromElementTree(root);
 
   return root.innerHTML;
 }

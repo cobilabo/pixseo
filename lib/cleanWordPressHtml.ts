@@ -1,4 +1,5 @@
 import { rewriteInternalLinksInHtml } from '@/lib/fix-internal-links';
+import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
 
 /**
  * WordPressから移行したHTMLをクリーニングする
@@ -115,6 +116,8 @@ export function cleanWordPressHtml(html: string): string {
   });
 
   cleaned = rewriteInternalLinksInHtml(cleaned);
+
+  cleaned = stripInlineFontSizesFromHtml(cleaned);
 
   return cleaned;
 }

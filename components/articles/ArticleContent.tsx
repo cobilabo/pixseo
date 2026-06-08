@@ -14,6 +14,7 @@ import { normalizeInlineTocPlaceholder } from '@/lib/cleanWordPressHtml';
 import { processHtmlBlocks } from '@/lib/article-utils';
 import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
 import { htmlAttribsToReactProps } from '@/lib/html-attribs-to-react';
+import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
 
 interface ArticleContentProps {
   content: string;
@@ -74,8 +75,11 @@ export default function ArticleContent({
     // HTMLブロックを実際のHTMLコンテンツに変換
     const htmlBlockProcessed = processHtmlBlocks(content);
 
+    // Google Docs 等のインライン font-size を除去し、本文タイポグラフィを統一
+    const fontSizeNormalized = stripInlineFontSizesFromHtml(htmlBlockProcessed);
+
     // エディタの目次プレースホルダー（装飾チャンク含む）をシンプルなマーカーに正規化
-    const tocNormalized = normalizeInlineTocPlaceholder(htmlBlockProcessed);
+    const tocNormalized = normalizeInlineTocPlaceholder(fontSizeNormalized);
 
     // ショートコードを処理
     const shortcodeProcessed = ShortCodeRenderer.process(tocNormalized);
