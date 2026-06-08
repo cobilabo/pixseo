@@ -569,12 +569,17 @@ if (typeof window !== 'undefined') {
       background: transparent !important;
       counter-increment: none !important;
     }
-    /* Tailwind の levelStyles (text-sm / text-xs) を固定ピクセル値で適用し、
+    /* Tailwind の levelStyles (text-base / text-sm) を固定ピクセル値で適用し、
        .article-content li の font-size: 0.9em が目次に漏れないようにする */
+    .article-content .toc-card.toc-card li.text-base,
+    .article-content .toc-card.toc-card li.text-base * {
+      font-size: 1rem !important;
+      line-height: 1.5rem !important;
+    }
     .article-content .toc-card.toc-card li.text-sm,
     .article-content .toc-card.toc-card li.text-sm * {
       font-size: 0.875rem !important;
-      line-height: 1.25rem !important;
+      line-height: 1.375rem !important;
     }
     .article-content .toc-card.toc-card li.text-xs,
     .article-content .toc-card.toc-card li.text-xs * {
@@ -587,11 +592,11 @@ if (typeof window !== 'undefined') {
       display: none !important;
       content: none !important;
     }
-    /* H2 レベル項目の区切り線だけは TableOfContents 側で付けている border-b を残す */
-    .article-content .toc-card.toc-card li.border-b {
-      border-bottom: 1px solid #e5e7eb !important;
-      padding-bottom: 0.5rem !important;
-      margin-bottom: 0.5rem !important;
+    /* H2 レベル項目の区切り線だけは TableOfContents 側で付けている border-t を残す */
+    .article-content .toc-card.toc-card li.border-t {
+      border-top: 1px solid #e5e7eb !important;
+      padding-top: 0.5rem !important;
+      margin-top: 0.5rem !important;
     }
     /* BlogCard専用スタイルリセット */
     .article-content .blogcard-wrapper {

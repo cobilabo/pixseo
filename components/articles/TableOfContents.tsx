@@ -100,16 +100,20 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
               
               const isActive = activeId === item.id;
               const isParentLevel = item.level === 2;
+              const hasPriorParent = items
+                .slice(0, index)
+                .some((x) => x?.level === 2);
+              const showParentBorder = isParentLevel && hasPriorParent;
               const levelStyles = {
-                2: 'ml-0 text-sm font-semibold',
-                3: 'ml-4 text-xs font-medium',
-                4: 'ml-8 text-xs font-normal',
+                2: 'ml-0 text-base font-semibold',
+                3: 'ml-4 text-sm font-medium',
+                4: 'ml-8 text-sm font-normal',
               };
               
               return (
                 <li
                   key={item.id || `toc-${index}`}
-                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${isParentLevel ? 'border-b border-gray-200 pb-2 mb-2' : ''}`}
+                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${showParentBorder ? 'border-t border-gray-200 pt-2 mt-2' : ''}`}
                 >
                   <button
                     onClick={() => handleClick(item.id)}
