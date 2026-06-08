@@ -22,9 +22,9 @@ export default function SocialShare({ title, url: propUrl, lang = 'ja' }: Social
     }
   }, [propUrl]);
 
-  const shareOnTwitter = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(url)}`;
-    window.open(twitterUrl, '_blank', 'width=550,height=420');
+  const shareOnX = () => {
+    const xUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(url)}`;
+    window.open(xUrl, '_blank', 'width=550,height=420');
   };
 
   const shareOnFacebook = () => {
@@ -53,16 +53,16 @@ export default function SocialShare({ title, url: propUrl, lang = 'ja' }: Social
         <p className="text-xs text-gray-500 uppercase tracking-wider">Share This Article</p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {/* Twitter */}
+        {/* X */}
         <button
-          onClick={shareOnTwitter}
-          className="flex items-center justify-center gap-2 bg-[#0c7abf] text-white px-4 py-3 rounded-lg hover:opacity-90 transition-opacity"
-          aria-label="Twitterでシェア"
+          onClick={shareOnX}
+          className="flex items-center justify-center gap-2 bg-black text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          aria-label="Xでシェア"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
-          <span className="font-medium">Twitter</span>
+          <span className="font-medium">X</span>
         </button>
 
         {/* Facebook */}

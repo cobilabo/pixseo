@@ -3,6 +3,7 @@
 import { TableOfContentsItem } from '@/types/article';
 import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
+import { normalizeTocDisplayText } from '@/lib/article-utils';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
@@ -91,7 +92,7 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
       
       {isOpen && (
         <nav>
-          <ul className="toc-inline space-y-0.5">
+          <ul className="toc-inline">
             {items.map((item, index) => {
               // 各アイテムの安全チェック
               if (!item || !item.id || !item.text) {
@@ -113,20 +114,20 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
               return (
                 <li
                   key={item.id || `toc-${index}`}
-                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${showParentBorder ? 'border-t border-gray-200 pt-2 mt-2' : ''}`}
+                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${showParentBorder ? 'border-t border-gray-200 pt-1.5 mt-1.5' : ''}`}
                 >
                   <button
                     onClick={() => handleClick(item.id)}
                     className={`
-                      w-full text-left py-1.5 px-3 rounded-md transition-all duration-150
+                      w-full text-left py-1 px-3 rounded-md transition-all duration-150
                       ${isActive 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
                       }
                     `}
                   >
-                    <span className="leading-snug">
-                      {item.text}
+                    <span className="leading-tight block">
+                      {normalizeTocDisplayText(item.text)}
                     </span>
                   </button>
                 </li>

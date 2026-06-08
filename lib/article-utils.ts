@@ -91,10 +91,31 @@ function contentForTableOfContents(content: string): string {
  * 見出しタグ内の HTML から目次用テキストを抽出する。
  * 見出し内に参照リンク段落（HTMLブロック由来）が含まれる場合、番号付き見出し本文だけを採用する。
  */
+function decodeHtmlEntitiesForToc(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#(?:160|xA0);/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'");
+}
+
+/** 目次表示用に HTML 由来の空白・実体参照を正規化（保存済み目次の表示にも利用） */
+export function normalizeTocDisplayText(text: string): string {
+  if (!text) return '';
+  return decodeHtmlEntitiesForToc(text)
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function extractHeadingTextForToc(innerHtml: string): string {
   let html = innerHtml || '';
   html = html.replace(/<p[^>]*>[\s\S]*?参照：[\s\S]*?<\/p>/gi, '');
-  let text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  let text = html.replace(/<[^>]*>/g, ' ');
+  text = normalizeTocDisplayText(text);
 
   const dashSection = text.match(/\d+(?:-\d+)+\.[^]+/);
   if (dashSection) {
