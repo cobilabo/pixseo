@@ -3,6 +3,11 @@ import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, buildAdminNotificationHtml, buildAutoReplyHtml } from '@/lib/email';
 import type { Lang } from '@/types/lang';
+import {
+  getRecaptchaServerConfig,
+  isRecaptchaVerificationPassed,
+  verifyRecaptchaToken,
+} from '@/lib/recaptcha';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +59,44 @@ export async function POST(
     const body = await request.json();
     const submissionData = body.data || {};
     const lang: Lang = VALID_LANGS.includes(body.lang) ? body.lang : 'ja';
+    const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : '';
+
+    const tenantDoc = form.mediaId
+      ? await adminDb.collection('mediaTenants').doc(form.mediaId).get()
+      : null;
+    const recaptchaConfig = getRecaptchaServerConfig(tenantDoc?.data()?.theme?.generalSettings);
+
+    if (recaptchaConfig.enabled) {
+      if (!recaptchaToken) {
+        return NextResponse.json(
+          { error: 'reCAPTCHA verification required' },
+          { status: 400 }
+        );
+      }
+
+      const remoteIp =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        undefined;
+
+      const verifyResult = await verifyRecaptchaToken(
+        recaptchaToken,
+        recaptchaConfig.secretKey!,
+        remoteIp
+      );
+
+      if (!isRecaptchaVerificationPassed(verifyResult)) {
+        console.warn('[FormSubmit] reCAPTCHA failed:', {
+          formId,
+          score: verifyResult.score,
+          errorCodes: verifyResult.errorCodes,
+        });
+        return NextResponse.json(
+          { error: 'reCAPTCHA verification failed' },
+          { status: 403 }
+        );
+      }
+    }
 
     const fields = form.fields || [];
     const missingFields: string[] = [];

@@ -41,6 +41,7 @@ import { localizeSiteInfo, localizeTheme, localizeCategory, localizeArticle, loc
 import { t } from '@/lib/i18n/translations';
 import { Page } from '@/types/page';
 import { shouldReturn404ForMissingTenant } from '@/lib/firebase/media-tenant-helper';
+import { getPublicRecaptchaConfig } from '@/lib/recaptcha';
 
 interface PageProps {
   params: {
@@ -182,6 +183,7 @@ export default async function HomePage({ params }: PageProps) {
   
   // ThemeスタイルとカスタムCSSを生成
   const combinedStyles = getCombinedStyles(rawTheme);
+  const recaptchaConfig = getPublicRecaptchaConfig(rawTheme.generalSettings);
   
   // フッターブロックを取得（themeから）
   const footerBlocks = theme.footerBlocks?.filter((block: any) => block.imageUrl) || [];
@@ -256,7 +258,7 @@ export default async function HomePage({ params }: PageProps) {
           />
 
           {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} semanticLandmarks searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+            <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} semanticLandmarks searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
           ) : (
             <main id="main-content">
               <div
@@ -289,7 +291,7 @@ export default async function HomePage({ params }: PageProps) {
         
         {/* ブロックビルダー使用時はBlockRendererで表示 */}
         {rawHomePage.useBlockBuilder && rawHomePage.blocks ? (
-          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawHomePage.blocks} isMobile={isMobile} showPanel={rawHomePage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} excludeFullWidthSliders searchData={{ tags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <div 
             className="prose prose-lg max-w-none"

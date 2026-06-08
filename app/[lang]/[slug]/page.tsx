@@ -39,6 +39,7 @@ import SidebarSnsLinks from '@/components/common/SidebarSnsLinks';
 import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
+import { getPublicRecaptchaConfig } from '@/lib/recaptcha';
 
 interface PageProps {
   params: {
@@ -174,6 +175,7 @@ export default async function FixedPage({ params }: PageProps) {
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
   const combinedStyles = getCombinedStyles(rawTheme);
+  const recaptchaConfig = getPublicRecaptchaConfig(rawTheme.generalSettings);
 
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
@@ -208,7 +210,7 @@ export default async function FixedPage({ params }: PageProps) {
           <link key={i} rel="stylesheet" href={href} />
         ))}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} semanticLandmarks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} semanticLandmarks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
         ) : (
           <main id="main-content">
             <div 
@@ -243,7 +245,7 @@ export default async function FixedPage({ params }: PageProps) {
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
-        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+        <BlockRenderer blocks={(rawTheme.layoutTheme === 'furatto' && params.slug === 'media') ? rawPage.blocks.filter((b: any) => b.type !== 'search') : rawPage.blocks} isMobile={isMobile} showPanel={rawPage.showPanel !== false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} excludeFullWidthSliders excludeFullWidthBottomBlocks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
       ) : (
         <div 
           className="prose prose-lg max-w-none"

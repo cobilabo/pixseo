@@ -9,6 +9,8 @@ import { useState, useEffect, FormEvent } from 'react';
 import { Block, FormBlockConfig, FormField } from '@/types/block';
 import { Form } from '@/types/form';
 import { Lang } from '@/types/lang';
+import type { RecaptchaPublicConfig } from '@/lib/recaptcha';
+import { executeRecaptchaV3 } from '@/lib/recaptcha-client';
 
 const UI_STRINGS: Record<string, Record<Lang, string>> = {
   submit: { ja: '送信する', en: 'Submit', zh: '提交', ko: '제출' },
@@ -25,6 +27,7 @@ const UI_STRINGS: Record<string, Record<Lang, string>> = {
   contactDesc: { ja: 'ご質問・ご相談は、お気軽にお問い合わせください。<br>なお、入力確認画面や自動返信メールはございません。<br>ご入力内容を確認の上、送信ボタンを押して下さい。', en: 'Please feel free to contact us with any questions or inquiries.<br>Please note that there is no confirmation screen or automatic reply email.<br>Please review your input and press the submit button.', zh: '如有任何问题或咨询，请随时与我们联系。<br>请注意，没有输入确认页面或自动回复邮件。<br>请确认您的输入内容后点击提交按钮。', ko: '질문이나 상담은 편하게 문의해 주세요.<br>입력 확인 화면이나 자동 답장 메일은 없습니다.<br>입력 내용을 확인하신 후 전송 버튼을 눌러주세요.' },
   consentToggle: { ja: '同意内容を確認する', en: 'View consent details', zh: '查看同意内容', ko: '동의 내용 확인' },
   required: { ja: '必須', en: 'Required', zh: '必填', ko: '필수' },
+  recaptchaError: { ja: 'reCAPTCHA認証に失敗しました。時間をおいて再度お試しください。', en: 'reCAPTCHA verification failed. Please try again later.', zh: 'reCAPTCHA验证失败。请稍后再试。', ko: 'reCAPTCHA 인증에 실패했습니다. 잠시 후 다시 시도해 주세요.' },
 };
 
 function ui(key: string, lang: Lang): string {
@@ -45,9 +48,10 @@ interface FormBlockProps {
   block: Block;
   lang?: Lang;
   layoutTheme?: string;
+  recaptchaConfig?: RecaptchaPublicConfig;
 }
 
-export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlockProps) {
+export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaConfig }: FormBlockProps) {
   const config = block.config as FormBlockConfig;
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +90,11 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
     setError(null);
 
     try {
+      let recaptchaToken: string | undefined;
+      if (recaptchaConfig?.enabled && recaptchaConfig.siteKey) {
+        recaptchaToken = await executeRecaptchaV3(recaptchaConfig.siteKey, 'form_submit');
+      }
+
       const response = await fetch(`/api/forms/${config.formId}/submit`, {
         method: 'POST',
         headers: {
@@ -94,6 +103,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
         body: JSON.stringify({
           data: formData,
           lang,
+          recaptchaToken,
         }),
       });
 
@@ -109,7 +119,12 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme }: FormBlock
         window.location.href = result.afterSubmit.redirectUrl;
       }
     } catch (err: any) {
-      setError(err.message || ui('submitError', lang));
+      const message = err.message || ui('submitError', lang);
+      if (/recaptcha/i.test(message)) {
+        setError(ui('recaptchaError', lang));
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }

@@ -66,6 +66,10 @@ export async function getTheme(mediaId: string): Promise<Theme> {
       ...defaultTheme,
       ...savedTheme,
       searchSettings: mergedSearchSettings,
+      generalSettings: {
+        ...defaultTheme.generalSettings,
+        ...savedTheme.generalSettings,
+      },
     };
 
     // バナー（footerBlocks）：トップレベルと themeSettings の不整合を解消し、画像URLが空のスロットを除外

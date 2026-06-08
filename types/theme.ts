@@ -266,6 +266,10 @@ export type TransitionAnimation = 'none' | 'fade-in';
 // 一般設定の定義
 export interface GeneralSettings {
   transitionAnimation: TransitionAnimation;
+  /** Google reCAPTCHA v3 を有効化（サイトキー・シークレットキー設定時のみ動作） */
+  recaptchaEnabled?: boolean;
+  recaptchaSiteKey?: string;
+  recaptchaSecretKey?: string;
 }
 
 // 内部リンク表示形式
@@ -560,6 +564,9 @@ export const defaultTheme: Theme = {
   // 一般設定
   generalSettings: {
     transitionAnimation: 'none',
+    recaptchaEnabled: false,
+    recaptchaSiteKey: '',
+    recaptchaSecretKey: '',
   },
 };
 

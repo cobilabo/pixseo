@@ -14,6 +14,7 @@ import SliderBlock from './SliderBlock';
 import RowBlock from './RowBlock';
 import SearchBlock from './SearchBlock';
 import CustomBlock from './CustomBlock';
+import type { RecaptchaPublicConfig } from '@/lib/recaptcha';
 
 interface BlockRendererProps {
   blocks: Block[];
@@ -21,6 +22,7 @@ interface BlockRendererProps {
   showPanel?: boolean;
   lang?: Lang;
   layoutTheme?: string;
+  recaptchaConfig?: RecaptchaPublicConfig;
   excludeFullWidthSliders?: boolean;
   excludeFullWidthBottomBlocks?: boolean;
   /** blank レイアウト: header/footer カスタムブロック以外を <main> でラップ */
@@ -71,7 +73,7 @@ function isHeaderFooterBlock(block: Block): 'header' | 'footer' | null {
   return null;
 }
 
-export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, layoutTheme, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, semanticLandmarks = false, searchData }: BlockRendererProps) {
+export default function BlockRenderer({ blocks, isMobile = false, showPanel = true, lang = 'ja' as Lang, layoutTheme, recaptchaConfig, excludeFullWidthSliders = false, excludeFullWidthBottomBlocks = false, semanticLandmarks = false, searchData }: BlockRendererProps) {
   const visibleBlocks = blocks
     .filter(block => {
       if (isMobile && block.showOnMobile === false) return false;
@@ -99,7 +101,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
     let blockContent;
     switch (block.type) {
       case 'form':
-        blockContent = <FormBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
+        blockContent = <FormBlock block={block} lang={lang} layoutTheme={layoutTheme} recaptchaConfig={recaptchaConfig} />;
         break;
       case 'html':
         blockContent = <HTMLBlock block={block} lang={lang} />;
@@ -117,7 +119,7 @@ export default function BlockRenderer({ blocks, isMobile = false, showPanel = tr
         blockContent = <SliderBlock block={block} lang={lang} />;
         break;
       case 'row':
-        blockContent = <RowBlock block={block} lang={lang} layoutTheme={layoutTheme} />;
+        blockContent = <RowBlock block={block} lang={lang} layoutTheme={layoutTheme} recaptchaConfig={recaptchaConfig} />;
         break;
       case 'search':
         blockContent = (

@@ -4,14 +4,16 @@ import { Block, RowBlockConfig, FormBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import { localizeHtmlLinks } from '@/lib/i18n/localize-html';
 import FormBlock from './FormBlock';
+import type { RecaptchaPublicConfig } from '@/lib/recaptcha';
 
 interface RowBlockProps {
   block: Block;
   lang?: Lang;
   layoutTheme?: string;
+  recaptchaConfig?: RecaptchaPublicConfig;
 }
 
-export default function RowBlock({ block, lang = 'ja', layoutTheme }: RowBlockProps) {
+export default function RowBlock({ block, lang = 'ja', layoutTheme, recaptchaConfig }: RowBlockProps) {
   const config = block.config as RowBlockConfig;
   const gap = config.gap ?? 40;
   const columns = config.columns || [];
@@ -50,6 +52,7 @@ export default function RowBlock({ block, lang = 'ja', layoutTheme }: RowBlockPr
               }}
               lang={lang}
               layoutTheme={layoutTheme}
+              recaptchaConfig={recaptchaConfig}
             />
           ) : col.html ? (
             <div dangerouslySetInnerHTML={{ __html: localizeHtmlLinks((lang !== 'ja' && (col as any)[`html_${lang}`]) ? (col as any)[`html_${lang}`] : col.html, lang) }} />

@@ -390,6 +390,10 @@ export default function ThemePage() {
         articleSettings: {
           internalLinkStyle: fetchedTheme.articleSettings?.internalLinkStyle || 'text',
         },
+        generalSettings: {
+          ...defaultTheme.generalSettings,
+          ...fetchedTheme.generalSettings,
+        },
         sideContentItems: migratedSideContentItems,
         htmlShortcodes: htmlShortcodePresets.htmlShortcodes,
         customCss: htmlShortcodePresets.customCss,
@@ -3209,6 +3213,67 @@ export default function ThemePage() {
                         />
                         <span className="text-sm font-medium text-gray-700">有効</span>
                       </label>
+                    </div>
+                  </div>
+
+                  {/* Google reCAPTCHA v3 */}
+                  <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800 mb-1">Google reCAPTCHA v3</h3>
+                      <p className="text-xs text-gray-500">
+                        有効化すると、サイト上のすべてのフォーム送信時に reCAPTCHA v3 によるボット対策が行われます。
+                        サイトキーとシークレットキーの両方を設定した場合のみ有効になります。
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors w-fit">
+                      <input
+                        type="checkbox"
+                        checked={theme.generalSettings?.recaptchaEnabled ?? false}
+                        onChange={(e) =>
+                          setTheme((prev) => ({
+                            ...prev,
+                            generalSettings: {
+                              ...(prev.generalSettings ?? defaultTheme.generalSettings!),
+                              recaptchaEnabled: e.target.checked,
+                            },
+                          }))
+                        }
+                        className="accent-blue-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700">reCAPTCHA v3 を有効にする</span>
+                    </label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FloatingInput
+                        label="サイトキー（Site Key）"
+                        value={theme.generalSettings?.recaptchaSiteKey ?? ''}
+                        onChange={(value) =>
+                          setTheme((prev) => ({
+                            ...prev,
+                            generalSettings: {
+                              ...(prev.generalSettings ?? defaultTheme.generalSettings!),
+                              recaptchaSiteKey: value,
+                            },
+                          }))
+                        }
+                        placeholder="6Lc..."
+                      />
+                      <FloatingInput
+                        label="シークレットキー（Secret Key）"
+                        type="password"
+                        value={theme.generalSettings?.recaptchaSecretKey ?? ''}
+                        onChange={(value) =>
+                          setTheme((prev) => ({
+                            ...prev,
+                            generalSettings: {
+                              ...(prev.generalSettings ?? defaultTheme.generalSettings!),
+                              recaptchaSecretKey: value,
+                            },
+                          }))
+                        }
+                        placeholder="6Lc..."
+                      />
                     </div>
                   </div>
                 </div>
