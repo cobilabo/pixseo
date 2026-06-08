@@ -587,7 +587,7 @@ if (typeof window !== 'undefined') {
       display: none !important;
       content: none !important;
     }
-    /* H3 レベル項目の点線区切りだけは TableOfContents 側で付けている border-b を残す */
+    /* H2 レベル項目の区切り線だけは TableOfContents 側で付けている border-b を残す */
     .article-content .toc-card.toc-card li.border-b {
       border-bottom: 1px solid #e5e7eb !important;
       padding-bottom: 0.5rem !important;

@@ -99,7 +99,7 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
               }
               
               const isActive = activeId === item.id;
-              const isH3 = item.level === 3;
+              const isParentLevel = item.level === 2;
               const levelStyles = {
                 2: 'ml-0 text-sm font-semibold',
                 3: 'ml-4 text-xs font-medium',
@@ -109,23 +109,19 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
               return (
                 <li
                   key={item.id || `toc-${index}`}
-                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${isH3 ? 'border-b border-gray-200 pb-2 mb-2' : ''}`}
+                  className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${isParentLevel ? 'border-b border-gray-200 pb-2 mb-2' : ''}`}
                 >
                   <button
                     onClick={() => handleClick(item.id)}
                     className={`
-                      w-full text-left py-1.5 px-3 rounded-md transition-all duration-150 flex items-center gap-2 group
+                      w-full text-left py-1.5 px-3 rounded-md transition-all duration-150
                       ${isActive 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
                       }
                     `}
                   >
-                    <span className={`
-                      w-1 h-1 rounded-full transition-all duration-150 flex-shrink-0
-                      ${isActive ? 'bg-blue-600' : 'bg-gray-400 group-hover:bg-blue-500'}
-                    `} />
-                    <span className="flex-1 leading-snug">
+                    <span className="leading-snug">
                       {item.text}
                     </span>
                   </button>
