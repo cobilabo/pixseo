@@ -241,9 +241,17 @@ export default function ArticleContent({
 
         // HTML の style 文字列・class を React 用に変換（style 文字列は React 19 で #62 エラーになる）
         const linkProps = htmlAttribsToReactProps(anchorAttribs);
+        const isExternal = isExternalLinkHref(newHref, siteHost);
+        const { target: _target, rel: _rel, ...restLinkProps } = linkProps;
 
         return (
-          <a href={newHref} {...linkProps}>
+          <a
+            href={newHref}
+            {...restLinkProps}
+            {...(isExternal
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
+          >
             {linkText}
           </a>
         );
@@ -330,7 +338,9 @@ export default function ArticleContent({
       return (
         <div
           key={`segment-${index}`}
-          dangerouslySetInnerHTML={{ __html: segment.content }}
+          dangerouslySetInnerHTML={{
+            __html: applyExternalLinkTargetsToHtml(segment.content, siteHost),
+          }}
         />
       );
     }
@@ -881,6 +891,58 @@ function processInternalLinksForBlogCard(
   });
 
   return [processedHtml, internalLinkUrls];
+}
+
+/** 記事本文の外部リンク（別ドメイン）かどうか */
+function isExternalLinkHref(href: string, siteHost: string): boolean {
+  if (!href?.trim()) return false;
+
+  const trimmed = href.trim();
+  if (
+    trimmed.startsWith('#') ||
+    trimmed.startsWith('mailto:') ||
+    trimmed.startsWith('tel:')
+  ) {
+    return false;
+  }
+
+  // 同一サイト内の相対パス
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return false;
+  }
+
+  try {
+    const url = new URL(trimmed.startsWith('//') ? `https:${trimmed}` : trimmed);
+    if (!url.protocol.startsWith('http')) return false;
+
+    if (siteHost && url.host === siteHost) return false;
+
+    if (
+      url.host.endsWith('.pixseo-preview.cloud') ||
+      url.host.endsWith('.pixseo.app')
+    ) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** dangerouslySetInnerHTML 経由の HTML 内の外部リンクに target を付与 */
+function applyExternalLinkTargetsToHtml(html: string, siteHost: string): string {
+  if (!html) return html;
+
+  return html.replace(/<a\b([^>]*?)>/gi, (match, attrs: string) => {
+    const hrefMatch = attrs.match(/\bhref=(["'])([^"']*)\1/i);
+    if (!hrefMatch) return match;
+    if (!isExternalLinkHref(hrefMatch[2], siteHost)) return match;
+    if (/\btarget\s*=/.test(attrs)) return match;
+
+    const trimmedAttrs = attrs.trim();
+    return `<a ${trimmedAttrs} target="_blank" rel="noopener noreferrer">`;
+  });
 }
 
 function checkIsInternalArticleLink(href: string, siteHost: string): boolean {
