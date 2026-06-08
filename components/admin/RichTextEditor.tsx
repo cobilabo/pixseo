@@ -6,11 +6,13 @@ import {
   useRef,
   useState,
   useCallback,
+  type ClipboardEvent,
   type KeyboardEvent,
 } from 'react';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
 import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
 import ImageGenerator from './ImageGenerator';
+import { normalizePastedHtml } from '@/lib/normalize-pasted-html';
 
 /** 目次プレースホルダー（エディタ内表示用・保存時は normalizeTocPlaceholder で簡略化されうる） */
 const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
@@ -854,6 +856,16 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const html = clone.innerHTML;
       onChange(html);
     }
+  };
+
+  const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
+    const html = e.clipboardData.getData('text/html');
+    if (!html?.trim()) return;
+
+    e.preventDefault();
+    const normalized = normalizePastedHtml(html);
+    document.execCommand('insertHTML', false, normalized);
+    handleInput();
   };
 
   /** 画像ブロック直前/直後で Backspace / Delete が効かないブラザ対策 */
@@ -1794,6 +1806,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onPaste={handlePaste}
           onKeyDown={handleEditorKeyDown}
           onDragOver={(e) => {
             if (draggingBlockId) {

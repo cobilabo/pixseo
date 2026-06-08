@@ -1,4 +1,4 @@
-import { DEFAULT_LANG, SUPPORTED_LANGS, type Lang } from '@/types/lang';
+import { DEFAULT_LANG, SUPPORTED_LANGS, isValidLang, type Lang } from '@/types/lang';
 import { ARTICLE_SLUG_REDIRECTS } from '@/lib/wp-slug-redirects';
 
 export type InternalLinkContext = {
@@ -55,6 +55,31 @@ export function resolveAyumiSitePath(pathAfterHost: string, ctx: InternalLinkCon
     const slug = rest.replace(/^articles\//, '').split('/')[0];
     return articlePath(slug, ctx, lang);
   }
+
+  // the-ayumi.jp/{lang}/articles/{slug} など言語プレフィックス付きパス
+  const langArticle = rest.match(
+    new RegExp(`^(${LANG_PATTERN})/articles/([^/?#]+)`, 'i')
+  );
+  if (langArticle && isValidLang(langArticle[1].toLowerCase())) {
+    return articlePath(langArticle[2], ctx, langArticle[1].toLowerCase() as Lang);
+  }
+  const langCategory = rest.match(
+    new RegExp(`^(${LANG_PATTERN})/categories/([^/?#]+)`, 'i')
+  );
+  if (langCategory && isValidLang(langCategory[1].toLowerCase())) {
+    return `/${langCategory[1].toLowerCase()}/categories/${langCategory[2]}/`;
+  }
+  const langTag = rest.match(new RegExp(`^(${LANG_PATTERN})/tags/([^/?#]+)`, 'i'));
+  if (langTag && isValidLang(langTag[1].toLowerCase())) {
+    return `/${langTag[1].toLowerCase()}/tags/${langTag[2]}/`;
+  }
+  const langWriter = rest.match(
+    new RegExp(`^(${LANG_PATTERN})/writers/([^/?#]+)`, 'i')
+  );
+  if (langWriter && isValidLang(langWriter[1].toLowerCase())) {
+    return `/${langWriter[1].toLowerCase()}/writers/${langWriter[2]}/`;
+  }
+
   if (rest.startsWith('categories/')) {
     const slug = rest.replace(/^categories\//, '').split('/')[0];
     return `/${lang}/categories/${slug}/`;
@@ -191,6 +216,14 @@ export function rewriteInternalLinksInHtml(html: string, ctx?: InternalLinkConte
   out = out.replace(
     /https?:\/\/the-ayumi\.jp\/author\/([^/"<>\s]+)\/?/gi,
     (_, slug) => `/${context.defaultLang || DEFAULT_LANG}/writers/${slug}/`
+  );
+  out = out.replace(
+    new RegExp(
+      `https?:\\/\\/the-ayumi\\.jp\\/(${LANG_PATTERN})\\/articles\\/([^/"<>\\s]+)\\/?`,
+      'gi'
+    ),
+    (_, langCode: string, slug: string) =>
+      articlePath(slug, context, langCode.toLowerCase() as Lang)
   );
   out = out.replace(/https?:\/\/the-ayumi\.jp\/?(?=["'<>\s]|$)/gi, `/${context.defaultLang || DEFAULT_LANG}/`);
 

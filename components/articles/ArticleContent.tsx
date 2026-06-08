@@ -25,11 +25,6 @@ interface ArticleContentProps {
   faviconUrl?: string;
 }
 
-/**
- * 本文 HTML の見出し <h2>/<h3>/<h4> に、目次と一致する id 属性を順番に注入する。
- * dangerouslySetInnerHTML 経由で描画する分岐では html-react-parser の置換が走らないため、
- * ID を事前に埋め込む必要がある。既に id が付与された見出しは尊重しスキップする。
- */
 function injectHeadingIds(
   html: string,
   toc: TableOfContentsItem[] | undefined,
@@ -48,7 +43,23 @@ function injectHeadingIds(
   });
 }
 
-export default function ArticleContent({ 
+/** html-react-parser の DOM ノードからテキストを再帰的に抽出 */
+function extractDomNodeText(node: unknown): string {
+  if (!node) return '';
+  if (typeof node === 'string') return node;
+  const n = node as { type?: string; data?: string; children?: unknown };
+  if (n.type === 'text' && typeof n.data === 'string') return n.data;
+  if (typeof n.data === 'string') return n.data;
+  if (Array.isArray(n.children)) {
+    return n.children.map(extractDomNodeText).join('');
+  }
+  if (n.children) {
+    return extractDomNodeText(n.children);
+  }
+  return '';
+}
+
+export default function ArticleContent({
   content, 
   tableOfContents, 
   internalLinkStyle = 'text',
@@ -220,15 +231,13 @@ export default function ArticleContent({
           return <BlogCard href={newHref} lang={lang} />;
         }
 
-        // リンクの内容を抽出
+        // リンクの内容を抽出（Google Docs 由来の <a><span>…</span></a> も含む）
         const linkText =
-          domNode.children
-            ?.map((child: any) => {
-              if (typeof child === 'string') return child;
-              if (child.type === 'text') return child.data;
-              return '';
-            })
-            .join('') || '';
+          (domNode.children
+            ? Array.isArray(domNode.children)
+              ? domNode.children.map(extractDomNodeText).join('')
+              : extractDomNodeText(domNode.children)
+            : '') || newHref;
 
         // HTML の style 文字列・class を React 用に変換（style 文字列は React 19 で #62 エラーになる）
         const linkProps = htmlAttribsToReactProps(anchorAttribs);
@@ -267,27 +276,12 @@ export default function ArticleContent({
         headingCount++;
 
         const Tag = domNode.name as 'h2' | 'h3' | 'h4';
-        
-        // テキストを安全に抽出（再帰的に処理）
-        const extractText = (node: any): string => {
-          if (!node) return '';
-          if (typeof node === 'string') return node;
-          if (node.type === 'text' && typeof node.data === 'string') return node.data;
-          if (node.data && typeof node.data === 'string') return node.data;
-          if (Array.isArray(node.children)) {
-            return node.children.map(extractText).join('');
-          }
-          if (node.children) {
-            return extractText(node.children);
-          }
-          return '';
-        };
-        
-        const textContent = domNode.children ? 
-          (Array.isArray(domNode.children) ? 
-            domNode.children.map(extractText).join('') : 
-            extractText(domNode.children)
-          ) : '';
+
+        const textContent = domNode.children
+          ? Array.isArray(domNode.children)
+            ? domNode.children.map(extractDomNodeText).join('')
+            : extractDomNodeText(domNode.children)
+          : '';
         
         return (
           <Tag id={id} className="scroll-mt-20">
