@@ -45,6 +45,7 @@ interface AlgoliaArticleRecord {
   categories: string[];
   tags: string[];
   publishedAt: number;
+  updatedAt?: number;
   isPublished: boolean;
   featuredImage?: string;
   featuredImageAlt?: string;
@@ -152,6 +153,8 @@ async function main() {
         tags: tagNames,
         publishedAt: article.publishedAt?.toDate?.()?.getTime() ||
                      (article.publishedAt ? new Date(article.publishedAt).getTime() : 0),
+        updatedAt: article.updatedAt?.toDate?.()?.getTime() ||
+                   (article.updatedAt ? new Date(article.updatedAt).getTime() : 0),
         isPublished: true,
         featuredImage: article.featuredImage || '',
         featuredImageAlt: article.featuredImageAlt || '',

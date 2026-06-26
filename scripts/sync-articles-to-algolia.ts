@@ -99,6 +99,7 @@ async function syncAllArticles() {
           categories: categoryNames,
           tags: tagNames,
           publishedAt: data.publishedAt?.toDate?.()?.getTime() || Date.now(),
+          updatedAt: data.updatedAt?.toDate?.()?.getTime() || 0,
           isPublished: data.isPublished || false,
           featuredImage: data.featuredImage,
           featuredImageAlt: data.featuredImageAlt,

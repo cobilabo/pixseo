@@ -3,6 +3,10 @@ import { searchClient, getArticlesIndexName } from './client';
 import { Article } from '@/types/article';
 import { Lang } from '@/types/lang';
 
+function algoliaMsToDate(value: unknown): Date | undefined {
+  return typeof value === 'number' && value > 0 ? new Date(value) : undefined;
+}
+
 const QUERY_LANGUAGE_BY_SITE_LANG: Record<Lang, SupportedLanguage> = {
   ja: 'ja',
   en: 'en',
@@ -94,10 +98,8 @@ export async function searchArticlesWithAlgolia(
       mediaId: hit.mediaId,
       // hit.publishedAt は Algolia 上で number (ms) 想定だが、過去データで null の可能性があるため
       // ガード (`new Date(null) = 1970-01-01` で表示崩れを起こさないように)。
-      publishedAt:
-        typeof hit.publishedAt === 'number' && hit.publishedAt > 0
-          ? new Date(hit.publishedAt)
-          : undefined,
+      publishedAt: algoliaMsToDate(hit.publishedAt),
+      updatedAt: algoliaMsToDate(hit.updatedAt),
       isPublished: hit.isPublished,
       featuredImage: hit.featuredImage,
       featuredImageAlt: hit.featuredImageAlt,

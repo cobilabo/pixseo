@@ -31,6 +31,7 @@ export interface AlgoliaArticleRecord {
   categories: string[];
   tags: string[];
   publishedAt: number;
+  updatedAt?: number;
   isPublished: boolean;
   featuredImage?: string;
   featuredImageAlt?: string;
@@ -162,16 +163,36 @@ export async function syncArticleToAlgolia(
     return;
   }
 
-  const publishedAtMs: number = (() => {
-    const pa = article.publishedAt;
-    if (!pa) return 0;
-    if (typeof pa === "number") return pa;
-    if (pa instanceof Date) return pa.getTime();
-    if (typeof pa === "string") return new Date(pa).getTime();
-    if (typeof (pa as any).toDate === "function") return (pa as any).toDate().getTime();
-    if (typeof (pa as any).seconds === "number") return (pa as any).seconds * 1000;
+  const toUnixMs = (value: unknown): number => {
+    if (value == null) return 0;
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+    if (value instanceof Date) {
+      const t = value.getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+    if (typeof value === "string") {
+      const t = new Date(value).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+    if (typeof value === "object") {
+      const v = value as { toDate?: () => Date; toMillis?: () => number; seconds?: number; nanoseconds?: number };
+      if (typeof v.toMillis === "function") {
+        const t = v.toMillis();
+        return Number.isFinite(t) ? t : 0;
+      }
+      if (typeof v.toDate === "function") {
+        const t = v.toDate().getTime();
+        return Number.isFinite(t) ? t : 0;
+      }
+      if (typeof v.seconds === "number") {
+        return v.seconds * 1000 + Math.floor((v.nanoseconds ?? 0) / 1_000_000);
+      }
+    }
     return 0;
-  })();
+  };
+
+  const publishedAtMs = toUnixMs(article.publishedAt);
+  const updatedAtMs = toUnixMs(article.updatedAt);
 
   await Promise.all(
     SUPPORTED_LANGS.map(async (lang) => {
@@ -194,6 +215,7 @@ export async function syncArticleToAlgolia(
           categories: categoryNames,
           tags: tagNames,
           publishedAt: publishedAtMs,
+          updatedAt: updatedAtMs,
           isPublished: !!article.isPublished,
           featuredImage: article.featuredImage,
           featuredImageAlt,

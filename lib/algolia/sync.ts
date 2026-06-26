@@ -199,6 +199,7 @@ export interface AlgoliaArticleRecord {
   categories: string[]; // カテゴリー名の配列
   tags: string[]; // タグ名の配列
   publishedAt: number; // Unixタイムスタンプ
+  updatedAt?: number; // Unixタイムスタンプ
   isPublished: boolean;
   featuredImage?: string; // アイキャッチ画像URL
   featuredImageAlt?: string; // アイキャッチ画像のalt属性
@@ -276,6 +277,7 @@ export async function syncArticleToAlgolia(
           categories: categoryNames,
           tags: tagNames,
           publishedAt: toUnixMs(article.publishedAt),
+          updatedAt: toUnixMs(article.updatedAt),
           isPublished: article.isPublished,
           featuredImage: article.featuredImage,
           featuredImageAlt: article.featuredImageAlt,
