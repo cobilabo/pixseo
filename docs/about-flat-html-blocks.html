@@ -14,6 +14,27 @@
      HTMLブロック 1 — 最初のコピー（縦書き・オレンジ背景）
      ============================================================ -->
 <style>
+  @media (prefers-reduced-motion: no-preference) {
+    html.js-af-scroll-reveal .af-reveal:not(.is-visible) {
+      opacity: 0;
+      transform: translate3d(0, 40px, 0);
+      transition:
+        opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: var(--af-reveal-delay, 0ms);
+      will-change: opacity, transform;
+    }
+    html.js-af-scroll-reveal .af-reveal.is-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .af-reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
   .af-intro {
     --af-orange-mid: #F0A050;
     --af-orange-light: #FCD34D;
@@ -33,12 +54,16 @@
     inset: 0;
     background: radial-gradient(ellipse 80% 60% at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 60%);
     pointer-events: none;
+    z-index: 2;
+  }
+  .af-intro__bg {
+    display: none;
   }
   .af-intro__inner {
     max-width: 1200px;
     margin: 0 auto;
     position: relative;
-    z-index: 1;
+    z-index: 3;
   }
   .af-intro__label {
     writing-mode: horizontal-tb;
@@ -68,13 +93,8 @@
   }
   .af-intro__col--lead {
     font-size: clamp(1.1875rem, 2vw, 1.375rem);
-    font-weight: 600;
-    line-height: 1.9;
-  }
-  .af-intro__col--emphasis {
     font-weight: 700;
-    font-size: clamp(1.25rem, 2.2vw, 1.5rem);
-    line-height: 1.95;
+    line-height: 1.9;
   }
   .af-intro__col p {
     margin: 0;
@@ -90,39 +110,98 @@
   .af-intro__col .af-intro__nowrap {
     white-space: nowrap;
   }
+  .af-intro__col--lead-sp {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .af-intro__bg {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .af-intro__bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 42%;
+      display: block;
+    }
+    .af-intro::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(145deg, rgba(251, 146, 60, 0.84) 0%, rgba(240, 160, 80, 0.8) 42%, rgba(252, 211, 77, 0.76) 100%);
+      pointer-events: none;
+    }
+  }
   @media (max-width: 767px) {
     .af-intro {
       padding: 48px 20px 56px;
+      background: linear-gradient(145deg, #fb923c 0%, var(--af-orange-mid) 42%, var(--af-orange-light) 100%);
     }
     .af-intro__label {
       margin-bottom: 32px;
     }
     .af-intro__columns {
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       min-height: unset;
       gap: 0;
     }
     .af-intro__col {
       writing-mode: horizontal-tb;
       text-orientation: mixed;
-      text-align: center;
+      text-align: left;
       width: 100%;
-      max-width: 22em;
+      max-width: none;
       font-size: 0.875rem;
       line-height: 1.55;
       letter-spacing: 0.03em;
       padding-bottom: 16px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.25);
       margin-bottom: 16px;
+      align-self: stretch;
     }
-    .af-intro__col--lead {
-      font-size: 0.9375rem;
-      line-height: 1.55;
+    /* 先頭コピーのみ縦書き（食べログ about SP FV イメージ） */
+    .af-intro__col--lead-pc {
+      display: none;
     }
-    .af-intro__col--emphasis {
-      font-size: 0.9375rem;
-      line-height: 1.55;
+    .af-intro__col--lead-sp {
+      display: block;
+    }
+    .af-intro__col--lead,
+    .af-intro__col--lead-sp {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      text-align: start;
+      width: auto;
+      max-width: none;
+      min-height: unset;
+      font-size: clamp(1.25rem, 5.5vw, 1.5rem);
+      font-weight: 400;
+      line-height: 1.85;
+      letter-spacing: 0.1em;
+      align-self: center;
+      padding: 0 0 28px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .af-intro__col--lead .af-intro__nowrap,
+    .af-intro__col--lead-sp .af-intro__nowrap {
+      white-space: nowrap;
+    }
+    .af-intro__col--lead p + p,
+    .af-intro__col--lead-sp p + p {
+      margin-block-start: 0.5em;
+    }
+    .af-intro__col--lead .af-intro__site-name,
+    .af-intro__col--lead-sp .af-intro__site-name {
+      font-weight: 400;
+      font-size: 1.35em;
     }
     .af-intro__col:last-child {
       border-bottom: none;
@@ -132,42 +211,52 @@
     .af-intro__col p + p {
       margin-block-start: 0.35em;
     }
-    .af-intro__col .af-intro__site-name {
-      font-size: 1.3em;
-    }
-    .af-intro__col .af-intro__nowrap {
+    .af-intro__col:not(.af-intro__col--lead):not(.af-intro__col--lead-sp) .af-intro__nowrap {
       white-space: normal;
     }
   }
 </style>
 
 <section class="af-intro" aria-label="ふらっと。について">
+  <div class="af-intro__bg" aria-hidden="true">
+    <img
+      src="https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/media/images/1782711857999_ayumi_header_bg_Image.webp?GoogleAccessId=firebase-adminsdk-fbsvc%40pixseo-1eeef.iam.gserviceaccount.com&amp;Expires=16447017600&amp;Signature=LR3N05oXbg9AvRe2%2FFeBQ8vpEfav%2BYuyySKI7SpK7XWyAxHIK3MKpCY3RJzN9fJksziWpDttPCVOxZWp13AhwKgDWkdZu%2BWlVOaiYQlpCTRRQPyjAzNU8552fZTK2Jx5TYghq2QE%2FCxESsO%2Br9PZRDaKdYMF4UpwKNmwNdFIzzSWswhO%2FKHGI8rnKMvXFoef%2FxCfIZQr5FCjCoeyzGyxvKg2KI5%2Bo237oVK6xkC7yUMniuAW6%2BQhZL06ZZ3wKRmdIXZ1rKCIOGFZECPOcFTq%2BGmA172qBeaj%2Baseg%2BK04%2B%2FLhjbEyNmUtlqNK06BUZHG7DTf6IgAX%2BjTS1NAzF55hw%3D%3D"
+      alt=""
+      width="1920"
+      height="1080"
+      decoding="async"
+    />
+  </div>
   <div class="af-intro__inner">
-    <p class="af-intro__label">ABOUT FLAT</p>
+    <p class="af-intro__label af-reveal">ABOUT FLAT</p>
     <div class="af-intro__columns">
-      <div class="af-intro__col af-intro__col--emphasis">
-        <p class="af-intro__nowrap">「探している情報がここにあった！」</p>
-        <p class="af-intro__nowrap">そう感じられるあたたかい場所にしていきます。</p>
+      <div class="af-intro__col af-intro__col--lead af-intro__col--lead-pc af-reveal" style="--af-reveal-delay: 80ms">
+        <p class="af-intro__nowrap"><span class="af-intro__site-name">ふらっと。</span>は、</p>
+        <p class="af-intro__nowrap">障害者やその家族、周りの人が心豊かに暮らすために、</p>
+        <p class="af-intro__nowrap">外出・生活・制度などの情報を集約した業界最大級のバリアフリー情報サイトです。</p>
       </div>
-      <div class="af-intro__col af-intro__col--emphasis">
-        <p class="af-intro__nowrap">「行ける場所」で妥協するのではなく、</p>
-        <p class="af-intro__nowrap">心から「行きたい！」と思えるおでかけを叶える。</p>
+      <div class="af-intro__col af-intro__col--lead af-intro__col--lead-sp af-reveal" style="--af-reveal-delay: 80ms">
+        <p class="af-intro__nowrap"><span class="af-intro__site-name">ふらっと。</span>は、</p>
+        <p class="af-intro__nowrap">障害者やその家族、</p>
+        <p class="af-intro__nowrap">周りの人が心豊かに暮らすために、</p>
+        <p class="af-intro__nowrap">外出・生活・制度などの情報を集約した</p>
+        <p class="af-intro__nowrap">業界最大級のバリアフリー情報サイトです。</p>
       </div>
-      <div class="af-intro__col">
+      <div class="af-intro__col af-reveal" style="--af-reveal-delay: 160ms">
+        <p class="af-intro__nowrap">運営は、障害当事者やその家族、医療・福祉の専門職など、さまざまな人が関わり合って日々情報を発信しています。</p>
+        <p class="af-intro__nowrap">当事者目線のリアルな情報が得られるので、より豊かな生活が手に入ります。</p>
+      </div>
+      <div class="af-intro__col af-reveal" style="--af-reveal-delay: 240ms">
         <p class="af-intro__nowrap">求めている情報が見つからないことで、</p>
         <p class="af-intro__nowrap">本人も周りも諦めてしまう、そんな世界を無くすために。</p>
       </div>
-      <div class="af-intro__col">
-        <p class="af-intro__nowrap">運営は、障害当事者やその家族、医療・福祉の専門職など、</p>
-        <p class="af-intro__nowrap">さまざまな人が関わり合って日々情報を発信しています。</p>
-        <p class="af-intro__nowrap">当事者目線のリアルな情報が得られるので、</p>
-        <p class="af-intro__nowrap">より豊かな生活が手に入ります。</p>
+      <div class="af-intro__col af-reveal" style="--af-reveal-delay: 320ms">
+        <p class="af-intro__nowrap">「行ける場所」で妥協するのではなく、</p>
+        <p class="af-intro__nowrap">心から「行きたい！」と思えるおでかけを叶える。</p>
       </div>
-      <div class="af-intro__col af-intro__col--lead">
-        <p class="af-intro__nowrap"><span class="af-intro__site-name">ふらっと。</span>は、</p>
-        <p class="af-intro__nowrap">障害者やその家族、周りの人が心豊かに暮らすために、</p>
-        <p class="af-intro__nowrap">外出・生活・制度などの情報を集約した</p>
-        <p class="af-intro__nowrap">業界最大級のバリアフリー情報サイトです。</p>
+      <div class="af-intro__col af-reveal" style="--af-reveal-delay: 400ms">
+        <p class="af-intro__nowrap">「探している情報がここにあった！」</p>
+        <p class="af-intro__nowrap">そう感じられるあたたかい場所にしていきます。</p>
       </div>
     </div>
   </div>
@@ -283,25 +372,23 @@
 
 <section class="af-features" aria-labelledby="af-features-heading">
   <div class="af-features__inner">
-    <h2 class="af-features__heading" id="af-features-heading">
+    <h2 class="af-features__heading af-reveal" id="af-features-heading">
       <span class="af-features__heading-en">FEATURES</span>
       <span class="af-features__heading-ja">ふらっとの特徴</span>
     </h2>
     <ul class="af-features__list">
-      <li class="af-features__item">
+      <li class="af-features__item af-reveal" style="--af-reveal-delay: 100ms">
         <div class="af-features__icon">
-          <!-- xxx（特徴1アイコン）を実URLに差し替え -->
-          <img class="af-features__icon-img" src="xxx" alt="" width="72" height="72" />
+          <img class="af-features__icon-img" src="https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/media/images/1780240489798_wheelchair.webp?GoogleAccessId=firebase-adminsdk-fbsvc%40pixseo-1eeef.iam.gserviceaccount.com&amp;Expires=16447017600&amp;Signature=JNSH977I%2BMzZ0lhfEH2%2FkBI3nRZjC5cSMNIzpIT6I705xmSJjkUbF2KZ67hB4WzvSUKfQWmMWVhjQL%2BGjNGhU6UQFkFWtqQ6vRmf1pO7kWpIrvnHvhEQwC3ByrGH85plCT1EM8EUd5Bvd%2FGVz6GVEt4JoV3beADw4XQXqEvozllZGai30LDlICDYbfIBJGvstpwRV1Z2zC7AZ%2F3ARLiR79xDk5MN4lpF%2B3Xr6ZtPwaiNAxIdNEDzkwr9EwvtP%2FirP5X9%2FJUtaOuNGJjAvuupojQ%2BgSUnvABZjmBuWZRI%2ByCemqVeUZF1DKC0IipijMG93vTB5pf1%2F7qYAmJA4yjMpg%3D%3D" alt="" width="72" height="72" />
         </div>
         <div>
           <h3 class="af-features__title">障害当事者や家族と共に運営</h3>
           <p class="af-features__body">障害当事者やその家族が取材・ライティング・校正/校閲・編集に参加。<br>「行きたいのに情報がない」を、現場や当事者の経験や情報提供から解決していきます。</p>
         </div>
       </li>
-      <li class="af-features__item">
+      <li class="af-features__item af-reveal" style="--af-reveal-delay: 220ms">
         <div class="af-features__icon">
-          <!-- xxx（特徴2アイコン）を実URLに差し替え -->
-          <img class="af-features__icon-img" src="xxx" alt="" width="72" height="72" />
+          <img class="af-features__icon-img" src="https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/media/images/1780240868852_pulse.webp?GoogleAccessId=firebase-adminsdk-fbsvc%40pixseo-1eeef.iam.gserviceaccount.com&amp;Expires=16447017600&amp;Signature=pPRfC%2FdnF6RdYSAXccBiQxjgHkx3a%2BKQotiG9jNd1d13x4g89rrbTOSo1BxM14OOIPiahEuQyLALKQ7AezHgRSekzbmlgJ9%2BV2N%2BQogGm93rvATnM7SnAvVay8ywRTi2AnheBaC2nPBMm1MUcSK4Osr%2BwoFr4hcPviwjy30ZEBW%2FY%2B4Ba21sTYhacGQv6NK%2FcV3Etn84Bc3xOI7zEfMSkj7ZIyT%2BU6sn9Td5Oby2xPkpZ2oycr7nTmsfx3vN3zkLSrjxLD4DOg4H0sS1VEpP1caKTRAxJY3lAeR8geuZ6sWqJMe0RlIFkqNTtBIr9pqGOIlmYDAbZChZcWLr96Uevw%3D%3D" alt="" width="72" height="72" />
         </div>
         <div>
           <h3 class="af-features__title"><mark>【月間PV10万突破】</mark>WEBアクセシビリティにも真摯に向き合います。</h3>
@@ -469,7 +556,7 @@
 
 <section class="af-target" aria-labelledby="af-target-heading">
   <div class="af-target__inner">
-    <div class="af-target__content">
+    <div class="af-target__content af-reveal">
       <h2 class="af-target__heading" id="af-target-heading"><span class="af-target__heading-mark" aria-hidden="true">■</span>外出の選択肢を増やしたい方へ</h2>
       <ul class="af-target__list">
         <li>行きたい場所のバリアフリー情報を、事前に確認したい</li>
@@ -481,11 +568,10 @@
         <span class="af-target__cta-arrow" aria-hidden="true">→</span>
       </a>
     </div>
-    <div class="af-target__visual">
-      <!-- メディアライブラリにアップ後、src="xxx" を実URLに差し替えてください -->
+    <div class="af-target__visual af-reveal" style="--af-reveal-delay: 140ms">
       <img
         class="af-target__mock"
-        src="xxx"
+        src="https://storage.googleapis.com/pixseo-1eeef.firebasestorage.app/media/images/1780241382239_mock.webp?GoogleAccessId=firebase-adminsdk-fbsvc%40pixseo-1eeef.iam.gserviceaccount.com&amp;Expires=16447017600&amp;Signature=Lrw6RShW58AYxTDmQtdtyufShrylkSAqYRaMj%2BzmtJxP1%2BZm%2FKMkPWCCLJ7a11Zz6IUifjc2fRw0l8JhaUOQOcz2Q8MsTELzBAOYJziUjnvS3Mxl2ETNxD5F6njCA39pA1Nu%2Fw7XS%2B2A%2FsEnOr5HfC%2BCoX%2BLBlxexMq%2FcFJUpxPpONymUl62VBud%2BrmD%2BMW5fKYnhcjge4Fs5JoSzYHyK9yQ1viCw85TirWc%2BxOrpzidEqMXeQ7mEZGMkvjemihmQjOus5cIC9m8SoAkQnFK9An2sh52mVJHtqUO2NwLnZuLZMOJ5G7eoDvZ5qAQYS9gJJOd%2Bv1HmYn1gfcpvzxJcA%3D%3D"
         alt="ふらっと。サイトのPC・スマートフォン表示イメージ"
         width="420"
         height="420"

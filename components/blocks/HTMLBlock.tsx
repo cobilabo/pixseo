@@ -6,6 +6,7 @@ import { Block, HTMLBlockConfig } from '@/types/block';
 import { Lang } from '@/types/lang';
 import { localizeHtmlLinks } from '@/lib/i18n/localize-html';
 import HtmlBlockSliderEnhancer from './HtmlBlockSliderEnhancer';
+import HtmlBlockScrollRevealEnhancer from './HtmlBlockScrollRevealEnhancer';
 
 interface HTMLBlockProps {
   block: Block;
@@ -22,6 +23,7 @@ export default function HTMLBlock({ block, lang = 'ja' }: HTMLBlockProps) {
     <div className="custom-html-block">
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <HtmlBlockSliderEnhancer />
+      <HtmlBlockScrollRevealEnhancer />
     </div>
   );
 }
