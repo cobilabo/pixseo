@@ -5,6 +5,14 @@ import { useLayoutEffect, useRef } from 'react';
 let scrollRevealObserver: IntersectionObserver | null = null;
 const observedElements = new WeakSet<Element>();
 
+function revealElement(element: Element): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      element.classList.add('is-visible');
+    });
+  });
+}
+
 function ensureScrollRevealObserver(): IntersectionObserver {
   if (scrollRevealObserver) return scrollRevealObserver;
 
@@ -12,14 +20,14 @@ function ensureScrollRevealObserver(): IntersectionObserver {
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
         scrollRevealObserver?.unobserve(entry.target);
+        revealElement(entry.target);
       });
     },
     {
       root: null,
-      rootMargin: '0px 0px -10% 0px',
-      threshold: 0.12,
+      rootMargin: '0px 0px -8% 0px',
+      threshold: 0.05,
     }
   );
 
@@ -44,9 +52,16 @@ export default function HtmlBlockScrollRevealEnhancer() {
 
   useLayoutEffect(() => {
     document.documentElement.classList.add('js-af-scroll-reveal');
-    registerScrollRevealTargets(document);
-    const container = anchorRef.current?.closest('.custom-html-block');
-    if (container) registerScrollRevealTargets(container);
+
+    const frameId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        registerScrollRevealTargets(document);
+        const container = anchorRef.current?.closest('.custom-html-block');
+        if (container) registerScrollRevealTargets(container);
+      });
+    });
+
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   return (

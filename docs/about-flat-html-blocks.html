@@ -15,18 +15,24 @@
      ============================================================ -->
 <style>
   @media (prefers-reduced-motion: no-preference) {
-    html.js-af-scroll-reveal .af-reveal:not(.is-visible) {
+    html.js-af-scroll-reveal .af-reveal {
       opacity: 0;
       transform: translate3d(0, 40px, 0);
-      transition:
-        opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-      transition-delay: var(--af-reveal-delay, 0ms);
-      will-change: opacity, transform;
     }
     html.js-af-scroll-reveal .af-reveal.is-visible {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
+      animation: af-reveal-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation-delay: var(--af-reveal-delay, 0ms);
+      will-change: opacity, transform;
+    }
+    @keyframes af-reveal-fade-up {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
     }
   }
   @media (prefers-reduced-motion: reduce) {
