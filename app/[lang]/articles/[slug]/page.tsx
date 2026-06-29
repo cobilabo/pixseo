@@ -516,7 +516,7 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* 目次（コンテンツ内にインライン目次がない場合のみ表示） */}
             {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 &&
               !(typeof article.content === 'string' && article.content.includes('toc-placeholder')) && (
-              <TableOfContents items={article.tableOfContents} faviconUrl={rawSiteInfo.faviconUrl} lang={lang} />
+              <TableOfContents items={article.tableOfContents} lang={lang} />
             )}
 
             {/* 記事本文 */}
@@ -527,7 +527,6 @@ export default async function ArticlePage({ params }: PageProps) {
                 internalLinkStyle={theme.articleSettings?.internalLinkStyle || 'text'}
                 lang={lang}
                 siteHost={siteHost}
-                faviconUrl={rawSiteInfo.faviconUrl}
               />
             </article>
 

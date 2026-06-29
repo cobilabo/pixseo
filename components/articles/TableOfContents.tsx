@@ -5,15 +5,13 @@ import { Lang } from '@/types/lang';
 import { t } from '@/lib/i18n/translations';
 import { normalizeTocDisplayText } from '@/lib/article-utils';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 interface TableOfContentsProps {
   items: TableOfContentsItem[];
-  faviconUrl?: string;
   lang?: Lang;
 }
 
-export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: TableOfContentsProps) {
+export default function TableOfContents({ items, lang = 'ja' }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
   // デフォルトで開いた状態にする（記事間で開閉挙動を統一）
   const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -63,23 +61,7 @@ export default function TableOfContents({ items, faviconUrl, lang = 'ja' }: Tabl
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between w-full ${isOpen ? 'mb-4 pb-3 border-b border-gray-200' : ''}`}
       >
-        <div className="flex items-center gap-2">
-          {faviconUrl ? (
-            <Image
-              src={faviconUrl}
-              alt="アイコン"
-              width={24}
-              height={24}
-              className="w-6 h-6"
-              unoptimized={faviconUrl.endsWith('.svg')}
-            />
-          ) : (
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h7" />
-            </svg>
-          )}
-          <h2 className="text-lg font-bold text-gray-900">{t('article.toc', lang)}</h2>
-        </div>
+        <h2 className="text-lg font-bold text-gray-900">{t('article.toc', lang)}</h2>
         <svg 
           className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none" 

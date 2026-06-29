@@ -22,8 +22,6 @@ interface ArticleContentProps {
   internalLinkStyle?: InternalLinkStyle;
   lang?: Lang;
   siteHost?: string;
-  /** 目次プレースホルダーを記事本文中に差し替える際にヘッダに表示するファビコン */
-  faviconUrl?: string;
 }
 
 function injectHeadingIds(
@@ -66,7 +64,6 @@ export default function ArticleContent({
   internalLinkStyle = 'text',
   lang = 'ja',
   siteHost = '',
-  faviconUrl,
 }: ArticleContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -282,7 +279,6 @@ export default function ArticleContent({
         return (
           <TableOfContents
             items={Array.isArray(tableOfContents) ? tableOfContents : []}
-            faviconUrl={faviconUrl}
             lang={lang}
           />
         );
@@ -343,7 +339,6 @@ export default function ArticleContent({
         <TableOfContents
           key={`toc-${index}`}
           items={tocItems}
-          faviconUrl={faviconUrl}
           lang={lang}
         />
       );
