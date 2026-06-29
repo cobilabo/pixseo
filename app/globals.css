@@ -125,7 +125,7 @@ body {
 /* 記事本文：スマホでは行間・余白をやや詰める（JS注入前の初期表示用） */
 @media (max-width: 767px) {
   .article-content.prose {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.75;
   }
 
