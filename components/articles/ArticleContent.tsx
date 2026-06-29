@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
-import parse, { DOMNode, Element } from 'html-react-parser';
+import parse, { DOMNode, Element, domToReact } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
 import ShortCodeRenderer from './ShortCodeRenderer';
@@ -183,15 +183,23 @@ export default function ArticleContent({
       // 画像: next.config で許可されたホストのみ Next/Image（それ以外は <img> で未設定ホストエラーを防ぐ）
       if (domNode.name === 'img' && domNode.attribs?.src) {
         const { src, alt = '' } = domNode.attribs;
+        const parent = domNode.parent as Element | undefined;
+        const insideAnchor = parent?.name === 'a';
+        const width = parseInt(domNode.attribs.width || '', 10) || 800;
+        const height = parseInt(domNode.attribs.height || '', 10) || 450;
+        const wrapperClass = insideAnchor ? 'inline-block' : 'block my-6';
+        const imageClass = insideAnchor
+          ? 'h-auto max-w-full'
+          : 'rounded-lg w-full h-auto';
 
         if (!isSrcAllowedForNextImage(src)) {
           return (
-            <span className="block my-6">
+            <span className={wrapperClass}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
                 alt={alt}
-                className="rounded-lg w-full h-auto"
+                className={imageClass}
                 loading="lazy"
               />
             </span>
@@ -199,13 +207,13 @@ export default function ArticleContent({
         }
 
         return (
-          <span className="block my-6">
+          <span className={wrapperClass}>
             <Image
               src={src}
               alt={alt}
-              width={800}
-              height={450}
-              className="rounded-lg w-full h-auto"
+              width={width}
+              height={height}
+              className={imageClass}
               loading="lazy"
             />
           </span>
@@ -235,18 +243,22 @@ export default function ArticleContent({
           return <BlogCard href={newHref} lang={lang} />;
         }
 
-        // リンクの内容を抽出（Google Docs 由来の <a><span>…</span></a> も含む）
-        const linkText =
-          (domNode.children
-            ? Array.isArray(domNode.children)
-              ? domNode.children.map(extractDomNodeText).join('')
-              : extractDomNodeText(domNode.children)
-            : '') || newHref;
-
         // HTML の style 文字列・class を React 用に変換（style 文字列は React 19 で #62 エラーになる）
         const linkProps = htmlAttribsToReactProps(anchorAttribs);
         const isExternal = isExternalLinkHref(newHref, siteHost);
         const { target: _target, rel: _rel, ...restLinkProps } = linkProps;
+
+        const linkChildren = domNode.children
+          ? Array.isArray(domNode.children)
+            ? domNode.children
+            : [domNode.children]
+          : [];
+        const linkContent = domToReact(linkChildren as DOMNode[], options);
+        const fallbackContent =
+          !linkContent ||
+          (Array.isArray(linkContent) && linkContent.length === 0)
+            ? newHref
+            : linkContent;
 
         return (
           <a
@@ -256,7 +268,7 @@ export default function ArticleContent({
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
           >
-            {linkText}
+            {fallbackContent}
           </a>
         );
       }
