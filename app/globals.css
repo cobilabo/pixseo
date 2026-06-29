@@ -122,6 +122,34 @@ body {
   @apply bg-gray-50;
 }
 
+/* 記事本文：スマホでは行間・余白をやや詰める（JS注入前の初期表示用） */
+@media (max-width: 767px) {
+  .article-content.prose {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+  }
+
+  .article-content.prose p {
+    line-height: 1.75;
+    margin-bottom: 1em;
+  }
+
+  .article-content.prose h2 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .article-content.prose h3 {
+    margin-top: 1.25em;
+    margin-bottom: 0.6em;
+  }
+
+  .article-content.prose h4 {
+    margin-top: 1.1em;
+    margin-bottom: 0.5em;
+  }
+}
+
 /* 参照元のスタイル（目立たないように） */
 .prose .reference {
   @apply text-xs text-gray-400 italic pl-6 border-l-2 border-gray-200 my-4;

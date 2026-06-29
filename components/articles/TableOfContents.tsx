@@ -56,12 +56,12 @@ export default function TableOfContents({ items, lang = 'ja' }: TableOfContentsP
   };
 
   return (
-    <div className="toc-card not-prose bg-white rounded-xl shadow-md border-l-3 border-blue-600 p-5 mb-6">
+    <div className="toc-card not-prose bg-white rounded-xl shadow-md border-l-3 border-blue-600 p-4 md:p-5 mb-4 md:mb-6">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between w-full ${isOpen ? 'mb-4 pb-3 border-b border-gray-200' : ''}`}
       >
-        <h2 className="text-lg font-bold text-gray-900">{t('article.toc', lang)}</h2>
+        <h2 className="text-base md:text-lg font-bold text-gray-900">{t('article.toc', lang)}</h2>
         <svg 
           className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none" 

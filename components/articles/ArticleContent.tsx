@@ -184,7 +184,7 @@ export default function ArticleContent({
         const insideAnchor = parent?.name === 'a';
         const width = parseInt(domNode.attribs.width || '', 10) || 800;
         const height = parseInt(domNode.attribs.height || '', 10) || 450;
-        const wrapperClass = insideAnchor ? 'inline-block' : 'block my-6';
+        const wrapperClass = insideAnchor ? 'inline-block' : 'block my-4 md:my-6';
         const imageClass = insideAnchor
           ? 'h-auto max-w-full'
           : 'rounded-lg w-full h-auto';
@@ -361,7 +361,7 @@ export default function ArticleContent({
   // セグメント分割が必要なケース（BlogCard / 目次プレースホルダー / 埋め込み）
   if (mustSegment) {
     return (
-      <div ref={contentRef} className="prose prose-lg max-w-none article-content">
+      <div ref={contentRef} className="prose md:prose-lg max-w-none article-content">
         {contentSegments.map(renderSegment)}
       </div>
     );
@@ -369,7 +369,7 @@ export default function ArticleContent({
 
   // 通常のパース処理
   return (
-    <div ref={contentRef} className="prose prose-lg max-w-none article-content">
+    <div ref={contentRef} className="prose md:prose-lg max-w-none article-content">
       {parse(processedContent, options)}
     </div>
   );
@@ -608,6 +608,56 @@ if (typeof window !== 'undefined') {
       border-top: 1px solid #e5e7eb !important;
       padding-top: 0.375rem !important;
       margin-top: 0.375rem !important;
+    }
+    @media (max-width: 767px) {
+      .article-content {
+        font-size: 0.9375rem !important;
+        line-height: 1.75 !important;
+      }
+      .article-content p {
+        line-height: 1.75 !important;
+        margin-bottom: 1em !important;
+      }
+      .article-content h2 {
+        font-size: 1.2em !important;
+        margin-top: 1.5em !important;
+        margin-bottom: 0.75em !important;
+        padding-bottom: 0.35em !important;
+      }
+      .article-content h2::after {
+        height: 4px !important;
+      }
+      .article-content h3 {
+        font-size: 1.1em !important;
+        margin-top: 1.25em !important;
+        margin-bottom: 0.6em !important;
+        padding-bottom: 0.35em !important;
+      }
+      .article-content h3::after {
+        height: 2px !important;
+      }
+      .article-content h4 {
+        font-size: 1.05em !important;
+        margin-top: 1.1em !important;
+        margin-bottom: 0.5em !important;
+      }
+      .article-content ul,
+      .article-content ol {
+        line-height: 1.75 !important;
+      }
+      .article-content li {
+        margin-bottom: 0.5em !important;
+        padding: 0.5em 0.75em !important;
+        font-size: 0.9375em !important;
+      }
+      .article-content table {
+        margin: 1.25em 0 !important;
+        font-size: 0.8125em !important;
+      }
+      .article-content table th,
+      .article-content table td {
+        padding: 0.5em 0.75em !important;
+      }
     }
     /* BlogCard専用スタイルリセット */
     .article-content .blogcard-wrapper {

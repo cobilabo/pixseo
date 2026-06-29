@@ -520,7 +520,7 @@ export default async function ArticlePage({ params }: PageProps) {
             )}
 
             {/* 記事本文 */}
-            <article className="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
+            <article className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 mb-6 md:mb-8">
               <ArticleContent 
                 content={typeof article.content === 'string' ? article.content : ''} 
                 tableOfContents={Array.isArray(article.tableOfContents) ? article.tableOfContents : []}
