@@ -135,6 +135,7 @@ export default async function TagPage({ params }: PageProps) {
   
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
+  const hasTagFvHeading = Boolean(rawTheme.firstView && theme.firstView?.imageUrl);
   const categories = allCategories.filter(cat => !mediaId || cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang));
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
@@ -216,6 +217,12 @@ export default async function TagPage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1 lg:w-[70%]">
             <section>
+              {!hasTagFvHeading && (
+                <div className="text-center mb-8">
+                  <h1 className="text-xl font-bold text-gray-900 mb-1">{tag.name}</h1>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">TAG</p>
+                </div>
+              )}
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>

@@ -112,6 +112,7 @@ export default async function WriterPage({ params }: PageProps) {
 
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
+  const hasWriterFvHeading = Boolean(rawTheme.firstView && (rawWriter.icon || rawWriter.backgroundImage));
   const headerCategories = mediaId ? allCategories.filter(cat => cat.mediaId === mediaId).map(cat => localizeCategory(cat, lang)) : allCategories.map(cat => localizeCategory(cat, lang));
   const categoriesWithCount = allCategoriesWithCount
     .filter(cat => !mediaId || cat.mediaId === mediaId)
@@ -182,6 +183,11 @@ export default async function WriterPage({ params }: PageProps) {
             {writer.bio && (
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <p className="text-gray-700 whitespace-pre-line">{writer.bio}</p>
+              </div>
+            )}
+            {!hasWriterFvHeading && (
+              <div className="text-center mb-8">
+                <h1 className="text-xl font-bold text-gray-900 mb-1">{writer.handleName}</h1>
               </div>
             )}
             <section>

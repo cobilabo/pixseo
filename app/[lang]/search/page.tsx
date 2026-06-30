@@ -134,6 +134,7 @@ export default async function SearchPage({ params }: PageProps) {
   // 多言語化
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
+  const hasSearchFvHeading = Boolean(rawTheme.firstView && theme.firstView?.imageUrl);
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
@@ -221,6 +222,12 @@ export default async function SearchPage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* メインカラム（70%） */}
           <div className="flex-1 lg:w-[70%]">
+            {!hasSearchFvHeading && (
+              <div className="text-center mb-8">
+                <h1 className="text-xl font-bold text-gray-900 mb-1">{t('meta.search', lang)}</h1>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">{t('meta.searchMeta', lang)}</p>
+              </div>
+            )}
             {/* 検索コンテンツ */}
             <Suspense fallback={<div className="text-center py-12">読み込み中...</div>}>
               <SearchContent faviconUrl={rawSiteInfo.faviconUrl} mediaId={mediaId || undefined} lang={lang} tags={tags} layoutTheme={rawTheme.layoutTheme} />

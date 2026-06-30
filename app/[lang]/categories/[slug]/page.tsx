@@ -146,6 +146,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // 多言語化
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
+  const hasCategoryFvHeading = Boolean(rawTheme.firstView && rawCategory.imageUrl);
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
@@ -269,7 +270,11 @@ export default async function CategoryPage({ params }: PageProps) {
 
             <section>
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{category.name}</h2>
+                {hasCategoryFvHeading ? (
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">{category.name}</h2>
+                ) : (
+                  <h1 className="text-xl font-bold text-gray-900 mb-1">{category.name}</h1>
+                )}
                 <p className="text-xs text-gray-500 uppercase tracking-wider">CATEGORY</p>
               </div>
               {localizedArticles.length > 0 ? (

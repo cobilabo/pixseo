@@ -136,6 +136,7 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
   // 多言語化
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const theme = localizeTheme(rawTheme, lang);
+  const hasArticlesFvHeading = Boolean(rawTheme.firstView && theme.firstView?.imageUrl);
   const categories = allCategories
     .filter(cat => !mediaId || cat.mediaId === mediaId)
     .map(cat => localizeCategory(cat, lang));
@@ -243,6 +244,12 @@ export default async function ArticlesPage({ params, searchParams }: PageProps) 
           <div className="flex-1 lg:w-[70%]">
             {/* 記事一覧 */}
             <section>
+              {!hasArticlesFvHeading && (
+                <div className="text-center mb-8">
+                  <h1 className="text-xl font-bold text-gray-900 mb-1">{t('meta.articleList', lang)}</h1>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">ARTICLES</p>
+                </div>
+              )}
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-1">{t('section.recentArticles', lang)}</h2>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('section.recentArticlesEn', lang)}</p>

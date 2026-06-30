@@ -210,9 +210,13 @@ export default async function FixedPage({ params }: PageProps) {
           <link key={i} rel="stylesheet" href={href} />
         ))}
         {rawPage.useBlockBuilder && rawPage.blocks ? (
-          <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} semanticLandmarks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          <>
+            <h1 className="sr-only">{page.title}</h1>
+            <BlockRenderer blocks={rawPage.blocks} isMobile={isMobile} showPanel={false} lang={lang} layoutTheme={rawTheme.layoutTheme} recaptchaConfig={recaptchaConfig} semanticLandmarks searchData={{ tags: sidebarTags, categories, featuredTags, popularTags: popularSearchTags, popularKeywords: popularSearchKeywords, mediaId: mediaId || undefined }} />
+          </>
         ) : (
           <main id="main-content">
+            <h1 className="sr-only">{page.title}</h1>
             <div 
               className="prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ __html: page.content }}
