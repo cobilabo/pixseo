@@ -13,9 +13,10 @@ export function localizeHtmlLinks(html: string, lang: Lang): string {
   let result = html.replace(regex, `$1/${lang}/`);
 
   // Also handle links without language prefix (e.g. href="/contact/")
-  // but only internal links (starting with /) that are NOT already prefixed
+  // but only internal links (starting with /) that are NOT already prefixed.
+  // NOTE: href="/ja" or href="/ja/" must not become href="/ja/ja" (lang code alone).
   result = result.replace(
-    /(href=["'])\/((?!(?:en|ja|zh|ko)\/)[^"']*["'])/g,
+    /(href=["'])\/((?!(?:en|ja|zh|ko)(?:\/|["']))[^"']*["'])/g,
     `$1/${lang}/$2`
   );
 

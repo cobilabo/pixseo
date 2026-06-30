@@ -144,6 +144,14 @@ export function normalizeInternalHref(href: string, ctx: InternalLinkContext): s
     return `/${ctx.defaultLang || DEFAULT_LANG}/`;
   }
 
+  // localizeHtmlLinks 由来の二重言語プレフィックス (/ja/ja/ 等)
+  const doubleLang = h.match(new RegExp(`^\\/(${LANG_PATTERN})\\/\\1(?:\\/([^?#]*))?\\/?$`, 'i'));
+  if (doubleLang && isValidLang(doubleLang[1].toLowerCase())) {
+    const langCode = doubleLang[1].toLowerCase();
+    const tail = doubleLang[2]?.replace(/\/+$/, '');
+    return tail ? `/${langCode}/${tail}/` : `/${langCode}/`;
+  }
+
   // 言語なし /articles/slug
   const legacyArticle = h.match(/^\/articles\/([^/?#]+)\/?/);
   if (legacyArticle) {

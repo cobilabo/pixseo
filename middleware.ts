@@ -168,6 +168,19 @@ export async function middleware(request: NextRequest) {
   
   // すでに言語パスが含まれている場合
   if (firstSegment && isValidLang(firstSegment)) {
+    // /ja/ja/ など二重言語プレフィックス → /ja/
+    if (pathSegments[1] === firstSegment) {
+      const url = request.nextUrl.clone();
+      const rest = pathSegments.slice(2).join('/');
+      url.pathname = withTrailingSlash(rest ? `/${firstSegment}/${rest}` : `/${firstSegment}`);
+      return NextResponse.redirect(url, { status: 301 });
+    }
+    // 旧固定ページ slug（記事未移行分）→ 記事へ
+    if (pathSegments.length === 2 && pathSegments[1] === 'communication-board') {
+      const url = request.nextUrl.clone();
+      url.pathname = withTrailingSlash(`/${firstSegment}/articles/denwaonegai`);
+      return NextResponse.redirect(url, { status: 301 });
+    }
     // /[lang]/home → /[lang]/ にリダイレクト（home固定ページは / で表示）
     if (pathSegments[1] === 'home') {
       const url = request.nextUrl.clone();
