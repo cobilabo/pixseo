@@ -15,6 +15,9 @@ import ImageGenerator from './ImageGenerator';
 import { normalizePastedHtml } from '@/lib/normalize-pasted-html';
 import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
 
+/** 記事本文エディタの HTML ソース全文編集タブ（一旦オフ・再有効化時は true に） */
+const ENABLE_EDITOR_HTML_SOURCE_VIEW = false;
+
 /** 目次プレースホルダー（エディタ内表示用・保存時は normalizeTocPlaceholder で簡略化されうる） */
 const TOC_PLACEHOLDER_EDITOR_INNER_HTML = `<div class="toc-placeholder-inner"><div class="toc-placeholder-header"><span class="toc-placeholder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg></span><span class="toc-placeholder-title">目次</span></div><p class="toc-placeholder-desc">記事内の見出し（H2・H3）から自動生成されます</p><button type="button" class="toc-placeholder-delete" data-action="delete-toc" title="目次を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div>`;
 
@@ -411,7 +414,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // 親の value が簡略マーカーのままだと装飾後 DOM と常に不一致になり、毎回 innerHTML を潰すため
   // 「親から渡された value が変わったときだけ」貼り直し、装飾後は onChange で親を揃える。
   useLayoutEffect(() => {
-    if (editorViewMode === 'source') {
+    if (ENABLE_EDITOR_HTML_SOURCE_VIEW && editorViewMode === 'source') {
       if (lastCanonicalHtmlRef.current !== value) {
         setSourceHtml(value);
         lastCanonicalHtmlRef.current = value;
@@ -444,7 +447,12 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
-    if (!editorRef.current || editorViewMode !== 'visual') return;
+    if (
+      !editorRef.current ||
+      (ENABLE_EDITOR_HTML_SOURCE_VIEW && editorViewMode !== 'visual')
+    ) {
+      return;
+    }
     const figures = collectImageFigureRoots(editorRef.current);
 
     figures.forEach((figure) => {
@@ -515,8 +523,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // 既存のHTMLブロックを検出して初期化
   useEffect(() => {
-    if (!editorRef.current || editorViewMode !== 'visual') return;
-    
+    if (
+      !editorRef.current ||
+      (ENABLE_EDITOR_HTML_SOURCE_VIEW && editorViewMode !== 'visual')
+    ) {
+      return;
+    }
+
     const htmlBlocks = editorRef.current.querySelectorAll('.html-block[data-html-id]');
     const newModes: Record<string, 'source' | 'preview'> = {};
     
@@ -1762,7 +1775,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   return (
     <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
       {/* フローティングツールバー（選択時/カーソル移動時） */}
-      {showToolbar && editorViewMode === 'visual' && (
+      {showToolbar &&
+        (!ENABLE_EDITOR_HTML_SOURCE_VIEW || editorViewMode === 'visual') && (
         <div
           className="fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 animate-fadeIn"
           style={{ 
@@ -1846,38 +1860,39 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         </div>
       )}
 
-      {/* ビジュアル / HTMLソース 切り替え */}
-      <div className="flex items-center gap-1 mb-2 border-b border-gray-200 pb-2">
-        <button
-          type="button"
-          onClick={() => switchEditorView('visual')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            editorViewMode === 'visual'
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          ビジュアル
-        </button>
-        <button
-          type="button"
-          onClick={() => switchEditorView('source')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            editorViewMode === 'source'
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          HTMLソース
-        </button>
-        {editorViewMode === 'source' && (
-          <span className="ml-2 text-xs text-gray-500">HTMLを直接編集できます</span>
-        )}
-      </div>
+      {ENABLE_EDITOR_HTML_SOURCE_VIEW && (
+        <div className="flex items-center gap-1 mb-2 border-b border-gray-200 pb-2">
+          <button
+            type="button"
+            onClick={() => switchEditorView('visual')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              editorViewMode === 'visual'
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            ビジュアル
+          </button>
+          <button
+            type="button"
+            onClick={() => switchEditorView('source')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              editorViewMode === 'source'
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            HTMLソース
+          </button>
+          {editorViewMode === 'source' && (
+            <span className="ml-2 text-xs text-gray-500">HTMLを直接編集できます</span>
+          )}
+        </div>
+      )}
 
       {/* エディター */}
       <div className="relative" style={{ minHeight: '500px' }}>
-        {editorViewMode === 'source' ? (
+        {ENABLE_EDITOR_HTML_SOURCE_VIEW && editorViewMode === 'source' ? (
           <textarea
             value={sourceHtml}
             onChange={(e) => handleSourceHtmlChange(e.target.value)}
@@ -1888,8 +1903,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         ) : null}
         <div
           ref={editorRef}
-          contentEditable={editorViewMode === 'visual'}
-          suppressContentEditableWarning
+          contentEditable={
+            !ENABLE_EDITOR_HTML_SOURCE_VIEW || editorViewMode === 'visual'
+          }
+          suppressContentEditableWarning={ENABLE_EDITOR_HTML_SOURCE_VIEW}
           onInput={handleInput}
           onPaste={handlePaste}
           onKeyDown={handleEditorKeyDown}
@@ -1927,7 +1944,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             }
           }}
           className={`min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content ${
-            editorViewMode === 'source' ? 'hidden' : ''
+            ENABLE_EDITOR_HTML_SOURCE_VIEW && editorViewMode === 'source'
+              ? 'hidden'
+              : ''
           }`}
           style={{
             whiteSpace: 'pre-wrap',
