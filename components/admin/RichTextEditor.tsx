@@ -217,6 +217,58 @@ function canonicalEditorInnerHtml(root: HTMLElement): string {
   return clone.innerHTML;
 }
 
+/** 保存用 HTML（画像編集ボタン除去 + インライン font-size 除去） */
+function extractCanonicalHtmlFromEditor(root: HTMLElement): string {
+  return stripInlineFontSizesFromHtml(canonicalEditorInnerHtml(root));
+}
+
+type EditorViewMode = 'visual' | 'source';
+
+/** HTMLフォーマッター（ブロック編集・全文ソース表示用） */
+function formatHtml(html: string): string {
+  if (!html || typeof html !== 'string') return '';
+
+  let formatted = html;
+  let indent = 0;
+  const indentSize = 2;
+
+  formatted = formatted
+    .replace(/></g, '>\n<')
+    .replace(/\n\s*\n+/g, '\n');
+
+  const lines = formatted.split('\n');
+  const formattedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line && i > 0 && i < lines.length - 1) {
+      formattedLines.push('');
+      continue;
+    }
+    if (!line) continue;
+
+    if (line.startsWith('</')) {
+      indent = Math.max(0, indent - indentSize);
+    }
+
+    formattedLines.push(' '.repeat(indent) + line);
+
+    if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>') && !line.includes('</')) {
+      if (!line.match(/<(script|style|textarea|pre)/i)) {
+        indent += indentSize;
+      }
+    }
+
+    if (line.startsWith('</')) {
+      if (i < lines.length - 1 && !lines[i + 1].trim().startsWith('</')) {
+        indent = Math.max(0, indent - indentSize);
+      }
+    }
+  }
+
+  return formattedLines.join('\n');
+}
+
 /** 選択範囲に重なるテキスト区間（各區間は単一 Text ノード内 → surroundContents が常に成功） */
 function collectTextSegmentsInRange(range: Range): { t: Text; start: number; end: number }[] {
   const segments: { t: Text; start: number; end: number }[] = [];
@@ -313,6 +365,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const fontSizeSavedRangeRef = useRef<Range | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const [editorViewMode, setEditorViewMode] = useState<EditorViewMode>('visual');
+  const [sourceHtml, setSourceHtml] = useState(value);
 
   openImageFigureEditRef.current = (figure: HTMLElement) => {
     const img = figure.querySelector('img');
@@ -357,6 +411,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   // 親の value が簡略マーカーのままだと装飾後 DOM と常に不一致になり、毎回 innerHTML を潰すため
   // 「親から渡された value が変わったときだけ」貼り直し、装飾後は onChange で親を揃える。
   useLayoutEffect(() => {
+    if (editorViewMode === 'source') {
+      if (lastCanonicalHtmlRef.current !== value) {
+        setSourceHtml(value);
+        lastCanonicalHtmlRef.current = value;
+      }
+      return;
+    }
+
     if (!editorRef.current) return;
     const ed = editorRef.current;
     const prevCanonical = lastCanonicalHtmlRef.current;
@@ -378,11 +440,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
 
     lastCanonicalHtmlRef.current = canonical;
-  }, [value]);
+  }, [value, editorViewMode]);
 
   // .image-figure に編集・削除ボタンを注入（保存時には除去される）
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || editorViewMode !== 'visual') return;
     const figures = collectImageFigureRoots(editorRef.current);
 
     figures.forEach((figure) => {
@@ -411,7 +473,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         figure.appendChild(btn);
       }
     });
-  }, [value]);
+  }, [value, editorViewMode]);
 
   /** 画像ブロック: capture で window から composedPath を辿り、figure 直付けより確実に拾う */
   useEffect(() => {
@@ -453,7 +515,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // 既存のHTMLブロックを検出して初期化
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || editorViewMode !== 'visual') return;
     
     const htmlBlocks = editorRef.current.querySelectorAll('.html-block[data-html-id]');
     const newModes: Record<string, 'source' | 'preview'> = {};
@@ -485,7 +547,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     if (Object.keys(newModes).length > 0) {
       setHtmlBlockModes(prev => ({ ...prev, ...newModes }));
     }
-  }, [value, htmlBlockModes]);
+  }, [value, htmlBlockModes, editorViewMode]);
 
   // HTMLブロック内のイベントを処理
   useEffect(() => {
@@ -849,14 +911,43 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   const handleInput = () => {
     if (editorRef.current) {
-      // 保存前に注入した画像編集・削除ボタンを除去してクリーンなHTMLを保存
-      const clone = editorRef.current.cloneNode(true) as HTMLElement;
-      clone
-        .querySelectorAll('.image-figure-delete-btn, .image-figure-edit-btn')
-        .forEach((btn) => btn.remove());
-      const html = stripInlineFontSizesFromHtml(clone.innerHTML);
+      const html = extractCanonicalHtmlFromEditor(editorRef.current);
       onChange(html);
     }
+  };
+
+  const switchEditorView = (mode: EditorViewMode) => {
+    if (mode === editorViewMode) return;
+
+    if (mode === 'source') {
+      const html = editorRef.current
+        ? extractCanonicalHtmlFromEditor(editorRef.current)
+        : value;
+      setSourceHtml(formatHtml(html));
+      lastCanonicalHtmlRef.current = html;
+      onChangeRef.current(html);
+      setShowToolbar(false);
+      setEditorViewMode('source');
+      return;
+    }
+
+    const ed = editorRef.current;
+    if (ed) {
+      ed.innerHTML = sourceHtml;
+      ensureTocPlaceholderChrome(ed);
+      const canonical = extractCanonicalHtmlFromEditor(ed);
+      lastCanonicalHtmlRef.current = canonical;
+      if (canonical !== value) {
+        onChangeRef.current(canonical);
+      }
+    }
+    setEditorViewMode('visual');
+  };
+
+  const handleSourceHtmlChange = (html: string) => {
+    setSourceHtml(html);
+    lastCanonicalHtmlRef.current = html;
+    onChangeRef.current(html);
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
@@ -1009,52 +1100,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     setEditImageAlt('');
     setEditImageCaption('');
     setEditImageCopyright('');
-  };
-
-  // HTMLフォーマッター（ブロック編集用）
-  const formatHtml = (html: string): string => {
-    if (!html || typeof html !== 'string') return '';
-    
-    let formatted = html;
-    let indent = 0;
-    const indentSize = 2;
-    
-    // タグの前後に改行を追加
-    formatted = formatted
-      .replace(/></g, '>\n<')
-      .replace(/\n\s*\n+/g, '\n');
-    
-    const lines = formatted.split('\n');
-    const formattedLines: string[] = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line && i > 0 && i < lines.length - 1) {
-        formattedLines.push('');
-        continue;
-      }
-      if (!line) continue;
-      
-      if (line.startsWith('</')) {
-        indent = Math.max(0, indent - indentSize);
-      }
-      
-      formattedLines.push(' '.repeat(indent) + line);
-      
-      if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>') && !line.includes('</')) {
-        if (!line.match(/<(script|style|textarea|pre)/i)) {
-          indent += indentSize;
-        }
-      }
-      
-      if (line.startsWith('</')) {
-        if (i < lines.length - 1 && !lines[i + 1].trim().startsWith('</')) {
-          indent = Math.max(0, indent - indentSize);
-        }
-      }
-    }
-    
-    return formattedLines.join('\n');
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
@@ -1717,7 +1762,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   return (
     <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
       {/* フローティングツールバー（選択時/カーソル移動時） */}
-      {showToolbar && (
+      {showToolbar && editorViewMode === 'visual' && (
         <div
           className="fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-custom p-2 flex gap-1 animate-fadeIn"
           style={{ 
@@ -1801,11 +1846,50 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         </div>
       )}
 
+      {/* ビジュアル / HTMLソース 切り替え */}
+      <div className="flex items-center gap-1 mb-2 border-b border-gray-200 pb-2">
+        <button
+          type="button"
+          onClick={() => switchEditorView('visual')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            editorViewMode === 'visual'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          ビジュアル
+        </button>
+        <button
+          type="button"
+          onClick={() => switchEditorView('source')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            editorViewMode === 'source'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          HTMLソース
+        </button>
+        {editorViewMode === 'source' && (
+          <span className="ml-2 text-xs text-gray-500">HTMLを直接編集できます</span>
+        )}
+      </div>
+
       {/* エディター */}
       <div className="relative" style={{ minHeight: '500px' }}>
+        {editorViewMode === 'source' ? (
+          <textarea
+            value={sourceHtml}
+            onChange={(e) => handleSourceHtmlChange(e.target.value)}
+            className="min-h-[500px] w-full p-4 font-mono text-sm leading-relaxed text-gray-800 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+            spellCheck={false}
+            aria-label="記事本文 HTMLソース"
+          />
+        ) : null}
         <div
           ref={editorRef}
-          contentEditable
+          contentEditable={editorViewMode === 'visual'}
+          suppressContentEditableWarning
           onInput={handleInput}
           onPaste={handlePaste}
           onKeyDown={handleEditorKeyDown}
@@ -1842,7 +1926,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               setDraggingBlockId(null);
             }
           }}
-          className="min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content"
+          className={`min-h-[500px] p-6 focus:outline-none prose prose-lg max-w-none bg-white border border-gray-300 rounded-xl article-content ${
+            editorViewMode === 'source' ? 'hidden' : ''
+          }`}
           style={{
             whiteSpace: 'pre-wrap',
             color: theme.textColor,
