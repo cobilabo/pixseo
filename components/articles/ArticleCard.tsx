@@ -17,7 +17,7 @@ export default function ArticleCard({ article, lang = 'ja' }: ArticleCardProps) 
       className="block bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
     >
       {article.featuredImage && (
-        <div className="relative w-full h-48 bg-gray-200">
+        <div className="relative w-full aspect-featured bg-gray-200">
           <Image
             src={article.featuredImage}
             alt={article.title}

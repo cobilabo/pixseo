@@ -32,7 +32,7 @@ function SidebarArticleCard({
       className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
     >
       {article.featuredImage ? (
-        <div className="relative w-full aspect-video bg-gray-200">
+        <div className="relative w-full aspect-featured bg-gray-200">
           <Image
             src={article.featuredImage}
             alt={article.featuredImageAlt || title}
@@ -43,7 +43,7 @@ function SidebarArticleCard({
           />
         </div>
       ) : (
-        <div className="w-full aspect-video bg-gradient-to-br from-gray-200 to-gray-300" aria-hidden />
+        <div className="w-full aspect-featured bg-gradient-to-br from-gray-200 to-gray-300" aria-hidden />
       )}
       <div className="p-2.5">
         <h3 className="text-xs font-semibold text-gray-900 line-clamp-3 mb-1.5 leading-snug">{title}</h3>

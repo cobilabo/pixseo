@@ -6,6 +6,7 @@ import { apiPostFormData } from '@/lib/api-client';
 import MediaLibraryModal from './MediaLibraryModal';
 import ImageGenerator from './ImageGenerator';
 import FloatingInput from './FloatingInput';
+import { FEATURED_IMAGE_ASPECT_HINT } from '@/lib/constants/featured-image';
 
 interface FeaturedImageUploadProps {
   value?: string;
@@ -276,6 +277,8 @@ export default function FeaturedImageUpload({
           </div>
         </div>
       )}
+
+      <p className="text-xs text-gray-500 leading-relaxed">{FEATURED_IMAGE_ASPECT_HINT}</p>
 
       {/* AI生成エリア（サムネイルエリアの下） */}
       {showAIGenerator && (

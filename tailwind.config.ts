@@ -45,6 +45,9 @@ const config: Config = {
         slideInRight: 'slideInRight 0.3s ease-out',
         slideOutRight: 'slideOutRight 0.3s ease-in',
       },
+      aspectRatio: {
+        featured: '1200 / 630',
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],
