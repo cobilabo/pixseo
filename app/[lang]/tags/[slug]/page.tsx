@@ -70,10 +70,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const rawSiteInfo = mediaId ? await getSiteInfo(mediaId) : { name: 'メディアサイト', name_ja: 'メディアサイト', description: '', logoUrl: '', faviconUrl: undefined, allowIndexing: false, isPreview: false };
   const siteInfo = localizeSiteInfo(rawSiteInfo, lang);
   const origin = getSiteOrigin();
+  const pageTitle = t('meta.tagListTitle', lang, { name: tag.name });
+  const pageDescription = t('meta.tagListDescription', lang, { name: tag.name });
 
   return {
-    title: `${tag.name}の記事一覧 | ${siteInfo.name}`,
-    description: `${tag.name}に関する記事一覧`,
+    title: `${pageTitle} | ${siteInfo.name}`,
+    description: pageDescription,
     robots: { index: rawSiteInfo.allowIndexing, follow: rawSiteInfo.allowIndexing },
     icons: rawSiteInfo.faviconUrl ? { icon: rawSiteInfo.faviconUrl, apple: rawSiteInfo.faviconUrl } : undefined,
     alternates: {
@@ -87,8 +89,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     },
     openGraph: {
-      title: `${tag.name}の記事一覧 | ${siteInfo.name}`,
-      description: `${tag.name}に関する記事一覧`,
+      title: `${pageTitle} | ${siteInfo.name}`,
+      description: pageDescription,
       locale: LANG_REGIONS[lang],
       alternateLocale: SUPPORTED_LANGS.filter(l => l !== lang).map(l => LANG_REGIONS[l]),
     },

@@ -93,6 +93,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}件の記事',
+    'meta.categoryListTitle': '{name}（カテゴリー）の記事一覧',
+    'meta.tagListTitle': '{name}（タグ）の記事一覧',
+    'meta.categoryListDescription': '{name}（カテゴリー）に関する記事一覧',
+    'meta.tagListDescription': '「{name}」タグの記事一覧',
     
     // ページネーション
     'pagination.previous': '前へ',
@@ -189,6 +193,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count} articles',
+    'meta.categoryListTitle': '{name} (Category) Articles',
+    'meta.tagListTitle': '{name} (Tag) Articles',
+    'meta.categoryListDescription': 'Articles in the {name} category',
+    'meta.tagListDescription': 'Articles tagged with "{name}"',
     
     // Pagination
     'pagination.previous': 'Previous',
@@ -285,6 +293,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}篇文章',
+    'meta.categoryListTitle': '{name}（分类）的文章列表',
+    'meta.tagListTitle': '{name}（标签）的文章列表',
+    'meta.categoryListDescription': '{name}（分类）相关文章列表',
+    'meta.tagListDescription': '「{name}」标签的文章列表',
     
     // 分页
     'pagination.previous': '上一页',
@@ -381,6 +393,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'meta.tag': 'TAG',
     'meta.writer': 'WRITER',
     'meta.articlesCount': '{count}개의 기사',
+    'meta.categoryListTitle': '{name}(카테고리) 기사 목록',
+    'meta.tagListTitle': '{name}(태그) 기사 목록',
+    'meta.categoryListDescription': '{name}(카테고리) 관련 기사 목록',
+    'meta.tagListDescription': '「{name}」태그의 기사 목록',
     
     // ページネーション
     'pagination.previous': '이전',
