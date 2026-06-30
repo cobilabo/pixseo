@@ -4,6 +4,7 @@ import { Page } from '@/types/page';
 import { translateArticle } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { revalidateCustomPage } from '@/lib/cache-manager';
+import { rewritePageHtmlFields } from '@/lib/fix-internal-links-server';
 
 // 固定ページ取得
 export async function GET(
@@ -45,6 +46,8 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
+    const existingDoc = await adminDb.collection('pages').doc(params.id).get();
+    const existingData = existingDoc.exists ? existingDoc.data() : null;
     
     // undefinedフィールドを除去（Firestoreはundefinedを許可しない）
     const cleanData = Object.fromEntries(
@@ -55,6 +58,14 @@ export async function PUT(
       ...cleanData,
       updatedAt: new Date(),
     };
+
+    const mediaIdForLinks =
+      (existingData?.mediaId as string | undefined) ||
+      (updateData.mediaId as string | undefined);
+    if (mediaIdForLinks) {
+      const rewritten = await rewritePageHtmlFields(updateData, mediaIdForLinks);
+      Object.assign(updateData, rewritten);
+    }
     
     // title, content, excerpt等が更新される場合は翻訳
     if (body.title || body.content || body.excerpt || body.metaTitle || body.metaDescription) {

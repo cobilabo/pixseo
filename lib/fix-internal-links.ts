@@ -97,7 +97,37 @@ export function resolveAyumiSitePath(pathAfterHost: string, ctx: InternalLinkCon
     return `/${lang}/`;
   }
 
+  const langFixed = rest.match(new RegExp(`^(${LANG_PATTERN})/([^/]+)$`, 'i'));
+  if (langFixed && isValidLang(langFixed[1].toLowerCase())) {
+    return `/${langFixed[1].toLowerCase()}/${langFixed[2]}/`;
+  }
+
   return `/${lang}/${rest.split('/')[0]}/`;
+}
+
+function splitHrefParts(href: string): { path: string; suffix: string } {
+  let pathEnd = href.length;
+  const q = href.indexOf('?');
+  const hash = href.indexOf('#');
+  if (q >= 0) pathEnd = Math.min(pathEnd, q);
+  if (hash >= 0) pathEnd = Math.min(pathEnd, hash);
+  return { path: href.slice(0, pathEnd), suffix: href.slice(pathEnd) };
+}
+
+/** 相対パスの内部リンクに末尾スラッシュ（および言語プレフィックス）を付与 */
+function ensureTrailingSlashOnRelativeHref(href: string, ctx: InternalLinkContext): string | null {
+  const { path, suffix } = splitHrefParts(href);
+  if (!path.startsWith('/') || path.endsWith('/')) return null;
+  if (path.includes('wp-content/') || path.includes('wp-admin/') || path.includes('wp-includes/')) {
+    return null;
+  }
+  if (/\.(xml|json|txt|jpe?g|png|gif|webp|svg|pdf)$/i.test(path)) return null;
+
+  const fixed = resolveAyumiSitePath(path.replace(/^\/+/, ''), ctx);
+  if (!fixed.endsWith('/')) return null;
+  const normalized = fixed.startsWith('/') ? fixed : `/${fixed}`;
+  if (normalized === path) return null;
+  return `${normalized}${suffix}`;
 }
 
 /** 単一 href を正規化（相対・絶対・壊れた埋め込み） */
@@ -193,6 +223,9 @@ export function normalizeInternalHref(href: string, ctx: InternalLinkContext): s
     const lang = ctx.defaultLang || DEFAULT_LANG;
     return `/${lang}/writers/${wpAuthor[1]}/`;
   }
+
+  const trailingFixed = ensureTrailingSlashOnRelativeHref(h, ctx);
+  if (trailingFixed) return trailingFixed;
 
   return h;
 }

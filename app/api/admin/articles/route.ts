@@ -6,6 +6,7 @@ import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { generateTableOfContents } from '@/lib/article-utils';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
+import { rewriteArticleHtmlFields } from '@/lib/fix-internal-links-server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
@@ -89,6 +90,12 @@ export async function POST(request: NextRequest) {
     
     // isDraftフィールドを削除（一時的なフラグ）
     delete articleData.isDraft;
+
+    const mediaIdForLinks = articleData.mediaId as string | undefined;
+    if (mediaIdForLinks) {
+      const rewritten = await rewriteArticleHtmlFields(articleData, mediaIdForLinks);
+      Object.assign(articleData, rewritten);
+    }
 
     // 🌐 日本語フィールドを保存（常に実行）
     articleData.title_ja = articleData.title;
