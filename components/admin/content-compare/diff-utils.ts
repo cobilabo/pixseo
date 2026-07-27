@@ -43,6 +43,68 @@ export function customBlockToSourceText(data: CustomBlockCompareData): string {
   ].join('\n');
 }
 
+/**
+ * ソース比較用の整形。改行を含む文字列は JSON の \n ではなく実改行で出力し、
+ * 行単位の差分・行番号が付くようにする。
+ */
+function formatValueForSource(value: unknown, indent = 0): string {
+  const pad = '  '.repeat(indent);
+  const padNext = '  '.repeat(indent + 1);
+
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+
+  if (typeof value === 'string') {
+    const normalized = value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    if (normalized.includes('\n')) {
+      const lines = normalized.split('\n');
+      return '"""\n' + lines.map((line) => padNext + line).join('\n') + '\n' + pad + '"""';
+    }
+    return JSON.stringify(normalized);
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    return (
+      '[\n' +
+      value.map((item) => padNext + formatValueForSource(item, indent + 1)).join(',\n') +
+      '\n' +
+      pad +
+      ']'
+    );
+  }
+
+  if (typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>).filter(
+      ([, v]) => v !== undefined
+    );
+    if (entries.length === 0) return '{}';
+    return (
+      '{\n' +
+      entries
+        .map(([key, v]) => `${padNext}${JSON.stringify(key)}: ${formatValueForSource(v, indent + 1)}`)
+        .join(',\n') +
+      '\n' +
+      pad +
+      '}'
+    );
+  }
+
+  return JSON.stringify(value);
+}
+
+function formatMultilineField(label: string, value: string | undefined): string[] {
+  const text = (value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  if (!text.includes('\n')) {
+    return [`${label}: ${text}`];
+  }
+  return [`${label}:`, ...text.split('\n').map((line) => `  ${line}`)];
+}
+
 export function pageToSourceText(data: PageCompareData): string {
   const settings = data.formData;
   const settingsText = [
@@ -59,14 +121,14 @@ export function pageToSourceText(data: PageCompareData): string {
     `layoutMode: ${settings.layoutMode || 'default'}`,
     `showGlobalNav: ${settings.showGlobalNav || false}`,
     `showSidebar: ${settings.showSidebar || false}`,
-    `customCss: ${settings.customCss || ''}`,
+    ...formatMultilineField('customCss', settings.customCss),
     `faviconUrl: ${settings.faviconUrl || ''}`,
     `isPublished: ${settings.isPublished || false}`,
     `order: ${settings.order ?? 0}`,
     '',
   ].join('\n');
 
-  const blocksText = '=== BLOCKS (JSON) ===\n' + JSON.stringify(data.blocks, null, 2);
+  const blocksText = '=== BLOCKS ===\n' + formatValueForSource(data.blocks);
   return settingsText + blocksText;
 }
 
