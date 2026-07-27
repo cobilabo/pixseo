@@ -8,7 +8,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FloatingInput from '@/components/admin/FloatingInput';
 import ColorPicker from '@/components/admin/ColorPicker';
 import CustomCheckbox from '@/components/admin/CustomCheckbox';
-import { updatePage, getPageById } from '@/lib/firebase/pages-admin';
+import { updatePageWithRevision, getPageById, restorePageRevision } from '@/lib/firebase/pages-admin';
 import { Page, LayoutMode } from '@/types/page';
 import { Block } from '@/types/block';
 import { useMediaTenant } from '@/contexts/MediaTenantContext';
@@ -16,13 +16,18 @@ import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 import BlockBuilder, { BlockBuilderRef } from '@/components/admin/BlockBuilder';
 import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
+import ContentCompareModal from '@/components/admin/content-compare/ContentCompareModal';
+import RevisionHistoryPanel from '@/components/admin/content-compare/RevisionHistoryPanel';
+import { PageCompareData, pageSnapshotToCompareData } from '@/components/admin/content-compare/diff-utils';
+import { getRevisionById } from '@/lib/firebase/revisions-admin';
+import { PageRevision } from '@/types/revision';
 
 export default function EditPagePage() {
   const router = useRouter();
   const params = useParams();
   const pageId = params.id as string;
   const { currentTenant } = useMediaTenant();
-  const { showSuccessAndNavigate, showError } = useToast();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -60,6 +65,21 @@ export default function EditPagePage() {
   const [existingHomePage, setExistingHomePage] = useState<{ id: string; title: string; slug: string } | null>(null);
   const [newSlugForExistingHome, setNewSlugForExistingHome] = useState('');
   const [changingHomeSlug, setChangingHomeSlug] = useState(false);
+  const [originalSnapshot, setOriginalSnapshot] = useState<PageCompareData | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareBefore, setCompareBefore] = useState<PageCompareData | null>(null);
+  const [compareAfter, setCompareAfter] = useState<PageCompareData | null>(null);
+  const [compareBeforeLabel, setCompareBeforeLabel] = useState('編集前');
+  const [compareAfterLabel, setCompareAfterLabel] = useState('編集後');
+  const [revisionRefreshKey, setRevisionRefreshKey] = useState(0);
+
+  const getCurrentPageData = (): PageCompareData => {
+    const currentBlocks = blockBuilderRef.current?.getCurrentBlocks() || blocks;
+    return {
+      formData: { ...formData },
+      blocks: currentBlocks,
+    };
+  };
 
   useEffect(() => {
     fetchPage();
@@ -97,6 +117,7 @@ export default function EditPagePage() {
       
       // ブロックビルダーデータを読み込み
       setBlocks(page.blocks || []);
+      setOriginalSnapshot(pageSnapshotToCompareData(page));
       
       setFetchLoading(false);
     } catch (error) {
@@ -314,6 +335,51 @@ export default function EditPagePage() {
     }
   };
 
+  const handleOpenCompare = () => {
+    if (!originalSnapshot) return;
+    setCompareBefore(originalSnapshot);
+    setCompareAfter(getCurrentPageData());
+    setCompareBeforeLabel('編集前（保存済み）');
+    setCompareAfterLabel('編集中');
+    setShowCompare(true);
+  };
+
+  const handleRevisionCompare = async (revision: { id: string; label?: string }) => {
+    try {
+      const rev = await getRevisionById<PageRevision>('page', pageId, revision.id);
+      if (!rev) {
+        showError('履歴の取得に失敗しました');
+        return;
+      }
+      setCompareBefore(pageSnapshotToCompareData(rev.snapshot));
+      setCompareAfter(getCurrentPageData());
+      setCompareBeforeLabel(rev.label || '履歴');
+      setCompareAfterLabel('現行（編集中）');
+      setShowCompare(true);
+    } catch (error) {
+      console.error('Error loading revision:', error);
+      showError('履歴の取得に失敗しました');
+    }
+  };
+
+  const handleRevisionRestore = async (revision: { id: string; label?: string }) => {
+    const label = revision.label || '選択した版';
+    if (!confirm(`${label} に戻しますか？\n現在の内容は履歴に保存されます。`)) return;
+
+    setLoading(true);
+    try {
+      await restorePageRevision(pageId, revision.id);
+      await fetchPage();
+      setRevisionRefreshKey((k) => k + 1);
+      showSuccess('以前の版に復元しました');
+    } catch (error) {
+      console.error('Error restoring revision:', error);
+      showError('復元に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -455,9 +521,14 @@ export default function EditPagePage() {
         // 翻訳失敗時は元のデータで保存
       }
       
-      await updatePage(pageId, updateData);
-      
-      showSuccessAndNavigate('固定ページを更新しました', '/admin/pages');
+      await updatePageWithRevision(pageId, updateData);
+
+      setOriginalSnapshot({
+        formData: { ...formData },
+        blocks: updateData.blocks || currentBlocks,
+      });
+      setRevisionRefreshKey((k) => k + 1);
+      showSuccess('固定ページを更新しました');
     } catch (error: any) {
       console.error('Error updating page:', error);
       const msg = error?.message || error?.code || String(error);
@@ -489,6 +560,16 @@ export default function EditPagePage() {
     <AuthGuard>
       <AdminLayout>
         <div className="px-4 pb-32 animate-fadeIn">
+          <div className="mb-6">
+            <RevisionHistoryPanel
+              entityType="page"
+              entityId={pageId}
+              onCompare={handleRevisionCompare}
+              onRestore={handleRevisionRestore}
+              refreshKey={revisionRefreshKey}
+            />
+          </div>
+
           <form id="page-edit-form" onSubmit={handleSubmit}>
             {/* タブメニュー */}
             <div className="bg-white rounded-[1.75rem] mb-6">
@@ -867,6 +948,15 @@ export default function EditPagePage() {
           <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
             <button
               type="button"
+              onClick={handleOpenCompare}
+              className="bg-gray-100 text-gray-700 px-5 h-14 rounded-full hover:bg-gray-200 transition-all hover:scale-105 flex items-center justify-center text-sm font-medium shadow-custom"
+              title="変更を比較"
+            >
+              比較
+            </button>
+
+            <button
+              type="button"
               onClick={() => router.back()}
               className="bg-gray-500 text-white w-14 h-14 rounded-full hover:bg-gray-600 transition-all hover:scale-110 flex items-center justify-center"
               title="キャンセル"
@@ -956,6 +1046,18 @@ export default function EditPagePage() {
           onSelect={(url) => setFormData(prev => ({ ...prev, faviconUrl: url }))}
           filterType="image"
         />
+
+        {compareBefore && compareAfter && (
+          <ContentCompareModal
+            isOpen={showCompare}
+            onClose={() => setShowCompare(false)}
+            contentType="page"
+            beforeData={compareBefore}
+            afterData={compareAfter}
+            beforeLabel={compareBeforeLabel}
+            afterLabel={compareAfterLabel}
+          />
+        )}
       </AdminLayout>
     </AuthGuard>
   );

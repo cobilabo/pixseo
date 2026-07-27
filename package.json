@@ -41,6 +41,7 @@
     "@hookform/resolvers": "^3.3.4",
     "algoliasearch": "^5.44.0",
     "cheerio": "^1.2.0",
+    "diff": "^9.0.0",
     "firebase": "^10.12.2",
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^6.6.0",
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
+    "@types/diff": "^7.0.2",
     "@types/he": "^1.2.3",
     "@types/node": "^20.14.12",
     "@types/react": "^18.3.3",

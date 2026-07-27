@@ -14,6 +14,10 @@ import {
 } from 'firebase/firestore';
 import { db, initializeFirebase } from './config';
 import { Page } from '@/types/page';
+import { PageRevision } from '@/types/revision';
+import { createRevision, pruneRevisions, listRevisions, getRevisionById } from './revisions-admin';
+
+export { listRevisions as listPageRevisions, getRevisionById as getPageRevisionById } from './revisions-admin';
 
 // クライアント側でFirebaseを初期化
 if (typeof window !== 'undefined') {
@@ -78,6 +82,44 @@ export const updatePage = async (id: string, pageData: Partial<Page>): Promise<v
     console.error('Error updating page:', error);
     throw error;
   }
+};
+
+function pageToSnapshot(page: Page): Omit<Page, 'id'> {
+  const { id: _id, ...snapshot } = page;
+  return snapshot;
+}
+
+/**
+ * 更新前の状態をリビジョンとして保存してから更新
+ */
+export const updatePageWithRevision = async (id: string, pageData: Partial<Page>): Promise<void> => {
+  const current = await getPageById(id);
+  if (!current) {
+    throw new Error('Page not found');
+  }
+
+  await createRevision('page', id, pageToSnapshot(current));
+  await updatePage(id, pageData);
+  await pruneRevisions('page', id);
+};
+
+/**
+ * リビジョンから固定ページを復元（現行をリビジョンに退避してから復元）
+ */
+export const restorePageRevision = async (pageId: string, revisionId: string): Promise<void> => {
+  const revision = await getRevisionById<PageRevision>('page', pageId, revisionId);
+  if (!revision) {
+    throw new Error('Revision not found');
+  }
+
+  const current = await getPageById(pageId);
+  if (!current) {
+    throw new Error('Page not found');
+  }
+
+  await createRevision('page', pageId, pageToSnapshot(current));
+  await updatePage(pageId, revision.snapshot);
+  await pruneRevisions('page', pageId);
 };
 
 /**
