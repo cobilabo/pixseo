@@ -126,7 +126,7 @@ export default function ContentCompareModal({
               afterLabel={afterLabel}
             />
           ) : (
-            <SourceDiffView beforeText={beforeText} afterText={afterText} highlight={highlight} />
+            <SourceDiffView beforeText={beforeText} afterText={afterText} highlight={highlight} beforeLabel={beforeLabel} afterLabel={afterLabel} />
           )}
         </div>
       </div>

@@ -29,8 +29,8 @@ export default function VisualComparePane({
   afterData,
   device,
   highlight,
-  beforeLabel = '雩蚾苩劦',
-  afterLabel = '雩蚾蛨徜',
+  beforeLabel = '\u7de8\u96c6\u524d',
+  afterLabel = '\u7de8\u96c6\u5f8c',
 }: VisualComparePaneProps) {
   const [beforeSrcdoc, setBeforeSrcdoc] = useState('');
   const [afterSrcdoc, setAfterSrcdoc] = useState('');
