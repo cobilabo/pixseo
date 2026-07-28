@@ -3,10 +3,12 @@ import { PageCompareData } from './diff-utils';
 import { getCustomBlockById } from '@/lib/firebase/custom-blocks-admin';
 
 const BLOCK_DIFF_STYLES = `
-  .preview-block { margin-bottom: 12px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-  .preview-block-header { background: #f3f4f6; padding: 6px 12px; font-size: 12px; color: #6b7280; font-family: monospace; }
-  .preview-block-body { padding: 12px; }
-  .preview-placeholder { background: #f9fafb; border: 1px dashed #d1d5db; padding: 16px; border-radius: 6px; color: #6b7280; font-size: 13px; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  .preview-meta { margin: 8px 12px 12px; padding: 8px 12px; background: #f3f4f6; border-radius: 6px; font-size: 13px; }
+  .preview-block { margin-bottom: 0; border: none; border-radius: 0; overflow: visible; }
+  .preview-block-header { background: #f3f4f6; padding: 4px 12px; font-size: 11px; color: #6b7280; font-family: monospace; border-bottom: 1px solid #e5e7eb; }
+  .preview-block-body { padding: 0; overflow: visible; }
+  .preview-placeholder { background: #f9fafb; border: 1px dashed #d1d5db; padding: 16px; border-radius: 6px; color: #6b7280; font-size: 13px; margin: 12px; }
   .preview-spacer { background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 10px, #e5e7eb 10px, #e5e7eb 20px); }
 `;
 
@@ -115,16 +117,16 @@ export async function buildPagePreviewHtml(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; ${bgStyle}${textStyle} }
+  body { margin: 0; padding: 0; font-family: system-ui, sans-serif; ${bgStyle}${textStyle} }
   ${BLOCK_DIFF_STYLES}
-  .diff-added-block { border-color: #4ade80 !important; background: #f0fdf4 !important; }
-  .diff-removed-block { border-color: #f87171 !important; background: #fef2f2 !important; }
-  .diff-changed-block { border-color: #fbbf24 !important; background: #fffbeb !important; }
+  .diff-added-block { outline: 2px solid #4ade80; outline-offset: -2px; background: #f0fdf4 !important; }
+  .diff-removed-block { outline: 2px solid #f87171; outline-offset: -2px; background: #fef2f2 !important; }
+  .diff-changed-block { outline: 2px solid #fbbf24; outline-offset: -2px; background: #fffbeb !important; }
   ${pageStyles}
 </style>
 </head>
 <body>
-  <div style="margin-bottom:16px;padding:8px 12px;background:#f3f4f6;border-radius:6px;font-size:13px">
+  <div class="preview-meta">
     <strong>${escapeHtml(formData.title)}</strong> / ${escapeHtml(formData.slug)}
   </div>
   ${blockHtmlParts.join('')}

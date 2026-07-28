@@ -173,7 +173,8 @@ export function buildCustomBlockSrcdoc(html: string, css: string, highlightHtml?
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body { font-family: system-ui, sans-serif; }
   mark.diff-added { background: #bbf7d0; padding: 0 2px; }
   mark.diff-removed { background: #fecaca; padding: 0 2px; text-decoration: line-through; }
   ${css}
