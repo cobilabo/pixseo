@@ -9,7 +9,8 @@ interface AdminPreviewFrameProps {
 }
 
 export default function AdminPreviewFrame({ srcdoc, device, label }: AdminPreviewFrameProps) {
-  const widthClass = device === 'sp' ? 'w-[375px] mx-auto' : 'w-full max-w-[1280px] mx-auto';
+  // SP: 左右比較でも見やすいよう、枠いっぱいに広げつつ上限を大きめのスマホ幅に
+  const widthClass = device === 'sp' ? 'w-full max-w-[520px] mx-auto' : 'w-full max-w-[1280px] mx-auto';
 
   return (
     <div className="flex flex-col h-full min-h-0">
