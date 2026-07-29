@@ -3,6 +3,7 @@ import { db, initializeFirebase } from './config';
 import { CustomBlock } from '@/types/custom-block';
 import { CustomBlockRevision } from '@/types/revision';
 import { createRevision, pruneRevisions, listRevisions, getRevisionById } from './revisions-admin';
+import { safeToDate, toFirestoreTimestamp, removeUndefinedDeep } from './firestore-utils';
 
 export { listRevisions as listCustomBlockRevisions, getRevisionById as getCustomBlockRevisionById } from './revisions-admin';
 
@@ -45,8 +46,8 @@ export const getCustomBlockById = async (id: string): Promise<CustomBlock | null
   return {
     id: customBlockSnap.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date(),
+    createdAt: safeToDate(data.createdAt),
+    updatedAt: safeToDate(data.updatedAt),
   } as CustomBlock;
 };
 
@@ -67,8 +68,8 @@ export const getCustomBlocksByMediaId = async (mediaId: string): Promise<CustomB
   return querySnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    createdAt: safeToDate(doc.data().createdAt),
+    updatedAt: safeToDate(doc.data().updatedAt),
   } as CustomBlock));
 };
 
@@ -86,8 +87,12 @@ export const updateCustomBlock = async (id: string, data: Partial<Omit<CustomBlo
 };
 
 function customBlockToSnapshot(block: CustomBlock): Omit<CustomBlock, 'id'> {
-  const { id: _id, ...snapshot } = block;
-  return snapshot;
+  const { id: _id, ...rest } = block;
+  return removeUndefinedDeep({
+    ...rest,
+    createdAt: toFirestoreTimestamp(rest.createdAt),
+    updatedAt: toFirestoreTimestamp(rest.updatedAt),
+  }) as Omit<CustomBlock, 'id'>;
 }
 
 /**
