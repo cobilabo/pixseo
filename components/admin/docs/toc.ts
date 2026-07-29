@@ -39,8 +39,15 @@ export const DOC_TOC: TocSection[] = [
     id: 'pages',
     label: 'ページ',
     children: [
-      { id: 'pages-list', label: '一覧と固定ページ' },
-      { id: 'pages-edit', label: 'ブロック編集とAI' },
+      { id: 'pages-overview', label: '固定ページとは' },
+      { id: 'pages-list', label: '一覧の使い方' },
+      { id: 'pages-create', label: '新規作成の手順' },
+      { id: 'pages-edit', label: '編集画面の基本' },
+      { id: 'pages-blocks', label: 'ブロックの追加と編集' },
+      { id: 'pages-settings', label: 'ページ設定タブ' },
+      { id: 'pages-compare', label: '変更の比較' },
+      { id: 'pages-history', label: '変更履歴と復元' },
+      { id: 'pages-preview', label: '公開前の確認' },
     ],
   },
   {
@@ -52,7 +59,14 @@ export const DOC_TOC: TocSection[] = [
       { id: 'forms-submissions', label: '送信一覧' },
     ],
   },
-  { id: 'custom-blocks', label: 'カスタムブロック' },
+  {
+    id: 'custom-blocks',
+    label: 'カスタムブロック',
+    children: [
+      { id: 'custom-blocks-basics', label: '基本の使い方' },
+      { id: 'custom-blocks-compare', label: '比較と変更履歴' },
+    ],
+  },
   {
     id: 'theme',
     label: 'テーマ',
