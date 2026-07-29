@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Page } from '@/types/page';
+import { safeToDate } from '@/lib/firebase/date-utils';
 import { translateArticle } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
 import { revalidateCustomPage } from '@/lib/cache-manager';
@@ -25,8 +26,8 @@ export async function GET(
     const page: Page = {
       id: doc.id,
       ...data,
-      publishedAt: data?.publishedAt?.toDate() || new Date(),
-      updatedAt: data?.updatedAt?.toDate() || new Date(),
+      publishedAt: safeToDate(data?.publishedAt),
+      updatedAt: safeToDate(data?.updatedAt),
     } as Page;
     
     return NextResponse.json(page);

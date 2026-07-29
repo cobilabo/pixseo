@@ -2,6 +2,7 @@ import { adminDb, getWpMediaUrlMap } from './admin';
 import { Page } from '@/types/page';
 import { pageMayContainWpUploads, rewritePageWpMediaUrls } from '@/lib/article-utils';
 import { isPreviewMode } from './media-tenant-helper';
+import { safeToDate } from './date-utils';
 
 /**
  * 固定ページの取得（スラッグ指定・サーバーサイド）
@@ -35,8 +36,8 @@ export async function getPageServer(slug: string, mediaId?: string): Promise<Pag
     const page = {
       id: doc.id,
       ...data,
-      publishedAt: data.publishedAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      publishedAt: safeToDate(data.publishedAt),
+      updatedAt: safeToDate(data.updatedAt),
       useBlockBuilder: data.useBlockBuilder || false,
       blocks: data.blocks || [],
     } as Page;
@@ -78,8 +79,8 @@ export async function getPagesServer(mediaId?: string): Promise<Page[]> {
       return {
         id: doc.id,
         ...data,
-        publishedAt: data.publishedAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
+        publishedAt: safeToDate(data.publishedAt),
+        updatedAt: safeToDate(data.updatedAt),
       } as Page;
     });
 
@@ -118,8 +119,8 @@ export async function getPublishedPagesServer(mediaId?: string): Promise<Page[]>
       return {
         id: doc.id,
         ...data,
-        publishedAt: data.publishedAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
+        publishedAt: safeToDate(data.publishedAt),
+        updatedAt: safeToDate(data.updatedAt),
       } as Page;
     });
 

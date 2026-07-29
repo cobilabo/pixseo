@@ -16,25 +16,12 @@ import { db, initializeFirebase } from './config';
 import { Page } from '@/types/page';
 import { PageRevision } from '@/types/revision';
 import { createRevision, pruneRevisions, listRevisions, getRevisionById } from './revisions-admin';
+import { removeUndefinedDeep, safeToDate, toFirestoreTimestamp } from './firestore-utils';
 
 export { listRevisions as listPageRevisions, getRevisionById as getPageRevisionById } from './revisions-admin';
 
-// クライアント側でFirebaseを初期化
 if (typeof window !== 'undefined') {
   initializeFirebase();
-}
-
-function removeUndefinedDeep(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (Array.isArray(obj)) return obj.map(removeUndefinedDeep);
-  if (typeof obj === 'object' && !(obj instanceof Date)) {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([_, v]) => v !== undefined)
-        .map(([k, v]) => [k, removeUndefinedDeep(v)])
-    );
-  }
-  return obj;
 }
 
 /**
@@ -71,8 +58,12 @@ export const updatePage = async (id: string, pageData: Partial<Page>): Promise<v
   }
 
   try {
-    const cleanData = removeUndefinedDeep(pageData);
-    
+    const cleanData = removeUndefinedDeep(pageData) as Record<string, unknown>;
+    if ('publishedAt' in cleanData) {
+      cleanData.publishedAt = toFirestoreTimestamp(cleanData.publishedAt);
+    }
+    delete cleanData.updatedAt;
+
     const pageRef = doc(db, 'pages', id);
     await updateDoc(pageRef, {
       ...cleanData,
@@ -85,8 +76,12 @@ export const updatePage = async (id: string, pageData: Partial<Page>): Promise<v
 };
 
 function pageToSnapshot(page: Page): Omit<Page, 'id'> {
-  const { id: _id, ...snapshot } = page;
-  return snapshot;
+  const { id: _id, ...rest } = page;
+  return removeUndefinedDeep({
+    ...rest,
+    publishedAt: toFirestoreTimestamp(rest.publishedAt),
+    updatedAt: toFirestoreTimestamp(rest.updatedAt),
+  }) as Omit<Page, 'id'>;
 }
 
 /**
@@ -160,8 +155,8 @@ export const getPageById = async (id: string): Promise<Page | null> => {
     return {
       id: pageSnap.id,
       ...data,
-      publishedAt: data.publishedAt?.toDate?.() || new Date(),
-      updatedAt: data.updatedAt?.toDate?.() || new Date(),
+      publishedAt: safeToDate(data.publishedAt),
+      updatedAt: safeToDate(data.updatedAt),
     } as Page;
   } catch (error) {
     console.error('Error getting page:', error);
@@ -197,8 +192,8 @@ export const getPages = async (mediaId?: string): Promise<Page[]> => {
       return {
         id: doc.id,
         ...data,
-        publishedAt: data.publishedAt?.toDate?.() || new Date(),
-        updatedAt: data.updatedAt?.toDate?.() || new Date(),
+        publishedAt: safeToDate(data.publishedAt),
+        updatedAt: safeToDate(data.updatedAt),
       } as Page;
     });
     

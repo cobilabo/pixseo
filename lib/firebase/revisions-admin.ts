@@ -12,6 +12,7 @@ import {
 import { db, initializeFirebase } from './config';
 import { getCurrentUser } from './auth';
 import { REVISION_KEEP_COUNT, RevisionMeta } from '@/types/revision';
+import { removeUndefinedDeep } from './firestore-utils';
 
 if (typeof window !== 'undefined') {
   initializeFirebase();
@@ -52,7 +53,7 @@ async function createRevision<TSnapshot>(
   const revisionsRef = collection(db, getRevisionCollectionPath(entityType, entityId));
 
   const docRef = await addDoc(revisionsRef, {
-    snapshot,
+    snapshot: removeUndefinedDeep(snapshot),
     createdAt: Timestamp.fromDate(now),
     createdByUid: user?.uid ?? null,
     createdByEmail: user?.email ?? null,
