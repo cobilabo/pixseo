@@ -34,7 +34,7 @@ export const createPage = async (pageData: Omit<Page, 'id' | 'publishedAt' | 'up
 
   try {
     const now = Timestamp.now();
-    const cleanData = removeUndefinedDeep(pageData);
+    const cleanData = removeUndefinedDeep(pageData) as Record<string, unknown>;
     
     const docRef = await addDoc(collection(db, 'pages'), {
       ...cleanData,

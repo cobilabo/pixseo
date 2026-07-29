@@ -1,8 +1,23 @@
 export { safeToDate } from './date-utils';
 import { Timestamp } from 'firebase/firestore';
 
+function isPlainTimestampMap(obj: object): boolean {
+  const v = obj as {
+    seconds?: unknown;
+    nanoseconds?: unknown;
+    _seconds?: unknown;
+    _nanoseconds?: unknown;
+  };
+  const keys = Object.keys(obj);
+  if (keys.length === 0 || keys.length > 4) return false;
+  const allowed = new Set(['seconds', 'nanoseconds', '_seconds', '_nanoseconds']);
+  if (!keys.every((k) => allowed.has(k))) return false;
+  return typeof v.seconds === 'number' || typeof v._seconds === 'number';
+}
+
 function isFirestoreTimestampLike(obj: object): boolean {
   if (obj instanceof Timestamp) return true;
+  if (isPlainTimestampMap(obj)) return true;
   const v = obj as { toDate?: unknown; seconds?: unknown; nanoseconds?: unknown };
   return (
     typeof v.toDate === 'function' &&
