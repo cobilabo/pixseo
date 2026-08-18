@@ -628,7 +628,7 @@ export default function AdminDocsBody() {
             <strong>フッターコンテンツ／フッターセクション</strong>: cobi レイアウト時などに表示。画像付きブロックやテキストリンクのセクション
           </li>
           <li>
-            <strong>メニュー</strong>: グローバルナビ・ハンバーガーメニューの項目（固定ページ・外部URL・カテゴリーなど）
+            <strong>メニュー</strong>: グローバルナビ（PCヘッダー／PCフッター）とハンバーガーメニュー（SPヘッダー／SPフッター）の項目（固定ページ・外部URL・カテゴリーなど）
           </li>
           <li>
             <strong>検索／サイドコンテンツ</strong>: furatto レイアウト時など。検索の種類の並び、サイドバーに表示するウィジェット

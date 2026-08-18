@@ -33,9 +33,24 @@ export default function FurattoFooter({
   lang,
   footerBackgroundColor,
 }: FurattoFooterProps) {
-  const navigationItems = menuSettings?.navigationItems || [];
-  const hasNavigationItems = navigationItems.length > 0;
+  const hamburgerItems = menuSettings?.navigationItems || [];
+  const globalNavItems = menuSettings?.globalNavItems || [];
   const visibleCategories = categories.filter(cat => !cat.isHiddenFromLists).slice(0, 10);
+
+  const renderMenuLinks = (items: NavigationItem[]) => (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item.id}>
+          <a
+            href={getNavigationItemUrl(item, lang)}
+            className="text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            {getItemLabel(item, lang)}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <footer style={{ backgroundColor: footerBackgroundColor }} className="text-white">
@@ -49,31 +64,8 @@ export default function FurattoFooter({
           </div>
           <div className="text-right">
             <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('common.menu', lang)}</h4>
-            <ul className="space-y-2">
-              {hasNavigationItems ? (
-                navigationItems.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={getNavigationItemUrl(item, lang)}
-                      className="text-sm text-gray-300 hover:text-white transition-colors"
-                    >
-                      {getItemLabel(item, lang)}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                (menuSettings?.globalNavItems || []).map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={getNavigationItemUrl(item, lang)}
-                      className="text-sm text-gray-300 hover:text-white transition-colors"
-                    >
-                      {getItemLabel(item, lang)}
-                    </a>
-                  </li>
-                ))
-              )}
-            </ul>
+            <div className="lg:hidden">{renderMenuLinks(hamburgerItems)}</div>
+            <div className="hidden lg:block">{renderMenuLinks(globalNavItems)}</div>
           </div>
           <div className="text-right">
             <h4 className="text-sm font-semibold mb-3 text-gray-200">{t('nav.categories', lang)}</h4>
