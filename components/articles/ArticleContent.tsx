@@ -15,6 +15,7 @@ import { processHtmlBlocks } from '@/lib/article-utils';
 import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
 import { htmlAttribsToReactProps } from '@/lib/html-attribs-to-react';
 import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
+import { unwrapDocsInternalGuidWrappers } from '@/lib/unwrap-invalid-inline-wrappers';
 
 interface ArticleContentProps {
   content: string;
@@ -40,6 +41,50 @@ function injectHeadingIds(
     const id = tocItem?.id || `heading-${currentIndex}`;
     return `<${tag}${attrs} id="${id}">`;
   });
+}
+
+const INLINE_WRAPPER_TAGS = new Set(['span', 'font', 'b', 'strong', 'em', 'i', 'u']);
+const BLOCK_CHILD_TAGS = new Set([
+  'p',
+  'div',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'ul',
+  'ol',
+  'li',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'section',
+  'article',
+  'figure',
+  'blockquote',
+  'pre',
+  'hr',
+]);
+
+function shouldUnwrapInlineWrapper(domNode: {
+  name?: string;
+  attribs?: { id?: string };
+  children?: unknown;
+}): boolean {
+  if (!domNode.name || !INLINE_WRAPPER_TAGS.has(domNode.name)) return false;
+  const id = domNode.attribs?.id || '';
+  if (id.startsWith('docs-internal-guid-')) return true;
+  const children = Array.isArray(domNode.children) ? domNode.children : [];
+  return children.some(
+    (child) =>
+      child &&
+      typeof child === 'object' &&
+      'type' in child &&
+      (child as { type?: string; name?: string }).type === 'tag' &&
+      BLOCK_CHILD_TAGS.has((child as { name?: string }).name || '')
+  );
 }
 
 /** html-react-parser の DOM ノードからテキストを再帰的に抽出 */
@@ -73,7 +118,9 @@ export default function ArticleContent({
     const htmlBlockProcessed = processHtmlBlocks(content);
 
     // Google Docs 等のインライン font-size を除去し、本文タイポグラフィを統一
-    const fontSizeNormalized = stripInlineFontSizesFromHtml(htmlBlockProcessed);
+    const fontSizeNormalized = unwrapDocsInternalGuidWrappers(
+      stripInlineFontSizesFromHtml(htmlBlockProcessed)
+    );
 
     // エディタの目次プレースホルダー（装飾チャンク含む）をシンプルなマーカーに正規化
     const tocNormalized = normalizeInlineTocPlaceholder(fontSizeNormalized);
@@ -163,6 +210,16 @@ export default function ArticleContent({
   // HTMLをパースしてReactコンポーネントに変換
   const options = {
     replace: (domNode: any) => {
+      // Google Docs の span#docs-internal-guid / ブロックを包んだインラインタグは展開する
+      if (shouldUnwrapInlineWrapper(domNode)) {
+        const children = Array.isArray(domNode.children)
+          ? domNode.children
+          : domNode.children
+            ? [domNode.children]
+            : [];
+        return <>{domToReact(children as DOMNode[], options)}</>;
+      }
+
       // Instagram埋め込みはそのままスキップ（変換しない）
       if (domNode.name === 'blockquote' && domNode.attribs?.class?.includes('instagram-media')) {
         // 変換せずにそのまま表示（html-react-parserが自動で処理）
