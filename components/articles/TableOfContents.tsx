@@ -58,14 +58,15 @@ export default function TableOfContents({ items, lang = 'ja' }: TableOfContentsP
   return (
     <div className="toc-card not-prose bg-white rounded-xl shadow-md border-l-3 border-blue-600 p-4 md:p-5 mb-4 md:mb-6">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between w-full ${isOpen ? 'mb-4 pb-3 border-b border-gray-200' : ''}`}
       >
-        <h2 className="text-base md:text-lg font-bold text-gray-900">{t('article.toc', lang)}</h2>
-        <svg 
+        <span className="text-base md:text-lg font-bold text-gray-900">{t('article.toc', lang)}</span>
+        <svg
           className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          fill="none" 
-          stroke="currentColor" 
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -99,14 +100,13 @@ export default function TableOfContents({ items, lang = 'ja' }: TableOfContentsP
                   className={`${levelStyles[item.level as keyof typeof levelStyles] || 'ml-0'} ${showParentBorder ? 'border-t border-gray-200 pt-1.5 mt-1.5' : ''}`}
                 >
                   <button
+                    type="button"
                     onClick={() => handleClick(item.id)}
-                    className={`
-                      w-full text-left py-1 px-3 rounded-md transition-all duration-150
-                      ${isActive 
-                        ? 'bg-blue-50 text-blue-700' 
+                    className={`w-full text-left py-1 px-3 rounded-md transition-all duration-150 ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-                      }
-                    `}
+                    }`}
                   >
                     <span className="leading-tight block">
                       {normalizeTocDisplayText(item.text)}

@@ -67,29 +67,25 @@ export default function AuthorProfile({ writer, lang = 'ja' }: AuthorProfileProp
             {writer.bio}
           </p>
         )}
-        <Link 
+        <Link
           href={`/${lang}/writers/${writer.id}`}
-          className="block"
+          className="block w-full py-2 px-4 rounded-full font-medium text-sm text-center transition-colors"
+          style={{
+            border: '2px solid var(--border-color, #e5e7eb)',
+            color: 'var(--link-text-color, #1f2937)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--primary-color, #3b82f6)';
+            e.currentTarget.style.borderColor = 'var(--primary-color, #3b82f6)';
+            e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.borderColor = 'var(--border-color, #e5e7eb)';
+            e.currentTarget.style.color = 'var(--link-text-color, #1f2937)';
+          }}
         >
-          <button 
-            className="w-full py-2 px-4 rounded-full font-medium text-sm transition-colors"
-            style={{ 
-              border: '2px solid var(--border-color, #e5e7eb)',
-              color: 'var(--link-text-color, #1f2937)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--primary-color, #3b82f6)';
-              e.currentTarget.style.borderColor = 'var(--primary-color, #3b82f6)';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = 'var(--border-color, #e5e7eb)';
-              e.currentTarget.style.color = 'var(--link-text-color, #1f2937)';
-            }}
-          >
-            VIEW MORE
-          </button>
+          VIEW MORE
         </Link>
       </div>
     </div>
