@@ -3,6 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: false, // Vercelの画像最適化を有効化
+    // デフォルト 8 段階 (640–3840) だとヒーロー等の srcset が冗長。
+    // アップロード上限は長辺 2000px、アイキャッチ推奨は 1200px なので
+    // モバイル / やや大きめモバイル / コンテンツ幅 / 2x デスクトップに絞る。
+    deviceSizes: [640, 828, 1200, 1920],
     domains: ['the-ayumi.jp', 'firebasestorage.googleapis.com'],
     remotePatterns: [
       {

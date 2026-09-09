@@ -65,6 +65,11 @@ import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import ViewCounter from '@/components/articles/ViewCounter';
 import Image from 'next/image';
+import {
+  FEATURED_IMAGE_HEIGHT,
+  FEATURED_IMAGE_SIZES,
+  FEATURED_IMAGE_WIDTH,
+} from '@/lib/constants/featured-image';
 
 // ISR: 1時間ごとに再生成（記事更新時は revalidatePath で即時反映）
 export const revalidate = 3600;
@@ -484,11 +489,11 @@ export default async function ArticlePage({ params }: PageProps) {
                 <Image
                   src={rawArticle.featuredImage}
                   alt={article.featuredImageAlt || article.title}
-                  width={1200}
-                  height={630}
+                  width={FEATURED_IMAGE_WIDTH}
+                  height={FEATURED_IMAGE_HEIGHT}
                   className="w-full h-auto"
                   priority
-                  sizes="(max-width: 1024px) 100vw, 800px"
+                  sizes={FEATURED_IMAGE_SIZES}
                 />
               </div>
             )}
