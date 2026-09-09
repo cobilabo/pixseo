@@ -3,6 +3,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import sharp from 'sharp';
 import { AnalysisResult, AnalyzedCommonBlock, AnalyzedPage } from './analyzer';
 import { v4 as uuidv4 } from 'uuid';
+import { findReusableMedia, hashMediaBuffer } from '@/lib/admin/media-dedup';
 
 export interface ImportOptions {
   mediaId: string;
@@ -77,6 +78,17 @@ async function uploadImageToStorage(
 
     // Skip non-image formats (SVG etc)
     if (metadata.format === 'svg') {
+      const contentHash = hashMediaBuffer(buffer);
+      const existing = await findReusableMedia(adminDb, {
+        mediaId,
+        contentHash,
+        sourceUrl: originalUrl,
+        originalName,
+        size: buffer.length,
+        allowOriginalMetaFallback: true,
+      });
+      if (existing) return existing.url;
+
       const svgPath = `media/images/${timestamp}_${sanitizedName}`;
       const svgFile = bucket.file(svgPath);
       await svgFile.save(buffer, {
@@ -95,6 +107,8 @@ async function uploadImageToStorage(
         size: buffer.length,
         width: metadata.width || 0,
         height: metadata.height || 0,
+        contentHash,
+        sourceUrl: originalUrl,
         alt: sanitizedName.replace(/\.[^.]+$/, ''),
         usageContext: 'site-import',
         siteImportBatchId,
@@ -114,6 +128,19 @@ async function uploadImageToStorage(
     const optimizedBuffer = await resizedImage
       .webp({ quality: 80 })
       .toBuffer();
+
+    const contentHash = hashMediaBuffer(optimizedBuffer);
+    const existing = await findReusableMedia(adminDb, {
+      mediaId,
+      contentHash,
+      sourceUrl: originalUrl,
+      originalName,
+      size: optimizedBuffer.length,
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      allowOriginalMetaFallback: true,
+    });
+    if (existing) return existing.url;
 
     const webpName = sanitizedName.replace(/\.[^.]+$/, '.webp');
     const mainPath = `media/images/${timestamp}_${webpName}`;
@@ -146,6 +173,8 @@ async function uploadImageToStorage(
       size: optimizedBuffer.length,
       width: metadata.width || 0,
       height: metadata.height || 0,
+      contentHash,
+      sourceUrl: originalUrl,
       alt: sanitizedName.replace(/\.[^.]+$/, ''),
       usageContext: 'site-import',
       siteImportBatchId,
@@ -191,6 +220,14 @@ async function uploadAllImages(
     const batch = imageArray.slice(i, i + 5);
     const results = await Promise.allSettled(
       batch.map(async (imgUrl) => {
+        const existingBySource = await findReusableMedia(adminDb, {
+          mediaId,
+          sourceUrl: imgUrl,
+        });
+        if (existingBySource) {
+          urlMap.set(imgUrl, existingBySource.url);
+          return;
+        }
         const buffer = await downloadImage(imgUrl);
         if (!buffer) {
           errors.push(`画像のダウンロードに失敗: ${imgUrl}`);

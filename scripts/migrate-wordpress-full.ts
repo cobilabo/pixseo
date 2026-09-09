@@ -23,6 +23,7 @@ import * as path from 'path';
 import https from 'https';
 import http from 'http';
 import sharp from 'sharp';
+import { findReusableMedia, hashMediaBuffer } from '../lib/admin/media-dedup';
 
 // 環境変数を読み込み
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
@@ -341,6 +342,21 @@ async function uploadToStorage(
       .toBuffer();
     
     const finalSize = optimizedBuffer.length;
+    const contentHash = hashMediaBuffer(optimizedBuffer);
+    const existing = await findReusableMedia(db, {
+      mediaId,
+      contentHash,
+      sourceUrl: originalUrl,
+      originalName: originalFileName,
+      size: finalSize,
+      width: originalWidth,
+      height: originalHeight,
+      allowOriginalMetaFallback: true,
+    });
+    if (existing) {
+      console.log(`      Reused existing media: ${existing.id}`);
+      return { mainUrl: existing.url, thumbnailUrl: existing.thumbnailUrl || existing.url };
+    }
     
     // 最適化後のサイズを取得
     const optimizedMetadata = await sharp(optimizedBuffer).metadata();
@@ -383,6 +399,7 @@ async function uploadToStorage(
         size: finalSize,
         width: finalWidth,
         height: finalHeight,
+        contentHash,
         alt: originalFileName.replace(/\.[^.]+$/, ''),
         usageContext: 'wp-migration',
         wpOriginalUrl: originalUrl,

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminStorage, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import sharp from 'sharp';
+import { findReusableMedia, hashMediaBuffer } from '@/lib/admin/media-dedup';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,18 +31,12 @@ export async function POST(request: Request) {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
 
-    let uploadUrl = '';
-    let thumbnailUrl = '';
-    let width = 0;
-    let height = 0;
-    let finalSize = file.size;
-
     if (isImage) {
       // 画像の場合：最適化処理
       const image = sharp(buffer);
       const metadata = await image.metadata();
-      width = metadata.width || 0;
-      height = metadata.height || 0;
+      const width = metadata.width || 0;
+      const height = metadata.height || 0;
 
       // 最大幅2000pxにリサイズ（アスペクト比維持）
       const maxWidth = 2000;
@@ -54,7 +49,25 @@ export async function POST(request: Request) {
         .webp({ quality: 80 })
         .toBuffer();
       
-      finalSize = optimizedBuffer.length;
+      const finalSize = optimizedBuffer.length;
+      const contentHash = hashMediaBuffer(optimizedBuffer);
+      const existing = await findReusableMedia(adminDb, {
+        mediaId,
+        contentHash,
+        originalName: file.name,
+        size: finalSize,
+        width,
+        height,
+        allowOriginalMetaFallback: true,
+      });
+      if (existing) {
+        return NextResponse.json({
+          id: existing.id,
+          url: existing.url,
+          thumbnailUrl: existing.thumbnailUrl || existing.url,
+          reused: true,
+        });
+      }
 
       // メイン画像をアップロード
       const mainPath = `media/images/${timestamp}_${sanitizedName.replace(/\.[^.]+$/, '.webp')}`;
@@ -62,7 +75,7 @@ export async function POST(request: Request) {
       await mainFile.save(optimizedBuffer, {
         metadata: { contentType: 'image/webp' },
       });
-      uploadUrl = await getPublicUrl(mainFile);
+      const uploadUrl = await getPublicUrl(mainFile);
 
       // サムネイル生成（300x300）
       const thumbnailBuffer = await sharp(buffer)
@@ -75,48 +88,87 @@ export async function POST(request: Request) {
       await thumbnailFile.save(thumbnailBuffer, {
         metadata: { contentType: 'image/webp' },
       });
-      thumbnailUrl = await getPublicUrl(thumbnailFile);
+      const thumbnailUrl = await getPublicUrl(thumbnailFile);
+
+      const mediaData = {
+        mediaId,
+        name: `${timestamp}_${sanitizedName}`,
+        originalName: file.name,
+        url: uploadUrl,
+        thumbnailUrl: thumbnailUrl || uploadUrl,
+        type: 'image' as const,
+        mimeType: 'image/webp',
+        size: finalSize,
+        width,
+        height,
+        contentHash,
+        alt: alt || file.name.replace(/\.[^.]+$/, ''),
+        usageContext: 'general',
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+
+      const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
+      return NextResponse.json({
+        id: docRef.id,
+        url: uploadUrl,
+        thumbnailUrl: thumbnailUrl || uploadUrl,
+        reused: false,
+      });
 
     } else if (isVideo) {
-      // 動画の場合：そのままアップロード
+      const contentHash = hashMediaBuffer(buffer);
+      const existing = await findReusableMedia(adminDb, {
+        mediaId,
+        contentHash,
+        originalName: file.name,
+        size: file.size,
+        allowOriginalMetaFallback: true,
+      });
+      if (existing) {
+        return NextResponse.json({
+          id: existing.id,
+          url: existing.url,
+          thumbnailUrl: existing.thumbnailUrl || existing.url,
+          reused: true,
+        });
+      }
+
       const videoPath = `media/videos/${timestamp}_${sanitizedName}`;
       const videoFile = bucket.file(videoPath);
       await videoFile.save(buffer, {
         metadata: { contentType: file.type },
       });
-      uploadUrl = await getPublicUrl(videoFile);
+      const uploadUrl = await getPublicUrl(videoFile);
 
-      // 動画のサムネイルは別途生成が必要（今回は省略）
-      // thumbnailUrl = ''; // 実装する場合はffmpegなどを使用
+      const mediaData = {
+        mediaId,
+        name: `${timestamp}_${sanitizedName}`,
+        originalName: file.name,
+        url: uploadUrl,
+        thumbnailUrl: uploadUrl,
+        type: 'video' as const,
+        mimeType: file.type,
+        size: file.size,
+        width: 0,
+        height: 0,
+        contentHash,
+        alt: alt || file.name.replace(/\.[^.]+$/, ''),
+        usageContext: 'general',
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
 
+      const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
+      return NextResponse.json({
+        id: docRef.id,
+        url: uploadUrl,
+        thumbnailUrl: uploadUrl,
+        reused: false,
+      });
     } else {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
-
-    // Firestoreにメタデータを保存
-    const mediaData = {
-      mediaId,
-      name: `${timestamp}_${sanitizedName}`,
-      originalName: file.name,
-      url: uploadUrl,
-      thumbnailUrl: thumbnailUrl || uploadUrl,
-      type: isImage ? 'image' : 'video',
-      mimeType: isImage ? 'image/webp' : file.type,
-      size: finalSize,
-      width,
-      height,
-      alt: alt || file.name.replace(/\.[^.]+$/, ''), // altが空の場合、ファイル名（拡張子なし）を使用
-      usageContext: 'general', // 使用状況（画像ブロック、記事アイキャッチなど）
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    const docRef = await adminDb.collection('mediaLibrary').add(mediaData);
-    return NextResponse.json({ 
-      id: docRef.id,
-      url: uploadUrl,
-      thumbnailUrl: thumbnailUrl || uploadUrl,
-    });
   } catch (error: any) {
     console.error('[API Media Upload] エラー:', error);
     return NextResponse.json({ error: error.message || 'Failed to upload media' }, { status: 500 });

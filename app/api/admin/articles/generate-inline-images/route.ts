@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
+import { findReusableMedia, hashMediaBuffer } from '@/lib/admin/media-dedup';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,35 +106,45 @@ export async function POST(request: NextRequest) {
           .webp({ quality: 85 })
           .toBuffer();
 
-        // Firebase Storageにアップロード
-        const fileName = `inline-images/${Date.now()}-${uuidv4()}.webp`;
-        const file = adminStorage.bucket().file(fileName);
-
-        await file.save(optimizedBuffer, {
-          metadata: {
-            contentType: 'image/webp',
-            metadata: {
-              mediaId,
-              type: 'inline-image',
-              articleTitle: title,
-            },
-          },
-        });
-
-        await file.makePublic();
-        const publicUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${fileName}`;
-        // メディアライブラリに登録
-        await adminDb.collection('mediaLibrary').add({
-          name: fileName,
-          originalName: `inline-${title}-${i + 1}.webp`,
-          url: publicUrl,
-          type: 'image',
-          mimeType: 'image/webp',
-          size: optimizedBuffer.length,
+        const contentHash = hashMediaBuffer(optimizedBuffer);
+        const existing = await findReusableMedia(adminDb, {
           mediaId,
-          createdAt: new Date(),
-          usageContext: 'inline-image',
+          contentHash,
         });
+
+        let publicUrl: string;
+        if (existing) {
+          publicUrl = existing.url;
+        } else {
+          const fileName = `inline-images/${Date.now()}-${uuidv4()}.webp`;
+          const file = adminStorage.bucket().file(fileName);
+
+          await file.save(optimizedBuffer, {
+            metadata: {
+              contentType: 'image/webp',
+              metadata: {
+                mediaId,
+                type: 'inline-image',
+                articleTitle: title,
+              },
+            },
+          });
+
+          await file.makePublic();
+          publicUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${fileName}`;
+          await adminDb.collection('mediaLibrary').add({
+            name: fileName,
+            originalName: `inline-${title}-${i + 1}.webp`,
+            url: publicUrl,
+            type: 'image',
+            mimeType: 'image/webp',
+            size: optimizedBuffer.length,
+            contentHash,
+            mediaId,
+            createdAt: new Date(),
+            usageContext: 'inline-image',
+          });
+        }
 
         generatedImages.push({
           url: publicUrl,

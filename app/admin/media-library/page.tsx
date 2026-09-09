@@ -171,16 +171,26 @@ export default function MediaPage() {
     setUploading(true);
 
     try {
+      let reusedCount = 0;
+      let createdCount = 0;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileToUpload = await prepareImageForUpload(file);
         const formData = new FormData();
         formData.append('file', fileToUpload);
 
-        await apiPostFormData('/api/admin/media/upload', formData);
+        const result = await apiPostFormData<{ reused?: boolean }>('/api/admin/media/upload', formData);
+        if (result.reused) reusedCount += 1;
+        else createdCount += 1;
       }
 
-      showSuccess(`${files.length}個のファイルをアップロードしました`);
+      if (reusedCount > 0 && createdCount === 0) {
+        showSuccess('同じ画像が既にあるため、既存の画像を使用しました');
+      } else if (reusedCount > 0) {
+        showSuccess(`${createdCount}件を追加し、${reusedCount}件は既存の画像を使用しました`);
+      } else {
+        showSuccess(`${createdCount}個のファイルをアップロードしました`);
+      }
       fetchMedia();
     } catch (error) {
       console.error('Error uploading files:', error);

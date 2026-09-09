@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { translateText, generateAISummary } from '@/lib/openai/translate';
 import { improveImagePrompt } from '@/lib/openai/improve-prompt';
 import { SUPPORTED_LANGS } from '@/types/lang';
+import { findReusableMedia, hashMediaBuffer } from '@/lib/admin/media-dedup';
 
 export interface GenerateAdvancedArticleParams {
   mediaId: string;
@@ -574,30 +575,42 @@ This is a featured image for an article titled "${title}".`;
     .webp({ quality: 85 })
     .toBuffer();
 
-  const featuredImageFileName = `featured-images/${Date.now()}-${uuidv4()}.webp`;
-  const featuredImageFile = adminStorage.bucket().file(featuredImageFileName);
-
-  await featuredImageFile.save(optimizedImageBuffer, {
-    metadata: {
-      contentType: 'image/webp',
-      metadata: { mediaId, type: 'featured-image' },
-    },
-  });
-
-  await featuredImageFile.makePublic();
-  const featuredImageUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${featuredImageFileName}`;
-
-  await adminDb.collection('mediaLibrary').add({
-    name: featuredImageFileName,
-    originalName: `featured-${title}.webp`,
-    url: featuredImageUrl,
-    type: 'image',
-    mimeType: 'image/webp',
-    size: optimizedImageBuffer.length,
+  const featuredContentHash = hashMediaBuffer(optimizedImageBuffer);
+  const existingFeatured = await findReusableMedia(adminDb, {
     mediaId,
-    createdAt: new Date(),
-    usageContext: 'featured-image',
+    contentHash: featuredContentHash,
   });
+
+  let featuredImageUrl: string;
+  if (existingFeatured) {
+    featuredImageUrl = existingFeatured.url;
+  } else {
+    const featuredImageFileName = `featured-images/${Date.now()}-${uuidv4()}.webp`;
+    const featuredImageFile = adminStorage.bucket().file(featuredImageFileName);
+
+    await featuredImageFile.save(optimizedImageBuffer, {
+      metadata: {
+        contentType: 'image/webp',
+        metadata: { mediaId, type: 'featured-image' },
+      },
+    });
+
+    await featuredImageFile.makePublic();
+    featuredImageUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${featuredImageFileName}`;
+
+    await adminDb.collection('mediaLibrary').add({
+      name: featuredImageFileName,
+      originalName: `featured-${title}.webp`,
+      url: featuredImageUrl,
+      type: 'image',
+      mimeType: 'image/webp',
+      size: optimizedImageBuffer.length,
+      contentHash: featuredContentHash,
+      mediaId,
+      createdAt: new Date(),
+      usageContext: 'featured-image',
+    });
+  }
 
   console.log('[Step 8] Featured image generated');
 
@@ -738,30 +751,42 @@ The image should visually represent the main concept of this section.`;
           .webp({ quality: 85 })
           .toBuffer();
 
-        const inlineImageFileName = `inline-images/${Date.now()}-${uuidv4()}.webp`;
-        const inlineImageFile = adminStorage.bucket().file(inlineImageFileName);
-
-        await inlineImageFile.save(optimizedInlineBuffer, {
-          metadata: {
-            contentType: 'image/webp',
-            metadata: { mediaId, type: 'inline-image' },
-          },
-        });
-
-        await inlineImageFile.makePublic();
-        const inlineImagePublicUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${inlineImageFileName}`;
-
-        await adminDb.collection('mediaLibrary').add({
-          name: inlineImageFileName,
-          originalName: `inline-${title}-${i}.webp`,
-          url: inlineImagePublicUrl,
-          type: 'image',
-          mimeType: 'image/webp',
-          size: optimizedInlineBuffer.length,
+        const inlineContentHash = hashMediaBuffer(optimizedInlineBuffer);
+        const existingInline = await findReusableMedia(adminDb, {
           mediaId,
-          createdAt: new Date(),
-          usageContext: 'inline-image',
+          contentHash: inlineContentHash,
         });
+
+        let inlineImagePublicUrl: string;
+        if (existingInline) {
+          inlineImagePublicUrl = existingInline.url;
+        } else {
+          const inlineImageFileName = `inline-images/${Date.now()}-${uuidv4()}.webp`;
+          const inlineImageFile = adminStorage.bucket().file(inlineImageFileName);
+
+          await inlineImageFile.save(optimizedInlineBuffer, {
+            metadata: {
+              contentType: 'image/webp',
+              metadata: { mediaId, type: 'inline-image' },
+            },
+          });
+
+          await inlineImageFile.makePublic();
+          inlineImagePublicUrl = `https://storage.googleapis.com/${adminStorage.bucket().name}/${inlineImageFileName}`;
+
+          await adminDb.collection('mediaLibrary').add({
+            name: inlineImageFileName,
+            originalName: `inline-${title}-${i}.webp`,
+            url: inlineImagePublicUrl,
+            type: 'image',
+            mimeType: 'image/webp',
+            size: optimizedInlineBuffer.length,
+            contentHash: inlineContentHash,
+            mediaId,
+            createdAt: new Date(),
+            usageContext: 'inline-image',
+          });
+        }
 
         if (!headingMatch || headingMatch.index === undefined) continue;
         const insertPosition = headingMatch.index + headingMatch[0].length;

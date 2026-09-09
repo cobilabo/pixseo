@@ -135,7 +135,7 @@ export default function FeaturedImageUpload({
       }
       
       console.log('[FeaturedImageUpload] APIリクエスト送信中...');
-      const data = await apiPostFormData<{ url: string }>('/api/admin/media/upload', formData);
+      const data = await apiPostFormData<{ url: string; reused?: boolean }>('/api/admin/media/upload', formData);
       
       console.log('[FeaturedImageUpload] アップロード成功、URL:', data.url);
       

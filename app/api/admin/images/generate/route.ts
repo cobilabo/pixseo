@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminStorage, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import sharp from 'sharp';
+import { findReusableMedia, hashMediaBuffer } from '@/lib/admin/media-dedup';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,6 +103,20 @@ export async function POST(request: NextRequest) {
       .webp({ quality: 80 })
       .toBuffer();
 
+    const contentHash = hashMediaBuffer(optimizedBuffer);
+    const existing = await findReusableMedia(adminDb, {
+      mediaId,
+      contentHash,
+    });
+    if (existing) {
+      return NextResponse.json({
+        url: existing.url,
+        mediaId: existing.id,
+        revisedPrompt: openaiData.data?.[0]?.revised_prompt || prompt,
+        reused: true,
+      });
+    }
+
     // Firebase Storageにアップロード（WebP）
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
@@ -149,6 +164,7 @@ export async function POST(request: NextRequest) {
       size: optimizedBuffer.length,
       width: originalWidth,
       height: originalHeight,
+      contentHash,
       alt: prompt, // プロンプトをaltとして保存
       isAiGenerated: true,
       aiPrompt: prompt,
@@ -162,6 +178,7 @@ export async function POST(request: NextRequest) {
       url: publicUrl,
       mediaId: docRef.id,
       revisedPrompt: openaiData.data?.[0]?.revised_prompt || prompt, // DALL-E 3はプロンプトを改善する場合がある
+      reused: false,
     });
   } catch (error) {
     console.error('[API /admin/images/generate] Error:', error);
