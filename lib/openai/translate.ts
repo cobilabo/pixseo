@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { Lang } from '@/types/lang';
+import { getOpenAISummaryModel, getOpenAITranslateModel } from '@/lib/openai/models';
 
 let openaiClient: OpenAI | null = null;
 
@@ -65,7 +66,7 @@ function chunkHtmlForTranslation(html: string, softMax: number): string[] {
   return chunks;
 }
 
-async function translateArticleHtmlInChunks(
+export async function translateArticleHtmlInChunks(
   html: string,
   targetLang: Lang
 ): Promise<string> {
@@ -125,7 +126,7 @@ ${context ? `このテキストは${context}です。` : ''}
     const maxTokens = Math.min(Math.max(4000, estimatedTokens), 8192);
 
     const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAITranslateModel(),
       messages: [
         {
           role: 'system',
@@ -268,7 +269,7 @@ export async function generateAISummary(
 
   try {
     const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAISummaryModel(),
       messages: [
         {
           role: 'system',

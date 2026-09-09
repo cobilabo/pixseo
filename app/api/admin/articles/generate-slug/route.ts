@@ -4,10 +4,10 @@ import {
   generateSlugFallbackFromTitle,
   normalizeOpenAISlugOutput,
 } from '@/lib/generate-slug';
+import { getOpenAIArticleSlugModel } from '@/lib/openai/models';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_SLUG_MODEL = 'gpt-4o-mini';
 const MAX_OPENAI_ATTEMPTS = 4;
 
 function sleep(ms: number): Promise<void> {
@@ -57,8 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const model =
-      process.env.OPENAI_ARTICLE_SLUG_MODEL?.trim() || DEFAULT_SLUG_MODEL;
+    const model = getOpenAIArticleSlugModel();
 
     let openaiSlug: string | null = null;
 

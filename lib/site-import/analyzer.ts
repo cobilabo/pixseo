@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { getOpenAISiteImportModel } from '@/lib/openai/models';
 
 export interface AnalyzedCommonBlock {
   name: string;
@@ -143,7 +144,7 @@ export async function analyzeSelectors(
     throw new Error('OPENAI_API_KEY is not configured');
   }
 
-  const modelName = process.env.OPENAI_SITE_IMPORT_MODEL || 'gpt-4o';
+  const modelName = getOpenAISiteImportModel();
   const openai = new OpenAI({ apiKey });
 
   onProgress?.(`AI解析中...（共通要素の検出 - ${modelName}）`);

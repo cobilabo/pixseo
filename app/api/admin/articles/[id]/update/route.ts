@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia } from '@/lib/algolia/sync';
-import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
-import { SUPPORTED_LANGS } from '@/types/lang';
-import { generateTableOfContents } from '@/lib/article-utils';
+import {
+  articleTranslationSourceFromDoc,
+  buildArticleTranslationUpdate,
+} from '@/lib/openai/article-translation';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 import { buildArticleUpdatePayload } from '@/lib/article-update-payload';
 import { rewriteArticleHtmlFields } from '@/lib/fix-internal-links-server';
@@ -157,56 +158,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       // バックグラウンド処理（awaitしない）
       (async () => {
         try {
-          const translationData: any = {};
-
-          const contentToTranslate = bgUpdateData.content || bgExistingData?.content || body.content;
-          const titleToTranslate = bgUpdateData.title || bgExistingData?.title || body.title;
-          const excerptToTranslate = bgUpdateData.excerpt !== undefined ? bgUpdateData.excerpt : (bgExistingData?.excerpt || body.excerpt || '');
-          const metaTitleToTranslate = bgUpdateData.metaTitle || bgExistingData?.metaTitle || titleToTranslate;
-          const metaDescriptionToTranslate = bgUpdateData.metaDescription || bgExistingData?.metaDescription || excerptToTranslate;
-          const faqsToTranslate = bgUpdateData.faqs || bgExistingData?.faqs_ja;
-
-          if (contentToTranslate) {
-            try {
-              const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
-              translationData.aiSummary_ja = aiSummaryJa;
-            } catch (error) {
-              console.error(`[BG ${id}] AIサマリー生成エラー（ja）:`, error);
-            }
-          }
-
-          const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-          
-          await Promise.all(otherLangs.map(async (lang) => {
-            try {
-              const translated = await translateArticle({
-                title: titleToTranslate,
-                content: contentToTranslate,
-                excerpt: excerptToTranslate,
-                metaTitle: metaTitleToTranslate,
-                metaDescription: metaDescriptionToTranslate,
-              }, lang);
-
-              translationData[`title_${lang}`] = translated.title;
-              translationData[`content_${lang}`] = translated.content;
-              translationData[`excerpt_${lang}`] = translated.excerpt;
-              translationData[`metaTitle_${lang}`] = translated.metaTitle;
-              translationData[`metaDescription_${lang}`] = translated.metaDescription;
-
-              const toc = generateTableOfContents(translated.content);
-              translationData[`tableOfContents_${lang}`] = toc;
-
-              const aiSummary = await generateAISummary(translated.content, lang);
-              translationData[`aiSummary_${lang}`] = aiSummary;
-
-              if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
-                const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
-                translationData[`faqs_${lang}`] = translatedFaqs;
-              }
-            } catch (error) {
-              console.error(`[BG ${id}] 翻訳エラー（${lang}）:`, error);
-            }
-          }));
+          const translationData = await buildArticleTranslationUpdate({
+            source: articleTranslationSourceFromDoc({
+              ...bgExistingData,
+              ...bgUpdateData,
+            }),
+            previous: bgExistingData
+              ? articleTranslationSourceFromDoc(bgExistingData)
+              : null,
+            existing: bgExistingData,
+          });
 
           if (Object.keys(translationData).length > 0) {
             await bgArticleRef.update(translationData);

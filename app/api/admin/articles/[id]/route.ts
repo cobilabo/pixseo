@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sync';
-import { translateArticle, translateFAQs, generateAISummary } from '@/lib/openai/translate';
-import { SUPPORTED_LANGS } from '@/types/lang';
-import { generateTableOfContents } from '@/lib/article-utils';
+import {
+  articleTranslationSourceFromDoc,
+  buildArticleTranslationUpdate,
+} from '@/lib/openai/article-translation';
 import { cacheManager, revalidateArticle } from '@/lib/cache-manager';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -193,63 +194,28 @@ export async function PUT(
     const isPublishedInBody = typeof body.isPublished === 'boolean';
     const statusChanged = isPublishedInBody && wasPublished !== body.isPublished;
     
-    // 🚀 公開に切り替えた場合、翻訳とAlgolia登録をバックグラウンドで実行
-    if (body.isPublished === true && statusChanged) {
+    // 公開切替、または公開中のタイトル変更。訳がある項目は再利用する。
+    const shouldTranslate =
+      (body.isPublished === true && statusChanged) ||
+      (wasPublished && typeof body.title === 'string');
+
+    if (shouldTranslate) {
       const bgArticleRef = adminDb.collection('articles').doc(id);
       const bgExistingData = existingData ? { ...existingData } : null;
+      const bgUpdateData = { ...updateData };
 
       (async () => {
         try {
-          const translationData: any = {};
-
-          const contentToTranslate = bgExistingData?.content || '';
-          const titleToTranslate = bgExistingData?.title || '';
-          const excerptToTranslate = bgExistingData?.excerpt || '';
-          const metaTitleToTranslate = bgExistingData?.metaTitle || titleToTranslate;
-          const metaDescriptionToTranslate = bgExistingData?.metaDescription || excerptToTranslate;
-          const faqsToTranslate = bgExistingData?.faqs_ja;
-
-          if (contentToTranslate) {
-            try {
-              const aiSummaryJa = await generateAISummary(contentToTranslate, 'ja');
-              translationData.aiSummary_ja = aiSummaryJa;
-            } catch (error) {
-              console.error(`[BG ${id}] AIサマリー生成エラー（ja）:`, error);
-            }
-          }
-
-          const otherLangs = SUPPORTED_LANGS.filter(lang => lang !== 'ja');
-          
-          await Promise.all(otherLangs.map(async (lang) => {
-            try {
-              const translated = await translateArticle({
-                title: titleToTranslate,
-                content: contentToTranslate,
-                excerpt: excerptToTranslate,
-                metaTitle: metaTitleToTranslate,
-                metaDescription: metaDescriptionToTranslate,
-              }, lang);
-
-              translationData[`title_${lang}`] = translated.title;
-              translationData[`content_${lang}`] = translated.content;
-              translationData[`excerpt_${lang}`] = translated.excerpt;
-              translationData[`metaTitle_${lang}`] = translated.metaTitle;
-              translationData[`metaDescription_${lang}`] = translated.metaDescription;
-
-              const toc = generateTableOfContents(translated.content);
-              translationData[`tableOfContents_${lang}`] = toc;
-
-              const aiSummary = await generateAISummary(translated.content, lang);
-              translationData[`aiSummary_${lang}`] = aiSummary;
-
-              if (faqsToTranslate && Array.isArray(faqsToTranslate) && faqsToTranslate.length > 0) {
-                const translatedFaqs = await translateFAQs(faqsToTranslate, lang);
-                translationData[`faqs_${lang}`] = translatedFaqs;
-              }
-            } catch (error) {
-              console.error(`[BG ${id}] 翻訳エラー（${lang}）:`, error);
-            }
-          }));
+          const translationData = await buildArticleTranslationUpdate({
+            source: articleTranslationSourceFromDoc({
+              ...bgExistingData,
+              ...bgUpdateData,
+            }),
+            previous: bgExistingData
+              ? articleTranslationSourceFromDoc(bgExistingData)
+              : null,
+            existing: bgExistingData,
+          });
 
           if (Object.keys(translationData).length > 0) {
             await bgArticleRef.update(translationData);
