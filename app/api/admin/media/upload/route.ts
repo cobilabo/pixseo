@@ -5,6 +5,9 @@ import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 
+// 注意: Vercel Functions のリクエストボディ上限は 4.5MB。
+// クライアント側で lib/admin/prepare-image-for-upload.ts により縮小してから送ること。
+
 // メディアアップロード
 export async function POST(request: Request) {
   try {

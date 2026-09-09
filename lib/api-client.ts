@@ -98,7 +98,19 @@ export async function apiPostFormData<T = any>(url: string, formData: FormData):
   });
   
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    if (response.status === 413) {
+      throw new Error(
+        '画像ファイルが大きすぎます。4MB以下にしてから再度お試しください。'
+      );
+    }
+    let detail = '';
+    try {
+      const data = (await response.json()) as { error?: string };
+      detail = data?.error || '';
+    } catch {
+      // ignore non-JSON error bodies
+    }
+    throw new Error(detail || `API Error: ${response.status} ${response.statusText}`);
   }
   
   return response.json();

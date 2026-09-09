@@ -7,6 +7,7 @@ import MediaLibraryModal from './MediaLibraryModal';
 import ImageGenerator from './ImageGenerator';
 import FloatingInput from './FloatingInput';
 import { FEATURED_IMAGE_ASPECT_HINT } from '@/lib/constants/featured-image';
+import { prepareImageForUpload } from '@/lib/admin/prepare-image-for-upload';
 
 interface FeaturedImageUploadProps {
   value?: string;
@@ -19,6 +20,7 @@ interface FeaturedImageUploadProps {
   imageGeneratorTitle?: string; // AI生成時のタイトル
   imageGeneratorContent?: string; // AI生成時のコンテンツ
   autoGenerateAlt?: boolean; // alt属性を自動生成するか（デフォルトはtrue）
+  hint?: string;
 }
 
 export default function FeaturedImageUpload({ 
@@ -32,6 +34,7 @@ export default function FeaturedImageUpload({
   imageGeneratorTitle = '',
   imageGeneratorContent = '',
   autoGenerateAlt = true,
+  hint = FEATURED_IMAGE_ASPECT_HINT,
 }: FeaturedImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(value);
@@ -124,8 +127,9 @@ export default function FeaturedImageUpload({
     console.log('[FeaturedImageUpload] API経由でアップロード開始');
     
     try {
+      const fileToUpload = await prepareImageForUpload(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
       if (altText) {
         formData.append('alt', altText);
       }
@@ -144,10 +148,17 @@ export default function FeaturedImageUpload({
       }
     } catch (error) {
       console.error('[FeaturedImageUpload] アップロードエラー:', error);
-      alert('画像のアップロードに失敗しました');
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : '画像のアップロードに失敗しました';
+      alert(message);
       setPreview(value);
     } finally {
       setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -278,7 +289,7 @@ export default function FeaturedImageUpload({
         </div>
       )}
 
-      <p className="text-xs text-gray-500 leading-relaxed">{FEATURED_IMAGE_ASPECT_HINT}</p>
+      <p className="text-xs text-gray-500 leading-relaxed">{hint}</p>
 
       {/* AI生成エリア（サムネイルエリアの下） */}
       {showAIGenerator && (

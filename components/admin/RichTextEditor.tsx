@@ -14,6 +14,7 @@ import { Theme, defaultTheme, HtmlShortcodeItem } from '@/types/theme';
 import ImageGenerator from './ImageGenerator';
 import { normalizePastedHtml } from '@/lib/normalize-pasted-html';
 import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
+import { prepareImageForUpload } from '@/lib/admin/prepare-image-for-upload';
 
 /** 記事本文エディタの HTML ソース全文編集タブ（一旦オフ・再有効化時は true に） */
 const ENABLE_EDITOR_HTML_SOURCE_VIEW = false;
@@ -1144,8 +1145,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     setUploadingImage(true);
     try {
+      const fileToUpload = await prepareImageForUpload(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
 
       const response = await fetch('/api/admin/upload-image', {
         method: 'POST',
@@ -1158,12 +1160,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (response.ok) {
         const data = await response.json();
         insertImageWithCaption(data.url);
+      } else if (response.status === 413) {
+        alert('画像ファイルが大きすぎます。4MB以下にしてから再度お試しください。');
       } else {
         alert('画像のアップロードに失敗しました');
       }
     } catch (error) {
       console.error('画像アップロードエラー:', error);
-      alert('画像のアップロードに失敗しました');
+      alert(error instanceof Error && error.message ? error.message : '画像のアップロードに失敗しました');
     } finally {
       setUploadingImage(false);
     }
@@ -1178,8 +1182,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     setUploadingImage(true);
     try {
+      const fileToUpload = await prepareImageForUpload(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
 
       const response = await fetch('/api/admin/upload-image', {
         method: 'POST',
@@ -1192,12 +1197,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (response.ok) {
         const data = await response.json();
         setEditImageSrc(data.url);
+      } else if (response.status === 413) {
+        alert('画像ファイルが大きすぎます。4MB以下にしてから再度お試しください。');
       } else {
         alert('画像のアップロードに失敗しました');
       }
     } catch (error) {
       console.error('画像アップロードエラー:', error);
-      alert('画像のアップロードに失敗しました');
+      alert(error instanceof Error && error.message ? error.message : '画像のアップロードに失敗しました');
     } finally {
       setUploadingImage(false);
     }

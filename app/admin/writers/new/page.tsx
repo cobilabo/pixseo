@@ -10,6 +10,7 @@ import { FormActions } from '@/components/admin/common';
 import { useToast } from '@/contexts/ToastContext';
 import { apiGet } from '@/lib/api-client';
 import { Writer } from '@/types/writer';
+import { WRITER_BACKGROUND_IMAGE_HINT, WRITER_ICON_IMAGE_HINT } from '@/lib/constants/featured-image';
 
 export default function NewWriterPage() {
   const { currentTenant } = useMediaTenant();
@@ -108,6 +109,7 @@ export default function NewWriterPage() {
                 alt={formData.iconAlt}
                 onAltChange={(alt) => setFormData({ ...formData, iconAlt: alt })}
                 label="アイコン画像"
+                hint={WRITER_ICON_IMAGE_HINT}
               />
 
               <FeaturedImageUpload
@@ -116,6 +118,7 @@ export default function NewWriterPage() {
                 alt={formData.backgroundImageAlt}
                 onAltChange={(alt) => setFormData({ ...formData, backgroundImageAlt: alt })}
                 label="背景画像"
+                hint={WRITER_BACKGROUND_IMAGE_HINT}
               />
 
               {existingWriterCount !== null && (

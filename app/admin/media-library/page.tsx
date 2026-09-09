@@ -5,6 +5,7 @@ import AuthGuard from '@/components/admin/AuthGuard';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Image from 'next/image';
 import { apiGet, apiPostFormData } from '@/lib/api-client';
+import { prepareImageForUpload } from '@/lib/admin/prepare-image-for-upload';
 import ImagePromptPatternModal from '@/components/admin/ImagePromptPatternModal';
 
 import { useToast } from '@/contexts/ToastContext';
@@ -172,8 +173,9 @@ export default function MediaPage() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const fileToUpload = await prepareImageForUpload(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', fileToUpload);
 
         await apiPostFormData('/api/admin/media/upload', formData);
       }
