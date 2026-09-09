@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, Fragment } from 'react';
 import parse, { DOMNode, Element, domToReact } from 'html-react-parser';
 import Image from 'next/image';
 import YouTubeEmbed from './YouTubeEmbed';
@@ -355,7 +355,9 @@ export default function ArticleContent({
         />
       );
     }
-    return <span key={`segment-${index}`}>{parse(segment.content, options)}</span>;
+    // span だと中の p/h2/div が不正 HTML になり、SSR とブラウザ修復で差分が出て
+    // React #418 / #422（ハイドレーション不一致）になる
+    return <Fragment key={`segment-${index}`}>{parse(segment.content, options)}</Fragment>;
   };
 
   // セグメント分割が必要なケース（BlogCard / 目次プレースホルダー / 埋め込み）
