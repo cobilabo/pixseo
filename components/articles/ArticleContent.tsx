@@ -1,9 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo, Fragment } from 'react';
-import parse, { DOMNode, Element, domToReact } from 'html-react-parser';
-import Image from 'next/image';
-import YouTubeEmbed from './YouTubeEmbed';
+import { useEffect, useRef, useMemo } from 'react';
 import ShortCodeRenderer from './ShortCodeRenderer';
 import BlogCard from './BlogCard';
 import { TableOfContentsItem } from '@/types/article';
@@ -12,8 +9,6 @@ import { Lang } from '@/types/lang';
 import TableOfContents from './TableOfContents';
 import { normalizeInlineTocPlaceholder } from '@/lib/cleanWordPressHtml';
 import { processHtmlBlocks } from '@/lib/article-utils';
-import { isSrcAllowedForNextImage } from '@/lib/next-image-allowed-hosts';
-import { htmlAttribsToReactProps } from '@/lib/html-attribs-to-react';
 import { stripInlineFontSizesFromHtml } from '@/lib/strip-inline-font-sizes';
 import { unwrapDocsInternalGuidWrappers } from '@/lib/unwrap-invalid-inline-wrappers';
 
@@ -32,75 +27,39 @@ function injectHeadingIds(
   if (!html) return html;
   const tocItems = Array.isArray(toc) ? toc : [];
   let headingIndex = 0;
-  return html.replace(/<(h2|h3|h4)\b([^>]*)>/gi, (match, tag, attrs) => {
+  return html.replace(/<(h2|h3|h4)\b([^>]*)>/gi, (_match, tag: string, attrs: string) => {
     const currentIndex = headingIndex++;
-    if (/\bid\s*=\s*["']/.test(attrs)) {
-      return match;
+    let newAttrs = attrs;
+    if (!/\bid\s*=/.test(attrs)) {
+      const tocItem = tocItems[currentIndex];
+      const id = tocItem?.id || `heading-${currentIndex}`;
+      newAttrs += ` id="${id}"`;
     }
-    const tocItem = tocItems[currentIndex];
-    const id = tocItem?.id || `heading-${currentIndex}`;
-    return `<${tag}${attrs} id="${id}">`;
+    if (/\bclass\s*=/.test(newAttrs)) {
+      if (!/scroll-mt-20/.test(newAttrs)) {
+        newAttrs = newAttrs.replace(
+          /class\s*=\s*(["'])([^"']*)\1/i,
+          (_m, q: string, cls: string) => `class=${q}${cls} scroll-mt-20${q}`
+        );
+      }
+    } else {
+      newAttrs += ' class="scroll-mt-20"';
+    }
+    return `<${tag}${newAttrs}>`;
   });
 }
 
-const INLINE_WRAPPER_TAGS = new Set(['span', 'font', 'b', 'strong', 'em', 'i', 'u']);
-const BLOCK_CHILD_TAGS = new Set([
-  'p',
-  'div',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'ul',
-  'ol',
-  'li',
-  'table',
-  'thead',
-  'tbody',
-  'tr',
-  'section',
-  'article',
-  'figure',
-  'blockquote',
-  'pre',
-  'hr',
-]);
-
-function shouldUnwrapInlineWrapper(domNode: {
-  name?: string;
-  attribs?: { id?: string };
-  children?: unknown;
-}): boolean {
-  if (!domNode.name || !INLINE_WRAPPER_TAGS.has(domNode.name)) return false;
-  const id = domNode.attribs?.id || '';
-  if (id.startsWith('docs-internal-guid-')) return true;
-  const children = Array.isArray(domNode.children) ? domNode.children : [];
-  return children.some(
-    (child) =>
-      child &&
-      typeof child === 'object' &&
-      'type' in child &&
-      (child as { type?: string; name?: string }).type === 'tag' &&
-      BLOCK_CHILD_TAGS.has((child as { name?: string }).name || '')
-  );
+/** FV でタイトル表示済みのため、本文中の h1 は出さない */
+function stripArticleBodyH1(html: string): string {
+  return html.replace(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi, '');
 }
 
-/** html-react-parser の DOM ノードからテキストを再帰的に抽出 */
-function extractDomNodeText(node: unknown): string {
-  if (!node) return '';
-  if (typeof node === 'string') return node;
-  const n = node as { type?: string; data?: string; children?: unknown };
-  if (n.type === 'text' && typeof n.data === 'string') return n.data;
-  if (typeof n.data === 'string') return n.data;
-  if (Array.isArray(n.children)) {
-    return n.children.map(extractDomNodeText).join('');
-  }
-  if (n.children) {
-    return extractDomNodeText(n.children);
-  }
-  return '';
+/** 旧ドメインの絶対 URL を相対パスにする（href 属性のみ） */
+function rewriteLegacyAyumiHrefs(html: string): string {
+  return html.replace(
+    /\bhref=(["'])https?:\/\/(?:www\.)?the-ayumi\.jp(\/[^"']*)?\1/gi,
+    (_m, q: string, path?: string) => `href=${q}${path || '/'}${q}`
+  );
 }
 
 export default function ArticleContent({
@@ -135,15 +94,19 @@ export default function ArticleContent({
       siteHost
     );
 
-    // dangerouslySetInnerHTML ルートでも TOC クリック→スクロールが効くよう、
-    // 事前に見出しへ id 属性を注入しておく。html-react-parser ルートでは
-    // replace() が id を付けるが、先に入っていてもそちらが尊重される。
-    const withHeadingIds = injectHeadingIds(processed, tableOfContents);
+    // 本文は React ツリーに展開せず HTML 文字列のまま載せる。
+    // Google Docs 由来の font / style / 不正ネストを parse すると
+    // ブラウザ修復とずれて #418 / #422 になる。
+    const withHeadingIds = injectHeadingIds(
+      rewriteLegacyAyumiHrefs(stripArticleBodyH1(processed)),
+      tableOfContents
+    );
+    const withExternalTargets = applyExternalLinkTargetsToHtml(withHeadingIds, siteHost);
 
     // コンテンツをセグメントに分割（BlogCard と 目次プレースホルダー）
-    const segments = splitContentByPlaceholders(withHeadingIds);
+    const segments = splitContentByPlaceholders(withExternalTargets);
 
-    return { processedContent: withHeadingIds, contentSegments: segments };
+    return { processedContent: withExternalTargets, contentSegments: segments };
   }, [content, internalLinkStyle, siteHost, tableOfContents]);
 
   // Instagram埋め込みとスクリプトタグを処理するuseEffect（クライアントマウント後にのみ実行）
@@ -204,186 +167,10 @@ export default function ArticleContent({
     }
   }, [content]);
 
-  // 見出しの出現順をカウント
-  let headingCount = 0;
-
-  // HTMLをパースしてReactコンポーネントに変換
-  const options = {
-    replace: (domNode: any) => {
-      // Google Docs の span#docs-internal-guid / ブロックを包んだインラインタグは展開する
-      if (shouldUnwrapInlineWrapper(domNode)) {
-        const children = Array.isArray(domNode.children)
-          ? domNode.children
-          : domNode.children
-            ? [domNode.children]
-            : [];
-        return <>{domToReact(children as DOMNode[], options)}</>;
-      }
-
-      // Instagram埋め込みはそのままスキップ（変換しない）
-      if (domNode.name === 'blockquote' && domNode.attribs?.class?.includes('instagram-media')) {
-        // 変換せずにそのまま表示（html-react-parserが自動で処理）
-        return undefined;
-      }
-
-      // YouTube埋め込みを検出して変換
-      if (domNode.name === 'iframe' && domNode.attribs?.src?.includes('youtube.com')) {
-        const youtubeId = extractYouTubeId(domNode.attribs.src);
-        if (youtubeId) {
-          return <YouTubeEmbed videoId={youtubeId} />;
-        }
-      }
-
-      // 画像: next.config で許可されたホストのみ Next/Image（それ以外は <img> で未設定ホストエラーを防ぐ）
-      if (domNode.name === 'img' && domNode.attribs?.src) {
-        const { src, alt = '' } = domNode.attribs;
-        const parent = domNode.parent as Element | undefined;
-        const insideAnchor = parent?.name === 'a';
-        const width = parseInt(domNode.attribs.width || '', 10) || 800;
-        const height = parseInt(domNode.attribs.height || '', 10) || 450;
-        const wrapperClass = insideAnchor ? 'inline-block' : 'block my-4 md:my-6';
-        const imageClass = insideAnchor
-          ? 'h-auto max-w-full'
-          : 'rounded-lg w-full h-auto';
-
-        if (!isSrcAllowedForNextImage(src)) {
-          return (
-            <span className={wrapperClass}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={alt}
-                className={imageClass}
-                loading="lazy"
-              />
-            </span>
-          );
-        }
-
-        return (
-          <span className={wrapperClass}>
-            <Image
-              src={src}
-              alt={alt}
-              width={width}
-              height={height}
-              className={imageClass}
-              loading="lazy"
-            />
-          </span>
-        );
-      }
-
-      // 内部リンクを修正（the-ayumi.jp → 現在のホスト）
-      if (domNode.name === 'a' && domNode.attribs?.href) {
-        const { href, ...anchorAttribs } = domNode.attribs;
-
-        // the-ayumi.jpへのリンクを現在のホストに変換
-        let newHref = href;
-        if (href.includes('the-ayumi.jp')) {
-          // /2024/01/10/disability-certificate/ のような相対パスに変換
-          newHref = href.replace(/https?:\/\/the-ayumi\.jp/, '');
-        }
-
-        // 内部記事リンクかどうかチェック
-        const isInternalArticleLink = checkIsInternalArticleLink(
-          newHref,
-          siteHost
-        );
-
-        // ブログカード形式で表示する場合
-        if (internalLinkStyle === 'blogcard' && isInternalArticleLink) {
-          // 親がp要素の場合、ブロック要素として表示するために適切に処理
-          return <BlogCard href={newHref} lang={lang} />;
-        }
-
-        // HTML の style 文字列・class を React 用に変換（style 文字列は React 19 で #62 エラーになる）
-        const linkProps = htmlAttribsToReactProps(anchorAttribs);
-        const isExternal = isExternalLinkHref(newHref, siteHost);
-        const { target: _target, rel: _rel, ...restLinkProps } = linkProps;
-
-        const linkChildren = domNode.children
-          ? Array.isArray(domNode.children)
-            ? domNode.children
-            : [domNode.children]
-          : [];
-        const linkContent = domToReact(linkChildren as DOMNode[], options);
-        const fallbackContent =
-          !linkContent ||
-          (Array.isArray(linkContent) && linkContent.length === 0)
-            ? newHref
-            : linkContent;
-
-        return (
-          <a
-            href={newHref}
-            {...restLinkProps}
-            {...(isExternal
-              ? { target: '_blank', rel: 'noopener noreferrer' }
-              : {})}
-          >
-            {fallbackContent}
-          </a>
-        );
-      }
-
-      // 目次プレースホルダーを目次コンポーネントに置換
-      if (
-        domNode.name === 'div' &&
-        (domNode.attribs?.class?.split(/\s+/).includes('toc-placeholder') ||
-          domNode.attribs?.['data-toc'] === 'auto')
-      ) {
-        return (
-          <TableOfContents
-            items={Array.isArray(tableOfContents) ? tableOfContents : []}
-            lang={lang}
-          />
-        );
-      }
-
-      // h1タグを除外（FVで既にタイトル表示済み）
-      if (domNode.name === 'h1') {
-        return <></>;
-      }
-
-      // 見出し（h2, h3, h4）にIDを付与
-      if (domNode.name && ['h2', 'h3', 'h4'].includes(domNode.name)) {
-        const tocItem = Array.isArray(tableOfContents) ? tableOfContents[headingCount] : undefined;
-        const id = tocItem?.id || `heading-${headingCount}`;
-        headingCount++;
-
-        const Tag = domNode.name as 'h2' | 'h3' | 'h4';
-
-        const textContent = domNode.children
-          ? Array.isArray(domNode.children)
-            ? domNode.children.map(extractDomNodeText).join('')
-            : extractDomNodeText(domNode.children)
-          : '';
-        
-        return (
-          <Tag id={id} className="scroll-mt-20">
-            {textContent || ''}
-          </Tag>
-        );
-      }
-
-      // その他の要素はそのまま返す（undefinedで元のノードを使用）
-      return undefined;
-    },
-  };
-
   // SSR でも本文を出力する（Googlebot に本文を認識させるため）
-  // 以前はクライアントマウント後にのみ本文を表示していたが、SEO 観点で初期 HTML に本文を含める
-
-  // スクリプトタグや埋め込みコンテンツが含まれているかをチェック
-  const hasScriptTag = /<script[\s\S]*?>[\s\S]*?<\/script>/i.test(processedContent);
-  const hasGoogleMapsIframe = /<iframe[\s\S]*?src=["'][^"']*(?:maps\.google\.com|google\.com\/maps)[^"']*["'][\s\S]*?>/i.test(processedContent);
-  const hasInstagramEmbed = processedContent.includes('instagram-media');
-
   const hasBlogCards = contentSegments.some(seg => seg.type === 'blogcard');
   const hasTocPlaceholder = contentSegments.some(seg => seg.type === 'toc');
-  const mustBypassParser = hasScriptTag || hasGoogleMapsIframe || hasInstagramEmbed;
-  const mustSegment = hasBlogCards || hasTocPlaceholder || mustBypassParser;
+  const mustSegment = hasBlogCards || hasTocPlaceholder;
 
   const tocItems = Array.isArray(tableOfContents) ? tableOfContents : [];
 
@@ -400,24 +187,17 @@ export default function ArticleContent({
         />
       );
     }
-    // html セグメント：スクリプトや埋め込みがある場合は dangerouslySetInnerHTML、
-    // そうでなければ html-react-parser で React コンポーネントに変換する。
-    if (mustBypassParser) {
-      return (
-        <div
-          key={`segment-${index}`}
-          dangerouslySetInnerHTML={{
-            __html: applyExternalLinkTargetsToHtml(segment.content, siteHost),
-          }}
-        />
-      );
+    if (!segment.content.trim()) {
+      return null;
     }
-    // span だと中の p/h2/div が不正 HTML になり、SSR とブラウザ修復で差分が出て
-    // React #418 / #422（ハイドレーション不一致）になる
-    return <Fragment key={`segment-${index}`}>{parse(segment.content, options)}</Fragment>;
+    return (
+      <div
+        key={`segment-${index}`}
+        dangerouslySetInnerHTML={{ __html: segment.content }}
+      />
+    );
   };
 
-  // セグメント分割が必要なケース（BlogCard / 目次プレースホルダー / 埋め込み）
   if (mustSegment) {
     return (
       <div ref={contentRef} className="prose md:prose-lg max-w-none article-content">
@@ -426,11 +206,12 @@ export default function ArticleContent({
     );
   }
 
-  // 通常のパース処理
   return (
-    <div ref={contentRef} className="prose md:prose-lg max-w-none article-content">
-      {parse(processedContent, options)}
-    </div>
+    <div
+      ref={contentRef}
+      className="prose md:prose-lg max-w-none article-content"
+      dangerouslySetInnerHTML={{ __html: processedContent }}
+    />
   );
 }
 
@@ -911,12 +692,6 @@ if (typeof window !== 'undefined') {
     style.id = 'article-content-styles';
     document.head.appendChild(style);
   }
-}
-
-function extractYouTubeId(url: string): string | null {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return match && match[2].length === 11 ? match[2] : null;
 }
 
 /**
