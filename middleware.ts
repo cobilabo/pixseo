@@ -104,6 +104,17 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.nextUrl.hostname;
   
+  // 旧 WordPress サイトマップ。現行は HTML ホームページを返して GSC エラーになっていた。
+  if (
+    /^\/(?:post-sitemap\d*|page-sitemap|post_tag-sitemap|category-sitemap|e-landing-page-sitemap)\.xml$/i.test(pathname) ||
+    pathname.toLowerCase() === '/sitemap.rss'
+  ) {
+    return new NextResponse(null, {
+      status: 410,
+      headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+    });
+  }
+
   // WordPress 旧メディアパス (拡張子付き .png 等を含む):
   // 下の「pathname.includes('.')」判定より前に処理しないと middleware を素通りし、
   // WAF bypass 通過後も 404 になる。GSC がクロールする旧画像 URL は 301 で /ja/ へ。
@@ -187,7 +198,13 @@ export async function middleware(request: NextRequest) {
       url.pathname = withTrailingSlash(`/${firstSegment}`);
       return NextResponse.redirect(url, { status: 301 });
     }
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-pathname-lang', firstSegment);
+    const langResponse = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    langResponse.headers.set('Content-Language', firstSegment);
+    return langResponse;
   }
   
   // 言語パスがない場合、デフォルト言語を追加してリダイレクト（301: SEO評価引き継ぎ）
@@ -455,6 +472,8 @@ export const config = {
      * 4. /admin (admin routes)
      * 5. all root files inside /public (e.g. /favicon.ico)
      */
-    '/((?!api|_next|_static|admin|[\\w-]+\\.\\w+).*)',
+    // ルート直下の静的ファイル（favicon.ico 等）は除外する。
+    // ただし旧 WP サイトマップ (.xml / .rss) は 410 を返すため middleware を通す。
+    '/((?!api|_next|_static|admin|[\\w-]+\\.(?:ico|png|jpe?g|gif|webp|svg|woff2?|ttf|css|js|map|txt|json)$).*)',
   ],
 };

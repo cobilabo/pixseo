@@ -99,6 +99,49 @@ export async function getPagesServer(mediaId?: string): Promise<Page[]> {
 }
 
 /**
+ * サイトマップ用の公開固定ページ（mediaId のみで取得し、メモリ上で公開判定する）。
+ * isPublished + order の複合インデックスに依存しない。
+ */
+export async function getPublishedPageSlugsForSitemap(
+  mediaId: string
+): Promise<Array<{ slug: string; isHomePage?: boolean; publishedAt: Date | null; updatedAt: Date | null }>> {
+  try {
+    const snapshot = await adminDb
+      .collection('pages')
+      .where('mediaId', '==', mediaId)
+      .select('slug', 'isPublished', 'isHomePage', 'publishedAt', 'updatedAt')
+      .get();
+
+    const now = new Date();
+    return snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          slug: (data.slug as string) || '',
+          isPublished: data.isPublished === true,
+          isHomePage: data.isHomePage === true,
+          publishedAt: safeToDate(data.publishedAt),
+          updatedAt: safeToDate(data.updatedAt),
+        };
+      })
+      .filter((page) =>
+        page.isPublished &&
+        page.slug &&
+        (!page.publishedAt || page.publishedAt <= now)
+      )
+      .map(({ slug, isHomePage, publishedAt, updatedAt }) => ({
+        slug,
+        isHomePage,
+        publishedAt,
+        updatedAt,
+      }));
+  } catch (error) {
+    console.error('[getPublishedPageSlugsForSitemap] Error:', error);
+    return [];
+  }
+}
+
+/**
  * 公開済み固定ページ一覧の取得（サーバーサイド）
  */
 export async function getPublishedPagesServer(mediaId?: string): Promise<Page[]> {

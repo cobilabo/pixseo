@@ -104,19 +104,31 @@ export async function getMediaIdFromHost(): Promise<string | null> {
       return mediaId;
     }
 
-    // 2. カスタムドメイン
-    const cacheKey = `mediaId:domain:${host}`;
+    return await getMediaIdFromDomain(host);
+  } catch (error) {
+    console.error('[getMediaIdFromHost] Error:', error);
+    return null;
+  }
+}
 
-    // キャッシュから取得（30分間有効）
+/**
+ * ホスト名（カスタムドメイン）から mediaId を解決する。
+ * sitemap など headers() を使えない経路からも呼べる。
+ */
+export async function getMediaIdFromDomain(host: string): Promise<string | null> {
+  try {
+    const normalized = host.replace(/:\d+$/, '').toLowerCase();
+    if (!normalized) return null;
+
+    const cacheKey = `mediaId:domain:${normalized}`;
     const cachedMediaId = cacheManager.get<string>(cacheKey, 30 * 60 * 1000);
     if (cachedMediaId) {
       return cachedMediaId;
     }
 
-    // Firestoreから取得
     const tenantsSnapshot = await adminDb
       .collection('mediaTenants')
-      .where('customDomain', '==', host)
+      .where('customDomain', '==', normalized)
       .limit(1)
       .get();
 
@@ -125,13 +137,10 @@ export async function getMediaIdFromHost(): Promise<string | null> {
     }
 
     const mediaId = tenantsSnapshot.docs[0].id;
-
-    // キャッシュに保存
     cacheManager.set(cacheKey, mediaId);
-
     return mediaId;
   } catch (error) {
-    console.error('[getMediaIdFromHost] Error:', error);
+    console.error('[getMediaIdFromDomain] Error:', error);
     return null;
   }
 }

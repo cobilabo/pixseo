@@ -40,6 +40,7 @@ import SidebarBanners from '@/components/common/SidebarBanners';
 import SidebarCustomHtml from '@/components/common/SidebarCustomHtml';
 import SidebarRenderer from '@/components/common/SidebarRenderer';
 import { getPublicRecaptchaConfig } from '@/lib/recaptcha';
+import { getSiteOrigin } from '@/lib/site-url';
 
 interface PageProps {
   params: {
@@ -53,8 +54,6 @@ export const revalidate = 1800;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const lang = isValidLang(params.lang) ? params.lang as Lang : 'ja';
-  const headersList = headers();
-  const host = headersList.get('host') || '';
   const mediaId = await getMediaIdFromHost();
   
   if (!mediaId) {
@@ -75,32 +74,55 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // 完全白紙モードのときは、タイトル欄の内容をそのままタイトルとして使用する
   // （通常モードでは「ページタイトル | サイト名」の形で表示する）
   const isBlankMode = (rawPage.layoutMode || 'default') === 'blank';
-  const title = isBlankMode ? page.title : `${page.title} | ${siteInfo.name}`;
-  const description = page.metaDescription || page.excerpt || '';
+  const pageTitle = page.metaTitle || page.title;
+  const titleIsSiteName = !pageTitle || pageTitle === siteInfo.name;
+  const mediaHubTitle: Record<string, string> = {
+    ja: 'メディア',
+    en: 'Media',
+    zh: '媒体',
+    ko: '미디어',
+  };
+  const resolvedPageTitle =
+    params.slug === 'media' && titleIsSiteName
+      ? (mediaHubTitle[lang] || mediaHubTitle.ja)
+      : pageTitle;
+  const title = isBlankMode
+    ? resolvedPageTitle
+    : resolvedPageTitle && resolvedPageTitle !== siteInfo.name
+      ? `${resolvedPageTitle} | ${siteInfo.name}`
+      : siteInfo.name;
+  const description = page.metaDescription || page.excerpt || siteInfo.description || '';
 
   // ページ個別のファビコンが設定されていればそれを優先、なければサイト共通のファビコン
   const resolvedFaviconUrl = rawPage.faviconUrl || rawSiteInfo.faviconUrl;
+  const origin = getSiteOrigin();
+  const canonicalUrl = `${origin}/${lang}/${params.slug}/`;
 
   return {
     title,
     description,
+    robots: {
+      index: rawSiteInfo.allowIndexing,
+      follow: rawSiteInfo.allowIndexing,
+    },
     icons: resolvedFaviconUrl ? {
       icon: resolvedFaviconUrl,
       apple: resolvedFaviconUrl,
     } : undefined,
     alternates: {
-      canonical: `https://${host}/${lang}/${params.slug}`,
+      canonical: canonicalUrl,
       languages: {
-        'ja-JP': `https://${host}/ja/${params.slug}`,
-        'en-US': `https://${host}/en/${params.slug}`,
-        'zh-CN': `https://${host}/zh/${params.slug}`,
-        'ko-KR': `https://${host}/ko/${params.slug}`,
-        'x-default': `https://${host}/ja/${params.slug}`,
+        'ja-JP': `${origin}/ja/${params.slug}/`,
+        'en-US': `${origin}/en/${params.slug}/`,
+        'zh-CN': `${origin}/zh/${params.slug}/`,
+        'ko-KR': `${origin}/ko/${params.slug}/`,
+        'x-default': `${origin}/ja/${params.slug}/`,
       },
     },
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
       locale: LANG_REGIONS[lang],
       alternateLocale: SUPPORTED_LANGS.filter(l => l !== lang).map(l => LANG_REGIONS[l]),
     },
@@ -176,6 +198,19 @@ export default async function FixedPage({ params }: PageProps) {
   const theme = localizeTheme(rawTheme, lang);
   const combinedStyles = getCombinedStyles(rawTheme);
   const recaptchaConfig = getPublicRecaptchaConfig(rawTheme.generalSettings);
+  const isFurattoMedia = rawTheme.layoutTheme === 'furatto' && params.slug === 'media';
+  const mediaHubHeading: Record<string, string> = {
+    ja: 'メディア',
+    en: 'Media',
+    zh: '媒体',
+    ko: '미디어',
+  };
+  const visiblePageHeading =
+    isFurattoMedia && (!page.title || page.title === siteInfo.name)
+      ? (mediaHubHeading[lang] || mediaHubHeading.ja)
+      : isFurattoMedia
+        ? page.title
+        : null;
 
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
@@ -244,8 +279,10 @@ export default async function FixedPage({ params }: PageProps) {
         color: rawPage.textColor || undefined,
       }}
     >
-      {/* SEO用のh1タグ（視覚的には非表示） */}
-      <h1 className="sr-only">{page.title}</h1>
+      {/* ふらっと media はヒーローに可視 h1 があるので、ここでは出さない */}
+      {!visiblePageHeading && (
+        <h1 className="sr-only">{page.title}</h1>
+      )}
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
@@ -305,6 +342,14 @@ export default async function FixedPage({ params }: PageProps) {
             <span className="furatto-wm-key text-white/[0.12] font-black tracking-widest leading-none">KEY</span>
             <span className="furatto-wm-word text-white/[0.12] font-black tracking-widest leading-none" style={{ marginTop: '-0.02em' }}>WORD</span>
           </div>
+
+          {visiblePageHeading && (
+            <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 text-center">
+              <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-sm">
+                {visiblePageHeading}
+              </h1>
+            </div>
+          )}
 
           <FurattoMediaSearchHero
             lang={lang}

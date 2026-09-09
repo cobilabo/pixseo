@@ -6,6 +6,8 @@ import {
   getPublishedCategoryIdsSet,
   getPublishedTagIdsSet,
 } from '@/lib/firebase/published-taxonomy';
+import { getPublishedPageSlugsForSitemap } from '@/lib/firebase/pages-server';
+import { getMediaIdFromDomain } from '@/lib/firebase/media-tenant-helper';
 import { SUPPORTED_LANGS } from '@/types/lang';
 
 /**
@@ -22,109 +24,134 @@ export const revalidate = 3600;
 
 const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL || 'https://the-ayumi.jp').replace(/\/+$/, '');
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const origin = SITE_ORIGIN;
+/** アプリの予約パス。固定ページとしてサイトマップに載せない */
+const RESERVED_PAGE_SLUGS = new Set([
+  'home',
+  'articles',
+  'search',
+  'categories',
+  'tags',
+  'writers',
+  'admin',
+  'api',
+]);
 
-  const [articles, categories, tags, publishedTagIds, publishedCategoryIds] =
+function withTrailingSlash(path: string): string {
+  if (!path) return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
+function absUrl(path: string): string {
+  return `${SITE_ORIGIN}${withTrailingSlash(path)}`;
+}
+
+function langAlternates(pathAfterLang: string): Record<string, string> {
+  const suffix = pathAfterLang
+    ? withTrailingSlash(pathAfterLang.startsWith('/') ? pathAfterLang : `/${pathAfterLang}`)
+    : '/';
+  return Object.fromEntries(
+    SUPPORTED_LANGS.map(l => [l, absUrl(`/${l}${suffix === '/' ? '/' : suffix}`)])
+  );
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const mediaHost = new URL(SITE_ORIGIN).hostname;
+  const mediaId =
+    (await getMediaIdFromDomain(mediaHost)) ||
+    (await getMediaIdFromDomain('the-ayumi.jp'));
+
+  const [articles, categories, tags, publishedTagIds, publishedCategoryIds, pages] =
     await Promise.all([
-      getArticleSlugsForSitemap({ limit: 5000 }),
-      getCategoriesServer(),
-      getTagsServer(),
-      getPublishedTagIdsSet(),
-      getPublishedCategoryIdsSet(),
+      getArticleSlugsForSitemap({ limit: 5000, mediaId: mediaId || undefined }),
+      getCategoriesServer().catch(() => []),
+      getTagsServer().catch(() => []),
+      getPublishedTagIdsSet().catch(() => new Set<string>()),
+      getPublishedCategoryIdsSet().catch(() => new Set<string>()),
+      mediaId ? getPublishedPageSlugsForSitemap(mediaId) : Promise.resolve([]),
     ]);
 
   const sitemapEntries: MetadataRoute.Sitemap = [];
   const now = new Date();
 
-  // 静的ページ（各言語ごと）
   SUPPORTED_LANGS.forEach(lang => {
     sitemapEntries.push({
-      url: `${origin}/${lang}`,
+      url: absUrl(`/${lang}`),
       lastModified: now,
       changeFrequency: 'daily',
       priority: 1.0,
       alternates: {
-        languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}`])
-        ),
+        languages: langAlternates(''),
       },
     });
 
     sitemapEntries.push({
-      url: `${origin}/${lang}/articles`,
+      url: absUrl(`/${lang}/articles`),
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
       alternates: {
-        languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/articles`])
-        ),
-      },
-    });
-
-    sitemapEntries.push({
-      url: `${origin}/${lang}/search`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.5,
-      alternates: {
-        languages: Object.fromEntries(
-          SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/search`])
-        ),
+        languages: langAlternates('/articles'),
       },
     });
   });
 
-  // 記事ページ（各言語ごと）
+  const pageNow = now;
+  pages.forEach(page => {
+    if (!page.slug || RESERVED_PAGE_SLUGS.has(page.slug) || page.isHomePage) return;
+    if (page.publishedAt && page.publishedAt > pageNow) return;
+    SUPPORTED_LANGS.forEach(lang => {
+      sitemapEntries.push({
+        url: absUrl(`/${lang}/${page.slug}`),
+        lastModified: page.updatedAt || page.publishedAt || now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+        alternates: {
+          languages: langAlternates(`/${page.slug}`),
+        },
+      });
+    });
+  });
+
   articles.forEach(article => {
     if (!article.slug) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `${origin}/${lang}/articles/${article.slug}`,
+        url: absUrl(`/${lang}/articles/${article.slug}`),
         lastModified: article.updatedAt || article.publishedAt || now,
         changeFrequency: 'weekly',
         priority: 0.7,
         alternates: {
-          languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/articles/${article.slug}`])
-          ),
+          languages: langAlternates(`/articles/${article.slug}`),
         },
       });
     });
   });
 
-  // カテゴリーページ（公開記事が1件以上あるもののみ）
   categories.forEach(category => {
     if (!category.slug || !publishedCategoryIds.has(category.id)) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `${origin}/${lang}/categories/${category.slug}`,
+        url: absUrl(`/${lang}/categories/${category.slug}`),
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.6,
         alternates: {
-          languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/categories/${category.slug}`])
-          ),
+          languages: langAlternates(`/categories/${category.slug}`),
         },
       });
     });
   });
 
-  // タグページ（公開記事が1件以上あるもののみ）
   tags.forEach(tag => {
     if (!tag.slug || !publishedTagIds.has(tag.id)) return;
     SUPPORTED_LANGS.forEach(lang => {
       sitemapEntries.push({
-        url: `${origin}/${lang}/tags/${tag.slug}`,
+        url: absUrl(`/${lang}/tags/${tag.slug}`),
         lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.5,
         alternates: {
-          languages: Object.fromEntries(
-            SUPPORTED_LANGS.map(l => [l, `${origin}/${l}/tags/${tag.slug}`])
-          ),
+          languages: langAlternates(`/tags/${tag.slug}`),
         },
       });
     });
