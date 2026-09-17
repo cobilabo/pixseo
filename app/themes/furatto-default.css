@@ -699,24 +699,6 @@
   }
 }
 
-/* PC watermark (single line) */
-.furatto-media-search-watermark {
-  font-size: clamp(8rem, 24vw, 22rem);
-  line-height: 1;
-  letter-spacing: 0.08em;
-}
-
-/* SP watermark (2 lines: KEY large, WORD smaller) */
-.furatto-wm-key {
-  font-size: 48vw;
-  letter-spacing: 0.12em;
-}
-
-.furatto-wm-word {
-  font-size: 32vw;
-  letter-spacing: 0.06em;
-}
-
 /* ===== Responsive Adjustments ===== */
 @media (max-width: 767px) {
   .theme-furatto-default .prose h2 {

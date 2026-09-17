@@ -75,21 +75,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // （通常モードでは「ページタイトル | サイト名」の形で表示する）
   const isBlankMode = (rawPage.layoutMode || 'default') === 'blank';
   const pageTitle = page.metaTitle || page.title;
-  const titleIsSiteName = !pageTitle || pageTitle === siteInfo.name;
-  const mediaHubTitle: Record<string, string> = {
-    ja: 'メディア',
-    en: 'Media',
-    zh: '媒体',
-    ko: '미디어',
-  };
-  const resolvedPageTitle =
-    params.slug === 'media' && titleIsSiteName
-      ? (mediaHubTitle[lang] || mediaHubTitle.ja)
-      : pageTitle;
   const title = isBlankMode
-    ? resolvedPageTitle
-    : resolvedPageTitle && resolvedPageTitle !== siteInfo.name
-      ? `${resolvedPageTitle} | ${siteInfo.name}`
+    ? pageTitle
+    : pageTitle && pageTitle !== siteInfo.name
+      ? `${pageTitle} | ${siteInfo.name}`
       : siteInfo.name;
   const description = page.metaDescription || page.excerpt || siteInfo.description || '';
 
@@ -198,20 +187,6 @@ export default async function FixedPage({ params }: PageProps) {
   const theme = localizeTheme(rawTheme, lang);
   const combinedStyles = getCombinedStyles(rawTheme);
   const recaptchaConfig = getPublicRecaptchaConfig(rawTheme.generalSettings);
-  const isFurattoMedia = rawTheme.layoutTheme === 'furatto' && params.slug === 'media';
-  const mediaHubHeading: Record<string, string> = {
-    ja: 'メディア',
-    en: 'Media',
-    zh: '媒体',
-    ko: '미디어',
-  };
-  const visiblePageHeading =
-    isFurattoMedia && (!page.title || page.title === siteInfo.name)
-      ? (mediaHubHeading[lang] || mediaHubHeading.ja)
-      : isFurattoMedia
-        ? page.title
-        : null;
-
   const footerContents = theme.footerContents?.filter((content: any) => content.imageUrl) || [];
   const footerTextLinkSections = theme.footerTextLinkSections?.filter((section: any) => section.title || section.links?.length > 0) || [];
   const footerBlocks = rawTheme.footerBlocks || [];
@@ -279,10 +254,7 @@ export default async function FixedPage({ params }: PageProps) {
         color: rawPage.textColor || undefined,
       }}
     >
-      {/* ふらっと media はヒーローに可視 h1 があるので、ここでは出さない */}
-      {!visiblePageHeading && (
-        <h1 className="sr-only">{page.title}</h1>
-      )}
+      <h1 className="sr-only">{page.title || siteInfo.name}</h1>
       
       {/* ブロックビルダー使用時はBlockRendererで表示 */}
       {rawPage.useBlockBuilder && rawPage.blocks ? (
@@ -331,25 +303,6 @@ export default async function FixedPage({ params }: PageProps) {
       {rawTheme.layoutTheme === 'furatto' && params.slug === 'media' ? (
         <section className="furatto-media-search-hero relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          {/* PC: 1行KEYWORD */}
-          <div className="absolute inset-x-0 bottom-0 hidden sm:flex items-start justify-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ top: '0%' }}>
-            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
-              KEYWORD
-            </span>
-          </div>
-          {/* SP: KEY/WORD 2行 */}
-          <div className="absolute inset-0 flex sm:hidden flex-col items-center justify-start pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ paddingTop: '8%' }}>
-            <span className="furatto-wm-key text-white/[0.12] font-black tracking-widest leading-none">KEY</span>
-            <span className="furatto-wm-word text-white/[0.12] font-black tracking-widest leading-none" style={{ marginTop: '-0.02em' }}>WORD</span>
-          </div>
-
-          {visiblePageHeading && (
-            <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 text-center">
-              <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-sm">
-                {visiblePageHeading}
-              </h1>
-            </div>
-          )}
 
           <FurattoMediaSearchHero
             lang={lang}

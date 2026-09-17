@@ -76,18 +76,7 @@ export default function FurattoMediaSearchHero({
   return (
     <div className={noBackground ? 'relative' : 'furatto-media-search-hero relative overflow-hidden'}>
       {!noBackground && (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
-          <div
-            className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none select-none overflow-hidden"
-            aria-hidden="true"
-            style={{ top: '-40%' }}
-          >
-            <span className="furatto-media-search-watermark text-white/[0.15] font-black tracking-widest whitespace-nowrap">
-              KEYWORD
-            </span>
-          </div>
-        </>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300" />
       )}
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
