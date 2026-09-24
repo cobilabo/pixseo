@@ -74,6 +74,16 @@ import {
 // ISR: 1時間ごとに再生成（記事更新時は revalidatePath で即時反映）
 export const revalidate = 3600;
 
+/** 検索結果・シェアカード用。管理画面の「メタディスクリプション」は excerpt に保存される。 */
+function articlePublicDescription(article: {
+  excerpt?: string;
+  metaDescription?: string;
+  aiSummary?: string;
+  title?: string;
+}): string {
+  return article.excerpt || article.metaDescription || article.aiSummary || article.title || '';
+}
+
 interface PageProps {
   params: {
     lang: string;
@@ -119,8 +129,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const origin = getSiteOrigin();
   const canonicalUrl = `${origin}/${lang}/articles/${rawArticle.slug}`;
 
-  // AIサマリーをメタデータに追加（AIO対策）
-  const description = article.aiSummary || article.metaDescription || article.excerpt || article.title;
+  const description = articlePublicDescription(article);
 
   return {
     title: `${article.metaTitle || article.title} | ${siteInfo.name}`,
@@ -172,7 +181,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       'googlebot': allowIndexing ? 'index, follow' : 'noindex, nofollow',
       'bingbot': allowIndexing ? 'index, follow' : 'noindex, nofollow',
       // AI向け特別タグ
-      'ai-content-summary': article.aiSummary || article.excerpt || description,
+      'ai-content-summary': description,
       ...(rawArticle.publishedAt instanceof Date && {
         'article:published_time': rawArticle.publishedAt.toISOString(),
       }),
@@ -327,8 +336,8 @@ export default async function ArticlePage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: article.title || '',
-    description: article.aiSummary || article.excerpt || article.metaDescription || article.title || '',
-    abstract: article.aiSummary || article.excerpt || '',
+    description: articlePublicDescription(article),
+    abstract: articlePublicDescription(article),
     image: rawArticle.featuredImage || '',
     datePublished: toIsoDateStringOrNow(rawArticle.publishedAt),
     dateModified: toIsoDateStringOrNow(rawArticle.updatedAt),
