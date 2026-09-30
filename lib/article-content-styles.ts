@@ -123,6 +123,10 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
       padding: 0.75em 1em !important;
       border-bottom: 1px solid var(--border-color, #e5e7eb) !important;
     }
+    .article-content table p {
+      line-height: 1.5 !important;
+      margin: 0 !important;
+    }
     .article-content table tbody tr:last-child td {
       border-bottom: none !important;
     }
@@ -269,13 +273,37 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
         padding: 0.5em 0.75em !important;
         font-size: 0.875em !important;
       }
+      .article-content .article-table-scroll {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        max-width: 100% !important;
+        margin: 1em 0 !important;
+      }
+      .article-content .article-table-scroll > table {
+        width: max-content !important;
+        min-width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+      }
       .article-content table {
-        margin: 1.25em 0 !important;
+        margin: 1em 0 !important;
         font-size: 0.8125em !important;
       }
       .article-content table th,
       .article-content table td {
-        padding: 0.5em 0.75em !important;
+        padding: 0.35em 0.5em !important;
+        line-height: 1.45 !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+      }
+      .article-content table p {
+        line-height: 1.45 !important;
+        margin: 0 !important;
+      }
+      .article-content table a {
+        word-break: normal !important;
       }
     }
     /* BlogCard専用スタイルリセット */

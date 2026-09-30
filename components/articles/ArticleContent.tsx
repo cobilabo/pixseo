@@ -51,6 +51,14 @@ function stripArticleBodyH1(html: string): string {
   return html.replace(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi, '');
 }
 
+/** スマホで表を潰さず、内容の幅で横スクロールできるように包む */
+function wrapArticleTablesForScroll(html: string): string {
+  if (!html || !/<table\b/i.test(html)) return html;
+  return html.replace(/<table\b[^>]*>[\s\S]*?<\/table>/gi, (table) => {
+    return `<div class="article-table-scroll">${table}</div>`;
+  });
+}
+
 /** 旧ドメインの絶対 URL を相対パスにする（href 属性のみ） */
 function rewriteLegacyAyumiHrefs(html: string): string {
   return html.replace(
@@ -81,8 +89,10 @@ export default function ArticleContent({
     rewriteLegacyAyumiHrefs(stripArticleBodyH1(processed)),
     tableOfContents
   );
-  const processedContent = applyExternalLinkTargetsToHtml(withHeadingIds, siteHost)
-    .replace(/<div\s+class="toc-placeholder"\s+data-toc="auto"\s*><\/div>/gi, '');
+  const processedContent = wrapArticleTablesForScroll(
+    applyExternalLinkTargetsToHtml(withHeadingIds, siteHost)
+      .replace(/<div\s+class="toc-placeholder"\s+data-toc="auto"\s*><\/div>/gi, '')
+  );
 
   const tocItems = Array.isArray(tableOfContents) ? tableOfContents : [];
 

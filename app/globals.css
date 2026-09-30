@@ -148,6 +148,35 @@ body {
     margin-top: 1.1em;
     margin-bottom: 0.5em;
   }
+
+  .article-content.prose .article-table-scroll {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    max-width: 100%;
+    margin: 1em 0;
+  }
+
+  .article-content.prose .article-table-scroll > table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .article-content.prose table th,
+  .article-content.prose table td {
+    padding: 0.35em 0.5em;
+    line-height: 1.45;
+    word-break: keep-all;
+    overflow-wrap: normal;
+  }
+
+  .article-content.prose table p {
+    line-height: 1.45;
+    margin: 0;
+  }
 }
 
 /* 参照元のスタイル（目立たないように） */
