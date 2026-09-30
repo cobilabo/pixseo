@@ -179,6 +179,54 @@ function placeCaretAtStart(el: HTMLElement) {
   sel.addRange(range);
 }
 
+/** 本文を innerHTML で差し替える前後で、キャレット位置を文字数で保持する */
+function getCollapsedCaretOffset(root: HTMLElement): number | null {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  if (!root.contains(range.startContainer)) return null;
+  const pre = range.cloneRange();
+  pre.selectNodeContents(root);
+  pre.setEnd(range.startContainer, range.startOffset);
+  return pre.toString().length;
+}
+
+function restoreCollapsedCaretOffset(root: HTMLElement, offset: number) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let remaining = offset;
+  let node = walker.nextNode();
+  while (node) {
+    const len = node.textContent?.length ?? 0;
+    if (remaining <= len) {
+      const range = document.createRange();
+      range.setStart(node, remaining);
+      range.collapse(true);
+      const sel = window.getSelection();
+      if (!sel) return;
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return;
+    }
+    remaining -= len;
+    node = walker.nextNode();
+  }
+}
+
+function findScrollParent(el: HTMLElement): HTMLElement | Window {
+  let node: HTMLElement | null = el.parentElement;
+  while (node) {
+    const overflowY = window.getComputedStyle(node).overflowY;
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      node.scrollHeight > node.clientHeight
+    ) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return window;
+}
+
 /** ツールバー注入対象の画像ラッパーを列挙（クラス付き + 素の div/figure+img） */
 function collectImageFigureRoots(editor: HTMLElement): HTMLElement[] {
   const seen = new Set<HTMLElement>();
@@ -427,17 +475,35 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     const ed = editorRef.current;
     const prevCanonical = lastCanonicalHtmlRef.current;
     const valueChangedFromParent = prevCanonical !== value;
-    const canonicalNow = canonicalEditorInnerHtml(ed);
+    // 保存値は font-size を除いた形。生の innerHTML と比べると毎回不一致になり、
+    // Backspace のたびに DOM を貼り直してキャレットとスクロールが先頭へ戻る。
+    const canonicalNow = extractCanonicalHtmlFromEditor(ed);
 
-    // 注入した編集・削除ボタンは innerHTML に含まれるが保存 value には無いため、
-    // value !== ed.innerHTML だと常に不一致になり、入力のたびに DOM を貼り直してカーソルが先頭へ飛ぶ。
     if (valueChangedFromParent && value != null && value !== canonicalNow) {
+      const caret = getCollapsedCaretOffset(ed);
+      const scroller = findScrollParent(ed);
+      const windowX = window.scrollX;
+      const windowY = window.scrollY;
+      const scrollTop = scroller === window ? windowY : scroller.scrollTop;
+      const scrollLeft = scroller === window ? windowX : scroller.scrollLeft;
+      const restoreScroll = () => {
+        window.scrollTo(windowX, windowY);
+        if (scroller !== window) {
+          scroller.scrollTop = scrollTop;
+          scroller.scrollLeft = scrollLeft;
+        }
+      };
       ed.innerHTML = value;
+      if (caret != null) {
+        restoreCollapsedCaretOffset(ed, caret);
+        restoreScroll();
+        requestAnimationFrame(restoreScroll);
+      }
     }
 
     ensureTocPlaceholderChrome(ed);
 
-    const canonical = canonicalEditorInnerHtml(ed);
+    const canonical = extractCanonicalHtmlFromEditor(ed);
 
     if (canonical !== value) {
       onChangeRef.current(canonical);
@@ -926,6 +992,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const handleInput = () => {
     if (editorRef.current) {
       const html = extractCanonicalHtmlFromEditor(editorRef.current);
+      // 自分の入力を親の value 更新と見分け、エコーで DOM を貼り直さない
+      lastCanonicalHtmlRef.current = html;
       onChange(html);
     }
   };
