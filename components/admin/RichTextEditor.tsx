@@ -212,7 +212,7 @@ function restoreCollapsedCaretOffset(root: HTMLElement, offset: number) {
   }
 }
 
-function findScrollParent(el: HTMLElement): HTMLElement | Window {
+function findScrollParent(el: HTMLElement): HTMLElement | null {
   let node: HTMLElement | null = el.parentElement;
   while (node) {
     const overflowY = window.getComputedStyle(node).overflowY;
@@ -224,7 +224,7 @@ function findScrollParent(el: HTMLElement): HTMLElement | Window {
     }
     node = node.parentElement;
   }
-  return window;
+  return null;
 }
 
 /** ツールバー注入対象の画像ラッパーを列挙（クラス付き + 素の div/figure+img） */
@@ -484,11 +484,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const scroller = findScrollParent(ed);
       const windowX = window.scrollX;
       const windowY = window.scrollY;
-      const scrollTop = scroller === window ? windowY : scroller.scrollTop;
-      const scrollLeft = scroller === window ? windowX : scroller.scrollLeft;
+      const scrollTop = scroller ? scroller.scrollTop : windowY;
+      const scrollLeft = scroller ? scroller.scrollLeft : windowX;
       const restoreScroll = () => {
         window.scrollTo(windowX, windowY);
-        if (scroller !== window) {
+        if (scroller) {
           scroller.scrollTop = scrollTop;
           scroller.scrollLeft = scrollLeft;
         }
