@@ -909,13 +909,14 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                         
                         const newIsPublished = e.target.checked;
                         
-                        // 下書き状態で公開トグルをオンにした場合
+                        // 下書きから公開に戻すとき、既にある公開日は残す。
+                        // 空のときだけ今日を入れる（未公開の新規下書き）。
                         if (newIsPublished && formData.isDraft) {
                           setFormData({
                             ...formData,
                             isPublished: true,
                             isDraft: false,
-                            publishedAt: getJapanTodayYmd(), // 公開日を今日に設定
+                            publishedAt: formData.publishedAt || getJapanTodayYmd(),
                           });
                         } else {
                           setFormData({ ...formData, isPublished: newIsPublished });
@@ -951,11 +952,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                         const newIsDraft = e.target.checked;
                         
                         if (newIsDraft) {
-                          // 下書きをオンにした場合：公開日を空に、公開もオフに
+                          // 公開日は消さない。消すと再公開時に今日の日付になり、新着の先頭へ出る。
                           setFormData({
                             ...formData,
                             isDraft: true,
-                            publishedAt: '',
                             isPublished: false,
                             isScheduled: false,
                           });

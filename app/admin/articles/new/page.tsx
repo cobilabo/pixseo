@@ -880,13 +880,13 @@ function NewArticlePageContent() {
                         
                         const newIsPublished = e.target.checked;
                         
-                        // 下書き状態で公開トグルをオンにした場合
+                        // 公開日が既にある場合は置き換えない。空のときだけ今日を入れる。
                         if (newIsPublished && formData.isDraft) {
                           setFormData({
                             ...formData,
                             isPublished: true,
                             isDraft: false,
-                            publishedAt: getJapanTodayYmd(), // 公開日を今日に設定
+                            publishedAt: formData.publishedAt || getJapanTodayYmd(),
                           });
                         } else {
                           setFormData({ ...formData, isPublished: newIsPublished });
