@@ -227,6 +227,38 @@ function findScrollParent(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
+type ScrollSnapshot = {
+  scroller: HTMLElement | null;
+  windowX: number;
+  windowY: number;
+  scrollTop: number;
+  scrollLeft: number;
+};
+
+function captureScrollSnapshot(el: HTMLElement): ScrollSnapshot {
+  const scroller = findScrollParent(el);
+  return {
+    scroller,
+    windowX: window.scrollX,
+    windowY: window.scrollY,
+    scrollTop: scroller ? scroller.scrollTop : 0,
+    scrollLeft: scroller ? scroller.scrollLeft : 0,
+  };
+}
+
+function restoreScrollSnapshot(snapshot: ScrollSnapshot) {
+  const apply = () => {
+    window.scrollTo(snapshot.windowX, snapshot.windowY);
+    if (snapshot.scroller) {
+      snapshot.scroller.scrollTop = snapshot.scrollTop;
+      snapshot.scroller.scrollLeft = snapshot.scrollLeft;
+    }
+  };
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 0);
+}
+
 /** ツールバー注入対象の画像ラッパーを列挙（クラス付き + 素の div/figure+img） */
 function collectImageFigureRoots(editor: HTMLElement): HTMLElement[] {
   const seen = new Set<HTMLElement>();
@@ -481,24 +513,10 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
     if (valueChangedFromParent && value != null && value !== canonicalNow) {
       const caret = getCollapsedCaretOffset(ed);
-      const scroller = findScrollParent(ed);
-      const windowX = window.scrollX;
-      const windowY = window.scrollY;
-      const scrollTop = scroller ? scroller.scrollTop : windowY;
-      const scrollLeft = scroller ? scroller.scrollLeft : windowX;
-      const restoreScroll = () => {
-        window.scrollTo(windowX, windowY);
-        if (scroller) {
-          scroller.scrollTop = scrollTop;
-          scroller.scrollLeft = scrollLeft;
-        }
-      };
+      const snapshot = captureScrollSnapshot(ed);
       ed.innerHTML = value;
-      if (caret != null) {
-        restoreCollapsedCaretOffset(ed, caret);
-        restoreScroll();
-        requestAnimationFrame(restoreScroll);
-      }
+      if (caret != null) restoreCollapsedCaretOffset(ed, caret);
+      restoreScrollSnapshot(snapshot);
     }
 
     ensureTocPlaceholderChrome(ed);
@@ -611,12 +629,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       if (currentMode === 'source' || !currentMode) {
         const textarea = block.querySelector('.html-block-textarea') as HTMLTextAreaElement;
         const savedContent = block.getAttribute('data-html-content');
-        if (textarea && savedContent) {
+        if (textarea && savedContent && editorRef.current) {
           try {
-            // URLエンコードされたコンテンツをデコード
             const decodedContent = decodeURIComponent(savedContent);
-            // textareaのvalueはそのままセット（HTMLエスケープ不要）
-            textarea.value = decodedContent;
+            if (textarea.value !== decodedContent) {
+              const snapshot = captureScrollSnapshot(editorRef.current);
+              textarea.value = decodedContent;
+              restoreScrollSnapshot(snapshot);
+            }
           } catch (e) {
             console.error('Failed to restore HTML block content:', e);
           }
@@ -1525,6 +1545,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       return;
     }
 
+    const scrollSnapshot = captureScrollSnapshot(editorRef.current);
+
     try {
       let range: Range | null = null;
       
@@ -1534,7 +1556,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       } else {
         // 保存された位置が無効な場合は、現在の選択範囲を使用
         const selection = window.getSelection();
-        editorRef.current.focus();
+        editorRef.current.focus({ preventScroll: true });
         
         if (selection && selection.rangeCount > 0) {
           range = selection.getRangeAt(0);
@@ -1565,8 +1587,8 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         return;
       }
       
-      // エディターにフォーカスを設定
-      editorRef.current.focus();
+      // フォーカス移動で本文先頭へスクロールしない
+      editorRef.current.focus({ preventScroll: true });
       
       // 保存された範囲がまだ有効か確認し、必要に応じて再設定
       try {
@@ -1600,9 +1622,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       // HTMLコンテンツをdata属性に保存（エスケープ）
       htmlBlock.setAttribute('data-html-content', encodeURIComponent(htmlContent.trim()));
       
-      // ツールバーとソースコード表示を含むHTMLを構築
-      const formattedHtml = formatHtml(htmlContent.trim());
-      htmlBlock.innerHTML = createHtmlBlockContent(blockId, formattedHtml, 'source');
+      // 表示テキストと data-html-content を同じ文字列にする。
+      // ここで整形すると挿入後の textarea.value 再代入が走り、画面が先頭へ戻る。
+      htmlBlock.innerHTML = createHtmlBlockContent(blockId, htmlContent.trim(), 'source');
       
       // 新しいブロックのモードを設定
       setHtmlBlockModes(prev => ({ ...prev, [blockId]: 'source' }));
@@ -1631,6 +1653,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       
       // エディターの内容を更新
       handleInput();
+      restoreScrollSnapshot(scrollSnapshot);
       
       // 保存された範囲をクリア
       setSavedRange(null);
