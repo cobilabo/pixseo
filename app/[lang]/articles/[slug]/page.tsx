@@ -45,7 +45,6 @@ import FirstView from '@/components/layout/FirstView';
 import ArticleContent from '@/components/articles/ArticleContent';
 import RelatedArticles from '@/components/articles/RelatedArticles';
 import GoogleMapsEmbed from '@/components/common/GoogleMapsEmbed';
-import TableOfContents from '@/components/articles/TableOfContents';
 import SocialShare from '@/components/articles/SocialShare';
 import Breadcrumbs from '@/components/articles/Breadcrumbs';
 import CategoryTagBadges from '@/components/articles/CategoryTagBadges';
@@ -527,13 +526,7 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* カテゴリー・タグバッジ */}
             <CategoryTagBadges categories={categories} tags={tags} lang={lang} />
 
-            {/* 目次（コンテンツ内にインライン目次がない場合のみ表示） */}
-            {Array.isArray(article.tableOfContents) && article.tableOfContents.length > 0 &&
-              !(typeof article.content === 'string' && article.content.includes('toc-placeholder')) && (
-              <TableOfContents items={article.tableOfContents} lang={lang} />
-            )}
-
-            {/* 記事本文 */}
+            {/* 記事本文（目次は ArticleContent 内の1か所だけ） */}
             <article className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 mb-6 md:mb-8">
               <ArticleContent 
                 content={typeof article.content === 'string' ? article.content : ''} 
