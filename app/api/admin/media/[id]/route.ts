@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminStorage, adminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
 
 // メディア削除
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'mediaLibrary', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     // Firestoreからメタデータ取得
     const doc = await adminDb.collection('mediaLibrary').doc(params.id).get();

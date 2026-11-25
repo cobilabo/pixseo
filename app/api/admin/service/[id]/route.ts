@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { canAccessMedia, invalidateAdminPrincipalCache, requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
@@ -8,6 +9,12 @@ export const dynamic = 'force-dynamic';
 
 // メディアテナント取得
 export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!canAccessMedia(adminCtx, params.id)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const doc = await adminDb.collection('mediaTenants').doc(params.id).get();
     
@@ -31,6 +38,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 // メディアテナント更新
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!canAccessMedia(adminCtx, params.id)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { 
@@ -57,6 +70,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
     const currentData = currentDoc.data()!;
     const oldClientId = currentData.clientId;
+
+    // クライアント（＝テナントのメンバー）の付け替えは super_admin のみ
+    if (!adminCtx.isSuperAdmin && clientId !== undefined && (clientId || null) !== (oldClientId || null)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // スラッグの重複チェック（自分以外）
     if (slug) {
@@ -165,6 +183,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     await adminDb.collection('mediaTenants').doc(params.id).update(updateData);
+    invalidateAdminPrincipalCache();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Service Update] エラー:', error);
@@ -174,11 +193,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 // メディアテナント削除
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     // TODO: 関連する記事・バナー・メディアファイルも削除するか確認
     // 今回は論理削除（isActive: false）を推奨
     
     await adminDb.collection('mediaTenants').doc(params.id).delete();
+    invalidateAdminPrincipalCache();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[API Tenant Delete] エラー:', error);

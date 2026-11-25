@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { 
   translateText, 
   translateBatch, 
@@ -21,6 +22,9 @@ import { Lang, SUPPORTED_LANGS } from '@/types/lang';
  * }
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { type, targetLang, data, context } = body;
@@ -132,6 +136,9 @@ export async function POST(request: NextRequest) {
  * 翻訳APIの状態確認
  */
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   const hasApiKey = !!process.env.OPENAI_API_KEY;
 
   return NextResponse.json({

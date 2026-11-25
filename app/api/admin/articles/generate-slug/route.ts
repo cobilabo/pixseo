@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import {
   generateSlugFallbackFromTitle,
@@ -30,6 +31,9 @@ function parseRetryAfterMs(res: Response): number | null {
  * 429 対策: バックオフで再試行 → それでも失敗時はフォールバックスラッグ（usedFallback: true）
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();

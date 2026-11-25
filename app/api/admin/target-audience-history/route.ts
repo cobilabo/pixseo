@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
 
 // GET: 想定読者履歴の取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
 
@@ -43,6 +47,9 @@ export async function GET(request: NextRequest) {
 
 // POST: 想定読者履歴に追加
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();
@@ -93,6 +100,9 @@ export async function POST(request: NextRequest) {
 
 // DELETE: 想定読者履歴から削除
 export async function DELETE(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const url = new URL(request.url);

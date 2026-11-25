@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminStorage } from '@/lib/firebase/admin';
 import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

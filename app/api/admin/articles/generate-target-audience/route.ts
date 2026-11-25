@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import OpenAI from 'openai';
 
@@ -8,6 +9,9 @@ export const dynamic = 'force-dynamic';
  * カテゴリー名から想定読者（ペルソナ）をAIで自動生成
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { categoryId, title, excludeHistory } = body;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 // GET: 単一クライアント取得
@@ -6,6 +7,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const doc = await adminDb.collection('clients').doc(id).get();
@@ -43,6 +47,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const body = await request.json();
@@ -115,6 +122,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const doc = await adminDb.collection('clients').doc(id).get();

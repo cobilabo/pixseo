@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
@@ -26,6 +27,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'writers', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const doc = await adminDb.collection('writers').doc(id).get();
@@ -72,6 +76,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'writers', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const body = await request.json();
@@ -184,6 +191,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'writers', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const mediaIdHeader = request.headers.get('x-media-id');

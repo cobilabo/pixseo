@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminStorage, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import sharp from 'sharp';
@@ -11,6 +12,9 @@ export const dynamic = 'force-dynamic';
 
 // メディアアップロード
 export async function POST(request: Request) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

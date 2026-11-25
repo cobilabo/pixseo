@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,9 @@ export const dynamic = 'force-dynamic';
  * 既存記事との類似度をチェックし、重複していないテーマを返す
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();

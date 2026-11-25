@@ -1,10 +1,14 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { analyzeSelectors, SelectorAnalysisInput } from '@/lib/site-import/analyzer';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   const body = await request.json();
   const { samplePages, allPages } = body as SelectorAnalysisInput;
 

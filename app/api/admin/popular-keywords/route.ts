@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import {
   getAggregatedPopularKeywords,
   setPopularKeywordApproval,
@@ -25,6 +26,9 @@ function parseInteger(value: string | null, fallback: number, min = 0): number {
 
 // GET: 集計済みキーワード一覧を取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     if (!mediaId) {
@@ -57,6 +61,9 @@ export async function GET(request: NextRequest) {
 
 // PATCH: キーワードの承認状態を更新
 export async function PATCH(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     if (!mediaId) {
@@ -107,6 +114,9 @@ export async function PATCH(request: NextRequest) {
 
 // POST: 一括更新（複数キーワードを一度に承認/拒否/未承認に戻す）
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     if (!mediaId) {

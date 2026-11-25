@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { canManageUser, requireAdmin } from '@/lib/admin-auth';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -6,6 +7,12 @@ export const dynamic = 'force-dynamic';
 
 // アカウント削除
 export async function DELETE(request: Request, { params }: { params: { uid: string } }) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!(await canManageUser(adminCtx, params.uid))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     await adminAuth.deleteUser(params.uid);
     return NextResponse.json({ success: true });
@@ -17,6 +24,12 @@ export async function DELETE(request: Request, { params }: { params: { uid: stri
 
 // アカウント更新
 export async function PUT(request: Request, { params }: { params: { uid: string } }) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!(await canManageUser(adminCtx, params.uid))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { email, password, displayName, logoUrl } = body;
@@ -46,6 +59,12 @@ export async function PUT(request: Request, { params }: { params: { uid: string 
 
 // アカウント取得
 export async function GET(request: Request, { params }: { params: { uid: string } }) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!(await canManageUser(adminCtx, params.uid))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const userRecord = await adminAuth.getUser(params.uid);
     

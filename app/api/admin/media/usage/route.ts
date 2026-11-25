@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,9 @@ const createBuckets = (): UsageBuckets => ({
 // パフォーマンス改善: メディア毎にクエリを発火するのではなく、
 // 関連コレクションを1度だけ取得してメモリ上でURLマッチングする。
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body: MediaUsageRequest = await request.json();
     const { mediaItems } = body;

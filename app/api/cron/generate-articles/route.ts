@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isCronAuthorized } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -18,10 +19,7 @@ const NOINDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' } as const;
 export async function GET(request: NextRequest) {
   try {
     // Vercel Cronからの認証
-    const authHeader = request.headers.get('authorization');
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-    
-    if (authHeader !== expectedAuth) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401, headers: NOINDEX_HEADERS }
@@ -78,6 +76,8 @@ export async function GET(request: NextRequest) {
           headers: {
             'Content-Type': 'application/json',
             'x-media-id': schedule.mediaId,
+            // 内部呼び出し: /api/admin/articles/generate-advanced は CRON_SECRET で認可する
+            Authorization: `Bearer ${process.env.CRON_SECRET}`,
           },
           body: JSON.stringify({
             categoryId: schedule.categoryId,

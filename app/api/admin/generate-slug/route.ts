@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { generateEnglishSlug } from '@/lib/generate-slug';
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,9 @@ export const dynamic = 'force-dynamic';
  * 日本語から英語のスラッグを生成するAPIエンドポイント
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { name, type = 'tag' } = body;

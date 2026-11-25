@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Page } from '@/types/page';
 import { safeToDate } from '@/lib/firebase/date-utils';
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
 
 // 固定ページ一覧取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     let query: FirebaseFirestore.Query = adminDb.collection('pages');
@@ -47,6 +51,9 @@ export async function GET(request: NextRequest) {
 
 // 固定ページ作成
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     // undefinedフィールドを除去（Firestoreはundefinedを許可しない）

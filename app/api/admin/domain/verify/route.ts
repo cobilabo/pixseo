@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { verifyDomain as verifyVercelDomain } from '@/lib/vercel-api';
@@ -10,6 +11,9 @@ import { DomainConfig } from '@/types/media-tenant';
  * POST /api/admin/domain/verify
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { serviceId } = body;

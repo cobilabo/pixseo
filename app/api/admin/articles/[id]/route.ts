@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia, deleteArticleFromAlgolia } from '@/lib/algolia/sync';
@@ -19,6 +20,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'articles', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     // Firestoreから削除
@@ -70,6 +74,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'articles', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const articleRef = adminDb.collection('articles').doc(id);
@@ -107,6 +114,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'articles', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   const { id } = params;
   
   try {

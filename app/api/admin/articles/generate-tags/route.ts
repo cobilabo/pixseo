@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { translateText } from '@/lib/openai/translate';
 import { SUPPORTED_LANGS } from '@/types/lang';
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
  * 既存タグとの類似度チェックを行い、統合または新規作成
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();
