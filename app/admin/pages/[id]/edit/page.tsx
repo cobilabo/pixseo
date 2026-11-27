@@ -56,6 +56,7 @@ export default function EditPagePage() {
     showGlobalNav: false,
     showSidebar: false,
     isHomePage: false,
+    noindex: false,
     faviconUrl: '',
   });
   const [showFaviconLibrary, setShowFaviconLibrary] = useState(false);
@@ -112,6 +113,7 @@ export default function EditPagePage() {
         showGlobalNav: page.showGlobalNav || false,
         showSidebar: page.showSidebar || false,
         isHomePage: page.isHomePage || page.slug === 'home',
+        noindex: page.noindex === true,
         faviconUrl: page.faviconUrl || '',
       });
       
@@ -742,6 +744,13 @@ export default function EditPagePage() {
                   />
                 </>
               )}
+
+              {/* 検索エンジンに表示しない */}
+              <CustomCheckbox
+                label="検索エンジンに表示しない（完了ページ等）"
+                checked={formData.noindex}
+                onChange={(checked) => setFormData({ ...formData, noindex: checked })}
+              />
 
               {/* パネル表示 */}
               <CustomCheckbox

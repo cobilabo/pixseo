@@ -219,17 +219,22 @@ export default function NewFormPage() {
                       rows={3}
                     />
                   ) : (
-                    <FloatingInput
-                      label="リダイレクト先URL"
-                      value={formData.afterSubmit.redirectUrl || ''}
-                      onChange={(value) => setFormData({
-                        ...formData,
-                        afterSubmit: {
-                          ...formData.afterSubmit,
-                          redirectUrl: value,
-                        },
-                      })}
-                    />
+                    <div>
+                      <FloatingInput
+                        label="リダイレクト先URL"
+                        value={formData.afterSubmit.redirectUrl || ''}
+                        onChange={(value) => setFormData({
+                          ...formData,
+                          afterSubmit: {
+                            ...formData.afterSubmit,
+                            redirectUrl: value,
+                          },
+                        })}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        言語を付けずに入力すると（例: /contact-thanks/）、閲覧中の言語のページへ移動します。
+                      </p>
+                    </div>
                   )}
 
                   {/* メール通知設定（管理者向け） */}

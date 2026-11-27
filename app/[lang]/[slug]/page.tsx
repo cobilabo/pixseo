@@ -91,7 +91,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     robots: {
-      index: rawSiteInfo.allowIndexing,
+      // ページ個別の「検索エンジンに表示しない」（完了ページ等）はサイト設定より優先
+      index: rawPage.noindex === true ? false : rawSiteInfo.allowIndexing,
       follow: rawSiteInfo.allowIndexing,
     },
     icons: resolvedFaviconUrl ? {

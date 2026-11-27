@@ -11,6 +11,7 @@ import { Form } from '@/types/form';
 import { Lang } from '@/types/lang';
 import type { RecaptchaPublicConfig } from '@/lib/recaptcha';
 import { executeRecaptchaV3 } from '@/lib/recaptcha-client';
+import { buildPrefillFromQuery, resolveFormRedirectUrl } from '@/lib/form-client-utils';
 
 const UI_STRINGS: Record<string, Record<Lang, string>> = {
   submit: { ja: '送信する', en: 'Submit', zh: '提交', ko: '제출' },
@@ -57,6 +58,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -69,6 +71,16 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
       setLoading(false);
     }
   }, [config.formId]);
+
+  // URL クエリ（例: ?type=kasuhara）で選択肢を初期チェックする。
+  // ページは ISR のため useSearchParams ではなくブラウザ側で location を読む。
+  useEffect(() => {
+    if (!form?.fields?.length) return;
+    const prefill = buildPrefillFromQuery(form.fields as any[], window.location.search);
+    if (Object.keys(prefill).length > 0) {
+      setFormData((prev) => ({ ...prefill, ...prev }));
+    }
+  }, [form]);
 
   const fetchForm = async () => {
     try {
@@ -113,11 +125,19 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
         throw new Error(result.error || 'フォームの送信に失敗しました');
       }
 
-      setSubmitted(true);
+      const redirectUrl =
+        result.afterSubmit?.type === 'redirect'
+          ? resolveFormRedirectUrl(result.afterSubmit.redirectUrl, lang)
+          : null;
 
-      if (result.afterSubmit?.type === 'redirect' && result.afterSubmit?.redirectUrl) {
-        window.location.href = result.afterSubmit.redirectUrl;
+      if (redirectUrl) {
+        // 完了ページへ移動する場合は完了メッセージを出さず、移動までボタンを無効のままにする
+        setRedirecting(true);
+        window.location.assign(redirectUrl);
+        return;
       }
+
+      setSubmitted(true);
     } catch (err: any) {
       const message = err.message || ui('submitError', lang);
       if (/recaptcha/i.test(message)) {
@@ -208,7 +228,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
 
             <button
               type="submit"
-              disabled={submitting || submitted}
+              disabled={submitting || submitted || redirecting}
               className={`form-block--cobi-submit ${submitted ? 'form-block--cobi-submit--success' : isButtonActive ? 'form-block--cobi-submit--active' : ''}`}
             >
               {submitted ? (
@@ -219,7 +239,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
                   {ui('submitted', lang)}
                 </span>
               ) : (
-                <span>{submitting ? ui('submitting', lang) : ui('submit', lang)}</span>
+                <span>{submitting || redirecting ? ui('submitting', lang) : ui('submit', lang)}</span>
               )}
             </button>
           </form>
@@ -254,10 +274,10 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || redirecting}
           className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? ui('submitting', lang) : ui('submit', lang)}
+          {submitting || redirecting ? ui('submitting', lang) : ui('submit', lang)}
         </button>
       </form>
     </div>

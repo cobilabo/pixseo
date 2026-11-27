@@ -71,5 +71,8 @@ export interface Page {
   
   // トップページ設定
   isHomePage?: boolean;      // トップページとして設定（slug='home'と連動）
+
+  // 検索エンジンに表示しない（robots noindex ＋ サイトマップから除外）。お問い合わせ完了ページ等で使う
+  noindex?: boolean;
 }
 

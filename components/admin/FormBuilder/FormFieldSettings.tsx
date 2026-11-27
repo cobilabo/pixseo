@@ -8,6 +8,65 @@
 import { FormField } from '@/types/block';
 import FloatingInput from '../FloatingInput';
 import { Toggle } from '../common';
+import { normalizeOptionKey } from '@/lib/form-client-utils';
+
+/**
+ * URL クエリで選択肢を初期選択するための設定
+ * 例: パラメータ名 type ＋ 選択肢のキー kasuhara → /ja/contact/?type=kasuhara
+ */
+function UrlPrefillSettings({ config, onChange }: { config: any; onChange: (updates: any) => void }) {
+  const options: string[] = Array.isArray(config.options) ? config.options : [];
+  const optionKeys: Record<string, string> = config.optionKeys || {};
+  const urlParam: string = config.urlParam || '';
+  const exampleKey = options.map((o) => optionKeys[o]).find(Boolean);
+
+  const updateKey = (option: string, raw: string) => {
+    // 現在の選択肢にあるものだけ残す（選択肢の削除・改名で古いキーが残らないように）
+    const next: Record<string, string> = {};
+    for (const opt of options) {
+      const value = opt === option ? normalizeOptionKey(raw) : optionKeys[opt];
+      if (value) next[opt] = value;
+    }
+    onChange({ optionKeys: next });
+  };
+
+  return (
+    <div className="pt-4 border-t border-gray-200 space-y-3">
+      <div>
+        <h4 className="text-sm font-bold text-gray-900">URLで初期選択</h4>
+        <p className="mt-1 text-xs text-gray-500">
+          パラメータ名と選択肢ごとのキーを設定すると、URLの末尾に付けた目印で選択済みの状態で開けます。キーは半角英小文字・数字・「-」「_」のみです。
+        </p>
+      </div>
+      <FloatingInput
+        label="URLパラメータ名（例: type）"
+        value={urlParam}
+        onChange={(value) => onChange({ urlParam: normalizeOptionKey(value) })}
+      />
+      {urlParam && options.length > 0 && (
+        <div className="space-y-2">
+          {options.map((option) => (
+            <div key={option} className="flex items-center gap-2">
+              <span className="flex-1 min-w-0 text-xs text-gray-700 break-words">{option}</span>
+              <input
+                type="text"
+                value={optionKeys[option] || ''}
+                onChange={(e) => updateKey(option, e.target.value)}
+                placeholder="キー"
+                className="w-32 shrink-0 px-2 py-1 border border-gray-300 rounded text-sm font-mono text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          ))}
+          {exampleKey && (
+            <p className="p-2 bg-gray-50 rounded text-xs text-gray-600 break-all">
+              例: フォームを置いたページのURL + <code className="font-mono">?{urlParam}={exampleKey}</code>
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface FormFieldSettingsProps {
   field: FormField;
@@ -111,13 +170,16 @@ export default function FormFieldSettings({ field, onUpdate, onClose, onDelete }
         )}
 
         {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox') && (
-          <FloatingInput
-            label="選択肢（1行に1つ）"
-            value={((field as any).config?.options || []).join('\n')}
-            onChange={(value) => updateConfig({ options: value.split('\n').filter((o: string) => o.trim()) })}
-            multiline
-            rows={5}
-          />
+          <>
+            <FloatingInput
+              label="選択肢（1行に1つ）"
+              value={((field as any).config?.options || []).join('\n')}
+              onChange={(value) => updateConfig({ options: value.split('\n').filter((o: string) => o.trim()) })}
+              multiline
+              rows={5}
+            />
+            <UrlPrefillSettings config={(field as any).config || {}} onChange={updateConfig} />
+          </>
         )}
 
         {field.type === 'agreement' && (

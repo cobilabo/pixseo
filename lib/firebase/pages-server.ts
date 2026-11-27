@@ -109,7 +109,7 @@ export async function getPublishedPageSlugsForSitemap(
     const snapshot = await adminDb
       .collection('pages')
       .where('mediaId', '==', mediaId)
-      .select('slug', 'isPublished', 'isHomePage', 'publishedAt', 'updatedAt')
+      .select('slug', 'isPublished', 'isHomePage', 'noindex', 'publishedAt', 'updatedAt')
       .get();
 
     const now = new Date();
@@ -120,12 +120,14 @@ export async function getPublishedPageSlugsForSitemap(
           slug: (data.slug as string) || '',
           isPublished: data.isPublished === true,
           isHomePage: data.isHomePage === true,
+          noindex: data.noindex === true,
           publishedAt: safeToDate(data.publishedAt),
           updatedAt: safeToDate(data.updatedAt),
         };
       })
       .filter((page) =>
         page.isPublished &&
+        !page.noindex &&
         page.slug &&
         (!page.publishedAt || page.publishedAt <= now)
       )
