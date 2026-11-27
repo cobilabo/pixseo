@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -9,6 +10,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'formSubmissions', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const submissionId = params.id;
     

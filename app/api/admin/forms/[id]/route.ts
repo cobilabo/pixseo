@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { translateText } from '@/lib/openai/translate';
 import { Lang } from '@/types/lang';
@@ -79,6 +80,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'forms', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const doc = await adminDb.collection('forms').doc(params.id).get();
 
@@ -111,6 +115,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'forms', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
 
@@ -210,6 +217,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'forms', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     // フォームの送信データも削除
     const submissionsSnapshot = await adminDb

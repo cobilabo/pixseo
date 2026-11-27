@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import OpenAI from 'openai';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,9 @@ const openai = new OpenAI({
  * カテゴリー名からSEO最適化された説明文を生成
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { name } = await request.json();
 

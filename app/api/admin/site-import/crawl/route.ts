@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { crawlSite } from '@/lib/site-import/crawler';
 import * as cheerio from 'cheerio';
 
@@ -28,6 +29,9 @@ function compactHtml(html: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { url, maxPages = 50, maxDepth = 3, excludePaths = [] } = body;

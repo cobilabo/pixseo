@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import OpenAI from 'openai';
 import { FormField, FormFieldType } from '@/types/block';
@@ -11,6 +12,9 @@ export const maxDuration = 300; // 5分
  * プロンプトからフォーム構造を生成
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,9 @@ async function deleteCollection(
 }
 
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { batchId, mediaId } = await request.json();
 

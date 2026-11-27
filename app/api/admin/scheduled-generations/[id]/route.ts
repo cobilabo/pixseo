@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -9,6 +10,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'scheduledGenerations', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const doc = await adminDb.collection('scheduledGenerations').doc(params.id).get();
 
@@ -39,6 +43,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'scheduledGenerations', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const {
@@ -88,6 +95,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'scheduledGenerations', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     await adminDb.collection('scheduledGenerations').doc(params.id).delete();
     return NextResponse.json({ success: true });

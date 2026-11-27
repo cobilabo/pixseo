@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { canAccessMedia, invalidateAdminPrincipalCache, requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
 // メディアテナント一覧取得
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const snapshot = await adminDb.collection('mediaTenants').orderBy('createdAt', 'desc').get();
     
@@ -18,7 +22,11 @@ export async function GET() {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       };
     });
-    return NextResponse.json(tenants);
+    // super_admin 以外には、アクセスできるテナントだけを返す
+    const visible = adminCtx.isSuperAdmin
+      ? tenants
+      : tenants.filter((t) => canAccessMedia(adminCtx, t.id));
+    return NextResponse.json(visible);
   } catch (error: any) {
     console.error('[API Tenants] エラー:', error);
     return NextResponse.json({ error: 'Failed to fetch tenants' }, { status: 500 });
@@ -27,6 +35,9 @@ export async function GET() {
 
 // サービス作成
 export async function POST(request: Request) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { 
@@ -108,6 +119,7 @@ export async function POST(request: Request) {
         }
       }
     }
+    invalidateAdminPrincipalCache();
     return NextResponse.json({ id: docRef.id });
   } catch (error: any) {
     console.error('[API Service] エラー:', error);

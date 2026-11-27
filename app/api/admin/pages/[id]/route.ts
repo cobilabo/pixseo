@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Page } from '@/types/page';
 import { safeToDate } from '@/lib/firebase/date-utils';
@@ -12,6 +13,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'pages', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const doc = await adminDb.collection('pages').doc(params.id).get();
     
@@ -45,6 +49,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'pages', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const existingDoc = await adminDb.collection('pages').doc(params.id).get();
@@ -135,6 +142,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'pages', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const docSnap = await adminDb.collection('pages').doc(params.id).get();
     const deletedSlug = (docSnap.data()?.slug as string | undefined) || null;

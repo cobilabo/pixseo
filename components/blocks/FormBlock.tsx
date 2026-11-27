@@ -84,7 +84,7 @@ export default function FormBlock({ block, lang = 'ja', layoutTheme, recaptchaCo
 
   const fetchForm = async () => {
     try {
-      const response = await fetch(`/api/admin/forms/${config.formId}`);
+      const response = await fetch(`/api/forms/${config.formId}`);
       if (response.ok) {
         const data = await response.json();
         setForm(data);

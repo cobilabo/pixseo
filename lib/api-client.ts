@@ -1,7 +1,9 @@
 /**
  * 管理画面用のAPI Client
  * 現在選択中のmediaIdを自動的にリクエストヘッダーに追加します
+ * Firebase ID トークン（Authorization: Bearer）は lib/admin-fetch-auth.ts が付けます
  */
+import '@/lib/admin-fetch-auth';
 
 // mediaIdをヘッダーに追加するfetch wrapper
 export async function fetchWithMediaId(url: string, options: RequestInit = {}): Promise<Response> {

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 // GET: クライアント一覧取得
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const snapshot = await adminDb
       .collection('clients')
@@ -36,6 +40,9 @@ export async function GET() {
 
 // POST: 新規クライアント作成
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request, { superAdminOnly: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { logoUrl, email, password, clientName, contactPerson, address } = body;

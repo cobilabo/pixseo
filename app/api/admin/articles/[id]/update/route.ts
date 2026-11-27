@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Article } from '@/types/article';
 import { syncArticleToAlgolia } from '@/lib/algolia/sync';
@@ -14,6 +15,9 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分（翻訳処理のため）
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const adminCtx = await requireAdmin(request, { doc: { collection: 'articles', id: params.id } });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { id } = params;
     const body = await request.json();

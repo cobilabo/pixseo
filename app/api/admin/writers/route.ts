@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { translateText } from '@/lib/openai/translate';
@@ -21,6 +22,9 @@ function isFullEnglish(text: string): boolean {
 
 // GET: ライター一覧取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     let query = adminDb.collection('writers');
@@ -72,6 +76,9 @@ export async function GET(request: NextRequest) {
 
 // POST: ライター作成
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { icon, iconAlt, backgroundImage, backgroundImageAlt, handleName, bio, mediaId, isMainWriter } = body;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Category } from '@/types/article';
 import { translateText } from '@/lib/openai/translate';
@@ -7,6 +8,9 @@ import { SUPPORTED_LANGS } from '@/types/lang';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     // リクエストヘッダーからmediaIdを取得
     const mediaId = request.headers.get('x-media-id');

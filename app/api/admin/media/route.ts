@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -17,6 +18,9 @@ const MAX_LIMIT = 200;
 //       使うため、media / mediaLibrary それぞれに mediaId+createdAt の複合
 //       インデックスが必要（firestore.indexes.json で定義済み）。
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const { searchParams } = new URL(request.url);

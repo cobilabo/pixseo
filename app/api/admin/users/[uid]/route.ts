@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { canManageUser, requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { uid: string } }
 ) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+  if (!(await canManageUser(adminCtx, params.uid))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const { uid } = params;
     

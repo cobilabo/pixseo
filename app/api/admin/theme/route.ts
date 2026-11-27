@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { defaultTheme } from '@/types/theme';
@@ -77,6 +78,9 @@ async function runTranslationTasks(tasks: TranslationTask[], concurrency = 15): 
 
 // GET: デザイン設定を取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     
@@ -111,6 +115,9 @@ export async function GET(request: NextRequest) {
 
 // PUT: デザイン設定を更新
 export async function PUT(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     

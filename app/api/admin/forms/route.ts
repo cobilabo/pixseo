@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { translateText } from '@/lib/openai/translate';
 import { Lang } from '@/types/lang';
@@ -9,6 +10,9 @@ const TARGET_LANGS: Lang[] = ['en', 'zh', 'ko'];
 
 // フォーム一覧取得
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
 
@@ -43,6 +47,9 @@ export async function GET(request: NextRequest) {
 
 // フォーム作成
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
 

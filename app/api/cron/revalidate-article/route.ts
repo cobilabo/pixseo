@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCronAuthorized } from '@/lib/admin-auth';
 import { revalidateArticle } from "@/lib/cache-manager";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +12,7 @@ const NOINDEX_HEADERS = { "X-Robots-Tag": "noindex, nofollow" } as const;
  * Body: { "slug": "universaltourism" }
  */
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: NOINDEX_HEADERS });
   }
 

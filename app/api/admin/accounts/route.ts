@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { canAccessMedia, requireAdmin } from '@/lib/admin-auth';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
 // アカウント一覧取得
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const listUsersResult = await adminAuth.listUsers(1000); // 最大1000件
     
@@ -27,7 +31,18 @@ export async function GET() {
     });
 
     const users = await Promise.all(usersPromises);
-    return NextResponse.json(users);
+    if (adminCtx.isSuperAdmin) {
+      return NextResponse.json(users);
+    }
+    // super_admin 以外には、自分と同じテナントに属するユーザーだけを返す
+    const visible = users.filter(
+      (u) =>
+        u.uid === adminCtx.uid ||
+        (u.role !== 'super_admin' &&
+          Array.isArray(u.mediaIds) &&
+          u.mediaIds.some((id: string) => canAccessMedia(adminCtx, id)))
+    );
+    return NextResponse.json(visible);
   } catch (error: any) {
     console.error('[API Accounts] エラー:', error);
     return NextResponse.json({ error: 'Failed to fetch accounts' }, { status: 500 });
@@ -36,6 +51,9 @@ export async function GET() {
 
 // アカウント作成
 export async function POST(request: Request) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const body = await request.json();
     const { email, password, displayName, logoUrl, mediaId } = body;

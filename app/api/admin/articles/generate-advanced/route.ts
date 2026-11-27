@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { generateAdvancedArticle } from '@/lib/article-generation/generate-advanced';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,9 @@ export const maxDuration = 300; // 5分
  * 12ステップの高度な記事生成フロー（手動実行用）
  */
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request, { allowCronSecret: true });
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const mediaId = request.headers.get('x-media-id');
     const body = await request.json();

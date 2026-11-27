@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import { adminDb } from '@/lib/firebase/admin';
 
 /**
@@ -7,6 +8,9 @@ import { adminDb } from '@/lib/firebase/admin';
  * GET /api/admin/articles/check-slug?mediaId={mediaId}&slug={slug}&excludeId={articleId}
  */
 export async function GET(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { searchParams } = new URL(request.url);
     const mediaId = searchParams.get('mediaId');

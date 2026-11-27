@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 import OpenAI from 'openai';
 import { improveImagePrompt } from '@/lib/openai/improve-prompt';
 
@@ -6,6 +7,9 @@ export const dynamic = 'force-dynamic';
 
 // サンプル画像生成（アップロードなし、表示のみ）
 export async function POST(request: NextRequest) {
+  const adminCtx = await requireAdmin(request);
+  if (adminCtx instanceof NextResponse) return adminCtx;
+
   try {
     const { prompt, size } = await request.json();
 
