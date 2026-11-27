@@ -242,7 +242,7 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
         margin-bottom: 1em !important;
       }
       .article-content h2 {
-        font-size: 1.15em !important;
+        font-size: 1.25rem !important; /* 20px: 本文の段落は .prose p で 16px のため rem で揃える */
         margin-top: 1.5em !important;
         margin-bottom: 0.75em !important;
         padding-bottom: 0.35em !important;
@@ -251,7 +251,7 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
         height: 4px !important;
       }
       .article-content h3 {
-        font-size: 1.05em !important;
+        font-size: 1.125rem !important; /* 18px */
         margin-top: 1.25em !important;
         margin-bottom: 0.6em !important;
         padding-bottom: 0.35em !important;
@@ -260,7 +260,7 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
         height: 2px !important;
       }
       .article-content h4 {
-        font-size: 1em !important;
+        font-size: 1rem !important; /* 16px */
         margin-top: 1.1em !important;
         margin-bottom: 0.5em !important;
       }
@@ -271,7 +271,7 @@ export const ARTICLE_CONTENT_STYLES = `    .article-content {
       .article-content li {
         margin-bottom: 0.5em !important;
         padding: 0.5em 0.75em !important;
-        font-size: 0.875em !important;
+        font-size: 0.875rem !important; /* 14px（PC と同じく本文の約0.9倍） */
       }
       .article-content .article-table-scroll {
         display: block !important;
