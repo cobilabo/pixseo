@@ -39,8 +39,16 @@ async function translateFormFields(fields: any[]): Promise<any[]> {
       for (const lang of TARGET_LANGS) jobs.push({ fieldIdx: i, target: 'config', key: 'content', lang, text: cfg.content, context: 'フォーム表示テキスト' });
     }
     if (cfg.options?.length) {
+      // 日本語の選択肢が前回の保存から変わっていなければ、既存の訳（手直しした訳を含む）を残す
+      const prevJa: unknown = cfg.options_ja;
+      const optionsUnchanged =
+        Array.isArray(prevJa) &&
+        prevJa.length === cfg.options.length &&
+        prevJa.every((v, idx) => v === cfg.options[idx]);
       cfg.options_ja = cfg.options;
       for (const lang of TARGET_LANGS) {
+        const existing = cfg[`options_${lang}`];
+        if (optionsUnchanged && Array.isArray(existing) && existing.length === cfg.options.length) continue;
         jobs.push({ fieldIdx: i, target: 'config', key: `options_array`, lang, text: cfg.options.join('\n---\n'), context: 'フォーム選択肢（各行は---で区切られた個別の選択肢）' });
       }
     }
