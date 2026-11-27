@@ -63,7 +63,9 @@ async function translateFormFields(fields: any[]): Promise<any[]> {
       }
 
       if (job.key === 'options_array') {
-        field.config[`options_${job.lang}`] = translated.split('\n---\n');
+        // 区切りの改行が消えて「a --- b」の形で返ることがあるため、前後の空白ごと区切る
+        const parts = translated.split(/\s*-{3,}\s*/).map(s => s.trim()).filter(Boolean);
+        field.config[`options_${job.lang}`] = parts;
       } else if (job.target === 'field') {
         field[`${job.key}_${job.lang}`] = translated;
       } else {
@@ -71,6 +73,27 @@ async function translateFormFields(fields: any[]): Promise<any[]> {
       }
     });
   }
+
+  // 選択肢の数が日本語と合わない言語は、1つずつ翻訳し直す（失敗したものは日本語のまま）
+  const retries: Promise<void>[] = [];
+  for (const field of fieldsCopy) {
+    const options: string[] | undefined = field.config?.options;
+    if (!options?.length) continue;
+    for (const lang of TARGET_LANGS) {
+      const key = `options_${lang}`;
+      if (Array.isArray(field.config[key]) && field.config[key].length === options.length) continue;
+      retries.push(
+        Promise.all(
+          options.map(opt =>
+            translateText(opt, lang, 'フォーム選択肢').then(t => t.trim() || opt).catch(() => opt)
+          )
+        ).then(translated => {
+          field.config[key] = translated;
+        })
+      );
+    }
+  }
+  await Promise.all(retries);
 
   return fieldsCopy;
 }
